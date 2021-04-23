@@ -1,14 +1,18 @@
-use player::Player;
+use game::Game;
 
+mod game;
 mod player;
 
 fn main() {
-    let player = Player::new();
-    player_status(&player);
+    let game = Game::new();
+    player_status(&game);
 }
 
-fn player_status(player: &Player) {
-    println!("{} lv {}", player.name, player.level);
-    println!("hp {}/{}", player.current_hp, player.max_hp);
-    println!("xp {} next level: TODO", player.xp);
+fn player_status(game: &Game) {
+    let player = &game.player;
+    println!("{}@{} ", player.name, game.location.display());
+    println!(
+        "lv:{} hp:{}/{} xp:{}",
+        player.level, player.current_hp, player.max_hp, player.xp
+    );
 }

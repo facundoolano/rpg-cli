@@ -13,9 +13,9 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new() -> Player {
+    pub fn new() -> Self {
         Self {
-            name: String::from("Hero"),
+            name: String::from("hero"),
             level: 1,
             xp: 0,
             max_hp: 20,
