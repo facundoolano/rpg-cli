@@ -4,8 +4,9 @@ mod game;
 mod player;
 
 fn main() {
+    // TODO maybe separate new/save from load?
     let game = Game::load().unwrap();
-    game.save();
+    game.save().unwrap();
     player_status(&game);
 }
 

@@ -1,8 +1,8 @@
+extern crate dirs;
+
 use crate::player::Player;
 use serde::{Deserialize, Serialize};
-use std::{fs, io};
-
-const DATA_FILE: &str = "~/.rpg/game";
+use std::{fs, io, path};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Game {
@@ -10,9 +10,18 @@ pub struct Game {
     pub location: String,
 }
 
+// TODO factor out all dir/file management code
+fn rpg_dir() -> path::PathBuf {
+    dirs::home_dir().unwrap().join(".rpg")
+}
+
+fn data_file() -> path::PathBuf {
+    rpg_dir().join("data")
+}
+
 impl Game {
     pub fn load() -> Result<Self, io::Error> {
-        match fs::read(DATA_FILE) {
+        match fs::read(data_file()) {
             Ok(data) => {
                 let game: Game = bincode::deserialize(&data).unwrap();
                 Ok(game)
@@ -22,12 +31,19 @@ impl Game {
         }
     }
 
-    pub fn save(&self) {
-        // TODO implement
+    pub fn save(&self) -> Result<(), io::Error> {
+        let rpg_dir = rpg_dir();
+        if !rpg_dir.exists() {
+            fs::create_dir(&rpg_dir).unwrap();
+        }
+
+        let data = bincode::serialize(&self).unwrap();
+        fs::write(data_file(), &data)
     }
 
     pub fn new() -> Self {
         Self {
+            // FIXME here ~ does not necessarily match home dir
             location: String::from("~"),
             player: Player::new(),
         }
