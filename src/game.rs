@@ -7,7 +7,7 @@ use std::{fs, io, path};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Game {
     pub player: Player,
-    pub location: String,
+    pub location: path::PathBuf,
 }
 
 // TODO factor out all dir/file management code
@@ -43,8 +43,7 @@ impl Game {
 
     pub fn new() -> Self {
         Self {
-            // FIXME here ~ does not necessarily match home dir
-            location: String::from("~"),
+            location: dirs::home_dir().unwrap(),
             player: Player::new(),
         }
     }
