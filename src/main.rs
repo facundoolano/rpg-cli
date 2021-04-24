@@ -8,12 +8,16 @@ use crate::location::Location;
 
 fn main() {
     // FIXME don't assume arguments, properly parse them
-    let destination = std::env::args().nth(1).unwrap();
-    let location = Location::from(&destination);
-    println!("{:?}", location.is_home());
+    let dest = std::env::args().nth(1).unwrap();
+    let dest = Location::from(&dest);
 
     // TODO maybe separate new/save from load?
-    let game = Game::load().unwrap();
+    let mut game = Game::load().unwrap();
+
+    let walk = game.location.walk_to(&dest);
+    println!("AAA {:?}", walk);
+
+    game.location = dest;
     game.save().unwrap();
     player_status(&game);
 }
