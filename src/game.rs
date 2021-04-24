@@ -1,8 +1,12 @@
 use crate::player::Player;
+use serde::{Deserialize, Serialize};
 use std::path;
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Game<'a> {
     pub player: Player,
+
+    #[serde(borrow)]
     pub location: &'a path::Path,
 }
 
