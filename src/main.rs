@@ -11,8 +11,7 @@ fn main() {
     let dest = std::env::args().nth(1).unwrap();
     let dest = Location::from(&dest);
 
-    // TODO maybe separate new/save from load?
-    let mut game = Game::load().unwrap();
+    let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
     game.walk_towards(&dest);
     game.save().unwrap();

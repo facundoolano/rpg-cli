@@ -21,15 +21,17 @@ fn data_file() -> path::PathBuf {
 }
 
 impl Game {
-    pub fn load() -> Result<Self, io::Error> {
-        match fs::read(data_file()) {
-            Ok(data) => {
-                let game: Game = bincode::deserialize(&data).unwrap();
-                Ok(game)
-            }
-            Err(ref e) if e.kind() == io::ErrorKind::NotFound => Ok(Self::new()),
-            Err(error) => Err(error),
+    pub fn new() -> Self {
+        Self {
+            location: Location::home(),
+            player: Player::new(),
         }
+    }
+
+    pub fn load() -> Result<Self, &'static str> {
+        let data = fs::read(data_file()).or(Err("Data file not readable"))?;
+        let game: Game = bincode::deserialize(&data).unwrap();
+        Ok(game)
     }
 
     pub fn save(&self) -> Result<(), io::Error> {
@@ -40,13 +42,6 @@ impl Game {
 
         let data = bincode::serialize(&self).unwrap();
         fs::write(data_file(), &data)
-    }
-
-    pub fn new() -> Self {
-        Self {
-            location: Location::home(),
-            player: Player::new(),
-        }
     }
 
     pub fn walk_towards(&mut self, dest: &Location) {
