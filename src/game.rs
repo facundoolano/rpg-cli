@@ -2,6 +2,7 @@ extern crate dirs;
 
 use crate::character::Character;
 use crate::location::Location;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path};
 
@@ -48,6 +49,7 @@ impl Game {
         while self.location != *dest {
             self.location.walk_towards(&dest);
             println!("move {}", self.location);
+
             if self.location.is_home() {
                 self.player.heal();
             } else if let Some(enemy) = self.maybe_spawn_enemy() {
@@ -57,12 +59,17 @@ impl Game {
         }
     }
 
-    // FIXME using string as placeholder for now
-    pub fn maybe_spawn_enemy(&self) -> Option<String> {
-        None
+    pub fn maybe_spawn_enemy(&self) -> Option<Character> {
+        let mut rng = rand::thread_rng();
+        if rng.gen_ratio(1, 3) {
+            Some(Character::enemy(&self.location, &self.player))
+        } else {
+            None
+        }
     }
 
-    pub fn battle(&mut self, _enemy: &str) {
+    pub fn battle(&mut self, enemy: &Character) {
         // TODO
+        println!("enemy lv:{} appeared!", enemy.level);
     }
 }
