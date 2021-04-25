@@ -55,7 +55,6 @@ impl Game {
                 return;
             }
         }
-        println!();
     }
 
     // FIXME using string as placeholder for now

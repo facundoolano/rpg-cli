@@ -7,14 +7,15 @@ mod player;
 use crate::location::Location;
 
 fn main() {
-    // FIXME don't assume arguments, properly parse them
-    let dest = std::env::args().nth(1).unwrap();
-    let dest = Location::from(&dest);
-
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
-    game.walk_towards(&dest);
-    game.save().unwrap();
+    if let Some(dest) = std::env::args().nth(1) {
+        let dest = Location::from(&dest);
+        game.walk_towards(&dest);
+        game.save().unwrap();
+        println!()
+    }
+
     player_status(&game);
 }
 
