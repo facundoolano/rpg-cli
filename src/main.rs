@@ -14,10 +14,7 @@ fn main() {
     // TODO maybe separate new/save from load?
     let mut game = Game::load().unwrap();
 
-    let walk = game.location.walk_to(&dest);
-    println!("AAA {:?}", walk);
-
-    game.location = dest;
+    game.walk_towards(&dest);
     game.save().unwrap();
     player_status(&game);
 }

@@ -48,4 +48,14 @@ impl Game {
             player: Player::new(),
         }
     }
+
+    pub fn walk_towards(&mut self, dest: &Location) {
+        while self.location != *dest {
+            self.location.walk_towards(&dest);
+            // print current location
+            // if home -> heal
+            // else if let Some(enemy) = maybe_spawn_enemy()
+            // battle + return
+        }
+    }
 }
