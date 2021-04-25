@@ -49,6 +49,23 @@ impl Location {
             self.path = self.path.join(next);
         }
     }
+
+    pub fn distance_from(&self, other: &Self) -> i32 {
+        let mut current = self.path.as_path();
+        let dest = other.path.as_path();
+
+        let mut distance = 0;
+        while !dest.starts_with(&current) {
+            current = current.parent().unwrap();
+            distance += 1;
+        }
+        let dest = dest.strip_prefix(current).unwrap();
+        distance + dest.components().count() as i32
+    }
+
+    pub fn distance_from_home(&self) -> i32 {
+        self.distance_from(&Location::home())
+    }
 }
 
 impl PartialEq for Location {
@@ -103,6 +120,18 @@ mod tests {
         assert_eq!(location_from("/Users/facundo/erlang"), source);
         source.walk_towards(&dest);
         assert_eq!(location_from("/Users/facundo/erlang/app"), source);
+    }
+
+    #[test]
+    fn test_distance() {
+        assert_eq!(location_from("/Users/facundo").distance_from(&location_from("/Users/facundo")), 0);
+        assert_eq!(location_from("/Users/facundo").distance_from(&location_from("/Users/facundo/other")), 1);
+        assert_eq!(location_from("/Users/facundo/other").distance_from(&location_from("/Users/facundo/")), 1);
+        assert_eq!(location_from("/Users/facundo/other").distance_from(&location_from("/")), 3);
+        assert_eq!(location_from("/").distance_from(&location_from("/Users/facundo/other")), 3);
+        assert_eq!(location_from("/Users/rusty/cage").distance_from(&location_from("/Users/facundo/other")), 4);
+        assert_eq!(location_from("/Users/facundo/other").distance_from(&location_from("/Users/rusty/cage")), 4);
+        assert_eq!(Location::home().distance_from_home(), 0);
     }
 
     /// test-only equivalent for Location::from, specifically to bypass
