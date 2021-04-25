@@ -52,10 +52,23 @@ impl Game {
     pub fn walk_towards(&mut self, dest: &Location) {
         while self.location != *dest {
             self.location.walk_towards(&dest);
-            // print current location
-            // if home -> heal
-            // else if let Some(enemy) = maybe_spawn_enemy()
-            // battle + return
+            println!("move {}", self.location);
+            if self.location.is_home() {
+                self.player.heal();
+            } else if let Some(enemy) = self.maybe_spawn_enemy() {
+                self.battle(&enemy);
+                return;
+            }
         }
+        println!();
+    }
+
+    // FIXME using string as placeholder for now
+    pub fn maybe_spawn_enemy(&self) -> Option<String> {
+        None
+    }
+
+    pub fn battle(&mut self, _enemy: &str) {
+        // TODO
     }
 }

@@ -28,4 +28,8 @@ impl Player {
             luck: 3,
         }
     }
+
+    pub fn heal(&mut self) {
+        self.current_hp = self.max_hp;
+    }
 }

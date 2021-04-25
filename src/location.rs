@@ -8,11 +8,9 @@ pub struct Location {
 
 impl Location {
     pub fn from(path: &str) -> Self {
-        // TODO sanitize path
+        // FIXME force ~ into home
         let path = path::Path::new(path).canonicalize().unwrap();
-        Self {
-            path: path.to_path_buf(),
-        }
+        Self { path }
     }
 
     pub fn home() -> Self {
