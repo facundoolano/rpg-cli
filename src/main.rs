@@ -1,8 +1,8 @@
 use game::Game;
 
+mod character;
 mod game;
 mod location;
-mod player;
 
 use crate::location::Location;
 

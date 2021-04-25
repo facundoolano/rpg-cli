@@ -1,13 +1,13 @@
 extern crate dirs;
 
+use crate::character::Character;
 use crate::location::Location;
-use crate::player::Player;
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Game {
-    pub player: Player,
+    pub player: Character,
     pub location: Location,
 }
 
@@ -24,7 +24,7 @@ impl Game {
     pub fn new() -> Self {
         Self {
             location: Location::home(),
-            player: Player::new(),
+            player: Character::player(),
         }
     }
 
