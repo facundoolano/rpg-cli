@@ -11,7 +11,10 @@ fn main() {
 
     if let Some(dest) = std::env::args().nth(1) {
         let dest = Location::from(&dest);
-        game.walk_towards(&dest);
+
+        // TODO handle game over
+        game.walk_towards(&dest).unwrap();
+
         game.save().unwrap();
         println!()
     }

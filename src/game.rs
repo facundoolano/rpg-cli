@@ -6,6 +6,11 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path};
 
+#[derive(Debug)]
+pub enum Error {
+    GameOver,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Game {
     pub player: Character,
@@ -45,7 +50,7 @@ impl Game {
         fs::write(data_file(), &data)
     }
 
-    pub fn walk_towards(&mut self, dest: &Location) {
+    pub fn walk_towards(&mut self, dest: &Location) -> Result<(), Error> {
         while self.location != *dest {
             self.location.walk_towards(&dest);
             println!("move {}", self.location);
@@ -53,10 +58,10 @@ impl Game {
             if self.location.is_home() {
                 self.player.heal();
             } else if let Some(enemy) = self.maybe_spawn_enemy() {
-                self.battle(&enemy);
-                return;
+                return self.battle(&enemy);
             }
         }
+        Ok(())
     }
 
     pub fn maybe_spawn_enemy(&self) -> Option<Character> {
@@ -68,8 +73,9 @@ impl Game {
         }
     }
 
-    pub fn battle(&mut self, enemy: &Character) {
+    pub fn battle(&mut self, enemy: &Character) -> Result<(), Error> {
         // TODO
         println!("enemy lv:{} appeared!", enemy.level);
+        Err(Error::GameOver)
     }
 }
