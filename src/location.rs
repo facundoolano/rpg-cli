@@ -124,36 +124,15 @@ mod tests {
 
     #[test]
     fn test_distance() {
-        assert_eq!(
-            location_from("/Users/facundo").distance_from(&location_from("/Users/facundo")),
-            0
-        );
-        assert_eq!(
-            location_from("/Users/facundo").distance_from(&location_from("/Users/facundo/other")),
-            1
-        );
-        assert_eq!(
-            location_from("/Users/facundo/other").distance_from(&location_from("/Users/facundo/")),
-            1
-        );
-        assert_eq!(
-            location_from("/Users/facundo/other").distance_from(&location_from("/")),
-            3
-        );
-        assert_eq!(
-            location_from("/").distance_from(&location_from("/Users/facundo/other")),
-            3
-        );
-        assert_eq!(
-            location_from("/Users/rusty/cage")
-                .distance_from(&location_from("/Users/facundo/other")),
-            4
-        );
-        assert_eq!(
-            location_from("/Users/facundo/other")
-                .distance_from(&location_from("/Users/rusty/cage")),
-            4
-        );
+        let distance = |from, to| location_from(from).distance_from(&location_from(to));
+
+        assert_eq!(distance("/Users/facundo", "/Users/facundo"), 0);
+        assert_eq!(distance("/Users/facundo", "/Users/facundo/other"), 1);
+        assert_eq!(distance("/Users/facundo/other", "/Users/facundo/"), 1);
+        assert_eq!(distance("/Users/facundo/other", "/"), 3);
+        assert_eq!(distance("/", "/Users/facundo/other"), 3);
+        assert_eq!(distance("/Users/rusty/cage", "/Users/facundo/other"), 4);
+        assert_eq!(distance("/Users/facundo/other", "/Users/rusty/cage"), 4);
         assert_eq!(Location::home().distance_from_home(), 0);
     }
 
