@@ -1,3 +1,4 @@
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
@@ -42,14 +43,14 @@ impl Character {
 
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
-        // TODO randomize a bit
         // TODO different rates by char class and enemy type -> parametrized enum. could include start values as well
-        let inc = |stat: i32, rate: f64| (stat as f64 * rate).round() as i32;
+        let inc =
+            |stat: i32, rate: f64| (stat as f64 + randomized(stat as f64 * rate)).round() as i32;
 
         self.level += 1;
-        self.max_hp = inc(self.max_hp, 1.3);
-        self.strength = inc(self.strength, 1.1);
-        self.speed = inc(self.speed, 1.1);
+        self.max_hp = inc(self.max_hp, 0.3);
+        self.strength = inc(self.strength, 0.1);
+        self.speed = inc(self.speed, 0.1);
     }
 
     /// Add to the accumulated experience points, possibly increasing the level.
@@ -87,10 +88,9 @@ impl Character {
         // Possible improvements: use different attack and defense stats,
         // incorporate weapon and armor effect.
 
-        // TODO randomize
         let str_10 = self.strength as f64 * 0.1;
         let damage = self.strength as f64 + (self.level - receiver.level) as f64 * str_10;
-        max(str_10.ceil() as i32, damage as i32)
+        max(str_10.ceil() as i32, randomized(damage) as i32)
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
@@ -98,4 +98,13 @@ impl Character {
         // TODO should the player also gain experience by damage received?
         damage * max(1, 1 + receiver.level - self.level)
     }
+}
+
+/// add +/- 10% variance to a f64
+/// may make more generic in the future
+fn randomized(value: f64) -> f64 {
+    let mut rng = rand::thread_rng();
+    let min = value * 0.9;
+    let max = value * 1.1;
+    rng.gen_range(min..=max)
 }
