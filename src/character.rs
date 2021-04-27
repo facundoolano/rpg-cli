@@ -1,7 +1,5 @@
-use crate::location;
 use serde::{Deserialize, Serialize};
-
-use rand::Rng;
+use std::cmp::max;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
@@ -15,7 +13,6 @@ pub struct Character {
 
     pub strength: i32,
     pub speed: i32,
-    pub luck: i32,
 }
 
 impl Character {
@@ -25,57 +22,80 @@ impl Character {
         Self::new("hero", 1)
     }
 
-    /// Spawn a new enemy in the given location, with level based on the
-    /// player's current level and the distance of the location from home.
-    pub fn enemy(location: &location::Location, player: &Self) -> Self {
-        let distance: i32 = location.distance_from_home();
-        Self::new("enemy", enemy_level(player.level, distance))
-    }
-
     pub fn new(name: &str, level: i32) -> Self {
-        Self {
+        let mut character = Self {
             name: String::from(name),
             level,
             xp: 0,
-            // FIXME arrange the rest of these stats based on level
             max_hp: 20,
             current_hp: 20,
             strength: 10,
             speed: 5,
-            luck: 3,
+        };
+
+        for _ in 1..level {
+            character.increase_level();
         }
+
+        character
+    }
+
+    /// Raise the level and all the character stats.
+    fn increase_level(&mut self) {
+        // TODO randomize a bit
+        // TODO different rates by char class and enemy type -> parametrized enum. could include start values as well
+        let inc = |stat: i32, rate: f64| (stat as f64 * rate).round() as i32;
+
+        self.level += 1;
+        self.max_hp = inc(self.max_hp, 1.3);
+        self.strength = inc(self.strength, 1.1);
+        self.speed = inc(self.speed, 1.1);
+    }
+
+    /// Add to the accumulated experience points, possibly increasing the level.
+    fn add_experience(&mut self, xp: i32) {
+        self.xp += xp;
+        let for_next = self.xp_for_next();
+        if self.xp >= for_next {
+            self.increase_level();
+            self.xp -= for_next;
+        }
+    }
+
+    pub fn receive_damage(&mut self, damage: i32) {
+        self.current_hp = max(0, self.current_hp - damage);
+    }
+
+    pub fn is_dead(&self) -> bool {
+        self.current_hp == 0
     }
 
     pub fn heal(&mut self) {
         self.current_hp = self.max_hp;
     }
-}
 
-fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
-    let mut rng = rand::thread_rng();
-    let random_delta = rng.gen_range(-1..2);
-    std::cmp::max(player_level / 2 + distance_from_home - 1 + random_delta, 1)
-}
+    /// How many experience points are required to move to the next level.
+    fn xp_for_next(&self) -> i32 {
+        let exp = 1.5;
+        let base_xp = 30;
+        base_xp * (self.level as f64).powf(exp) as i32
+    }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+    /// Generate a randomized damage numer based on the attacker strength
+    /// and the receiver strength.
+    pub fn damage(&self, receiver: &Self) -> i32 {
+        // Possible improvements: use different attack and defense stats,
+        // incorporate weapon and armor effect.
 
-    #[test]
-    fn test_enemy() {
-        // player level 1
-        assert!((1..=1).contains(&enemy_level(1, 1)));
-        assert!((1..=2).contains(&enemy_level(1, 2)));
-        assert!((1..=3).contains(&enemy_level(1, 3)));
+        // TODO randomize
+        let str_10 = self.strength as f64 * 0.1;
+        let damage = self.strength as f64 + (self.level - receiver.level) as f64 * str_10;
+        max(str_10.ceil() as i32, damage as i32)
+    }
 
-        // player level 5
-        assert!((1..=3).contains(&enemy_level(5, 1)));
-        assert!((2..=4).contains(&enemy_level(5, 2)));
-        assert!((3..=5).contains(&enemy_level(5, 3)));
-
-        // player level 10
-        assert!((4..=6).contains(&enemy_level(10, 1)));
-        assert!((5..=7).contains(&enemy_level(10, 2)));
-        assert!((6..=8).contains(&enemy_level(10, 3)));
+    /// How many experience points are gained by inflicting damage to an enemy.
+    pub fn xp_gained(&self, receiver: &Self, damage: i32) -> i32 {
+        // TODO should the player also gain experience by damage received?
+        damage * max(1, 1 + receiver.level - self.level)
     }
 }

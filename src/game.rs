@@ -50,6 +50,9 @@ impl Game {
         fs::write(data_file(), &data)
     }
 
+    // TODO document
+    // TODO use a less awkward name for such a central function.
+    // maybe just `move`
     pub fn walk_towards(&mut self, dest: &Location) -> Result<(), Error> {
         while self.location != *dest {
             self.location.walk_towards(&dest);
@@ -65,12 +68,24 @@ impl Game {
     }
 
     pub fn maybe_spawn_enemy(&self) -> Option<Character> {
-        let mut rng = rand::thread_rng();
-        if rng.gen_ratio(1, 3) {
-            Some(Character::enemy(&self.location, &self.player))
+        if self.should_enemy_appear() {
+            let level = self.enemy_level();
+            Some(Character::new("enemy", level))
         } else {
             None
         }
+    }
+
+    pub fn should_enemy_appear(&self) -> bool {
+        let mut rng = rand::thread_rng();
+        rng.gen_ratio(1, 3)
+    }
+
+    pub fn enemy_level(&self) -> i32 {
+        let distance: i32 = self.location.distance_from_home();
+        let mut rng = rand::thread_rng();
+        let random_delta = rng.gen_range(-1..2);
+        std::cmp::max(self.player.level / 2 + distance - 1 + random_delta, 1)
     }
 
     pub fn battle(&mut self, enemy: &Character) -> Result<(), Error> {
