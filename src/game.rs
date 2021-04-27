@@ -51,9 +51,11 @@ impl Game {
         fs::write(data_file(), &data)
     }
 
-    pub fn reset(&self) -> Result<(), io::Error> {
+    pub fn reset(&self) {
         let rpg_dir = rpg_dir();
-        fs::remove_dir_all(&rpg_dir)
+        if rpg_dir.exists() {
+            fs::remove_dir_all(&rpg_dir).unwrap();
+        }
     }
 
     // TODO document
