@@ -54,13 +54,15 @@ impl Character {
     }
 
     /// Add to the accumulated experience points, possibly increasing the level.
-    fn add_experience(&mut self, xp: i32) {
+    pub fn add_experience(&mut self, xp: i32) -> bool {
         self.xp += xp;
         let for_next = self.xp_for_next();
         if self.xp >= for_next {
             self.increase_level();
             self.xp -= for_next;
+            return true;
         }
+        false
     }
 
     pub fn receive_damage(&mut self, damage: i32) {

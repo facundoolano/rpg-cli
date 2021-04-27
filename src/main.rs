@@ -12,7 +12,7 @@ fn main() {
     if let Some(dest) = std::env::args().nth(1) {
         let dest = Location::from(&dest);
 
-        // TODO handle game over
+        // FIXME handle game over -> delete character
         game.walk_towards(&dest).unwrap();
 
         game.save().unwrap();

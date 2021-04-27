@@ -60,14 +60,14 @@ impl Game {
 
             if self.location.is_home() {
                 self.player.heal();
-            } else if let Some(enemy) = self.maybe_spawn_enemy() {
-                return self.battle(&enemy);
+            } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
+                return self.battle(&mut enemy)
             }
         }
         Ok(())
     }
 
-    pub fn maybe_spawn_enemy(&self) -> Option<Character> {
+    fn maybe_spawn_enemy(&self) -> Option<Character> {
         if self.should_enemy_appear() {
             let level = self.enemy_level();
             Some(Character::new("enemy", level))
@@ -76,21 +76,59 @@ impl Game {
         }
     }
 
-    pub fn should_enemy_appear(&self) -> bool {
+    fn should_enemy_appear(&self) -> bool {
         let mut rng = rand::thread_rng();
         rng.gen_ratio(1, 3)
     }
 
-    pub fn enemy_level(&self) -> i32 {
+    fn enemy_level(&self) -> i32 {
         let distance: i32 = self.location.distance_from_home();
         let mut rng = rand::thread_rng();
         let random_delta = rng.gen_range(-1..2);
         std::cmp::max(self.player.level / 2 + distance - 1 + random_delta, 1)
     }
 
-    pub fn battle(&mut self, enemy: &Character) -> Result<(), Error> {
-        // TODO
+    fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
         println!("enemy lv:{} appeared!", enemy.level);
-        Err(Error::GameOver)
+
+        // this could be generalized to player vs enemy parties
+        let (mut pl_accum, mut en_accum) = (0, 0);
+        let player = &mut self.player;
+        let mut xp = 0;
+        while !enemy.is_dead() {
+            pl_accum += player.speed;
+            en_accum += enemy.speed;
+
+            if pl_accum >= en_accum {
+                xp += Self::attack(player, enemy);
+                pl_accum = -1;
+            } else {
+                Self::attack(enemy, player);
+                en_accum = -1;
+            }
+
+            if player.is_dead() {
+                println!("you die!");
+                return Err(Error::GameOver);
+            }
+        }
+
+        println!("you win!");
+        print!("+{}xp", xp);
+        if self.player.add_experience(xp) {
+            print!(" +lv:{}", self.player.level);
+        }
+        println!();
+
+        Ok(())
+    }
+
+    /// Inflict damage from attacker to receiver and return the
+    fn attack(attacker: &mut Character, receiver: &mut Character) -> i32 {
+        let damage = attacker.damage(&receiver);
+        receiver.receive_damage(damage);
+        println!("{} -{}hp", receiver.name, damage);
+
+        attacker.xp_gained(&receiver, damage)
     }
 }
