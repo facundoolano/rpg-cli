@@ -9,6 +9,7 @@ use std::{fs, io, path};
 #[derive(Debug)]
 pub enum Error {
     GameOver,
+    NoDataFile,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -34,8 +35,8 @@ impl Game {
         }
     }
 
-    pub fn load() -> Result<Self, &'static str> {
-        let data = fs::read(data_file()).or(Err("Data file not readable"))?;
+    pub fn load() -> Result<Self, Error> {
+        let data = fs::read(data_file()).or(Err(Error::NoDataFile))?;
         let game: Game = bincode::deserialize(&data).unwrap();
         Ok(game)
     }
@@ -50,6 +51,11 @@ impl Game {
         fs::write(data_file(), &data)
     }
 
+    pub fn reset(&self) -> Result<(), io::Error> {
+        let rpg_dir = rpg_dir();
+        fs::remove_dir_all(&rpg_dir)
+    }
+
     // TODO document
     // TODO use a less awkward name for such a central function.
     // maybe just `move`
@@ -61,7 +67,7 @@ impl Game {
             if self.location.is_home() {
                 self.player.heal();
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
-                return self.battle(&mut enemy)
+                return self.battle(&mut enemy);
             }
         }
         Ok(())
@@ -108,17 +114,16 @@ impl Game {
             }
 
             if player.is_dead() {
-                println!("you die!");
+                println!("you die!\n");
                 return Err(Error::GameOver);
             }
         }
 
-        println!("you win!");
+        println!("you win!\n");
         print!("+{}xp", xp);
         if self.player.add_experience(xp) {
             print!(" +lv:{}", self.player.level);
         }
-        println!();
 
         Ok(())
     }

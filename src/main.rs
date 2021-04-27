@@ -7,16 +7,22 @@ mod location;
 use crate::location::Location;
 
 fn main() {
-    let mut game = Game::load().unwrap_or_else(|_| Game::new());
+    let mut game = match Game::load() {
+        Ok(game) => game,
+        Err(_) => {
+            let game = Game::new();
+            game.save().unwrap();
+            game
+        }
+    };
 
     if let Some(dest) = std::env::args().nth(1) {
         let dest = Location::from(&dest);
 
-        // FIXME handle game over -> delete character
-        game.walk_towards(&dest).unwrap();
-
-        game.save().unwrap();
-        println!()
+        match game.walk_towards(&dest) {
+            Err(game::Error::GameOver) => game.reset().unwrap(),
+            _ => game.save().unwrap(),
+        }
     }
 
     player_status(&game);
