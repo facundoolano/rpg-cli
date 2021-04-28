@@ -1,3 +1,4 @@
+use colored::*;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
@@ -20,7 +21,7 @@ impl Character {
     // we could have a Character trait and separate Player and Enemy structs
     // but there's barely any logic to justify that yet
     pub fn player() -> Self {
-        Self::new("hero", 1)
+        Self::new(&"hero".bold(), 1)
     }
 
     pub fn new(name: &str, level: i32) -> Self {
@@ -78,7 +79,7 @@ impl Character {
     }
 
     /// How many experience points are required to move to the next level.
-    fn xp_for_next(&self) -> i32 {
+    pub fn xp_for_next(&self) -> i32 {
         let exp = 1.5;
         let base_xp = 30;
         base_xp * (self.level as f64).powf(exp) as i32
@@ -100,6 +101,16 @@ impl Character {
         // TODO should the player also gain experience by damage received?
         damage * max(1, 1 + receiver.level - self.level)
     }
+
+    pub fn hp_display(&self) -> String {
+        let ratio = self.current_hp as f64 / self.max_hp as f64;
+        let string = format!("{}/{}", self.current_hp, self.max_hp);
+        if ratio > 0.0 && ratio <= 0.25 {
+            string.red().bold().to_string()
+        } else {
+            string
+        }
+    }
 }
 
 /// add +/- 10% variance to a f64
@@ -109,4 +120,16 @@ fn randomized(value: f64) -> f64 {
     let min = value * 0.9;
     let max = value * 1.1;
     rng.gen_range(min..=max)
+}
+
+impl std::fmt::Display for Character {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // FIXME ugly
+        let name = if self.name == "hero" {
+            "hero".bold().to_string()
+        } else {
+            self.name.to_string()
+        };
+        write!(f, "{}[{}]", name, self.level)
+    }
 }

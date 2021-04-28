@@ -1,3 +1,4 @@
+use colored::*;
 extern crate dirs;
 
 use crate::character::Character;
@@ -64,7 +65,7 @@ impl Game {
     pub fn walk_towards(&mut self, dest: &Location) -> Result<(), Error> {
         while self.location != *dest {
             self.location.walk_towards(&dest);
-            println!("move {}", self.location);
+            // println!("move {}", self.location);
 
             if self.location.is_home() {
                 self.player.heal();
@@ -97,7 +98,7 @@ impl Game {
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        println!("enemy lv:{} appeared!", enemy.level);
+        println!("{}: {} appeared!", self.location, enemy);
 
         // this could be generalized to player vs enemy parties
         let (mut pl_accum, mut en_accum) = (0, 0);
@@ -116,16 +117,17 @@ impl Game {
             }
 
             if player.is_dead() {
-                println!("you die!\n");
+                println!("{}", "you die!\n".bold().red());
                 return Err(Error::GameOver);
             }
         }
 
-        println!("you win!\n");
-        print!("+{}xp", xp);
+        print!("{}", "you win!".bold().green());
+        print!(" +{}xp", xp);
         if self.player.add_experience(xp) {
             print!(" +lv:{}", self.player.level);
         }
+        println!("\n");
 
         Ok(())
     }
@@ -134,7 +136,7 @@ impl Game {
     fn attack(attacker: &mut Character, receiver: &mut Character) -> i32 {
         let damage = attacker.damage(&receiver);
         receiver.receive_damage(damage);
-        println!("{} -{}hp", receiver.name, damage);
+        println!("{: <7} {:3}hp", receiver.name, -damage);
 
         attacker.xp_gained(&receiver, damage)
     }
