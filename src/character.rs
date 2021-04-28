@@ -106,7 +106,7 @@ impl Character {
     pub fn hp_display(&self) -> String {
         let ratio = self.current_hp as f64 / self.max_hp as f64;
         let string = format!("{}/{}", self.current_hp, self.max_hp);
-        if ratio > 0.0 && ratio <= 0.25 {
+        if ratio > 0.0 && ratio <= 0.4 {
             string.red().bold().to_string()
         } else {
             string
@@ -125,8 +125,7 @@ fn randomized(value: f64) -> i32 {
 
 impl std::fmt::Display for Character {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let level =
-        if self.is_dead() {
+        let level = if self.is_dead() {
             "\u{1F480}".to_string()
         } else {
             self.level.to_string()

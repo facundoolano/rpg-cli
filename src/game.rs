@@ -68,7 +68,11 @@ impl Game {
             if self.location.is_home() {
                 let recovered = self.player.heal();
                 if recovered > 0 {
-                    println!("{}@home\n  {}\n", self.player, format!("+{}hp", recovered).green());
+                    println!(
+                        "{}@home\n  {}\n",
+                        self.player,
+                        format!("+{}hp", recovered).green()
+                    );
                 }
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
                 return self.battle(&mut enemy);
@@ -105,6 +109,8 @@ impl Game {
         let (mut pl_accum, mut en_accum) = (0, 0);
         let player = &mut self.player;
         let mut xp = 0;
+        let start_hp = player.current_hp;
+
         while !enemy.is_dead() {
             pl_accum += player.speed;
             en_accum += enemy.speed;
@@ -123,7 +129,11 @@ impl Game {
             }
         }
 
-        print!("  {}", format!("+{}xp", xp).bold());
+        print!(
+            "  {} {}",
+            format!("{}hp", player.current_hp - start_hp).bold().red(),
+            format!("+{}xp", xp).bold()
+        );
         if self.player.add_experience(xp) {
             print!(" {}", "+level".cyan());
         }
