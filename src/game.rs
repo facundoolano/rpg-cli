@@ -124,7 +124,7 @@ impl Game {
             }
 
             if player.is_dead() {
-                println!();
+                println!(" {}\n", format!("{}hp", -start_hp).bold().red());
                 return Err(Error::GameOver);
             }
         }
