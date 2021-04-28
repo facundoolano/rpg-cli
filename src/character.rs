@@ -74,8 +74,10 @@ impl Character {
         self.current_hp == 0
     }
 
-    pub fn heal(&mut self) {
+    pub fn heal(&mut self) -> i32 {
+        let recovered = self.max_hp - self.current_hp;
         self.current_hp = self.max_hp;
+        recovered
     }
 
     /// How many experience points are required to move to the next level.
@@ -124,12 +126,20 @@ fn randomized(value: f64) -> f64 {
 
 impl std::fmt::Display for Character {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let level =
+        if self.is_dead() {
+            "\u{1F480}".to_string()
+        } else {
+            self.level.to_string()
+        };
+
         // FIXME ugly
         let name = if self.name == "hero" {
             "hero".bold().to_string()
         } else {
-            self.name.to_string()
+            self.name.yellow().bold().to_string()
         };
-        write!(f, "{}[{}]", name, self.level)
+
+        write!(f, "{}[{}]", name, level)
     }
 }

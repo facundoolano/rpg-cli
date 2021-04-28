@@ -1,8 +1,8 @@
-use colored::*;
 extern crate dirs;
 
 use crate::character::Character;
 use crate::location::Location;
+use colored::*;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path};
@@ -68,7 +68,10 @@ impl Game {
             // println!("move {}", self.location);
 
             if self.location.is_home() {
-                self.player.heal();
+                let recovered = self.player.heal();
+                if recovered > 0 {
+                    println!("{}", format!("  +{}hp", recovered).green());
+                }
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
                 return self.battle(&mut enemy);
             }
@@ -98,7 +101,7 @@ impl Game {
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        println!("{}: {} appeared!", self.location, enemy);
+        println!("{}@{}", enemy, self.location);
 
         // this could be generalized to player vs enemy parties
         let (mut pl_accum, mut en_accum) = (0, 0);
@@ -117,15 +120,14 @@ impl Game {
             }
 
             if player.is_dead() {
-                println!("{}", "you die!\n".bold().red());
+                println!();
                 return Err(Error::GameOver);
             }
         }
 
-        print!("{}", "you win!".bold().green());
-        print!(" +{}xp", xp);
+        print!("  {}", format!("+{}xp", xp).bold());
         if self.player.add_experience(xp) {
-            print!(" +lv:{}", self.player.level);
+            print!(" {}", "+level".cyan());
         }
         println!("\n");
 
@@ -136,7 +138,7 @@ impl Game {
     fn attack(attacker: &mut Character, receiver: &mut Character) -> i32 {
         let damage = attacker.damage(&receiver);
         receiver.receive_damage(damage);
-        println!("{: <7} {:3}hp", receiver.name, -damage);
+        // println!("{: <} {:5}hp", format!("{}[{}]", receiver.name, receiver.level), -damage);
 
         attacker.xp_gained(&receiver, damage)
     }

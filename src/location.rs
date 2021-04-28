@@ -77,7 +77,10 @@ impl PartialEq for Location {
 impl std::fmt::Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let home = dirs::home_dir().unwrap().to_string_lossy().to_string();
-        let loc = self.path.to_string_lossy().replace(&home, "~");
+        let mut loc = self.path.to_string_lossy().replace(&home, "~");
+        if loc == "~" {
+            loc = "home".to_string();
+        }
         write!(f, "{}", loc)
     }
 }

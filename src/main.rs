@@ -25,10 +25,6 @@ fn main() {
 fn player_status(game: &Game) {
     let player = &game.player;
     println!("{}@{}", player, game.location);
-    println!(
-        "hp:{} xp:{}/{}",
-        player.hp_display(),
-        player.xp,
-        player.xp_for_next()
-    );
+    println!("  hp:{}", player.hp_display());
+    println!("  xp:{}/{}", player.xp, player.xp_for_next());
 }
