@@ -45,8 +45,7 @@ impl Character {
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
         // TODO different rates by char class and enemy type -> parametrized enum. could include start values as well
-        let inc =
-            |stat: i32, rate: f64| (stat as f64 + randomized(stat as f64 * rate)).round() as i32;
+        let inc = |stat: i32, rate: f64| stat + randomized(stat as f64 * rate);
 
         self.level += 1;
         self.max_hp = inc(self.max_hp, 0.3);
@@ -117,10 +116,10 @@ impl Character {
 
 /// add +/- 10% variance to a f64
 /// may make more generic in the future
-fn randomized(value: f64) -> f64 {
+fn randomized(value: f64) -> i32 {
     let mut rng = rand::thread_rng();
-    let min = value * 0.9;
-    let max = value * 1.1;
+    let min = (value - value * 0.1).floor() as i32;
+    let max = (value + value * 0.1).ceil() as i32;
     rng.gen_range(min..=max)
 }
 
