@@ -104,13 +104,30 @@ impl Character {
     }
 
     pub fn hp_display(&self) -> String {
-        let ratio = self.current_hp as f64 / self.max_hp as f64;
-        let string = format!("{}/{}", self.current_hp, self.max_hp);
-        if ratio > 0.0 && ratio <= 0.4 {
-            string.red().bold().to_string()
-        } else {
-            string
-        }
+        let current_units = (self.current_hp as f64 * 4 as f64 / self.max_hp as f64).ceil() as i32;
+        let green = (0..current_units)
+            .map(|_| "x")
+            .collect::<String>()
+            .green();
+        let red = (0..(4 - current_units))
+            .map(|_| "-")
+            .collect::<String>()
+            .red();
+        format!("[{}{}]", green, red)
+    }
+
+    // FIXME duplicated
+    pub fn xp_display(&self) -> String {
+        let current_units = self.xp * 4 / self.xp_for_next();
+        let green = (0..current_units)
+            .map(|_| "x")
+            .collect::<String>()
+            .cyan();
+        let red = (0..(4 - current_units))
+            .map(|_| "-")
+            .collect::<String>()
+            .bright_black();
+        format!("[{}{}]", green, red)
     }
 }
 
