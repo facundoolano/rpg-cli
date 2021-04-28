@@ -21,7 +21,7 @@ impl Character {
     // we could have a Character trait and separate Player and Enemy structs
     // but there's barely any logic to justify that yet
     pub fn player() -> Self {
-        Self::new(&"hero".bold(), 1)
+        Self::new("hero", 1)
     }
 
     pub fn new(name: &str, level: i32) -> Self {
