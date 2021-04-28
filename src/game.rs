@@ -65,12 +65,10 @@ impl Game {
     pub fn walk_towards(&mut self, dest: &Location) -> Result<(), Error> {
         while self.location != *dest {
             self.location.walk_towards(&dest);
-            // println!("move {}", self.location);
-
             if self.location.is_home() {
                 let recovered = self.player.heal();
                 if recovered > 0 {
-                    println!("{}", format!("  +{}hp", recovered).green());
+                    println!("{}@home\n  {}\n", self.player, format!("+{}hp", recovered).green());
                 }
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
                 return self.battle(&mut enemy);
@@ -138,8 +136,6 @@ impl Game {
     fn attack(attacker: &mut Character, receiver: &mut Character) -> i32 {
         let damage = attacker.damage(&receiver);
         receiver.receive_damage(damage);
-        // println!("{: <} {:5}hp", format!("{}[{}]", receiver.name, receiver.level), -damage);
-
         attacker.xp_gained(&receiver, damage)
     }
 }
