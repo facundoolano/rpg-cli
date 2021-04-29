@@ -1,3 +1,4 @@
+use crate::location;
 use colored::*;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -103,12 +104,21 @@ impl Character {
         damage * max(1, 1 + receiver.level - self.level)
     }
 
-    pub fn hp_display(&self) -> String {
-        let current_units = (self.current_hp as f64 * 4 as f64 / self.max_hp as f64).ceil() as i32;
-        let green = (0..current_units)
-            .map(|_| "x")
-            .collect::<String>()
-            .green();
+    // FIXME this is all temporary code, need to factor out or to trait
+    pub fn display_at(&self, location: &location::Location) -> String {
+        format!(
+            "{}{}{}@{}",
+            self,
+            self.hp_display(),
+            self.xp_display(),
+            location
+        )
+    }
+
+    fn hp_display(&self) -> String {
+        // FIXME this sometimes can still look unfilled at 100%
+        let current_units = (self.current_hp as f64 * 4.0 / self.max_hp as f64).ceil() as i32;
+        let green = (0..current_units).map(|_| "x").collect::<String>().green();
         let red = (0..(4 - current_units))
             .map(|_| "-")
             .collect::<String>()
@@ -117,12 +127,9 @@ impl Character {
     }
 
     // FIXME duplicated
-    pub fn xp_display(&self) -> String {
+    fn xp_display(&self) -> String {
         let current_units = self.xp * 4 / self.xp_for_next();
-        let green = (0..current_units)
-            .map(|_| "x")
-            .collect::<String>()
-            .cyan();
+        let green = (0..current_units).map(|_| "x").collect::<String>().cyan();
         let red = (0..(4 - current_units))
             .map(|_| "-")
             .collect::<String>()
@@ -150,7 +157,8 @@ impl std::fmt::Display for Character {
 
         // FIXME ugly
         let name = if self.name == "hero" {
-            "hero".bold().to_string()
+            // FIXME use correct padding
+            " hero".bold().to_string()
         } else {
             self.name.yellow().bold().to_string()
         };

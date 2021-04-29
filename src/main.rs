@@ -18,11 +18,5 @@ fn main() {
         }
     }
 
-    player_status(&game);
-}
-
-// FIXME most of this belongs in player struct
-fn player_status(game: &Game) {
-    let player = &game.player;
-    println!("{}{}{}@{} ", player, player.hp_display(), player.xp_display(), game.location);
+    println!("{}", game.player.display_at(&game.location));
 }

@@ -69,8 +69,8 @@ impl Game {
                 let recovered = self.player.heal();
                 if recovered > 0 {
                     println!(
-                        "{}@home\n  {}\n",
-                        self.player,
+                        "{} {}",
+                        self.player.display_at(&self.location),
                         format!("+{}hp", recovered).green()
                     );
                 }
@@ -103,7 +103,7 @@ impl Game {
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        println!("{}@{}", enemy, self.location);
+        println!("{}", enemy.display_at(&self.location));
 
         // this could be generalized to player vs enemy parties
         let (mut pl_accum, mut en_accum) = (0, 0);
@@ -124,20 +124,26 @@ impl Game {
             }
 
             if player.is_dead() {
-                println!(" {}\n", format!("{}hp", -start_hp).bold().red());
+                // FIXME more likely should print each turn instead
+                println!(
+                    "{} {}",
+                    player.display_at(&self.location),
+                    format!("{}hp", -start_hp).bold().red()
+                );
                 return Err(Error::GameOver);
             }
         }
 
         print!(
-            "  {} {}",
+            "{} {} {}",
+            player.display_at(&self.location),
             format!("{}hp", player.current_hp - start_hp).bold().red(),
             format!("+{}xp", xp).bold()
         );
         if self.player.add_experience(xp) {
             print!(" {}", "+level".cyan());
         }
-        println!("\n");
+        println!();
 
         Ok(())
     }
