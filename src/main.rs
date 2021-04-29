@@ -7,6 +7,7 @@ mod location;
 use crate::location::Location;
 
 fn main() {
+    println!();
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
     if let Some(dest) = std::env::args().nth(1) {
@@ -19,4 +20,5 @@ fn main() {
     }
 
     println!("{}", game.player.display_at(&game.location));
+    println!();
 }

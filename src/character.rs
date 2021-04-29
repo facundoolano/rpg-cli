@@ -107,7 +107,7 @@ impl Character {
     // FIXME this is all temporary code, need to factor out or to trait
     pub fn display_at(&self, location: &location::Location) -> String {
         format!(
-            "{}{}{}@{}",
+            "    {}{}{}@{}",
             self,
             self.hp_display(),
             self.xp_display(),
