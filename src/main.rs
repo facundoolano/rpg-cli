@@ -3,6 +3,7 @@ use game::Game;
 mod character;
 mod game;
 mod location;
+mod log;
 
 use crate::location::Location;
 
@@ -16,16 +17,7 @@ fn main() {
             Err(game::Error::GameOver) => game.reset(),
             _ => game.save().unwrap(),
         }
+    } else {
+        log::status(&game.player, &game.location);
     }
-
-    player_status(&game);
-}
-
-fn player_status(game: &Game) {
-    let player = &game.player;
-    println!("{}@{} ", player.name, game.location);
-    println!(
-        "lv:{} hp:{}/{} xp:{}",
-        player.level, player.current_hp, player.max_hp, player.xp
-    );
 }
