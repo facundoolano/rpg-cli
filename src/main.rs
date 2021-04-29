@@ -7,7 +7,7 @@ mod location;
 use crate::location::Location;
 
 fn main() {
-    println!();
+    println!(); // this shouldn't be printed when the command does nothing more than chdir
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
     if let Some(dest) = std::env::args().nth(1) {

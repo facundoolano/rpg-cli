@@ -109,27 +109,37 @@ impl Game {
         let (mut pl_accum, mut en_accum) = (0, 0);
         let player = &mut self.player;
         let mut xp = 0;
-        let start_hp = player.current_hp;
 
         while !enemy.is_dead() {
             pl_accum += player.speed;
             en_accum += enemy.speed;
 
+            // TODO reduce duplication
             if pl_accum >= en_accum {
-                xp += Self::attack(player, enemy);
+                let (new_xp, damage) = Self::attack(player, enemy);
+                xp += new_xp;
                 pl_accum = -1;
+
+                println!(
+                    "{} {}",
+                    enemy.display_at(&self.location),
+                    format!("{}hp", -damage)
+                );
             } else {
-                Self::attack(enemy, player);
+                let (_, damage) = Self::attack(enemy, player);
                 en_accum = -1;
+
+                println!(
+                    "{} {}",
+                    player.display_at(&self.location),
+                    format!("{}hp", -damage).bold().red()
+                )
             }
 
+            // we should print either dead, and before this
             if player.is_dead() {
                 // FIXME more likely should print each turn instead
-                println!(
-                    "{} {} \u{1F480}",
-                    player.display_at(&self.location),
-                    format!("{}hp", -start_hp).bold().red()
-                );
+                println!("{} \u{1F480}", player.display_at(&self.location));
                 return Err(Error::GameOver);
             }
         }
@@ -139,10 +149,11 @@ impl Game {
         } else {
             "".to_string()
         };
+        // TODO gather gold for real
         println!(
             "{} {} {}{}",
             player.display_at(&self.location),
-            format!("{}hp", player.current_hp - start_hp).bold().red(),
+            "+100g".yellow(),
             format!("+{}xp", xp).bold(),
             level_up
         );
@@ -151,9 +162,10 @@ impl Game {
     }
 
     /// Inflict damage from attacker to receiver and return the
-    fn attack(attacker: &mut Character, receiver: &mut Character) -> i32 {
+    fn attack(attacker: &mut Character, receiver: &mut Character) -> (i32, i32) {
         let damage = attacker.damage(&receiver);
         receiver.receive_damage(damage);
-        attacker.xp_gained(&receiver, damage)
+        let xp = attacker.xp_gained(&receiver, damage);
+        (damage, xp)
     }
 }
