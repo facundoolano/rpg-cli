@@ -19,6 +19,11 @@ fn main() {
         }
     }
 
+    // FIXME this prints redundat information when there's another event before
+    // but taking it out makes no-event movements weird
+    // perhaps that gets solved by using the chdir side effect?
+    // alternatively, the event log printing could have the smarts
+    // to print status if there are no other printable events
     println!("{}", game.player.display_at(&game.location));
     println!();
 }

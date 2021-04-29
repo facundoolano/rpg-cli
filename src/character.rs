@@ -149,12 +149,6 @@ fn randomized(value: f64) -> i32 {
 
 impl std::fmt::Display for Character {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let level = if self.is_dead() {
-            "\u{1F480}".to_string()
-        } else {
-            self.level.to_string()
-        };
-
         // FIXME ugly
         let name = if self.name == "hero" {
             // FIXME use correct padding
@@ -163,6 +157,6 @@ impl std::fmt::Display for Character {
             self.name.yellow().bold().to_string()
         };
 
-        write!(f, "{}[{}]", name, level)
+        write!(f, "{}[{}]", name, self.level)
     }
 }

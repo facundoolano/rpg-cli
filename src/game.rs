@@ -126,7 +126,7 @@ impl Game {
             if player.is_dead() {
                 // FIXME more likely should print each turn instead
                 println!(
-                    "{} {}",
+                    "{} {} \u{1F480}",
                     player.display_at(&self.location),
                     format!("{}hp", -start_hp).bold().red()
                 );
