@@ -145,17 +145,17 @@ impl Game {
         }
 
         let level_up = if player.add_experience(xp) {
-            format!(" {}", "+level".cyan())
+            " +level".cyan().to_string()
         } else {
             "".to_string()
         };
         // TODO gather gold for real
         println!(
-            "{} {} {}{}",
+            "{} {}{} {}",
             player.display_at(&self.location),
-            "+100g".yellow(),
             format!("+{}xp", xp).bold(),
-            level_up
+            level_up,
+            "+100g".yellow(),
         );
 
         Ok(())
