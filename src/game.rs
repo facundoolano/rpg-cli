@@ -112,11 +112,11 @@ impl Game {
                 let (new_xp, damage) = Self::attack(player, enemy);
                 xp += new_xp;
 
-                log::attack(&enemy, &self.location, damage);
+                log::player_attack(&enemy, &self.location, damage);
                 pl_accum = -1;
             } else {
                 let (_, damage) = Self::attack(enemy, player);
-                log::attack(&player, &self.location, damage);
+                log::enemy_attack(&player, &self.location, damage);
                 en_accum = -1;
             }
 
@@ -134,7 +134,8 @@ impl Game {
         Ok(())
     }
 
-    /// Inflict damage from attacker to receiver and return the
+    /// Inflict damage from attacker to receiver, return the inflicted
+    /// damage and the experience that will be gain if the battle is won
     fn attack(attacker: &mut Character, receiver: &mut Character) -> (i32, i32) {
         let damage = attacker.damage(&receiver);
         receiver.receive_damage(damage);

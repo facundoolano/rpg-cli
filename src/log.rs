@@ -15,15 +15,13 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
         );
     }
 }
+pub fn player_attack(enemy: &Character, location: &Location, damage: i32) {
+    log(&enemy, &location, &format!("{}hp", -damage).white().to_string());
+}
 
-pub fn attack(enemy: &Character, location: &Location, damage: i32) {
-    let damage = if is_hero(&enemy) {
-        format!("{}hp", -damage).bold().red()
-    } else {
-        format!("{}hp", -damage).white()
-    };
 
-    log(&enemy, &location, &damage.to_string());
+pub fn enemy_attack(player: &Character, location: &Location, damage: i32) {
+    log(&player, &location, &format!("{}hp", -damage).bold().red().to_string());
 }
 
 pub fn battle_lost(player: &Character, location: &Location) {
@@ -78,7 +76,6 @@ fn xp_display(character: &Character) -> String {
         character.xp,
         character.xp_for_next(),
         "cyan",
-        // FIXME this one doesn't work
         "bright black",
     )
 }
@@ -98,15 +95,11 @@ fn bar_display(current: i32, total: i32, current_color: &str, missing_color: &st
 }
 
 fn name(character: &Character) -> String {
-    if is_hero(&character) {
+    // FIXME ugly hack, will fix some day --or not
+    if character.name == "hero" {
         // FIXME use correct padding
         " hero".bold().to_string()
     } else {
         character.name.yellow().bold().to_string()
     }
-}
-
-fn is_hero(character: &Character) -> bool {
-    // FIXME ugly hack, will fix some day --or not
-    character.name == "hero"
 }
