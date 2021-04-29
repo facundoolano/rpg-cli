@@ -134,16 +134,18 @@ impl Game {
             }
         }
 
-        print!(
-            "{} {} {}",
+        let level_up = if player.add_experience(xp) {
+            format!(" {}", "+level".cyan())
+        } else {
+            "".to_string()
+        };
+        println!(
+            "{} {} {}{}",
             player.display_at(&self.location),
             format!("{}hp", player.current_hp - start_hp).bold().red(),
-            format!("+{}xp", xp).bold()
+            format!("+{}xp", xp).bold(),
+            level_up
         );
-        if self.player.add_experience(xp) {
-            print!(" {}", "+level".cyan());
-        }
-        println!();
 
         Ok(())
     }
