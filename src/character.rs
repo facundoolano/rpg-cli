@@ -1,5 +1,3 @@
-use crate::location;
-use colored::*;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
@@ -103,39 +101,6 @@ impl Character {
         // TODO should the player also gain experience by damage received?
         damage * max(1, 1 + receiver.level - self.level)
     }
-
-    // FIXME this is all temporary code, need to factor out or to trait
-    pub fn display_at(&self, location: &location::Location) -> String {
-        format!(
-            "    {}{}{}@{}",
-            self,
-            self.hp_display(),
-            self.xp_display(),
-            location
-        )
-    }
-
-    fn hp_display(&self) -> String {
-        // FIXME this sometimes can still look unfilled at 100%
-        let current_units = (self.current_hp as f64 * 4.0 / self.max_hp as f64).ceil() as i32;
-        let green = (0..current_units).map(|_| "x").collect::<String>().green();
-        let red = (0..(4 - current_units))
-            .map(|_| "-")
-            .collect::<String>()
-            .red();
-        format!("[{}{}]", green, red)
-    }
-
-    // FIXME duplicated
-    fn xp_display(&self) -> String {
-        let current_units = self.xp * 4 / self.xp_for_next();
-        let green = (0..current_units).map(|_| "x").collect::<String>().cyan();
-        let red = (0..(4 - current_units))
-            .map(|_| "-")
-            .collect::<String>()
-            .bright_black();
-        format!("[{}{}]", green, red)
-    }
 }
 
 /// add +/- 10% variance to a f64
@@ -145,18 +110,4 @@ fn randomized(value: f64) -> i32 {
     let min = (value - value * 0.1).floor() as i32;
     let max = (value + value * 0.1).ceil() as i32;
     rng.gen_range(min..=max)
-}
-
-impl std::fmt::Display for Character {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // FIXME ugly
-        let name = if self.name == "hero" {
-            // FIXME use correct padding
-            " hero".bold().to_string()
-        } else {
-            self.name.yellow().bold().to_string()
-        };
-
-        write!(f, "{}[{}]", name, self.level)
-    }
 }
