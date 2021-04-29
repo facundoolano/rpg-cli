@@ -2,7 +2,7 @@ extern crate dirs;
 
 use crate::character::Character;
 use crate::location::Location;
-use colored::*;
+use crate::log;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path};
@@ -67,13 +67,7 @@ impl Game {
             self.location.walk_towards(&dest);
             if self.location.is_home() {
                 let recovered = self.player.heal();
-                if recovered > 0 {
-                    println!(
-                        "{} {}",
-                        self.player.display_at(&self.location),
-                        format!("+{}hp", recovered).green()
-                    );
-                }
+                log::heal(&self.player, &self.location, recovered);
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
                 return self.battle(&mut enemy);
             }
@@ -84,7 +78,9 @@ impl Game {
     fn maybe_spawn_enemy(&self) -> Option<Character> {
         if self.should_enemy_appear() {
             let level = self.enemy_level();
-            Some(Character::new("enemy", level))
+            let enemy = Character::new("enemy", level);
+            log::enemy_appears(&enemy, &self.location);
+            Some(enemy)
         } else {
             None
         }
@@ -103,8 +99,6 @@ impl Game {
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        println!("{}", enemy.display_at(&self.location));
-
         // this could be generalized to player vs enemy parties
         let (mut pl_accum, mut en_accum) = (0, 0);
         let player = &mut self.player;
@@ -114,49 +108,28 @@ impl Game {
             pl_accum += player.speed;
             en_accum += enemy.speed;
 
-            // TODO reduce duplication
             if pl_accum >= en_accum {
                 let (new_xp, damage) = Self::attack(player, enemy);
                 xp += new_xp;
-                pl_accum = -1;
 
-                println!(
-                    "{} {}",
-                    enemy.display_at(&self.location),
-                    format!("{}hp", -damage)
-                );
+                log::attack(&enemy, &self.location, damage);
+                pl_accum = -1;
             } else {
                 let (_, damage) = Self::attack(enemy, player);
+                log::attack(&player, &self.location, damage);
                 en_accum = -1;
-
-                println!(
-                    "{} {}",
-                    player.display_at(&self.location),
-                    format!("{}hp", -damage).bold().red()
-                )
             }
 
-            // we should print either dead, and before this
             if player.is_dead() {
-                // FIXME more likely should print each turn instead
-                println!("{} \u{1F480}", player.display_at(&self.location));
+                log::battle_lost(&player, &self.location);
                 return Err(Error::GameOver);
             }
         }
 
-        let level_up = if player.add_experience(xp) {
-            " +level".cyan().to_string()
-        } else {
-            "".to_string()
-        };
         // TODO gather gold for real
-        println!(
-            "{} {}{} {}",
-            player.display_at(&self.location),
-            format!("+{}xp", xp).bold(),
-            level_up,
-            "+100g".yellow(),
-        );
+        let gold = 100;
+        let level_up = player.add_experience(xp);
+        log::battle_won(&player, &self.location, xp, level_up, gold);
 
         Ok(())
     }

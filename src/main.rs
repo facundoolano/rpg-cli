@@ -3,6 +3,7 @@ use game::Game;
 mod character;
 mod game;
 mod location;
+mod log;
 
 use crate::location::Location;
 
@@ -17,8 +18,6 @@ fn main() {
             _ => game.save().unwrap(),
         }
     } else {
-        println!("{}", game.player.display_at(&game.location));
+        log::status(&game.player, &game.location);
     }
-
-
 }
