@@ -17,10 +17,16 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
 }
 
 pub fn attack(enemy: &Character, location: &Location, damage: i32) {
+    let damage = if is_hero(&enemy) {
+        format!("{}hp", -damage).bold().red()
+    } else {
+        format!("{}hp", -damage).white()
+    };
+
     println!(
         "{} {}",
         character_at(&enemy, &location),
-        format!("{}hp", -damage)
+        damage
     );
 }
 
@@ -50,8 +56,7 @@ pub fn status(player: &Character, location: &Location) {
 
 impl std::fmt::Display for Character {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // FIXME ugly
-        let name = if self.name == "hero" {
+        let name = if is_hero(&self) {
             // FIXME use correct padding
             " hero".bold().to_string()
         } else {
@@ -64,6 +69,9 @@ impl std::fmt::Display for Character {
 
 // HELPERS
 
+// NOTE: the pervasiveness of this function suggests that location should
+// be an attribute of character, and that this function should be the
+// implementation of the display trait
 fn character_at(character: &Character, location: &Location) -> String {
     format!(
         "    {}{}{}@{}",
@@ -75,23 +83,34 @@ fn character_at(character: &Character, location: &Location) -> String {
 }
 
 fn hp_display(character: &Character) -> String {
-    // FIXME this sometimes can still look unfilled at 100%
-    let current_units = (character.current_hp as f64 * 4.0 / character.max_hp as f64).ceil() as i32;
-    let green = (0..current_units).map(|_| "x").collect::<String>().green();
-    let red = (0..(4 - current_units))
-        .map(|_| "-")
-        .collect::<String>()
-        .red();
-    format!("[{}{}]", green, red)
+    bar_display(character.current_hp, character.max_hp, "green", "red")
 }
 
-// FIXME duplicated bar display
 fn xp_display(character: &Character) -> String {
-    let current_units = character.xp * 4 / character.xp_for_next();
-    let green = (0..current_units).map(|_| "x").collect::<String>().cyan();
-    let red = (0..(4 - current_units))
+    bar_display(
+        character.xp,
+        character.xp_for_next(),
+        "cyan",
+        // FIXME this one doesn't work
+        "bright black",
+    )
+}
+
+fn bar_display(current: i32, total: i32, current_color: &str, missing_color: &str) -> String {
+    // FIXME this sometimes can still look unfilled at 100% or empty at >0%
+    let units = (current as f64 * 4.0 / total as f64).ceil() as i32;
+    let current = (0..units)
+        .map(|_| "x")
+        .collect::<String>()
+        .color(current_color);
+    let missing = (0..(4 - units))
         .map(|_| "-")
         .collect::<String>()
-        .bright_black();
-    format!("[{}{}]", green, red)
+        .color(missing_color);
+    format!("[{}{}]", current, missing)
+}
+
+fn is_hero(character: &Character) -> bool {
+    // FIXME ugly hack, will fix some day --or not
+    character.name == "hero"
 }
