@@ -14,7 +14,7 @@ To install from source (assuming Cargo is available):
 
     $ cargo build --release
 
-Check the [rpg.sh](./rpg.sh) script for an example script to use the game as an alias of `cd` (so the working directory is updated according to the game progress).
+Check the [rpg.sh](./rpg.sh) script for an example of how to use the game as an alias of `cd` (so the working directory is updated according to the hero's progress).
 
 
 ## Usage
