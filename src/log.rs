@@ -16,12 +16,19 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
     }
 }
 pub fn player_attack(enemy: &Character, location: &Location, damage: i32) {
-    log(&enemy, &location, &format!("{}hp", -damage).white().to_string());
+    log(
+        &enemy,
+        &location,
+        &format!("{}hp", -damage).white().to_string(),
+    );
 }
 
-
 pub fn enemy_attack(player: &Character, location: &Location, damage: i32) {
-    log(&player, &location, &format!("{}hp", -damage).bold().red().to_string());
+    log(
+        &player,
+        &location,
+        &format!("{}hp", -damage).bold().red().to_string(),
+    );
 }
 
 pub fn battle_lost(player: &Character, location: &Location) {
