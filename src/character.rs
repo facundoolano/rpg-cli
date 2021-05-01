@@ -54,9 +54,14 @@ impl Character {
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
         self.level += 1;
-        self.max_hp = inc(self.max_hp, HP_RATE);
         self.strength = inc(self.strength, STRENGTH_RATE);
         self.speed = inc(self.speed, SPEED_RATE);
+
+        // the current should increase proportionally but not
+        // erase previous damage
+        let previous_damage = self.max_hp - self.current_hp;
+        self.max_hp = inc(self.max_hp, HP_RATE);
+        self.current_hp = self.max_hp - previous_damage;
     }
 
     /// Add to the accumulated experience points, possibly increasing the level.
