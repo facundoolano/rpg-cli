@@ -55,7 +55,22 @@ pub fn battle_won(player: &Character, location: &Location, xp: i32, level_up: bo
 }
 
 pub fn status(player: &Character, location: &Location) {
-    log(&player, &location, "");
+    println!("   {}[{}]@{}", name(&player), player.level, location);
+    println!(
+        "    hp:{} {}/{}",
+        hp_display(&player, 10),
+        player.current_hp,
+        player.max_hp
+    );
+    println!(
+        "    xp:{} {}/{}",
+        xp_display(&player, 10),
+        player.xp,
+        player.xp_for_next()
+    );
+    println!("    str:{}   spd:{}   100g", player.strength, player.speed);
+    println!("    equip:{{sword, shield}}");
+    println!("    item:{{}}");
 }
 
 // HELPERS
@@ -67,19 +82,26 @@ fn log(character: &Character, location: &Location, suffix: &str) {
         "    {}[{}]{}{}@{} {}",
         name(&character),
         character.level,
-        hp_display(&character),
-        xp_display(&character),
+        hp_display(&character, 4),
+        xp_display(&character, 4),
         location,
         suffix
     );
 }
 
-fn hp_display(character: &Character) -> String {
-    bar_display(character.current_hp, character.max_hp, "green", "red")
+fn hp_display(character: &Character, slots: i32) -> String {
+    bar_display(
+        slots,
+        character.current_hp,
+        character.max_hp,
+        "green",
+        "red",
+    )
 }
 
-fn xp_display(character: &Character) -> String {
+fn xp_display(character: &Character, slots: i32) -> String {
     bar_display(
+        slots,
         character.xp,
         character.xp_for_next(),
         "cyan",
@@ -87,8 +109,14 @@ fn xp_display(character: &Character) -> String {
     )
 }
 
-fn bar_display(current: i32, total: i32, current_color: &str, missing_color: &str) -> String {
-    let (filled, rest) = bar_slots(4, total, current);
+fn bar_display(
+    slots: i32,
+    current: i32,
+    total: i32,
+    current_color: &str,
+    missing_color: &str,
+) -> String {
+    let (filled, rest) = bar_slots(slots, total, current);
     let current = (0..filled)
         .map(|_| "x")
         .collect::<String>()
@@ -144,5 +172,4 @@ mod tests {
         assert_eq!((4, 0), bar_slots(slots, total, 9));
         assert_eq!((4, 0), bar_slots(slots, total, 10));
     }
-
 }

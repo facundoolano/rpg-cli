@@ -3,7 +3,7 @@
 # e.g. put this in your .bashrc:
 # alias rpg=". ~/dev/facundoolano/rpg-cli/rpg.sh"
 
-rpg=~/dev/facundoolano/rpg-cli/target/release/rpg-cli
+rpg=~/dev/facundoolano/rpg-cli/target/debug/rpg-cli
 $rpg "$@"
 dest=$($rpg --pwd)
 cd $dest

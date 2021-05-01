@@ -57,7 +57,7 @@ fn main() {
 
 /// Main command, attempt to move the hero to the supplied location,
 /// possibly engaging in combat along the way.
-fn go_to(game: &mut Game, dest: &String) {
+fn go_to(game: &mut Game, dest: &str) {
     let dest = Location::from(&dest);
 
     match game.walk_towards(&dest) {
