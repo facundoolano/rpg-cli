@@ -255,4 +255,21 @@ mod tests {
         hero.increase_level();
         assert_eq!(155, hero.xp_for_next());
     }
+
+    #[test]
+    fn test_add_experience() {
+        let mut hero = Character::player();
+        assert_eq!(1, hero.level);
+        assert_eq!(0, hero.xp);
+
+        let level_up = hero.add_experience(20);
+        assert!(!level_up);
+        assert_eq!(1, hero.level);
+        assert_eq!(20, hero.xp);
+
+        let level_up = hero.add_experience(25);
+        assert!(level_up);
+        assert_eq!(2, hero.level);
+        assert_eq!(15, hero.xp);
+    }
 }
