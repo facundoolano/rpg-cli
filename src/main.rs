@@ -60,7 +60,7 @@ fn main() {
 fn go_to(game: &mut Game, dest: &str) {
     let dest = Location::from(&dest);
 
-    match game.walk_towards(&dest) {
+    match game.go_to(&dest) {
         Err(game::Error::GameOver) => game.reset(),
         _ => game.save().unwrap(),
     }

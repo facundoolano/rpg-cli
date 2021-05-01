@@ -59,12 +59,11 @@ impl Game {
         }
     }
 
-    // TODO document
-    // TODO use a less awkward name for such a central function.
-    // maybe just `move`
-    pub fn walk_towards(&mut self, dest: &Location) -> Result<(), Error> {
+    /// Move the hero's location towards the given destination, one directory
+    /// at a time, with some chance of enemies appearing on each one.
+    pub fn go_to(&mut self, dest: &Location) -> Result<(), Error> {
         while self.location != *dest {
-            self.location.walk_towards(&dest);
+            self.location.go_to(&dest);
             if self.location.is_home() {
                 let recovered = self.player.heal();
                 log::heal(&self.player, &self.location, recovered);

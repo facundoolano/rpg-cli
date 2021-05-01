@@ -35,7 +35,7 @@ impl Location {
     }
 
     /// Move this location one step towards the given destination
-    pub fn walk_towards(&mut self, dest: &Self) {
+    pub fn go_to(&mut self, dest: &Self) {
         if !dest.path.starts_with(&self.path) {
             self.path = self.path.parent().unwrap().to_path_buf();
         } else if dest != self {
@@ -103,25 +103,25 @@ mod tests {
         let mut source = location_from("/Users/facundo/dev/");
         let dest = location_from("/");
 
-        source.walk_towards(&dest);
+        source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/"), source);
-        source.walk_towards(&dest);
+        source.go_to(&dest);
         assert_eq!(location_from("/Users/"), source);
-        source.walk_towards(&dest);
+        source.go_to(&dest);
         assert_eq!(location_from("/"), source);
-        source.walk_towards(&dest);
+        source.go_to(&dest);
         assert_eq!(location_from("/"), source);
 
         let mut source = location_from("/Users/facundo/rust/rpg");
         let dest = location_from("/Users/facundo/erlang/app");
 
-        source.walk_towards(&dest);
+        source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/rust/"), source);
-        source.walk_towards(&dest);
+        source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/"), source);
-        source.walk_towards(&dest);
+        source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/erlang"), source);
-        source.walk_towards(&dest);
+        source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/erlang/app"), source);
     }
 
