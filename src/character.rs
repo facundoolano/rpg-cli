@@ -119,7 +119,13 @@ impl Character {
     /// How many experience points are gained by inflicting damage to an enemy.
     pub fn xp_gained(&self, receiver: &Self, damage: i32) -> i32 {
         // should the player also gain experience by damage received?
-        damage * max(1, 1 + receiver.level - self.level)
+
+
+        if receiver.level > self.level {
+            damage * (1 + receiver.level - self.level)
+        } else {
+            damage / (1 + self.level - receiver.level)
+        }
     }
 }
 
@@ -224,7 +230,7 @@ mod tests {
         let damage = hero.damage(&foe);
         assert!((8..=12).contains(&damage), "value was {}", damage);
 
-        // level 1 vs level 2 -- 2xeffect
+        // level 1 vs level 2
         foe.level = 2;
         foe.strength = 15;
         let damage = hero.damage(&foe);
@@ -234,7 +240,7 @@ mod tests {
         let damage = foe.damage(&hero);
         assert!((12..=19).contains(&damage), "value was {}", damage);
 
-        // level 1 vs level 5 -- 8xeffect
+        // level 1 vs level 5
         foe.level = 5;
         foe.strength = 40;
 
@@ -244,6 +250,35 @@ mod tests {
         // level 5 vs level 1
         let damage = foe.damage(&hero);
         assert!((38..=58).contains(&damage), "value was {}", damage);
+    }
+
+    #[test]
+    fn test_xp_gained() {
+        let hero = Character::new("hero", 1);
+        let mut foe = Character::new("foe", 1);
+        let damage = 10;
+
+        // 1 vs 1 -- no level-based effect
+        let xp = hero.xp_gained(&foe, damage);
+        assert_eq!(damage, xp);
+
+        // level 1 vs level 2
+        foe.level = 2;
+        let xp = hero.xp_gained(&foe, damage);
+        assert_eq!(2 * damage, xp);
+
+        // level 2 vs level 1
+        let xp = foe.xp_gained(&hero, damage);
+        assert_eq!(damage / 2, xp);
+
+        // level 1 vs level 5
+        foe.level = 5;
+        let xp = hero.xp_gained(&foe, damage);
+        assert_eq!(5 * damage, xp);
+
+        // level 5 vs level 1
+        let xp = foe.xp_gained(&hero, damage);
+        assert_eq!(damage / 5, xp);
     }
 
     #[test]
