@@ -104,13 +104,21 @@ impl Character {
         // incorporate weapon and armor effect.
 
         let str_10 = self.strength as f64 * 0.1;
-        let damage = self.strength as f64 + (self.level - receiver.level) as f64 * str_10;
+
+        // attenuate the level based difference to help the weaker player
+        let level_diff_effect = if self.level < receiver.level {
+            (self.level - receiver.level) as f64 * str_10
+        } else {
+            (self.level - receiver.level) as f64 / 2.0 * str_10
+        };
+
+        let damage = self.strength as f64 + level_diff_effect;
         max(str_10.ceil() as i32, randomized(damage) as i32)
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
     pub fn xp_gained(&self, receiver: &Self, damage: i32) -> i32 {
-        // TODO should the player also gain experience by damage received?
+        // should the player also gain experience by damage received?
         damage * max(1, 1 + receiver.level - self.level)
     }
 }
@@ -126,15 +134,16 @@ fn inc(current: i32, rate: f64) -> i32 {
     current + rng.gen_range(min..=max)
 }
 
-// FIXME review: this is dubiously implemented and now used in a single place
-/// add +/- 10% variance to a f64
+// TODO need a more generic, mockable way of adding variance to stats, damages and other numbers
+/// add +/- 20% variance to a f64
 /// may make more generic in the future
 fn randomized(value: f64) -> i32 {
     let mut rng = rand::thread_rng();
-    let min = (value - value * 0.1).floor() as i32;
-    let max = (value + value * 0.1).ceil() as i32;
+    let min = (value - value * 0.2).floor() as i32;
+    let max = (value + value * 0.2).ceil() as i32;
     rng.gen_range(min..=max)
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -201,5 +210,39 @@ mod tests {
         hero.increase_level();
         assert_eq!(3, hero.level);
         assert_eq!(hero.current_hp, hero.max_hp - damage);
+    }
+
+    #[test]
+    fn test_damage() {
+        let mut hero = Character::new("hero", 1);
+        let mut foe = Character::new("foe", 1);
+
+        // 1 vs 1 -- no level-based effect
+        hero.strength = 10;
+        foe.strength = 10;
+
+        let damage = hero.damage(&foe);
+        assert!((8..=12).contains(&damage), "value was {}", damage);
+
+        // level 1 vs level 2 -- 2xeffect
+        foe.level = 2;
+        foe.strength = 15;
+        let damage = hero.damage(&foe);
+        assert!((7..=11).contains(&damage), "value was {}", damage);
+
+        // level 2 vs level 1
+        let damage = foe.damage(&hero);
+        assert!((12..=19).contains(&damage), "value was {}", damage);
+
+        // level 1 vs level 5 -- 8xeffect
+        foe.level = 5;
+        foe.strength = 40;
+
+        let damage = hero.damage(&foe);
+        assert!((4..=8).contains(&damage), "value was {}", damage);
+
+        // level 5 vs level 1
+        let damage = foe.damage(&hero);
+        assert!((38..=58).contains(&damage), "value was {}", damage);
     }
 }
