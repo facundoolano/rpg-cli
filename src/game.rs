@@ -76,7 +76,7 @@ impl Game {
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
         if self.should_enemy_appear() {
-            let level = self.enemy_level();
+            let level = enemy_level(self.player.level, self.location.distance_from_home());
             let enemy = Character::new("enemy", level);
             log::enemy_appears(&enemy, &self.location);
             Some(enemy)
@@ -88,13 +88,6 @@ impl Game {
     fn should_enemy_appear(&self) -> bool {
         let mut rng = rand::thread_rng();
         rng.gen_ratio(1, 3)
-    }
-
-    fn enemy_level(&self) -> i32 {
-        let distance: i32 = self.location.distance_from_home();
-        let mut rng = rand::thread_rng();
-        let random_delta = rng.gen_range(-1..2);
-        std::cmp::max(self.player.level / 2 + distance - 1 + random_delta, 1)
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
@@ -140,5 +133,34 @@ impl Game {
         receiver.receive_damage(damage);
         let xp = attacker.xp_gained(&receiver, damage);
         (damage, xp)
+    }
+}
+
+fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
+    let mut rng = rand::thread_rng();
+    let random_delta = rng.gen_range(-1..2);
+    std::cmp::max(player_level / 2 + distance_from_home - 1 + random_delta, 1)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_enemy_level() {
+        // player level 1
+        assert!((1..=1).contains(&enemy_level(1, 1)));
+        assert!((1..=2).contains(&enemy_level(1, 2)));
+        assert!((1..=3).contains(&enemy_level(1, 3)));
+
+        // player level 5
+        assert!((1..=3).contains(&enemy_level(5, 1)));
+        assert!((2..=4).contains(&enemy_level(5, 2)));
+        assert!((3..=5).contains(&enemy_level(5, 3)));
+
+        // player level 10
+        assert!((4..=6).contains(&enemy_level(10, 1)));
+        assert!((5..=7).contains(&enemy_level(10, 2)));
+        assert!((6..=8).contains(&enemy_level(10, 3)));
     }
 }

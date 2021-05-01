@@ -120,7 +120,6 @@ impl Character {
     pub fn xp_gained(&self, receiver: &Self, damage: i32) -> i32 {
         // should the player also gain experience by damage received?
 
-
         if receiver.level > self.level {
             damage * (1 + receiver.level - self.level)
         } else {
@@ -149,7 +148,6 @@ fn randomized(value: f64) -> i32 {
     let max = (value + value * 0.2).ceil() as i32;
     rng.gen_range(min..=max)
 }
-
 
 #[cfg(test)]
 mod tests {
