@@ -88,17 +88,21 @@ fn xp_display(character: &Character) -> String {
 }
 
 fn bar_display(current: i32, total: i32, current_color: &str, missing_color: &str) -> String {
-    // FIXME this sometimes can still look unfilled at 100% or empty at >0%
-    let units = (current as f64 * 4.0 / total as f64).ceil() as i32;
-    let current = (0..units)
+    let (filled, rest) = bar_slots(4, total, current);
+    let current = (0..filled)
         .map(|_| "x")
         .collect::<String>()
         .color(current_color);
-    let missing = (0..(4 - units))
+    let missing = (0..rest)
         .map(|_| "-")
         .collect::<String>()
         .color(missing_color);
     format!("[{}{}]", current, missing)
+}
+
+fn bar_slots(slots: i32, total: i32, current: i32) -> (i32, i32) {
+    let units = (current as f64 * slots as f64 / total as f64).ceil() as i32;
+    (units, slots - units)
 }
 
 fn name(character: &Character) -> String {
@@ -109,4 +113,36 @@ fn name(character: &Character) -> String {
     } else {
         character.name.yellow().bold().to_string()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bar_slots() {
+        // simple case 1:1 between points and slots
+        let slots = 4;
+        let total = 4;
+        assert_eq!((0, 4), bar_slots(slots, total, 0));
+        assert_eq!((1, 3), bar_slots(slots, total, 1));
+        assert_eq!((2, 2), bar_slots(slots, total, 2));
+        assert_eq!((3, 1), bar_slots(slots, total, 3));
+        assert_eq!((4, 0), bar_slots(slots, total, 4));
+
+        let total = 10;
+        assert_eq!((0, 4), bar_slots(slots, total, 0));
+        assert_eq!((1, 3), bar_slots(slots, total, 1));
+        assert_eq!((1, 3), bar_slots(slots, total, 2));
+        assert_eq!((2, 2), bar_slots(slots, total, 3));
+        assert_eq!((2, 2), bar_slots(slots, total, 4));
+        assert_eq!((2, 2), bar_slots(slots, total, 5));
+        assert_eq!((3, 1), bar_slots(slots, total, 6));
+        assert_eq!((3, 1), bar_slots(slots, total, 7));
+        // this one I would maybe like to show as 3, 1
+        assert_eq!((4, 0), bar_slots(slots, total, 8));
+        assert_eq!((4, 0), bar_slots(slots, total, 9));
+        assert_eq!((4, 0), bar_slots(slots, total, 10));
+    }
+
 }
