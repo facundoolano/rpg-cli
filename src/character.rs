@@ -93,8 +93,8 @@ impl Character {
     /// How many experience points are required to move to the next level.
     pub fn xp_for_next(&self) -> i32 {
         let exp = 1.5;
-        let base_xp = 30;
-        base_xp * (self.level as f64).powf(exp) as i32
+        let base_xp = 30.0;
+        (base_xp * (self.level as f64).powf(exp)) as i32
     }
 
     /// Generate a randomized damage numer based on the attacker strength
@@ -244,5 +244,15 @@ mod tests {
         // level 5 vs level 1
         let damage = foe.damage(&hero);
         assert!((38..=58).contains(&damage), "value was {}", damage);
+    }
+
+    #[test]
+    fn test_xp_for_next() {
+        let mut hero = Character::player();
+        assert_eq!(30, hero.xp_for_next());
+        hero.increase_level();
+        assert_eq!(84, hero.xp_for_next());
+        hero.increase_level();
+        assert_eq!(155, hero.xp_for_next());
     }
 }
