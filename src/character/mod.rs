@@ -29,6 +29,10 @@ impl Character {
         Self::new(Class::Enemy, "enemy", level)
     }
 
+    pub fn is_player(&self) -> bool {
+        matches!(self.class, Class::Hero)
+    }
+
     fn new(class: Class, name: &str, level: i32) -> Self {
         let params = class.params();
         let mut character = Self {
@@ -154,7 +158,7 @@ mod tests {
     use super::*;
 
     fn new_char() -> Character {
-        Character::new(Class::Hero, "hero", 1)
+        Character::new(Class::Test, "hero", 1)
     }
 
     #[test]
