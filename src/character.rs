@@ -9,6 +9,7 @@ use std::cmp::max;
 enum Class {
     Hero,
     Enemy,
+    Test
 }
 
 struct Parameters {
@@ -30,7 +31,7 @@ impl Parameters {
                 start_speed: 5,
 
                 hp_rate: 0.3,
-                strength_rate: 0.1,
+                strength_rate: 0.2,
                 speed_rate: 0.1,
             },
             Class::Enemy => Self {
@@ -39,8 +40,19 @@ impl Parameters {
                 start_speed: 3,
 
                 hp_rate: 0.20,
-                strength_rate: 0.1,
+                strength_rate: 0.15,
                 speed_rate: 0.07,
+            },
+            // this class is left fixed to use in unit tests so they don't break
+            // every time we tune rest of the classes's parameters
+            Class::Test => Self {
+                start_hp: 25,
+                start_strength: 10,
+                start_speed: 5,
+
+                hp_rate: 0.3,
+                strength_rate: 0.1,
+                speed_rate: 0.1,
             },
         }
     }
@@ -241,7 +253,7 @@ mod tests {
 
         // Using hardcoded start/rates so we can assert with specific values
         // TODO add specific test character class that we can assume won't change
-        let params = Parameters::of(&Class::Hero);
+        let params = Parameters::of(&Class::Test);
         assert_eq!(0.3, params.hp_rate);
         assert_eq!(0.1, params.strength_rate);
         assert_eq!(0.1, params.speed_rate);
