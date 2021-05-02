@@ -10,6 +10,9 @@ pub enum Class {
     Test,
 }
 
+/// The stat configuration for a given character class.
+/// It determines the default values for stat and the rate at
+/// which they increse on level up.
 pub struct Parameters {
     pub start_hp: i32,
     pub start_strength: i32,
@@ -53,8 +56,8 @@ const TEST_PARAMS: Parameters = Parameters {
 };
 
 impl Class {
-    pub fn params_for(class: &Class) -> Parameters {
-        match class {
+    pub fn params(&self) -> Parameters {
+        match self {
             Class::Hero => HERO_PARAMS,
             Class::Enemy => ENEMY_PARAMS,
             Class::Test => TEST_PARAMS,
