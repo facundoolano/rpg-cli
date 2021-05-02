@@ -2,61 +2,8 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
-/// Character classes, which will determine the parameters to start and
-/// increase the stats of the character. For now generic hero/enemy but
-/// should enable multiple player and enemy types.
-#[derive(Serialize, Deserialize, Debug)]
-enum Class {
-    Hero,
-    Enemy,
-    Test
-}
-
-struct Parameters {
-    start_hp: i32,
-    start_strength: i32,
-    start_speed: i32,
-
-    hp_rate: f64,
-    strength_rate: f64,
-    speed_rate: f64,
-}
-
-impl Parameters {
-    fn of(class: &Class) -> Self {
-        match class {
-            Class::Hero => Self {
-                start_hp: 25,
-                start_strength: 10,
-                start_speed: 5,
-
-                hp_rate: 0.3,
-                strength_rate: 0.2,
-                speed_rate: 0.1,
-            },
-            Class::Enemy => Self {
-                start_hp: 20,
-                start_strength: 10,
-                start_speed: 3,
-
-                hp_rate: 0.20,
-                strength_rate: 0.15,
-                speed_rate: 0.07,
-            },
-            // this class is left fixed to use in unit tests so they don't break
-            // every time we tune rest of the classes's parameters
-            Class::Test => Self {
-                start_hp: 25,
-                start_strength: 10,
-                start_speed: 5,
-
-                hp_rate: 0.3,
-                strength_rate: 0.1,
-                speed_rate: 0.1,
-            },
-        }
-    }
-}
+mod class;
+use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
@@ -83,7 +30,7 @@ impl Character {
     }
 
     fn new(class: Class, name: &str, level: i32) -> Self {
-        let params = Parameters::of(&class);
+        let params = class::Parameters::of(&class);
         let mut character = Self {
             class,
             level,
@@ -104,7 +51,7 @@ impl Character {
 
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
-        let params = Parameters::of(&self.class);
+        let params = class::Parameters::of(&self.class);
 
         self.level += 1;
         self.strength = inc(self.strength, params.strength_rate);
@@ -217,7 +164,7 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        let params = Parameters::of(&Class::Test);
+        let params = class::Parameters::of(&Class::Test);
         assert_eq!(params.start_hp, hero.current_hp);
         assert_eq!(params.start_hp, hero.max_hp);
         assert_eq!(params.start_strength, hero.strength);
@@ -255,7 +202,7 @@ mod tests {
     fn test_increase_level() {
         let mut hero = new_char();
 
-        let params = Parameters::of(&Class::Test);
+        let params = class::Parameters::of(&Class::Test);
         // assert what we're assuming are the params in the rest of the test
         assert_eq!(0.3, params.hp_rate);
         assert_eq!(0.1, params.strength_rate);
@@ -369,5 +316,4 @@ mod tests {
         assert_eq!(2, hero.level);
         assert_eq!(15, hero.xp);
     }
-
 }
