@@ -2,18 +2,41 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
-// TODO these values could be different for different character classes
-// and pick them based on some enum.
-// We could start off with Hero and Enemy enums for now
-const START_HP: i32 = 20;
-const START_STRENGTH: i32 = 10;
-const START_SPEED: i32 = 10;
-const HP_RATE: f64 = 0.3;
-const STRENGTH_RATE: f64 = 0.1;
-const SPEED_RATE: f64 = 0.1;
+#[derive(Serialize, Deserialize, Debug)]
+enum Class {
+    Hero,
+    Enemy,
+}
+
+struct Parameters {
+    start_hp: i32,
+    start_strength: i32,
+    start_speed: i32,
+
+    hp_rate: f64,
+    strength_rate: f64,
+    speed_rate: f64,
+}
+
+impl Parameters {
+    fn of(class: &Class) -> Self {
+        match class {
+            Class::Hero | Class::Enemy => Self {
+                start_hp: 20,
+                start_strength: 10,
+                start_speed: 5,
+
+                hp_rate: 0.3,
+                strength_rate: 0.1,
+                speed_rate: 0.1,
+            },
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
+    class: Class,
     pub name: String,
 
     pub level: i32,
@@ -27,21 +50,26 @@ pub struct Character {
 }
 
 impl Character {
-    // we could have a Character trait and separate Player and Enemy structs
-    // but there's barely any logic to justify that yet
     pub fn player() -> Self {
-        Self::new("hero", 1)
+        Self::new(Class::Hero, "hero", 1)
     }
 
-    pub fn new(name: &str, level: i32) -> Self {
+    pub fn enemy(level: i32) -> Self {
+        Self::new(Class::Enemy, "enemy", level)
+    }
+
+    // TODO drop the name
+    fn new(class: Class, name: &str, level: i32) -> Self {
+        let params = Parameters::of(&class);
         let mut character = Self {
-            name: String::from(name),
+            class,
             level,
+            name: String::from(name),
             xp: 0,
-            max_hp: START_HP,
-            current_hp: START_HP,
-            strength: START_STRENGTH,
-            speed: START_SPEED,
+            max_hp: params.start_hp,
+            current_hp: params.start_hp,
+            strength: params.start_strength,
+            speed: params.start_speed,
         };
 
         for _ in 1..level {
@@ -53,14 +81,17 @@ impl Character {
 
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
+        let params = Parameters::of(&self.class);
+
+        // TODO consider puting the inc logic in the params struct?
         self.level += 1;
-        self.strength = inc(self.strength, STRENGTH_RATE);
-        self.speed = inc(self.speed, SPEED_RATE);
+        self.strength = inc(self.strength, params.strength_rate);
+        self.speed = inc(self.speed, params.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = inc(self.max_hp, HP_RATE);
+        self.max_hp = inc(self.max_hp, params.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
