@@ -77,7 +77,7 @@ impl Game {
     fn maybe_spawn_enemy(&self) -> Option<Character> {
         if self.should_enemy_appear() {
             let level = enemy_level(self.player.level, self.location.distance_from_home());
-            let enemy = Character::new("enemy", level);
+            let enemy = Character::enemy(level);
             log::enemy_appears(&enemy, &self.location);
             Some(enemy)
         } else {

@@ -2,18 +2,65 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
-// TODO these values could be different for different character classes
-// and pick them based on some enum.
-// We could start off with Hero and Enemy enums for now
-const START_HP: i32 = 20;
-const START_STRENGTH: i32 = 10;
-const START_SPEED: i32 = 10;
-const HP_RATE: f64 = 0.3;
-const STRENGTH_RATE: f64 = 0.1;
-const SPEED_RATE: f64 = 0.1;
+/// Character classes, which will determine the parameters to start and
+/// increase the stats of the character. For now generic hero/enemy but
+/// should enable multiple player and enemy types.
+#[derive(Serialize, Deserialize, Debug)]
+enum Class {
+    Hero,
+    Enemy,
+    Test
+}
+
+struct Parameters {
+    start_hp: i32,
+    start_strength: i32,
+    start_speed: i32,
+
+    hp_rate: f64,
+    strength_rate: f64,
+    speed_rate: f64,
+}
+
+impl Parameters {
+    fn of(class: &Class) -> Self {
+        match class {
+            Class::Hero => Self {
+                start_hp: 25,
+                start_strength: 10,
+                start_speed: 5,
+
+                hp_rate: 0.3,
+                strength_rate: 0.2,
+                speed_rate: 0.1,
+            },
+            Class::Enemy => Self {
+                start_hp: 20,
+                start_strength: 10,
+                start_speed: 3,
+
+                hp_rate: 0.20,
+                strength_rate: 0.15,
+                speed_rate: 0.07,
+            },
+            // this class is left fixed to use in unit tests so they don't break
+            // every time we tune rest of the classes's parameters
+            Class::Test => Self {
+                start_hp: 25,
+                start_strength: 10,
+                start_speed: 5,
+
+                hp_rate: 0.3,
+                strength_rate: 0.1,
+                speed_rate: 0.1,
+            },
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
+    class: Class,
     pub name: String,
 
     pub level: i32,
@@ -27,21 +74,25 @@ pub struct Character {
 }
 
 impl Character {
-    // we could have a Character trait and separate Player and Enemy structs
-    // but there's barely any logic to justify that yet
     pub fn player() -> Self {
-        Self::new("hero", 1)
+        Self::new(Class::Hero, "hero", 1)
     }
 
-    pub fn new(name: &str, level: i32) -> Self {
+    pub fn enemy(level: i32) -> Self {
+        Self::new(Class::Enemy, "enemy", level)
+    }
+
+    fn new(class: Class, name: &str, level: i32) -> Self {
+        let params = Parameters::of(&class);
         let mut character = Self {
-            name: String::from(name),
+            class,
             level,
+            name: String::from(name),
             xp: 0,
-            max_hp: START_HP,
-            current_hp: START_HP,
-            strength: START_STRENGTH,
-            speed: START_SPEED,
+            max_hp: params.start_hp,
+            current_hp: params.start_hp,
+            strength: params.start_strength,
+            speed: params.start_speed,
         };
 
         for _ in 1..level {
@@ -53,14 +104,16 @@ impl Character {
 
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
+        let params = Parameters::of(&self.class);
+
         self.level += 1;
-        self.strength = inc(self.strength, STRENGTH_RATE);
-        self.speed = inc(self.speed, SPEED_RATE);
+        self.strength = inc(self.strength, params.strength_rate);
+        self.speed = inc(self.speed, params.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = inc(self.max_hp, HP_RATE);
+        self.max_hp = inc(self.max_hp, params.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -133,7 +186,7 @@ fn inc(current: i32, rate: f64) -> i32 {
     // if rate is .3, increase can be in .15-.45
     let current_f = current as f64;
     let min = std::cmp::max(1, (current_f * (rate - rate / 2.0)).round() as i32);
-    let max = (current_f * rate + rate / 2.0).round() as i32;
+    let max = std::cmp::max(1, (current_f * rate + rate / 2.0).round() as i32);
 
     let mut rng = rand::thread_rng();
     current + rng.gen_range(min..=max)
@@ -153,16 +206,22 @@ fn randomized(value: f64) -> i32 {
 mod tests {
     use super::*;
 
+    fn new_char() -> Character {
+        Character::new(Class::Hero, "hero", 1)
+    }
+
     #[test]
     fn test_new() {
-        let hero = Character::player();
+        let hero = new_char();
 
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
-        assert_eq!(START_HP, hero.current_hp);
-        assert_eq!(START_HP, hero.max_hp);
-        assert_eq!(START_STRENGTH, hero.strength);
-        assert_eq!(START_SPEED, hero.speed);
+
+        let params = Parameters::of(&Class::Test);
+        assert_eq!(params.start_hp, hero.current_hp);
+        assert_eq!(params.start_hp, hero.max_hp);
+        assert_eq!(params.start_strength, hero.strength);
+        assert_eq!(params.start_speed, hero.speed);
     }
 
     #[test]
@@ -186,17 +245,22 @@ mod tests {
         // ~ hp lvl3
         let value = inc(34, 0.3);
         assert!((39..=49).contains(&value), "value was {}", value);
+
+        // small numbers
+        let value = inc(3, 0.07);
+        assert_eq!(4, value);
     }
 
     #[test]
     fn test_increase_level() {
-        let mut hero = Character::player();
+        let mut hero = new_char();
 
-        // Using hardcoded start/rates so we can assert with specific values
-        // TODO add specific test character class that we can assume won't change
-        assert_eq!(0.3, HP_RATE);
-        assert_eq!(0.1, STRENGTH_RATE);
-        assert_eq!(0.1, SPEED_RATE);
+        let params = Parameters::of(&Class::Test);
+        // assert what we're assuming are the params in the rest of the test
+        assert_eq!(0.3, params.hp_rate);
+        assert_eq!(0.1, params.strength_rate);
+        assert_eq!(0.1, params.speed_rate);
+
         hero.max_hp = 20;
         hero.current_hp = 20;
         hero.strength = 10;
@@ -218,8 +282,8 @@ mod tests {
 
     #[test]
     fn test_damage() {
-        let mut hero = Character::new("hero", 1);
-        let mut foe = Character::new("foe", 1);
+        let mut hero = new_char();
+        let mut foe = new_char();
 
         // 1 vs 1 -- no level-based effect
         hero.strength = 10;
@@ -252,8 +316,8 @@ mod tests {
 
     #[test]
     fn test_xp_gained() {
-        let hero = Character::new("hero", 1);
-        let mut foe = Character::new("foe", 1);
+        let hero = new_char();
+        let mut foe = new_char();
         let damage = 10;
 
         // 1 vs 1 -- no level-based effect
@@ -281,7 +345,7 @@ mod tests {
 
     #[test]
     fn test_xp_for_next() {
-        let mut hero = Character::player();
+        let mut hero = new_char();
         assert_eq!(30, hero.xp_for_next());
         hero.increase_level();
         assert_eq!(84, hero.xp_for_next());
@@ -291,7 +355,7 @@ mod tests {
 
     #[test]
     fn test_add_experience() {
-        let mut hero = Character::player();
+        let mut hero = new_char();
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
@@ -305,4 +369,5 @@ mod tests {
         assert_eq!(2, hero.level);
         assert_eq!(15, hero.xp);
     }
+
 }
