@@ -2,6 +2,9 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
+/// Character classes, which will determine the parameters to start and
+/// increase the stats of the character. For now generic hero/enemy but
+/// should enable multiple player and enemy types.
 #[derive(Serialize, Deserialize, Debug)]
 enum Class {
     Hero,
@@ -21,6 +24,7 @@ struct Parameters {
 impl Parameters {
     fn of(class: &Class) -> Self {
         match class {
+            // TODO separate stats
             Class::Hero | Class::Enemy => Self {
                 start_hp: 20,
                 start_strength: 10,
@@ -58,7 +62,6 @@ impl Character {
         Self::new(Class::Enemy, "enemy", level)
     }
 
-    // TODO drop the name
     fn new(class: Class, name: &str, level: i32) -> Self {
         let params = Parameters::of(&class);
         let mut character = Self {
@@ -190,10 +193,12 @@ mod tests {
 
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
-        assert_eq!(START_HP, hero.current_hp);
-        assert_eq!(START_HP, hero.max_hp);
-        assert_eq!(START_STRENGTH, hero.strength);
-        assert_eq!(START_SPEED, hero.speed);
+
+        let params = Parameters::of(&Class::Hero);
+        assert_eq!(params.start_hp, hero.current_hp);
+        assert_eq!(params.start_hp, hero.max_hp);
+        assert_eq!(params.start_strength, hero.strength);
+        assert_eq!(params.start_speed, hero.speed);
     }
 
     #[test]
@@ -225,9 +230,10 @@ mod tests {
 
         // Using hardcoded start/rates so we can assert with specific values
         // TODO add specific test character class that we can assume won't change
-        assert_eq!(0.3, HP_RATE);
-        assert_eq!(0.1, STRENGTH_RATE);
-        assert_eq!(0.1, SPEED_RATE);
+        let params = Parameters::of(&Class::Hero);
+        assert_eq!(0.3, params.hp_rate);
+        assert_eq!(0.1, params.strength_rate);
+        assert_eq!(0.1, params.speed_rate);
         hero.max_hp = 20;
         hero.current_hp = 20;
         hero.strength = 10;
@@ -249,8 +255,8 @@ mod tests {
 
     #[test]
     fn test_damage() {
-        let mut hero = Character::new("hero", 1);
-        let mut foe = Character::new("foe", 1);
+        let mut hero = Character::player();
+        let mut foe = Character::enemy(1);
 
         // 1 vs 1 -- no level-based effect
         hero.strength = 10;
@@ -283,8 +289,8 @@ mod tests {
 
     #[test]
     fn test_xp_gained() {
-        let hero = Character::new("hero", 1);
-        let mut foe = Character::new("foe", 1);
+        let hero = Character::player();
+        let mut foe = Character::enemy(1);
         let damage = 10;
 
         // 1 vs 1 -- no level-based effect
