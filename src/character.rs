@@ -24,9 +24,8 @@ struct Parameters {
 impl Parameters {
     fn of(class: &Class) -> Self {
         match class {
-            // TODO separate stats
-            Class::Hero | Class::Enemy => Self {
-                start_hp: 20,
+            Class::Hero  => Self {
+                start_hp: 25,
                 start_strength: 10,
                 start_speed: 5,
 
@@ -34,6 +33,15 @@ impl Parameters {
                 strength_rate: 0.1,
                 speed_rate: 0.1,
             },
+            Class::Enemy => Self {
+                start_hp: 20,
+                start_strength: 10,
+                start_speed: 3,
+
+                hp_rate: 0.20,
+                strength_rate: 0.1,
+                speed_rate: 0.07,
+            }
         }
     }
 }
@@ -86,7 +94,6 @@ impl Character {
     fn increase_level(&mut self) {
         let params = Parameters::of(&self.class);
 
-        // TODO consider puting the inc logic in the params struct?
         self.level += 1;
         self.strength = inc(self.strength, params.strength_rate);
         self.speed = inc(self.speed, params.speed_rate);
