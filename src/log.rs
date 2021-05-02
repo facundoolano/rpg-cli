@@ -134,8 +134,7 @@ fn bar_slots(slots: i32, total: i32, current: i32) -> (i32, i32) {
 }
 
 fn name(character: &Character) -> String {
-    // FIXME ugly hack, will fix some day --or not
-    if character.name == "hero" {
+    if character.is_player() {
         // FIXME use correct padding
         " hero".bold().to_string()
     } else {
