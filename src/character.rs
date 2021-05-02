@@ -24,7 +24,7 @@ struct Parameters {
 impl Parameters {
     fn of(class: &Class) -> Self {
         match class {
-            Class::Hero  => Self {
+            Class::Hero => Self {
                 start_hp: 25,
                 start_strength: 10,
                 start_speed: 5,
@@ -41,7 +41,7 @@ impl Parameters {
                 hp_rate: 0.20,
                 strength_rate: 0.1,
                 speed_rate: 0.07,
-            }
+            },
         }
     }
 }
@@ -174,7 +174,7 @@ fn inc(current: i32, rate: f64) -> i32 {
     // if rate is .3, increase can be in .15-.45
     let current_f = current as f64;
     let min = std::cmp::max(1, (current_f * (rate - rate / 2.0)).round() as i32);
-    let max = (current_f * rate + rate / 2.0).round() as i32;
+    let max = std::cmp::max(1, (current_f * rate + rate / 2.0).round() as i32);
 
     let mut rng = rand::thread_rng();
     current + rng.gen_range(min..=max)
@@ -229,6 +229,10 @@ mod tests {
         // ~ hp lvl3
         let value = inc(34, 0.3);
         assert!((39..=49).contains(&value), "value was {}", value);
+
+        // small numbers
+        let value = inc(3, 0.07);
+        assert_eq!(4, value);
     }
 
     #[test]
@@ -349,4 +353,5 @@ mod tests {
         assert_eq!(2, hero.level);
         assert_eq!(15, hero.xp);
     }
+
 }
