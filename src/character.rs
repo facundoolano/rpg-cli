@@ -206,14 +206,18 @@ fn randomized(value: f64) -> i32 {
 mod tests {
     use super::*;
 
+    fn new_char() -> Character {
+        Character::new(Class::Hero, "hero", 1)
+    }
+
     #[test]
     fn test_new() {
-        let hero = Character::player();
+        let hero = new_char();
 
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        let params = Parameters::of(&Class::Hero);
+        let params = Parameters::of(&Class::Test);
         assert_eq!(params.start_hp, hero.current_hp);
         assert_eq!(params.start_hp, hero.max_hp);
         assert_eq!(params.start_strength, hero.strength);
@@ -249,14 +253,14 @@ mod tests {
 
     #[test]
     fn test_increase_level() {
-        let mut hero = Character::player();
+        let mut hero = new_char();
 
-        // Using hardcoded start/rates so we can assert with specific values
-        // TODO add specific test character class that we can assume won't change
         let params = Parameters::of(&Class::Test);
+        // assert what we're assuming are the params in the rest of the test
         assert_eq!(0.3, params.hp_rate);
         assert_eq!(0.1, params.strength_rate);
         assert_eq!(0.1, params.speed_rate);
+
         hero.max_hp = 20;
         hero.current_hp = 20;
         hero.strength = 10;
@@ -278,8 +282,8 @@ mod tests {
 
     #[test]
     fn test_damage() {
-        let mut hero = Character::player();
-        let mut foe = Character::enemy(1);
+        let mut hero = new_char();
+        let mut foe = new_char();
 
         // 1 vs 1 -- no level-based effect
         hero.strength = 10;
@@ -312,8 +316,8 @@ mod tests {
 
     #[test]
     fn test_xp_gained() {
-        let hero = Character::player();
-        let mut foe = Character::enemy(1);
+        let hero = new_char();
+        let mut foe = new_char();
         let damage = 10;
 
         // 1 vs 1 -- no level-based effect
@@ -341,7 +345,7 @@ mod tests {
 
     #[test]
     fn test_xp_for_next() {
-        let mut hero = Character::player();
+        let mut hero = new_char();
         assert_eq!(30, hero.xp_for_next());
         hero.increase_level();
         assert_eq!(84, hero.xp_for_next());
@@ -351,7 +355,7 @@ mod tests {
 
     #[test]
     fn test_add_experience() {
-        let mut hero = Character::player();
+        let mut hero = new_char();
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
