@@ -1,6 +1,6 @@
 # rpg-cli —Your filesystem as a dungeon!
 
-rpg-cli is a bare-bones [JRPG](https://en.wikipedia.org/wiki/JRPG)-inspired terminal game written in Rust. It can work as an alias to `cd` where you randomly encounter enemies as you change directories.
+rpg-cli is a bare-bones [JRPG](https://en.wikipedia.org/wiki/JRPG)-inspired terminal game written in Rust. It can work as an alternative to `cd` where you randomly encounter enemies as you change directories.
 
 ![](rpg-cli.png)
 
@@ -13,7 +13,7 @@ Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/get
 
 The binary will be available at `target/release/rpg-cli`.
 
-Check the [rpg.sh](./rpg.sh) script for an example of how to use the game as an alias of `cd` (so the working directory is updated according to the hero's progress).
+Check the [rpg.sh](./rpg.sh) script for an example of how to setup the game with a shell alias to work as `cd` (so the working directory is updated according to the hero's progress).
 
 ## Usage
 
