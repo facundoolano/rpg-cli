@@ -9,7 +9,7 @@ pub struct Location {
 impl Location {
     /// Build a location from the given path string.
     /// The path is validated to exist and converted to it's canonical form.
-    pub fn from(path: &str) -> Self {
+    pub fn from(path: &str) -> Result<Self, std::io::Error> {
         // if input doesn't come from shell, we want to interpret ~ as home ourselves
         let path = if path.starts_with('~') {
             // TODO figure out these string lossy stuff
@@ -19,9 +19,8 @@ impl Location {
             path.to_string()
         };
 
-        // TODO gracefully return the error when path is not found
-        let path = path::Path::new(&path).canonicalize().unwrap();
-        Self { path }
+        let path = path::Path::new(&path).canonicalize()?;
+        Ok(Self { path })
     }
 
     pub fn home() -> Self {
@@ -91,11 +90,17 @@ mod tests {
 
     #[test]
     fn test_from() {
-        assert_ne!(Location::from("/"), Location::home());
-        assert_eq!(Location::from("~"), Location::from("~/"));
-        assert_eq!(Location::from("~/."), Location::from("~/"));
+        assert_ne!(Location::from("/").unwrap(), Location::home());
+        assert_eq!(Location::from("~").unwrap(), Location::from("~/").unwrap());
+        assert_eq!(
+            Location::from("~/.").unwrap(),
+            Location::from("~/").unwrap()
+        );
         // FIXME this only works if /usr/bin exists
-        assert_eq!(Location::from("/usr"), Location::from("/usr/bin/../"));
+        assert_eq!(
+            Location::from("/usr").unwrap(),
+            Location::from("/usr/bin/../").unwrap()
+        );
     }
 
     #[test]

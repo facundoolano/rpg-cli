@@ -58,11 +58,14 @@ fn main() {
 /// Main command, attempt to move the hero to the supplied location,
 /// possibly engaging in combat along the way.
 fn go_to(game: &mut Game, dest: &str) {
-    let dest = Location::from(&dest);
-
-    match game.go_to(&dest) {
-        Err(game::Error::GameOver) => game.reset(),
-        _ => game.save().unwrap(),
+    if let Ok(dest) = Location::from(&dest) {
+        match game.go_to(&dest) {
+            Err(game::Error::GameOver) => game.reset(),
+            _ => game.save().unwrap(),
+        };
+    } else {
+        println!("No such file or directory");
+        std::process::exit(1);
     }
 }
 
