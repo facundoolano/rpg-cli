@@ -30,7 +30,7 @@ impl Character {
     }
 
     fn new(class: Class, name: &str, level: i32) -> Self {
-        let params = class::Parameters::of(&class);
+        let params = Class::params_for(&class);
         let mut character = Self {
             class,
             level,
@@ -51,7 +51,7 @@ impl Character {
 
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
-        let params = class::Parameters::of(&self.class);
+        let params = Class::params_for(&self.class);
 
         self.level += 1;
         self.strength = inc(self.strength, params.strength_rate);
@@ -164,7 +164,7 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        let params = class::Parameters::of(&Class::Test);
+        let params = Class::params_for(&Class::Test);
         assert_eq!(params.start_hp, hero.current_hp);
         assert_eq!(params.start_hp, hero.max_hp);
         assert_eq!(params.start_strength, hero.strength);
@@ -202,7 +202,7 @@ mod tests {
     fn test_increase_level() {
         let mut hero = new_char();
 
-        let params = class::Parameters::of(&Class::Test);
+        let params = Class::params_for(&Class::Test);
         // assert what we're assuming are the params in the rest of the test
         assert_eq!(0.3, params.hp_rate);
         assert_eq!(0.1, params.strength_rate);
