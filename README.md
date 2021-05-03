@@ -62,10 +62,10 @@ The further from home you move the hero, the tougher the enemies will get. If yo
 
     ~ $ rpg dev/facundoolano/rpg-cli/target/debug/
         enemy[6][xxxx][----]@~/dev/facundoolano/rpg-cli/target/debug
-        hero[2][x---][xxx-]@~/dev/facundoolano/rpg-cli/target/debug -16hp
+         hero[2][x---][xxx-]@~/dev/facundoolano/rpg-cli/target/debug -16hp
         enemy[6][xxxx][----]@~/dev/facundoolano/rpg-cli/target/debug -8hp
-        hero[2][----][xxx-]@~/dev/facundoolano/rpg-cli/target/debug -18hp
-        hero[2][----][xxx-]@~/dev/facundoolano/rpg-cli/target/debug 💀
+         hero[2][----][xxx-]@~/dev/facundoolano/rpg-cli/target/debug -18hp
+         hero[2][----][xxx-]@~/dev/facundoolano/rpg-cli/target/debug 💀
     ~ $ rpg
         hero[1]@home
         hp:[xxxxxxxxxx] 25/25
