@@ -3,7 +3,7 @@ use std::path;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Location {
-    pub path: path::PathBuf,
+    path: path::PathBuf,
 }
 
 impl Location {
@@ -21,6 +21,10 @@ impl Location {
 
         let path = path::Path::new(&path).canonicalize()?;
         Ok(Self { path })
+    }
+
+    pub fn to_string(&self) -> String {
+        self.path.to_string_lossy().to_string()
     }
 
     pub fn home() -> Self {
