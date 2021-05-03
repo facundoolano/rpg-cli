@@ -101,13 +101,13 @@ impl Game {
             en_accum += enemy.speed;
 
             if pl_accum >= en_accum {
-                let (new_xp, damage) = Self::attack(player, enemy);
+                let (damage, new_xp) = Self::attack(player, enemy);
                 xp += new_xp;
 
                 log::player_attack(&enemy, &self.location, damage);
                 pl_accum = -1;
             } else {
-                let (_, damage) = Self::attack(enemy, player);
+                let (damage, _) = Self::attack(enemy, player);
                 log::enemy_attack(&player, &self.location, damage);
                 en_accum = -1;
             }

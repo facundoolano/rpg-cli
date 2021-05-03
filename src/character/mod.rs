@@ -37,7 +37,7 @@ impl Character {
         let params = class.params();
         let mut character = Self {
             class,
-            level,
+            level: 1,
             name: String::from(name),
             xp: 0,
             max_hp: params.start_hp,
