@@ -61,12 +61,11 @@ When you return to the home directory, the hero's health points are restored:
 The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health your hero is likely to die in battle, causing the game to reset.
 
     ~ $ rpg dev/facundoolano/rpg-cli/target/debug/
-        enemy[5][xxxx][----]@~/dev/facundoolano/rpg-cli
-        enemy[5][xxxx][----]@~/dev/facundoolano/rpg-cli -30hp
-         hero[1][xx--][xxx-]@~/dev/facundoolano/rpg-cli -3hp
-        enemy[5][xxx-][----]@~/dev/facundoolano/rpg-cli -40hp
-         hero[1][----][xxx-]@~/dev/facundoolano/rpg-cli -3hp
-         hero[1][----][xxx-]@~/dev/facundoolano/rpg-cli 💀
+        enemy[6][xxxx][----]@~/dev/facundoolano/rpg-cli/target/debug
+        hero[2][x---][xxx-]@~/dev/facundoolano/rpg-cli/target/debug -16hp
+        enemy[6][xxxx][----]@~/dev/facundoolano/rpg-cli/target/debug -8hp
+        hero[2][----][xxx-]@~/dev/facundoolano/rpg-cli/target/debug -18hp
+        hero[2][----][xxx-]@~/dev/facundoolano/rpg-cli/target/debug 💀
     ~ $ rpg
         hero[1]@home
         hp:[xxxxxxxxxx] 25/25
