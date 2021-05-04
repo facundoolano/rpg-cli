@@ -1,5 +1,19 @@
 language: rust
 rust:
   - stable
-  - beta
-  - nightly
+  
+before_deploy:
+  - rustup target add x86_64-apple-darwin
+  - cargo build --release --target x86_64-apple-darwin --locked
+  - cp target/x86_64-apple-darwin/release/rpg-cli rpg-cli-apple-darwin
+deploy:
+  provider: releases
+  api_key: "GITHUB OAUTH TOKEN"
+  file:
+    - rpg-cli-apple-darwin
+  skip_cleanup: true
+  draft: true
+  on:
+    # FIXME remove this
+    branch: travis
+    # tags: true
