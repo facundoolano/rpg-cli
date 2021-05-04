@@ -58,13 +58,13 @@ impl Character {
         let params = self.class.params();
 
         self.level += 1;
-        self.strength = inc(self.strength, params.strength_rate);
-        self.speed = inc(self.speed, params.speed_rate);
+        self.strength = increase_stat(self.strength, params.strength_rate);
+        self.speed = increase_stat(self.speed, params.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = inc(self.max_hp, params.hp_rate);
+        self.max_hp = increase_stat(self.max_hp, params.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -117,7 +117,7 @@ impl Character {
         };
 
         let damage = self.strength as f64 + level_diff_effect;
-        max(str_10.ceil() as i32, randomized(damage) as i32)
+        max(str_10.ceil() as i32, randomize_damage(damage) as i32)
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
@@ -133,7 +133,7 @@ impl Character {
 }
 
 /// Increase a stat by the given rate, with some randomization.
-fn inc(current: i32, rate: f64) -> i32 {
+fn increase_stat(current: i32, rate: f64) -> i32 {
     // if rate is .3, increase can be in .15-.45
     let current_f = current as f64;
     let min = std::cmp::max(1, (current_f * (rate - rate / 2.0)).round() as i32);
@@ -143,10 +143,8 @@ fn inc(current: i32, rate: f64) -> i32 {
     current + rng.gen_range(min..=max)
 }
 
-// TODO need a more generic, mockable way of adding variance to stats, damages and other numbers
-/// add +/- 20% variance to a f64
-/// may make more generic in the future
-fn randomized(value: f64) -> i32 {
+/// add +/- 20% variance to a the damage
+fn randomize_damage(value: f64) -> i32 {
     let mut rng = rand::thread_rng();
     let min = (value - value * 0.2).floor() as i32;
     let max = (value + value * 0.2).ceil() as i32;
@@ -178,27 +176,27 @@ mod tests {
     #[test]
     fn test_increase_stat() {
         // current hp lvl1: increase in .3 +/- .15
-        let value = inc(20, 0.3);
+        let value = increase_stat(20, 0.3);
         assert!((23..=29).contains(&value), "value was {}", value);
 
         // current strength lvl1
-        let value = inc(10, 0.1);
+        let value = increase_stat(10, 0.1);
         assert!((11..=12).contains(&value), "value was {}", value);
 
         // current speed lvl1
-        let value = inc(5, 0.1);
+        let value = increase_stat(5, 0.1);
         assert_eq!(6, value);
 
         // ~ hp lvl2
-        let value = inc(26, 0.3);
+        let value = increase_stat(26, 0.3);
         assert!((30..=38).contains(&value), "value was {}", value);
 
         // ~ hp lvl3
-        let value = inc(34, 0.3);
+        let value = increase_stat(34, 0.3);
         assert!((39..=49).contains(&value), "value was {}", value);
 
         // small numbers
-        let value = inc(3, 0.07);
+        let value = increase_stat(3, 0.07);
         assert_eq!(4, value);
     }
 
