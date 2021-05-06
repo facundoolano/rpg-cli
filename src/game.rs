@@ -3,7 +3,7 @@ extern crate dirs;
 use crate::character::Character;
 use crate::location::Location;
 use crate::log;
-use rand::Rng;
+use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path};
 
@@ -75,7 +75,7 @@ impl Game {
     }
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
-        if self.should_enemy_appear() {
+        if Randomizer::should_enemy_appear() {
             let level = enemy_level(self.player.level, self.location.distance_from_home());
             let enemy = Character::enemy(level);
             log::enemy_appears(&enemy, &self.location);
@@ -83,11 +83,6 @@ impl Game {
         } else {
             None
         }
-    }
-
-    fn should_enemy_appear(&self) -> bool {
-        let mut rng = rand::thread_rng();
-        rng.gen_ratio(1, 3)
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
@@ -137,8 +132,7 @@ impl Game {
 }
 
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
-    let mut rng = rand::thread_rng();
-    let random_delta = rng.gen_range(-1..2);
+    let random_delta = Randomizer::enemy_delta();
     std::cmp::max(player_level / 2 + distance_from_home - 1 + random_delta, 1)
 }
 
