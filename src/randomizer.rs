@@ -1,10 +1,11 @@
+#![allow(dead_code)]
+
 use rand::Rng;
 use std::cmp::max;
 
-pub struct Randomizer {}
+pub struct DefaultRandomizer {}
 
-#[cfg(not(test))]
-impl Randomizer {
+impl DefaultRandomizer {
     pub fn enemy_delta() -> i32 {
         let mut rng = rand::thread_rng();
         rng.gen_range(-1..2)
@@ -36,8 +37,9 @@ impl Randomizer {
     }
 }
 
-#[cfg(test)]
-impl Randomizer {
+pub struct TestRandomizer {}
+
+impl TestRandomizer {
     pub fn enemy_delta() -> i32 {
         0
     }
@@ -54,3 +56,9 @@ impl Randomizer {
         value
     }
 }
+
+#[cfg(not(test))]
+pub type Randomizer = DefaultRandomizer;
+
+#[cfg(test)]
+pub type Randomizer = TestRandomizer;
