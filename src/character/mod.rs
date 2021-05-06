@@ -1,8 +1,8 @@
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
 mod class;
+use crate::randomizer::Randomizer;
 use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -58,13 +58,13 @@ impl Character {
         let params = self.class.params();
 
         self.level += 1;
-        self.strength = increase_stat(self.strength, params.strength_rate);
-        self.speed = increase_stat(self.speed, params.speed_rate);
+        self.strength = Randomizer::stat(self.strength, params.strength_rate);
+        self.speed = Randomizer::stat(self.speed, params.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = increase_stat(self.max_hp, params.hp_rate);
+        self.max_hp = Randomizer::stat(self.max_hp, params.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -116,8 +116,8 @@ impl Character {
             (self.level - receiver.level) as f64 / 2.0 * str_10
         };
 
-        let damage = self.strength as f64 + level_diff_effect;
-        max(str_10.ceil() as i32, randomize_damage(damage) as i32)
+        let damage = (self.strength as f64 + level_diff_effect) as i32;
+        max(str_10.ceil() as i32, Randomizer::damage(damage))
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
@@ -130,25 +130,6 @@ impl Character {
             damage / (1 + self.level - receiver.level)
         }
     }
-}
-
-/// Increase a stat by the given rate, with some randomization.
-fn increase_stat(current: i32, rate: f64) -> i32 {
-    // if rate is .3, increase can be in .15-.45
-    let current_f = current as f64;
-    let min = std::cmp::max(1, (current_f * (rate - rate / 2.0)).round() as i32);
-    let max = std::cmp::max(1, (current_f * rate + rate / 2.0).round() as i32);
-
-    let mut rng = rand::thread_rng();
-    current + rng.gen_range(min..=max)
-}
-
-/// add +/- 20% variance to a the damage
-fn randomize_damage(value: f64) -> i32 {
-    let mut rng = rand::thread_rng();
-    let min = (value - value * 0.2).floor() as i32;
-    let max = (value + value * 0.2).ceil() as i32;
-    rng.gen_range(min..=max)
 }
 
 #[cfg(test)]
@@ -173,30 +154,31 @@ mod tests {
         assert_eq!(params.start_speed, hero.speed);
     }
 
+    // FIXME not so good to lose testing because we force random is off for all tests
     #[test]
     fn test_increase_stat() {
         // current hp lvl1: increase in .3 +/- .15
-        let value = increase_stat(20, 0.3);
+        let value = Randomizer::stat(20, 0.3);
         assert!((23..=29).contains(&value), "value was {}", value);
 
         // current strength lvl1
-        let value = increase_stat(10, 0.1);
+        let value = Randomizer::stat(10, 0.1);
         assert!((11..=12).contains(&value), "value was {}", value);
 
         // current speed lvl1
-        let value = increase_stat(5, 0.1);
+        let value = Randomizer::stat(5, 0.1);
         assert_eq!(6, value);
 
         // ~ hp lvl2
-        let value = increase_stat(26, 0.3);
+        let value = Randomizer::stat(26, 0.3);
         assert!((30..=38).contains(&value), "value was {}", value);
 
         // ~ hp lvl3
-        let value = increase_stat(34, 0.3);
+        let value = Randomizer::stat(34, 0.3);
         assert!((39..=49).contains(&value), "value was {}", value);
 
         // small numbers
-        let value = increase_stat(3, 0.07);
+        let value = Randomizer::stat(3, 0.07);
         assert_eq!(4, value);
     }
 
