@@ -154,34 +154,6 @@ mod tests {
         assert_eq!(params.start_speed, hero.speed);
     }
 
-    // FIXME not so good to lose testing because we force random is off for all tests
-    #[test]
-    fn test_increase_stat() {
-        // current hp lvl1: increase in .3 +/- .15
-        let value = Randomizer::stat(20, 0.3);
-        assert!((23..=29).contains(&value), "value was {}", value);
-
-        // current strength lvl1
-        let value = Randomizer::stat(10, 0.1);
-        assert!((11..=12).contains(&value), "value was {}", value);
-
-        // current speed lvl1
-        let value = Randomizer::stat(5, 0.1);
-        assert_eq!(6, value);
-
-        // ~ hp lvl2
-        let value = Randomizer::stat(26, 0.3);
-        assert!((30..=38).contains(&value), "value was {}", value);
-
-        // ~ hp lvl3
-        let value = Randomizer::stat(34, 0.3);
-        assert!((39..=49).contains(&value), "value was {}", value);
-
-        // small numbers
-        let value = Randomizer::stat(3, 0.07);
-        assert_eq!(4, value);
-    }
-
     #[test]
     fn test_increase_level() {
         let mut hero = new_char();
