@@ -11,24 +11,14 @@ use std::cmp::max;
 pub struct DefaultRandomizer {}
 
 impl DefaultRandomizer {
-    pub fn enemy_delta() -> i32 {
-        let mut rng = rand::thread_rng();
-        rng.gen_range(-1..2)
-    }
-
     pub fn should_enemy_appear() -> bool {
         let mut rng = rand::thread_rng();
         rng.gen_ratio(1, 3)
     }
 
-    pub fn stat(current: i32, rate: f64) -> i32 {
-        // if rate is .3, increase can be in .15-.45
-        let current_f = current as f64;
-        let min_value = max(1, (current_f * (rate - rate / 2.0)).round() as i32);
-        let max_value = max(1, (current_f * rate + rate / 2.0).round() as i32);
-
+    pub fn enemy_delta() -> i32 {
         let mut rng = rand::thread_rng();
-        current + rng.gen_range(min_value..=max_value)
+        rng.gen_range(-1..2)
     }
 
     /// add +/- 20% variance to a the damage
@@ -40,6 +30,31 @@ impl DefaultRandomizer {
         let max = (value + value * 0.2).ceil() as i32;
         rng.gen_range(min..=max)
     }
+
+    pub fn should_critical() -> bool {
+        let mut rng = rand::thread_rng();
+        rng.gen_ratio(1, 20)
+    }
+
+    pub fn should_miss(attacker_speed: i32, receiver_speed: i32) -> bool {
+        if receiver_speed > attacker_speed {
+            let ratio = receiver_speed / attacker_speed;
+            let ratio = max(1, 5 - ratio) as u32;
+            let mut rng = rand::thread_rng();
+            return rng.gen_ratio(1, ratio)
+        }
+        false
+    }
+
+    pub fn stat(current: i32, rate: f64) -> i32 {
+        // if rate is .3, increase can be in .15-.45
+        let current_f = current as f64;
+        let min_value = max(1, (current_f * (rate - rate / 2.0)).round() as i32);
+        let max_value = max(1, (current_f * rate + rate / 2.0).round() as i32);
+
+        let mut rng = rand::thread_rng();
+        current + rng.gen_range(min_value..=max_value)
+    }
 }
 
 /// The test randomizer just exposes the same functions as the default one
@@ -47,20 +62,28 @@ impl DefaultRandomizer {
 pub struct TestRandomizer {}
 
 impl TestRandomizer {
-    pub fn enemy_delta() -> i32 {
-        0
-    }
-
     pub fn should_enemy_appear() -> bool {
         true
     }
 
-    pub fn stat(current: i32, rate: f64) -> i32 {
-        current + (current as f64 * rate).ceil() as i32
+    pub fn enemy_delta() -> i32 {
+        0
     }
 
     pub fn damage(value: i32) -> i32 {
         value
+    }
+
+    pub fn should_critical() -> bool {
+        false
+    }
+
+    pub fn should_miss(_attacker_speed: i32, _receiver_speed: i32) -> bool {
+        false
+    }
+
+    pub fn stat(current: i32, rate: f64) -> i32 {
+        current + (current as f64 * rate).ceil() as i32
     }
 }
 
@@ -70,7 +93,6 @@ impl TestRandomizer {
 pub type Randomizer = DefaultRandomizer;
 #[cfg(test)]
 pub type Randomizer = TestRandomizer;
-
 
 #[cfg(test)]
 mod tests {

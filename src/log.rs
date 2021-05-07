@@ -1,4 +1,5 @@
 use crate::character::Character;
+use crate::game;
 use crate::location::Location;
 use colored::*;
 
@@ -15,19 +16,19 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
         );
     }
 }
-pub fn player_attack(enemy: &Character, location: &Location, damage: i32) {
+pub fn player_attack(enemy: &Character, location: &Location, attack: game::Attack) {
     log(
         &enemy,
         &location,
-        &format!("{}hp", -damage).white().to_string(),
+        &format!("{}", attack).white().to_string(),
     );
 }
 
-pub fn enemy_attack(player: &Character, location: &Location, damage: i32) {
+pub fn enemy_attack(player: &Character, location: &Location, attack: game::Attack) {
     log(
         &player,
         &location,
-        &format!("{}hp", -damage).bold().red().to_string(),
+        &format!("{}", attack).bold().red().to_string(),
     );
 }
 
@@ -71,6 +72,22 @@ pub fn status(player: &Character, location: &Location) {
     println!("    str:{}   spd:{}   100g", player.strength, player.speed);
     println!("    equip:{{sword, shield}}");
     println!("    item:{{}}");
+}
+
+impl std::fmt::Display for game::Attack {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            game::Attack::Regular(damage) => {
+                write!(f, "-{}hp", damage)
+            }
+            game::Attack::Critical(damage) => {
+                write!(f, "-{}hp critical!", damage)
+            }
+            game::Attack::Miss => {
+                write!(f, " miss!")
+            }
+        }
+    }
 }
 
 // HELPERS
