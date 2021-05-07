@@ -7,6 +7,7 @@ use std::cmp::max;
 /// needs to incorporate randomness.
 /// It basically wraps all calls to the rand crate, allowing to turn it off
 /// during testing to make the logic deterministic.
+// DISCLAIMER: I'm not convinced this is a good idea.
 pub struct DefaultRandomizer {}
 
 impl DefaultRandomizer {
