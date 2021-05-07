@@ -3,6 +3,10 @@
 use rand::Rng;
 use std::cmp::max;
 
+/// This struct exposes functions to deal with any element of the game that
+/// needs to incorporate randomness.
+/// It basically wraps all calls to the rand crate, allowing to turn it off
+/// during testing to make the logic deterministic.
 pub struct DefaultRandomizer {}
 
 impl DefaultRandomizer {
@@ -37,6 +41,8 @@ impl DefaultRandomizer {
     }
 }
 
+/// The test randomizer just exposes the same functions as the default one
+/// but return deterministic results.
 pub struct TestRandomizer {}
 
 impl TestRandomizer {
@@ -57,9 +63,10 @@ impl TestRandomizer {
     }
 }
 
+/// The randomizer is exposed through a type alias so it can be "turned off"
+/// in tests.
 #[cfg(not(test))]
 pub type Randomizer = DefaultRandomizer;
-
 #[cfg(test)]
 pub type Randomizer = TestRandomizer;
 
