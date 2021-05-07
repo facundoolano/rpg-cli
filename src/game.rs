@@ -157,4 +157,50 @@ mod tests {
         assert_eq!(6, enemy_level(10, 2));
         assert_eq!(7, enemy_level(10, 3));
     }
+
+    #[test]
+    fn battle_won() {
+        let mut game = Game::new();
+        // same level as player
+        let mut enemy = Character::enemy(1);
+
+        game.player.speed = 2;
+        game.player.current_hp = 20;
+        game.player.strength = 10; // each hit will take 10hp
+
+        enemy.speed = 1;
+        enemy.current_hp = 15;
+        enemy.strength = 5;
+
+        // expected turns
+        // enemy - 10hp
+        // player - 5 hp
+        // enemy - 10hp
+
+        let result = game.battle(&mut enemy);
+        assert!(result.is_ok());
+        assert_eq!(15, game.player.current_hp);
+        assert_eq!(1, game.player.level);
+        assert_eq!(20, game.player.xp);
+
+        let mut enemy = Character::enemy(1);
+        enemy.speed = 1;
+        enemy.current_hp = 15;
+        enemy.strength = 5;
+
+        // same turns, added xp increases level
+
+        let result = game.battle(&mut enemy);
+        assert!(result.is_ok());
+        assert_eq!(2, game.player.level);
+        assert_eq!(10, game.player.xp);
+    }
+
+    #[test]
+    fn battle_lost() {
+        let mut game = Game::new();
+        let mut enemy = Character::enemy(10);
+        let result = game.battle(&mut enemy);
+        assert!(result.is_err());
+    }
 }
