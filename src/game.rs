@@ -143,18 +143,18 @@ mod tests {
     #[test]
     fn test_enemy_level() {
         // player level 1
-        assert!((1..=1).contains(&enemy_level(1, 1)));
-        assert!((1..=2).contains(&enemy_level(1, 2)));
-        assert!((1..=3).contains(&enemy_level(1, 3)));
+        assert_eq!(1, enemy_level(1, 1));
+        assert_eq!(1, enemy_level(1, 2));
+        assert_eq!(2, enemy_level(1, 3));
 
         // player level 5
-        assert!((1..=3).contains(&enemy_level(5, 1)));
-        assert!((2..=4).contains(&enemy_level(5, 2)));
-        assert!((3..=5).contains(&enemy_level(5, 3)));
+        assert_eq!(2, enemy_level(5, 1));
+        assert_eq!(3, enemy_level(5, 2));
+        assert_eq!(4, enemy_level(5, 3));
 
         // player level 10
-        assert!((4..=6).contains(&enemy_level(10, 1)));
-        assert!((5..=7).contains(&enemy_level(10, 2)));
-        assert!((6..=8).contains(&enemy_level(10, 3)));
+        assert_eq!(5, enemy_level(10, 1));
+        assert_eq!(6, enemy_level(10, 2));
+        assert_eq!(7, enemy_level(10, 3));
     }
 }

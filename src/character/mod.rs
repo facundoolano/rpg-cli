@@ -171,8 +171,8 @@ mod tests {
 
         hero.increase_level();
         assert_eq!(2, hero.level);
-        assert!((23..=29).contains(&hero.max_hp));
-        assert!((11..=12).contains(&hero.strength));
+        assert_eq!(26, hero.max_hp);
+        assert_eq!(11, hero.strength);
         assert_eq!(6, hero.speed);
 
         let damage = 7;
@@ -191,30 +191,23 @@ mod tests {
         // 1 vs 1 -- no level-based effect
         hero.strength = 10;
         foe.strength = 10;
-
-        let damage = hero.damage(&foe);
-        assert!((8..=12).contains(&damage), "value was {}", damage);
+        assert_eq!(10, hero.damage(&foe));
 
         // level 1 vs level 2
         foe.level = 2;
         foe.strength = 15;
-        let damage = hero.damage(&foe);
-        assert!((7..=11).contains(&damage), "value was {}", damage);
+        assert_eq!(9, hero.damage(&foe));
 
         // level 2 vs level 1
-        let damage = foe.damage(&hero);
-        assert!((12..=19).contains(&damage), "value was {}", damage);
+        assert_eq!(15, foe.damage(&hero));
 
         // level 1 vs level 5
         foe.level = 5;
         foe.strength = 40;
-
-        let damage = hero.damage(&foe);
-        assert!((4..=8).contains(&damage), "value was {}", damage);
+        assert_eq!(6, hero.damage(&foe));
 
         // level 5 vs level 1
-        let damage = foe.damage(&hero);
-        assert!((38..=58).contains(&damage), "value was {}", damage);
+        assert_eq!(48, foe.damage(&hero));
     }
 
     #[test]
