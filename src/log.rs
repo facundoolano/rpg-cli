@@ -28,6 +28,7 @@ pub fn enemy_attack(player: &Character, location: &Location, attack: game::Attac
     log(
         &player,
         &location,
+        // FIXME dodged shouldn't be red
         &format!("{}", attack).bold().red().to_string(),
     );
 }
@@ -84,7 +85,7 @@ impl std::fmt::Display for game::Attack {
                 write!(f, "-{}hp critical!", damage)
             }
             game::Attack::Miss => {
-                write!(f, " miss!")
+                write!(f, " dodged!")
             }
         }
     }
