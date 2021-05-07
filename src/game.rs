@@ -3,7 +3,7 @@ extern crate dirs;
 use crate::character::Character;
 use crate::location::Location;
 use crate::log;
-use rand::Rng;
+use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path};
 
@@ -75,7 +75,7 @@ impl Game {
     }
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
-        if self.should_enemy_appear() {
+        if Randomizer::should_enemy_appear() {
             let level = enemy_level(self.player.level, self.location.distance_from_home());
             let enemy = Character::enemy(level);
             log::enemy_appears(&enemy, &self.location);
@@ -83,11 +83,6 @@ impl Game {
         } else {
             None
         }
-    }
-
-    fn should_enemy_appear(&self) -> bool {
-        let mut rng = rand::thread_rng();
-        rng.gen_ratio(1, 3)
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
@@ -137,8 +132,7 @@ impl Game {
 }
 
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
-    let mut rng = rand::thread_rng();
-    let random_delta = rng.gen_range(-1..2);
+    let random_delta = Randomizer::enemy_delta();
     std::cmp::max(player_level / 2 + distance_from_home - 1 + random_delta, 1)
 }
 
@@ -149,18 +143,64 @@ mod tests {
     #[test]
     fn test_enemy_level() {
         // player level 1
-        assert!((1..=1).contains(&enemy_level(1, 1)));
-        assert!((1..=2).contains(&enemy_level(1, 2)));
-        assert!((1..=3).contains(&enemy_level(1, 3)));
+        assert_eq!(1, enemy_level(1, 1));
+        assert_eq!(1, enemy_level(1, 2));
+        assert_eq!(2, enemy_level(1, 3));
 
         // player level 5
-        assert!((1..=3).contains(&enemy_level(5, 1)));
-        assert!((2..=4).contains(&enemy_level(5, 2)));
-        assert!((3..=5).contains(&enemy_level(5, 3)));
+        assert_eq!(2, enemy_level(5, 1));
+        assert_eq!(3, enemy_level(5, 2));
+        assert_eq!(4, enemy_level(5, 3));
 
         // player level 10
-        assert!((4..=6).contains(&enemy_level(10, 1)));
-        assert!((5..=7).contains(&enemy_level(10, 2)));
-        assert!((6..=8).contains(&enemy_level(10, 3)));
+        assert_eq!(5, enemy_level(10, 1));
+        assert_eq!(6, enemy_level(10, 2));
+        assert_eq!(7, enemy_level(10, 3));
+    }
+
+    #[test]
+    fn battle_won() {
+        let mut game = Game::new();
+        // same level as player
+        let mut enemy = Character::enemy(1);
+
+        game.player.speed = 2;
+        game.player.current_hp = 20;
+        game.player.strength = 10; // each hit will take 10hp
+
+        enemy.speed = 1;
+        enemy.current_hp = 15;
+        enemy.strength = 5;
+
+        // expected turns
+        // enemy - 10hp
+        // player - 5 hp
+        // enemy - 10hp
+
+        let result = game.battle(&mut enemy);
+        assert!(result.is_ok());
+        assert_eq!(15, game.player.current_hp);
+        assert_eq!(1, game.player.level);
+        assert_eq!(20, game.player.xp);
+
+        let mut enemy = Character::enemy(1);
+        enemy.speed = 1;
+        enemy.current_hp = 15;
+        enemy.strength = 5;
+
+        // same turns, added xp increases level
+
+        let result = game.battle(&mut enemy);
+        assert!(result.is_ok());
+        assert_eq!(2, game.player.level);
+        assert_eq!(10, game.player.xp);
+    }
+
+    #[test]
+    fn battle_lost() {
+        let mut game = Game::new();
+        let mut enemy = Character::enemy(10);
+        let result = game.battle(&mut enemy);
+        assert!(result.is_err());
     }
 }

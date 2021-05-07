@@ -4,6 +4,7 @@ mod character;
 mod game;
 mod location;
 mod log;
+mod randomizer;
 
 use crate::location::Location;
 use clap::Clap;
