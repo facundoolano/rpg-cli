@@ -26,8 +26,8 @@ impl DefaultRandomizer {
         let value = value as f64;
 
         let mut rng = rand::thread_rng();
-        let min = (value - value * 0.2).floor() as i32;
-        let max = (value + value * 0.2).ceil() as i32;
+        let min = (value * 0.8).floor() as i32;
+        let max = (value * 1.2).ceil() as i32;
         rng.gen_range(min..=max)
     }
 
@@ -44,6 +44,13 @@ impl DefaultRandomizer {
             return rng.gen_ratio(1, ratio);
         }
         false
+    }
+
+    pub fn gold_gained(base: i32) -> i32 {
+        let mut rng = rand::thread_rng();
+        let min = (base as f64 * 0.6) as i32;
+        let max = (base as f64 * 1.3) as i32;
+        rng.gen_range(min..=max)
     }
 
     pub fn stat(current: i32, rate: f64) -> i32 {
@@ -80,6 +87,10 @@ impl TestRandomizer {
 
     pub fn should_miss(_attacker_speed: i32, _receiver_speed: i32) -> bool {
         false
+    }
+
+    pub fn gold_gained(base: i32) -> i32 {
+        base
     }
 
     pub fn stat(current: i32, rate: f64) -> i32 {

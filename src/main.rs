@@ -52,7 +52,7 @@ fn main() {
     } else if let Some(dest) = opts.destination {
         go_to(&mut game, &dest);
     } else {
-        log::status(&game.player, &game.location);
+        log::status(&game);
     }
 }
 

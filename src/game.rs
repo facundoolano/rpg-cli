@@ -23,6 +23,7 @@ pub enum Attack {
 pub struct Game {
     pub player: Character,
     pub location: Location,
+    pub gold: i32,
 }
 
 // TODO factor out all dir/file management code
@@ -39,6 +40,7 @@ impl Game {
         Self {
             location: Location::home(),
             player: Character::player(),
+            gold: 0,
         }
     }
 
@@ -119,8 +121,8 @@ impl Game {
             }
         }
 
-        // TODO gather gold for real
-        let gold = 100;
+        let gold = Randomizer::gold_gained(enemy.level * 100);
+        self.gold += gold;
         let level_up = player.add_experience(xp);
         log::battle_won(&player, &self.location, xp, level_up, gold);
 
