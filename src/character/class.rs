@@ -14,30 +14,37 @@ pub struct Class {
     pub speed_rate: f64,
 }
 
-// pub enum Class {
-//     Hero,
-//     Test,
+impl Class {
+    pub const HERO: Self = Self {
+        name: "hero",
+        start_hp: 25,
+        start_strength: 10,
+        start_speed: 5,
 
-//     Rat,
-//     Wolf,
-//     Snake,
-//     Slime,
-//     Spider,
+        hp_rate: 0.3,
+        strength_rate: 0.2,
+        speed_rate: 0.1,
+    };
 
-//     Zombie,
-//     Orc,
-//     Skeleton,
-//     Demon,
-//     Vampire,
-//     Dragon,
-//     Golem,
+    // At the moment the only criteria to choose one enemy class vs another is how far
+    // from home they appear. Within the same group, the classes is chosen randomly.
+    const NEAR_ENEMIES: &'static [Self] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
+    const MEDIUM_ENEMIES: &'static [Self] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
+    const FAR_ENEMIES: &'static [Self] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
 
-//     Chimera,
-//     Basilisk,
-//     Minotaur,
-//     Balrog,
-//     Phoenix,
-// }
+    pub fn random_enemy(distance_from_home: i32) -> &'static Self {
+        match distance_from_home {
+            n if n <= 4 => Self::random_choice(Self::NEAR_ENEMIES),
+            n if n <= 9 => Self::random_choice(Self::MEDIUM_ENEMIES),
+            _ => Self::random_choice(Self::FAR_ENEMIES),
+        }
+    }
+
+    fn random_choice(options: &[Self]) -> &Self {
+        let mut rng = rand::thread_rng();
+        options.iter().choose(&mut rng).unwrap()
+    }
+}
 
 // TODO review stats
 const RAT: Class = Class {
@@ -63,35 +70,182 @@ const WOLF: Class = Class {
     speed_rate: 0.07,
 };
 
+// TODO review stats
+const SNAKE: Class = Class {
+    name: "snake",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
 
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
 
-impl Class {
-    pub const HERO: Self = Self {
-        name: "hero",
-        start_hp: 25,
-        start_strength: 10,
-        start_speed: 5,
+// TODO review stats
+const SLIME: Class = Class {
+    name: "slime",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
 
-        hp_rate: 0.3,
-        strength_rate: 0.2,
-        speed_rate: 0.1,
-    };
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
 
-    // FIXME add the rest
-    const NEAR_ENEMIES: &'static [Self] = &[RAT, WOLF];
-    const MEDIUM_ENEMIES: &'static [Self] = &[RAT, WOLF];
-    const FAR_ENEMIES: &'static [Self] = &[RAT, WOLF];
+// TODO review stats
+const SPIDER: Class = Class {
+    name: "spider",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
 
-    pub fn random_enemy(distance_from_home: i32) -> &'static Self {
-        match distance_from_home {
-            n if n <= 4  => Self::random_choice(Self::NEAR_ENEMIES),
-            n if n <= 9  => Self::random_choice(Self::MEDIUM_ENEMIES),
-            _ => Self::random_choice(Self::FAR_ENEMIES)
-        }
-    }
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
 
-    fn random_choice(options: &[Self]) -> &Self {
-        let mut rng = rand::thread_rng();
-        options.iter().choose(&mut rng).unwrap()
-    }
-}
+// TODO review stats
+const ZOMBIE: Class = Class {
+    name: "zombie",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const ORC: Class = Class {
+    name: "orc",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const SKELETON: Class = Class {
+    name: "skeleton",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const DEMON: Class = Class {
+    name: "demon",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const VAMPIRE: Class = Class {
+    name: "vampire",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const DRAGON: Class = Class {
+    name: "dragon",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const GOLEM: Class = Class {
+    name: "golem",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const CHIMERA: Class = Class {
+    name: "chimera",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const BASILISK: Class = Class {
+    name: "basilisk",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const MINOTAUR: Class = Class {
+    name: "minotaur",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const BALROG: Class = Class {
+    name: "balrog",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
+
+// TODO review stats
+const PHOENIX: Class = Class {
+    name: "phoenix",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    hp_rate: 0.20,
+    strength_rate: 0.15,
+    speed_rate: 0.07,
+};
