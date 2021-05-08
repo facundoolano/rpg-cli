@@ -1,4 +1,5 @@
 use crate::character::Character;
+use crate::game;
 use crate::location::Location;
 use colored::*;
 
@@ -15,19 +16,19 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
         );
     }
 }
-pub fn player_attack(enemy: &Character, location: &Location, damage: i32) {
+pub fn player_attack(enemy: &Character, location: &Location, attack: game::Attack) {
     log(
         &enemy,
         &location,
-        &format!("{}hp", -damage).white().to_string(),
+        &format_attack(attack, "white")
     );
 }
 
-pub fn enemy_attack(player: &Character, location: &Location, damage: i32) {
+pub fn enemy_attack(player: &Character, location: &Location, attack: game::Attack) {
     log(
         &player,
         &location,
-        &format!("{}hp", -damage).bold().red().to_string(),
+        &format_attack(attack, "bright red")
     );
 }
 
@@ -87,6 +88,20 @@ fn log(character: &Character, location: &Location, suffix: &str) {
         location,
         suffix
     );
+}
+
+fn format_attack(attack: game::Attack, color: &str) -> String {
+    match attack {
+        game::Attack::Regular(damage) => {
+            format!("-{}hp", damage).color(color).to_string()
+        }
+        game::Attack::Critical(damage) => {
+            format!("-{}hp critical!", damage).color(color).to_string()
+        }
+        game::Attack::Miss => {
+            format!(" dodged!")
+        }
+    }
 }
 
 fn hp_display(character: &Character, slots: i32) -> String {
