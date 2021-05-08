@@ -147,8 +147,19 @@ impl Character {
 mod tests {
     use super::*;
 
+    const TEST_CLASS: Class = Class {
+        name: "test",
+        start_hp: 25,
+        start_strength: 10,
+        start_speed: 5,
+
+        hp_rate: 0.3,
+        strength_rate: 0.1,
+        speed_rate: 0.1,
+    };
+
     fn new_char() -> Character {
-        Character::new(Class::Test, "hero", 1)
+        Character::new(&TEST_CLASS, 1)
     }
 
     #[test]
@@ -158,22 +169,20 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        let params = Class::Test.params();
-        assert_eq!(params.start_hp, hero.current_hp);
-        assert_eq!(params.start_hp, hero.max_hp);
-        assert_eq!(params.start_strength, hero.strength);
-        assert_eq!(params.start_speed, hero.speed);
+        assert_eq!(TEST_CLASS.start_hp, hero.current_hp);
+        assert_eq!(TEST_CLASS.start_hp, hero.max_hp);
+        assert_eq!(TEST_CLASS.start_strength, hero.strength);
+        assert_eq!(TEST_CLASS.start_speed, hero.speed);
     }
 
     #[test]
     fn test_increase_level() {
         let mut hero = new_char();
 
-        let params = Class::Test.params();
         // assert what we're assuming are the params in the rest of the test
-        assert_eq!(0.3, params.hp_rate);
-        assert_eq!(0.1, params.strength_rate);
-        assert_eq!(0.1, params.speed_rate);
+        assert_eq!(0.3, TEST_CLASS.hp_rate);
+        assert_eq!(0.1, TEST_CLASS.strength_rate);
+        assert_eq!(0.1, TEST_CLASS.speed_rate);
 
         hero.max_hp = 20;
         hero.current_hp = 20;
