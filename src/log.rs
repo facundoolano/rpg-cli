@@ -20,7 +20,7 @@ pub fn player_attack(enemy: &Character, location: &Location, attack: game::Attac
     log(
         &enemy,
         &location,
-        &format!("{}", attack).white().to_string(),
+        &format_attack(attack, "white")
     );
 }
 
@@ -28,8 +28,7 @@ pub fn enemy_attack(player: &Character, location: &Location, attack: game::Attac
     log(
         &player,
         &location,
-        // FIXME dodged shouldn't be red
-        &format!("{}", attack).bold().red().to_string(),
+        &format_attack(attack, "bright red")
     );
 }
 
@@ -75,22 +74,6 @@ pub fn status(player: &Character, location: &Location) {
     println!("    item:{{}}");
 }
 
-impl std::fmt::Display for game::Attack {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            game::Attack::Regular(damage) => {
-                write!(f, "-{}hp", damage)
-            }
-            game::Attack::Critical(damage) => {
-                write!(f, "-{}hp critical!", damage)
-            }
-            game::Attack::Miss => {
-                write!(f, " dodged!")
-            }
-        }
-    }
-}
-
 // HELPERS
 
 /// Generic log function. At the moment all output of the game is structured as
@@ -105,6 +88,20 @@ fn log(character: &Character, location: &Location, suffix: &str) {
         location,
         suffix
     );
+}
+
+fn format_attack(attack: game::Attack, color: &str) -> String {
+    match attack {
+        game::Attack::Regular(damage) => {
+            format!("-{}hp", damage).color(color).to_string()
+        }
+        game::Attack::Critical(damage) => {
+            format!("-{}hp critical!", damage).color(color).to_string()
+        }
+        game::Attack::Miss => {
+            format!(" dodged!")
+        }
+    }
 }
 
 fn hp_display(character: &Character, slots: i32) -> String {
