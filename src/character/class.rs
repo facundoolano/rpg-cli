@@ -1,14 +1,65 @@
+use std::fmt;
+use rand::seq::IteratorRandom;
+
 use serde::{Deserialize, Serialize};
 
 /// Character classes, which will determine the parameters to start and
 /// increase the stats of the character. For now generic hero/enemy but
 /// should enable multiple player and enemy types.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum Class {
     Hero,
-    Enemy,
     Test,
+
+    Rat,
+    Wolf,
+    Snake,
+    Slime,
+    Spider,
+
+    Zombie,
+    Orc,
+    Skeleton,
+    Demon,
+    Vampire,
+    Dragon,
+    Golem,
+
+    Chimera,
+    Basilisk,
+    Minotaur,
+    Balrog,
+    Phoenix,
 }
+
+// FIXME there's too much duplication with this enum approach
+// explore if using structs or traits could make things simpler somehow
+
+const NEAR_ENEMIES: &[Class] = &[
+    Class::Rat,
+    Class::Wolf,
+    Class::Snake,
+    Class::Slime,
+    Class::Spider,
+];
+
+const MEDIUM_ENEMIES: &[Class] = &[
+    Class::Zombie,
+    Class::Orc,
+    Class::Skeleton,
+    Class::Demon,
+    Class::Vampire,
+    Class::Dragon,
+    Class::Golem,
+];
+
+const FAR_ENEMIES: &[Class] = &[
+    Class::Chimera,
+    Class::Basilisk,
+    Class::Minotaur,
+    Class::Balrog,
+    Class::Phoenix,
+];
 
 /// The stat configuration for a given character class.
 /// It determines the default values for stat and the rate at
@@ -59,8 +110,29 @@ impl Class {
     pub fn params(&self) -> Parameters {
         match self {
             Class::Hero => HERO_PARAMS,
-            Class::Enemy => ENEMY_PARAMS,
             Class::Test => TEST_PARAMS,
+            // FIXME make different params per class
+            _ => ENEMY_PARAMS,
         }
+    }
+
+    pub fn random_enemy(distance_from_home: i32) -> Self {
+        match distance_from_home {
+            n if n <= 4  => Self::random_choice(NEAR_ENEMIES),
+            n if n <= 9  => Self::random_choice(MEDIUM_ENEMIES),
+            _ => Self::random_choice(FAR_ENEMIES)
+        }
+    }
+
+    fn random_choice(options: &[Self]) -> Self {
+        let mut rng = rand::thread_rng();
+        *options.iter().choose(&mut rng).unwrap()
+    }
+}
+
+impl fmt::Display for Class {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // FIXME add padding
+        write!(f, "{}", format!("{:?}", self).to_lowercase())
     }
 }

@@ -23,7 +23,7 @@ impl Location {
         Ok(Self { path })
     }
 
-    pub fn to_string(&self) -> String {
+    pub fn path_string(&self) -> String {
         self.path.to_string_lossy().to_string()
     }
 

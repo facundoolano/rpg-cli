@@ -8,6 +8,7 @@ use class::Class;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
     class: Class,
+    // FIXME remove
     pub name: String,
 
     pub level: i32,
@@ -26,7 +27,8 @@ impl Character {
     }
 
     pub fn enemy(level: i32) -> Self {
-        Self::new(Class::Enemy, "enemy", level)
+        // FIXME should get distance from home
+        Self::new(Class::random_enemy(1), "enemy", level)
     }
 
     pub fn is_player(&self) -> bool {
