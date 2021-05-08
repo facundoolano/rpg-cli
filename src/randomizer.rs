@@ -41,7 +41,7 @@ impl DefaultRandomizer {
             let ratio = receiver_speed / attacker_speed;
             let ratio = max(1, 5 - ratio) as u32;
             let mut rng = rand::thread_rng();
-            return rng.gen_ratio(1, ratio)
+            return rng.gen_ratio(1, ratio);
         }
         false
     }

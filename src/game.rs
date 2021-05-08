@@ -105,11 +105,11 @@ impl Game {
                 let (damage, new_xp) = Self::attack(player, enemy);
                 xp += new_xp;
 
-                log::player_attack(&enemy, &self.location, damage);
+                log::player_attack(&enemy, damage);
                 pl_accum = -1;
             } else {
                 let (damage, _) = Self::attack(enemy, player);
-                log::enemy_attack(&player, &self.location, damage);
+                log::enemy_attack(&player, damage);
                 en_accum = -1;
             }
 

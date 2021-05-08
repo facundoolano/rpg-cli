@@ -16,20 +16,12 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
         );
     }
 }
-pub fn player_attack(enemy: &Character, location: &Location, attack: game::Attack) {
-    log(
-        &enemy,
-        &location,
-        &format_attack(attack, "white")
-    );
+pub fn player_attack(enemy: &Character, attack: game::Attack) {
+    battle_log(&enemy, &format_attack(attack, "white"));
 }
 
-pub fn enemy_attack(player: &Character, location: &Location, attack: game::Attack) {
-    log(
-        &player,
-        &location,
-        &format_attack(attack, "bright red")
-    );
+pub fn enemy_attack(player: &Character, attack: game::Attack) {
+    battle_log(&player, &format_attack(attack, "bright red"));
 }
 
 pub fn battle_lost(player: &Character, location: &Location) {
@@ -56,6 +48,7 @@ pub fn battle_won(player: &Character, location: &Location, xp: i32, level_up: bo
 }
 
 pub fn status(player: &Character, location: &Location) {
+    println!();
     println!("   {}[{}]@{}", name(&player), player.level, location);
     println!(
         "    hp:{} {}/{}",
@@ -72,6 +65,7 @@ pub fn status(player: &Character, location: &Location) {
     println!("    str:{}   spd:{}   100g", player.strength, player.speed);
     println!("    equip:{{sword, shield}}");
     println!("    item:{{}}");
+    println!();
 }
 
 // HELPERS
@@ -80,7 +74,7 @@ pub fn status(player: &Character, location: &Location) {
 /// of a player status at some location, with an optional event suffix.
 fn log(character: &Character, location: &Location, suffix: &str) {
     println!(
-        "    {}[{}]{}{}@{} {}",
+        "\n    {}[{}]{}{}@{} {}\n",
         name(&character),
         character.level,
         hp_display(&character, 4),
@@ -90,17 +84,23 @@ fn log(character: &Character, location: &Location, suffix: &str) {
     );
 }
 
+fn battle_log(character: &Character, suffix: &str) {
+    println!(
+        "    {}[{}]{} {}",
+        name(&character),
+        character.level,
+        hp_display(&character, 4),
+        suffix
+    );
+}
+
 fn format_attack(attack: game::Attack, color: &str) -> String {
     match attack {
-        game::Attack::Regular(damage) => {
-            format!("-{}hp", damage).color(color).to_string()
-        }
+        game::Attack::Regular(damage) => format!("-{}hp", damage).color(color).to_string(),
         game::Attack::Critical(damage) => {
             format!("-{}hp critical!", damage).color(color).to_string()
         }
-        game::Attack::Miss => {
-            format!(" dodged!")
-        }
+        game::Attack::Miss => " dodged!".to_string(),
     }
 }
 
@@ -115,13 +115,18 @@ fn hp_display(character: &Character, slots: i32) -> String {
 }
 
 fn xp_display(character: &Character, slots: i32) -> String {
-    bar_display(
-        slots,
-        character.xp,
-        character.xp_for_next(),
-        "cyan",
-        "bright black",
-    )
+    if character.is_player() {
+        bar_display(
+            slots,
+            character.xp,
+            character.xp_for_next(),
+            "cyan",
+            "bright black",
+        )
+    } else {
+        // enemies don't have experience
+        String::new()
+    }
 }
 
 fn bar_display(
