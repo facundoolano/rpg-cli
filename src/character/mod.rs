@@ -33,9 +33,8 @@ impl Character {
         Self::new(&Class::HERO, 1)
     }
 
-    pub fn enemy(level: i32) -> Self {
-        // FIXME should get distance from home
-        Self::new(Class::random_enemy(1), level)
+    pub fn enemy(level: i32, distance_from_home: i32) -> Self {
+        Self::new(Class::random_enemy(distance_from_home), level)
     }
 
     pub fn name(&self) -> String {
