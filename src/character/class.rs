@@ -26,24 +26,25 @@ impl Class {
         speed_rate: 0.1,
     };
 
-    // At the moment the only criteria to choose one enemy class vs another is how far
-    // from home they appear. Within the same group, the classes is chosen randomly.
-    const NEAR_ENEMIES: &'static [Self] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
-    const MEDIUM_ENEMIES: &'static [Self] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
-    const FAR_ENEMIES: &'static [Self] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
-
     pub fn random_enemy(distance_from_home: i32) -> &'static Self {
         match distance_from_home {
-            n if n <= 4 => Self::random_choice(Self::NEAR_ENEMIES),
-            n if n <= 9 => Self::random_choice(Self::MEDIUM_ENEMIES),
-            _ => Self::random_choice(Self::FAR_ENEMIES),
+            n if n <= 4 => random_choice(NEAR_ENEMIES),
+            n if n <= 9 => random_choice(MEDIUM_ENEMIES),
+            _ => random_choice(FAR_ENEMIES),
         }
     }
 
-    fn random_choice(options: &[Self]) -> &Self {
-        let mut rng = rand::thread_rng();
-        options.iter().choose(&mut rng).unwrap()
-    }
+}
+
+// At the moment the only criteria to choose one enemy class vs another is how far
+// from home they appear. Within the same group, the class is chosen randomly.
+const NEAR_ENEMIES: &'static [Class] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
+const MEDIUM_ENEMIES: &'static [Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
+const FAR_ENEMIES: &'static [Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
+
+fn random_choice(options: &[Class]) -> &Class {
+    let mut rng = rand::thread_rng();
+    options.iter().choose(&mut rng).unwrap()
 }
 
 // TODO review stats
