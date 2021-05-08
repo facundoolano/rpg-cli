@@ -157,13 +157,13 @@ fn bar_slots(slots: i32, total: i32, current: i32) -> (i32, i32) {
     (units, slots - units)
 }
 
-// FIXME kill the name concept altogether, rely on class display
 fn name(character: &Character) -> String {
+    let name = character.name();
     if character.is_player() {
         // FIXME use correct padding
-        " hero".bold().to_string()
+        name.bold().to_string()
     } else {
-        character.name().yellow().bold().to_string()
+        name.yellow().bold().to_string()
     }
 }
 

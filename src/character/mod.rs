@@ -41,9 +41,8 @@ impl Character {
         self.class.name.to_string()
     }
 
-    // FIXME this shouldnt exist
     pub fn is_player(&self) -> bool {
-        // FIXME ugly
+        // kind of ugly but does the job
         self.class.name == "hero"
     }
 
