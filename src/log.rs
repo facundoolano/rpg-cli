@@ -163,7 +163,7 @@ fn name(character: &Character) -> String {
         // FIXME use correct padding
         " hero".bold().to_string()
     } else {
-        character.name.yellow().bold().to_string()
+        character.name().yellow().bold().to_string()
     }
 }
 
