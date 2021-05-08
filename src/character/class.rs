@@ -2,7 +2,7 @@ use rand::seq::IteratorRandom;
 
 /// Character classes, which will determine the parameters to start and
 /// increase the stats of the character.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Class {
     pub name: &'static str,
     pub start_hp: i32,
