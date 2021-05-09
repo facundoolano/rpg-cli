@@ -2,6 +2,7 @@ use game::Game;
 
 mod character;
 mod game;
+mod equipment;
 mod location;
 mod log;
 mod randomizer;

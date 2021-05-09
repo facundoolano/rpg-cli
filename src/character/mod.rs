@@ -1,14 +1,16 @@
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
-mod class;
+pub mod class;
 use crate::randomizer::Randomizer;
+use crate::equipment;
 use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
+    pub sword: Option<equipment::Sword>,
 
     pub level: i32,
     pub xp: i32,
@@ -46,6 +48,7 @@ impl Character {
     fn new(class: &'static Class, level: i32) -> Self {
         let mut character = Self {
             class,
+            sword: None,
             level: 1,
             xp: 0,
             max_hp: class.start_hp,
@@ -113,7 +116,11 @@ impl Character {
         // Possible improvements: use different attack and defense stats,
         // incorporate weapon and armor effect.
 
-        let str_10 = self.strength as f64 * 0.1;
+        // if there's a weapon equipped it increases the character's base strength
+        let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
+        let strength = (self.strength + sword_str) as f64;
+
+        let str_10 = strength * 0.1;
 
         // attenuate the level based difference to help the weaker player
         let level_diff_effect = if self.level < receiver.level {
@@ -122,7 +129,7 @@ impl Character {
             (self.level - receiver.level) as f64 / 2.0 * str_10
         };
 
-        let damage = (self.strength as f64 + level_diff_effect) as i32;
+        let damage = (strength + level_diff_effect) as i32;
         max(str_10.ceil() as i32, Randomizer::damage(damage))
     }
 
