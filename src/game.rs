@@ -84,8 +84,9 @@ impl Game {
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
         if Randomizer::should_enemy_appear() {
-            let level = enemy_level(self.player.level, self.location.distance_from_home());
-            let enemy = Character::enemy(level);
+            let distance = self.location.distance_from_home();
+            let level = enemy_level(self.player.level, distance);
+            let enemy = Character::enemy(level, distance);
             log::enemy_appears(&enemy, &self.location);
             Some(enemy)
         } else {
@@ -181,7 +182,7 @@ mod tests {
     fn battle_won() {
         let mut game = Game::new();
         // same level as player
-        let mut enemy = Character::enemy(1);
+        let mut enemy = Character::enemy(1, 1);
 
         game.player.speed = 2;
         game.player.current_hp = 20;
@@ -203,7 +204,7 @@ mod tests {
         assert_eq!(20, game.player.xp);
         assert_eq!(100, game.gold);
 
-        let mut enemy = Character::enemy(1);
+        let mut enemy = Character::enemy(1, 1);
         enemy.speed = 1;
         enemy.current_hp = 15;
         enemy.strength = 5;
@@ -220,7 +221,7 @@ mod tests {
     #[test]
     fn battle_lost() {
         let mut game = Game::new();
-        let mut enemy = Character::enemy(10);
+        let mut enemy = Character::enemy(10, 1);
         let result = game.battle(&mut enemy);
         assert!(result.is_err());
     }

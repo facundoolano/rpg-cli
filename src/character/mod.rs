@@ -7,8 +7,8 @@ use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
-    class: Class,
-    pub name: String,
+    #[serde(skip, default = "default_class")]
+    class: &'static Class,
 
     pub level: i32,
     pub xp: i32,
@@ -20,30 +20,38 @@ pub struct Character {
     pub speed: i32,
 }
 
+// Always attach the static hero class to deserialized characters
+fn default_class() -> &'static Class {
+    &Class::HERO
+}
+
 impl Character {
     pub fn player() -> Self {
-        Self::new(Class::Hero, "hero", 1)
+        Self::new(&Class::HERO, 1)
     }
 
-    pub fn enemy(level: i32) -> Self {
-        Self::new(Class::Enemy, "enemy", level)
+    pub fn enemy(level: i32, distance_from_home: i32) -> Self {
+        Self::new(Class::random_enemy(distance_from_home), level)
+    }
+
+    pub fn name(&self) -> String {
+        self.class.name.to_string()
     }
 
     pub fn is_player(&self) -> bool {
-        matches!(self.class, Class::Hero)
+        // kind of ugly but does the job
+        self.class.name == "hero"
     }
 
-    fn new(class: Class, name: &str, level: i32) -> Self {
-        let params = class.params();
+    fn new(class: &'static Class, level: i32) -> Self {
         let mut character = Self {
             class,
             level: 1,
-            name: String::from(name),
             xp: 0,
-            max_hp: params.start_hp,
-            current_hp: params.start_hp,
-            strength: params.start_strength,
-            speed: params.start_speed,
+            max_hp: class.start_hp,
+            current_hp: class.start_hp,
+            strength: class.start_strength,
+            speed: class.start_speed,
         };
 
         for _ in 1..level {
@@ -55,16 +63,14 @@ impl Character {
 
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
-        let params = self.class.params();
-
         self.level += 1;
-        self.strength = Randomizer::stat(self.strength, params.strength_rate);
-        self.speed = Randomizer::stat(self.speed, params.speed_rate);
+        self.strength = Randomizer::stat(self.strength, self.class.strength_rate);
+        self.speed = Randomizer::stat(self.speed, self.class.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = Randomizer::stat(self.max_hp, params.hp_rate);
+        self.max_hp = Randomizer::stat(self.max_hp, self.class.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -136,8 +142,19 @@ impl Character {
 mod tests {
     use super::*;
 
+    const TEST_CLASS: Class = Class {
+        name: "test",
+        start_hp: 25,
+        start_strength: 10,
+        start_speed: 5,
+
+        hp_rate: 0.3,
+        strength_rate: 0.1,
+        speed_rate: 0.1,
+    };
+
     fn new_char() -> Character {
-        Character::new(Class::Test, "hero", 1)
+        Character::new(&TEST_CLASS, 1)
     }
 
     #[test]
@@ -147,22 +164,20 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        let params = Class::Test.params();
-        assert_eq!(params.start_hp, hero.current_hp);
-        assert_eq!(params.start_hp, hero.max_hp);
-        assert_eq!(params.start_strength, hero.strength);
-        assert_eq!(params.start_speed, hero.speed);
+        assert_eq!(TEST_CLASS.start_hp, hero.current_hp);
+        assert_eq!(TEST_CLASS.start_hp, hero.max_hp);
+        assert_eq!(TEST_CLASS.start_strength, hero.strength);
+        assert_eq!(TEST_CLASS.start_speed, hero.speed);
     }
 
     #[test]
     fn test_increase_level() {
         let mut hero = new_char();
 
-        let params = Class::Test.params();
         // assert what we're assuming are the params in the rest of the test
-        assert_eq!(0.3, params.hp_rate);
-        assert_eq!(0.1, params.strength_rate);
-        assert_eq!(0.1, params.speed_rate);
+        assert_eq!(0.3, TEST_CLASS.hp_rate);
+        assert_eq!(0.1, TEST_CLASS.strength_rate);
+        assert_eq!(0.1, TEST_CLASS.speed_rate);
 
         hero.max_hp = 20;
         hero.current_hp = 20;

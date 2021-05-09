@@ -1,4 +1,4 @@
-# rpg-cli —Your filesystem as a dungeon!
+# rpg-cli —your filesystem as a dungeon!
 
 rpg-cli is a bare-bones [JRPG](https://en.wikipedia.org/wiki/JRPG)-inspired terminal game written in Rust. It can work as an alternative to `cd` where you randomly encounter enemies as you change directories.
 

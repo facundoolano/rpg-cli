@@ -40,7 +40,7 @@ fn main() {
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
     if opts.pwd {
-        println!("{}", game.location.to_string());
+        println!("{}", game.location.path_string());
     } else if opts.reset {
         game.reset()
     } else if opts.shop {

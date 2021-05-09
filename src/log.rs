@@ -52,7 +52,7 @@ pub fn status(game: &Game) {
     let location = &game.location;
 
     println!();
-    println!("   {}[{}]@{}", name(&player), player.level, location);
+    println!("{}@{}", format_character(&player), location);
     println!(
         "    hp:{} {}/{}",
         hp_display(&player, 10),
@@ -66,8 +66,10 @@ pub fn status(game: &Game) {
         player.xp_for_next()
     );
     println!(
-        "    str:{}   spd:{}   {}g",
-        player.strength, player.speed, game.gold
+        "    str:{}   spd:{}   {}",
+        player.strength,
+        player.speed,
+        format!("{}g", game.gold).yellow()
     );
     println!("    equip:{{sword, shield}}");
     println!("    item:{{}}");
@@ -80,9 +82,8 @@ pub fn status(game: &Game) {
 /// of a player status at some location, with an optional event suffix.
 fn log(character: &Character, location: &Location, suffix: &str) {
     println!(
-        "\n    {}[{}]{}{}@{} {}\n",
-        name(&character),
-        character.level,
+        "\n{}{}{}@{} {}\n",
+        format_character(&character),
         hp_display(&character, 4),
         xp_display(&character, 4),
         location,
@@ -92,12 +93,21 @@ fn log(character: &Character, location: &Location, suffix: &str) {
 
 fn battle_log(character: &Character, suffix: &str) {
     println!(
-        "    {}[{}]{} {}",
-        name(&character),
-        character.level,
+        "{}{} {}",
+        format_character(&character),
         hp_display(&character, 4),
         suffix
     );
+}
+
+fn format_character(character: &Character) -> String {
+    let name = format!("{:>8}", character.name());
+    let name = if character.is_player() {
+        name.bold()
+    } else {
+        name.yellow().bold()
+    };
+    format!("{}[{}]", name, character.level)
 }
 
 fn format_attack(attack: Attack, color: &str) -> String {
@@ -155,15 +165,6 @@ fn bar_display(
 fn bar_slots(slots: i32, total: i32, current: i32) -> (i32, i32) {
     let units = (current as f64 * slots as f64 / total as f64).ceil() as i32;
     (units, slots - units)
-}
-
-fn name(character: &Character) -> String {
-    if character.is_player() {
-        // FIXME use correct padding
-        " hero".bold().to_string()
-    } else {
-        character.name.yellow().bold().to_string()
-    }
 }
 
 #[cfg(test)]
