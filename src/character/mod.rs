@@ -10,7 +10,8 @@ use class::Class;
 pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
-    pub sword: Option<equipment::Sword>,
+    pub sword: Option<equipment::Equipment>,
+    pub shield: Option<equipment::Equipment>,
 
     pub level: i32,
     pub xp: i32,
@@ -49,6 +50,7 @@ impl Character {
         let mut character = Self {
             class,
             sword: None,
+            shield: None,
             level: 1,
             xp: 0,
             max_hp: class.start_hp,
@@ -113,24 +115,20 @@ impl Character {
     /// Generate a randomized damage numer based on the attacker strength
     /// and the receiver strength.
     pub fn damage(&self, receiver: &Self) -> i32 {
-        // Possible improvements: use different attack and defense stats,
-        // incorporate weapon and armor effect.
+        // TODO verify if we need to set some attenuation again, hopefully not
+        let attack = self.attack();
+        let damage = attack - receiver.deffense();
+        max(1, Randomizer::damage(damage))
+    }
 
-        // if there's a weapon equipped it increases the character's base strength
+    fn attack(&self) -> i32 {
         let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
-        let strength = (self.strength + sword_str) as f64;
+        self.strength + sword_str
+    }
 
-        let str_10 = strength * 0.1;
-
-        // attenuate the level based difference to help the weaker player
-        let level_diff_effect = if self.level < receiver.level {
-            (self.level - receiver.level) as f64 * str_10
-        } else {
-            (self.level - receiver.level) as f64 / 2.0 * str_10
-        };
-
-        let damage = (strength + level_diff_effect) as i32;
-        max(str_10.ceil() as i32, Randomizer::damage(damage))
+    fn deffense(&self) -> i32 {
+        let shield_str = self.shield.as_ref().map_or(0, |s| s.strength());
+        self.strength / 3 + shield_str
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
