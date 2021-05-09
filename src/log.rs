@@ -66,11 +66,10 @@ pub fn status(game: &Game) {
         player.xp_for_next()
     );
     println!(
-        "    str:{}   spd:{}   {}g",
-        // TODO yellow gold
+        "    str:{}   spd:{}   {}",
         player.strength,
         player.speed,
-        game.gold
+        format!("{}g", game.gold).yellow()
     );
     println!("    equip:{{sword, shield}}");
     println!("    item:{{}}");

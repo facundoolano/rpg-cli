@@ -5,9 +5,6 @@ mod class;
 use crate::randomizer::Randomizer;
 use class::Class;
 
-// TODO consider separating the battle part of the character which is the same
-// for player and enemy, from the player specifics such as xp stuff and serialization
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
     #[serde(skip, default = "default_class")]
