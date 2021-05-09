@@ -13,6 +13,7 @@ pub struct DefaultRandomizer {}
 impl DefaultRandomizer {
     pub fn should_enemy_appear() -> bool {
         let mut rng = rand::thread_rng();
+        // TODO consider changing the ratio depending on distance from home
         rng.gen_ratio(1, 3)
     }
 
