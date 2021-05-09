@@ -68,7 +68,9 @@ pub fn status(game: &Game) {
     println!(
         "    str:{}   spd:{}   {}g",
         // TODO yellow gold
-        player.strength, player.speed, game.gold
+        player.strength,
+        player.speed,
+        game.gold
     );
     println!("    equip:{{sword, shield}}");
     println!("    item:{{}}");

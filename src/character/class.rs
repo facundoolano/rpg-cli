@@ -33,7 +33,6 @@ impl Class {
             _ => random_choice(FAR_ENEMIES),
         }
     }
-
 }
 
 // At the moment the only criteria to choose one enemy class vs another is how far
@@ -47,9 +46,10 @@ fn random_choice(options: &[Class]) -> &Class {
     options.iter().choose(&mut rng).unwrap()
 }
 
-// TODO review stats
-const RAT: Class = Class {
-    name: "rat",
+/// Defaults for all enemies.
+/// For when it's not obvious how a given class would differ from the resst.
+const BASE: Class = Class {
+    name: "enemy",
     start_hp: 20,
     start_strength: 10,
     start_speed: 3,
@@ -57,6 +57,16 @@ const RAT: Class = Class {
     hp_rate: 0.20,
     strength_rate: 0.15,
     speed_rate: 0.07,
+};
+
+// TODO review stats
+const RAT: Class = Class {
+    name: "rat",
+    start_hp: 20,
+    start_strength: 10,
+    start_speed: 3,
+
+    ..BASE
 };
 
 // TODO review stats
@@ -66,9 +76,7 @@ const WOLF: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -78,9 +86,7 @@ const SNAKE: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -90,9 +96,7 @@ const SLIME: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -102,9 +106,7 @@ const SPIDER: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -114,9 +116,7 @@ const ZOMBIE: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -126,9 +126,7 @@ const ORC: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -138,9 +136,7 @@ const SKELETON: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -150,9 +146,7 @@ const DEMON: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -162,9 +156,7 @@ const VAMPIRE: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -174,9 +166,7 @@ const DRAGON: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -186,9 +176,7 @@ const GOLEM: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -198,9 +186,7 @@ const CHIMERA: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -210,9 +196,7 @@ const BASILISK: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -222,9 +206,7 @@ const MINOTAUR: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -234,9 +216,7 @@ const BALROG: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
 
 // TODO review stats
@@ -246,7 +226,5 @@ const PHOENIX: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    ..BASE
 };
