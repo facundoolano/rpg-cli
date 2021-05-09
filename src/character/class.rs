@@ -46,6 +46,14 @@ fn random_choice(options: &[Class]) -> &Class {
     options.iter().choose(&mut rng).unwrap()
 }
 
+// TODO verify that the rates produce some realistic values for far enemies especially for far enemies
+// which will only appear at high levels (i.e. the high start values can grow too big at their actual level)
+// we shouldn't end up in a place were the hero raises its value and as a consequence the enemies
+// raise it too.
+// Consider: 1. raising the enemy level solely (or primarily) based on distance;
+// 2. decreasing rates to prevent overgrowth at higher levels
+// as a starting measure, using increase rates way below those of the player
+
 /// Defaults for all enemies.
 /// For when it's not obvious how a given class would differ from the resst.
 const BASE: Class = Class {
@@ -54,177 +62,160 @@ const BASE: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.20,
-    strength_rate: 0.15,
-    speed_rate: 0.07,
+    hp_rate: 0.10,
+    strength_rate: 0.05,
+    speed_rate: 0.05,
 };
 
-// TODO review stats
 const RAT: Class = Class {
     name: "rat",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 10,
+    start_strength: 5,
+    start_speed: 4,
 
     ..BASE
 };
 
-// TODO review stats
 const WOLF: Class = Class {
     name: "wolf",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 15,
+    start_strength: 8,
+    start_speed: 6,
 
     ..BASE
 };
 
-// TODO review stats
 const SNAKE: Class = Class {
     name: "snake",
-    start_hp: 20,
-    start_strength: 10,
+    start_hp: 13,
+    start_strength: 7,
     start_speed: 3,
 
     ..BASE
 };
 
-// TODO review stats
 const SLIME: Class = Class {
     name: "slime",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 100,
+    start_strength: 3,
+    start_speed: 2,
 
     ..BASE
 };
 
-// TODO review stats
 const SPIDER: Class = Class {
     name: "spider",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 10,
+    start_strength: 9,
+    start_speed: 6,
 
     ..BASE
 };
 
-// TODO review stats
 const ZOMBIE: Class = Class {
     name: "zombie",
-    start_hp: 20,
-    start_strength: 10,
+    start_hp: 50,
+    start_strength: 8,
     start_speed: 3,
 
     ..BASE
 };
 
-// TODO review stats
 const ORC: Class = Class {
     name: "orc",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 35,
+    start_strength: 13,
+    start_speed: 6,
 
     ..BASE
 };
 
-// TODO review stats
 const SKELETON: Class = Class {
     name: "skeleton",
-    start_hp: 20,
+    start_hp: 30,
     start_strength: 10,
-    start_speed: 3,
+    start_speed: 5,
 
     ..BASE
 };
 
-// TODO review stats
 const DEMON: Class = Class {
     name: "demon",
-    start_hp: 20,
+    start_hp: 50,
     start_strength: 10,
-    start_speed: 3,
+    start_speed: 9,
 
     ..BASE
 };
 
-// TODO review stats
 const VAMPIRE: Class = Class {
     name: "vampire",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 50,
+    start_strength: 13,
+    start_speed: 5,
 
     ..BASE
 };
 
-// TODO review stats
 const DRAGON: Class = Class {
     name: "dragon",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 100,
+    start_strength: 25,
+    start_speed: 4,
 
     ..BASE
 };
 
-// TODO review stats
 const GOLEM: Class = Class {
     name: "golem",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 50,
+    start_strength: 50,
+    start_speed: 2,
 
     ..BASE
 };
 
-// TODO review stats
 const CHIMERA: Class = Class {
     name: "chimera",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 200,
+    start_strength: 90,
+    start_speed: 8,
 
     ..BASE
 };
 
-// TODO review stats
 const BASILISK: Class = Class {
     name: "basilisk",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 150,
+    start_strength: 100,
+    start_speed: 9,
 
     ..BASE
 };
 
-// TODO review stats
 const MINOTAUR: Class = Class {
     name: "minotaur",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 100,
+    start_strength: 60,
+    start_speed: 20,
 
     ..BASE
 };
 
-// TODO review stats
 const BALROG: Class = Class {
     name: "balrog",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 200,
+    start_strength: 200,
+    start_speed: 7,
 
     ..BASE
 };
 
-// TODO review stats
 const PHOENIX: Class = Class {
     name: "phoenix",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
+    start_hp: 350,
+    start_strength: 180,
+    start_speed: 14,
 
     ..BASE
 };
