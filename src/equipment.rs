@@ -3,9 +3,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Equipment {
-    level: i32,
+    pub level: i32,
 }
-
 
 impl Equipment {
     pub fn new(level: i32) -> Self {

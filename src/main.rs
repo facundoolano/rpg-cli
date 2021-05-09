@@ -1,8 +1,8 @@
 use game::Game;
 
 mod character;
-mod game;
 mod equipment;
+mod game;
 mod location;
 mod log;
 mod randomizer;

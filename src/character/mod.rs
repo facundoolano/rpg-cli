@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
 pub mod class;
-use crate::randomizer::Randomizer;
 use crate::equipment;
+use crate::randomizer::Randomizer;
 use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
