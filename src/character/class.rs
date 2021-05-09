@@ -38,9 +38,9 @@ impl Class {
 
 // At the moment the only criteria to choose one enemy class vs another is how far
 // from home they appear. Within the same group, the class is chosen randomly.
-const NEAR_ENEMIES: &'static [Class] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
-const MEDIUM_ENEMIES: &'static [Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
-const FAR_ENEMIES: &'static [Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
+const NEAR_ENEMIES: &[Class] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
+const MEDIUM_ENEMIES: &[Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
+const FAR_ENEMIES: &[Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
 
 fn random_choice(options: &[Class]) -> &Class {
     let mut rng = rand::thread_rng();
