@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
 pub mod class;
-use crate::equipment;
+use crate::item;
 use crate::randomizer::Randomizer;
 use class::Class;
 
@@ -10,8 +10,8 @@ use class::Class;
 pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
-    pub sword: Option<equipment::Equipment>,
-    pub shield: Option<equipment::Equipment>,
+    pub sword: Option<item::Equipment>,
+    pub shield: Option<item::Equipment>,
 
     pub level: i32,
     pub xp: i32,

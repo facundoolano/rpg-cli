@@ -65,6 +65,8 @@ pub fn status(game: &Game) {
         player.xp,
         player.xp_for_next()
     );
+    // FIXME should the increased strength be reflected here?
+    // what about the defense then?
     println!(
         "    str:{}   spd:{}   {}",
         player.strength,

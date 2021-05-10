@@ -1,6 +1,8 @@
 use crate::character::class as character;
 use serde::{Deserialize, Serialize};
 
+pub mod shop;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Equipment {
     pub level: i32,
