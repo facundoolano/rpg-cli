@@ -71,7 +71,7 @@ pub fn status(game: &Game) {
         player.speed,
         format!("{}g", game.gold).yellow()
     );
-    println!("    equip:{{sword, shield}}");
+    println!("    {}", format_equipment(&player));
     println!("    item:{{}}");
     println!();
 }
@@ -108,6 +108,19 @@ fn format_character(character: &Character) -> String {
         name.yellow().bold()
     };
     format!("{}[{}]", name, character.level)
+}
+
+fn format_equipment(character: &Character) -> String {
+    let sword = character
+        .sword
+        .as_ref()
+        .map_or(String::new(), |s| format!("sword[{}]", s.level));
+    let shield = character
+        .shield
+        .as_ref()
+        .map_or(String::new(), |s| format!("shield[{}]", s.level));
+    let equipment = [sword, shield].join(",");
+    format!("equip:{{{}}}", equipment)
 }
 
 fn format_attack(attack: Attack, color: &str) -> String {

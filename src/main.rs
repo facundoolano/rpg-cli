@@ -1,6 +1,7 @@
 use game::Game;
 
 mod character;
+mod equipment;
 mod game;
 mod location;
 mod log;

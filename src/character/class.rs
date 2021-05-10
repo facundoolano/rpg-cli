@@ -26,7 +26,16 @@ impl Class {
         speed_rate: 0.1,
     };
 
+    pub fn strength_at(&self, level: i32) -> i32 {
+        let inc_rate = 1.0 + self.strength_rate;
+        (self.start_strength as f64 * inc_rate.powi(level)) as i32
+    }
+
     pub fn random_enemy(distance_from_home: i32) -> &'static Self {
+        // TODO use weights instead of separate lists
+        // e.g. when > 4 distance more likely to get medium
+        // but not impossible to get near enemies
+        // e.g. with bad luck you could find a boss in medium distance
         match distance_from_home {
             n if n <= 4 => random_choice(NEAR_ENEMIES),
             n if n <= 9 => random_choice(MEDIUM_ENEMIES),
@@ -71,7 +80,7 @@ const RAT: Class = Class {
     name: "rat",
     start_hp: 10,
     start_strength: 5,
-    start_speed: 4,
+    start_speed: 8,
 
     ..BASE
 };
