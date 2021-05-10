@@ -116,8 +116,7 @@ impl Character {
     /// and the receiver strength.
     pub fn damage(&self, receiver: &Self) -> i32 {
         // TODO verify if we need to set some attenuation again, hopefully not
-        let attack = self.attack();
-        let damage = attack - receiver.deffense();
+        let damage = self.attack() - receiver.deffense();
         max(1, Randomizer::damage(damage))
     }
 
@@ -127,8 +126,9 @@ impl Character {
     }
 
     fn deffense(&self) -> i32 {
-        let shield_str = self.shield.as_ref().map_or(0, |s| s.strength());
-        self.strength / 3 + shield_str
+        // we could incorporate strength here, but it's not clear if wouldn't just be noise
+        // and it could also made it hard to make damage to stronger enemies
+        self.shield.as_ref().map_or(0, |s| s.strength())
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
@@ -208,7 +208,7 @@ mod tests {
         let mut hero = new_char();
         let mut foe = new_char();
 
-        // 1 vs 1 -- no level-based effect
+        // 1 vs 1
         hero.strength = 10;
         foe.strength = 10;
         assert_eq!(10, hero.damage(&foe));
@@ -216,7 +216,7 @@ mod tests {
         // level 1 vs level 2
         foe.level = 2;
         foe.strength = 15;
-        assert_eq!(9, hero.damage(&foe));
+        assert_eq!(10, hero.damage(&foe));
 
         // level 2 vs level 1
         assert_eq!(15, foe.damage(&hero));
@@ -224,10 +224,10 @@ mod tests {
         // level 1 vs level 5
         foe.level = 5;
         foe.strength = 40;
-        assert_eq!(6, hero.damage(&foe));
+        assert_eq!(10, hero.damage(&foe));
 
         // level 5 vs level 1
-        assert_eq!(48, foe.damage(&hero));
+        assert_eq!(40, foe.damage(&hero));
     }
 
     #[test]

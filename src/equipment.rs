@@ -15,7 +15,8 @@ impl Equipment {
     /// the item is equipped.
     pub fn strength(&self) -> i32 {
         // get the base strength of the hero at this level
-        // TODO make this a character method?
+        // FIXME make these plain public constants in Class, instead of accessing the struct
+        // or maybe an associated method? strength_at or something?
         let class = &character::Class::HERO;
         let inc_rate = 1.0 + class.strength_rate;
         let player_strength = class.start_strength as f64 * inc_rate.powi(self.level);
