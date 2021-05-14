@@ -1,19 +1,20 @@
+use super::Equipment;
 use crate::character::Character;
 
 pub fn list(player: &Character) {
-    if let Some(sword) = next_equipment(&player, &player.sword) {
-        println!("sword[{}]  {}g", sword.level, sword.cost());
+    if let Some(sword) = next_equipment(&player, "sword", &player.sword) {
+        println!("{}  {}g", sword, sword.cost());
     }
 
-    if let Some(shield) = next_equipment(&player, &player.shield) {
-        println!("shield[{}]  {}g", shield.level, shield.cost());
+    if let Some(shield) = next_equipment(&player, "shield", &player.shield) {
+        println!("{}  {}g", shield, shield.cost());
     }
-
-    let escape = super::Escape::new();
-    println!("escape {}g", escape.cost());
 
     let potion = super::Potion::new(available_level(&player));
-    println!("potion[{}] {}g", potion.level, potion.cost());
+    println!("{} {}g", potion, potion.cost());
+
+    let escape = super::Escape::new();
+    println!("{} {}g", escape, escape.cost());
 }
 
 pub fn buy(item: &str) {
@@ -21,14 +22,18 @@ pub fn buy(item: &str) {
     todo!();
 }
 
-fn next_equipment(player: &Character, equip: &Option<super::Equipment>) -> Option<super::Equipment> {
+fn next_equipment(
+    player: &Character,
+    name: &str,
+    current: &Option<Equipment>,
+) -> Option<Equipment> {
     let level = available_level(&player);
-    if let Some(sword) = &equip {
+    if let Some(sword) = &current {
         if sword.level >= level {
             return None;
         }
     }
-    Some(super::Equipment::new(level))
+    Some(Equipment::new(name, level))
 }
 
 /// The offered items/equipment have levels e.g. potion[1], sword[5], etc.
@@ -42,7 +47,7 @@ trait Shoppable {
     fn cost(&self) -> i32;
 }
 
-impl Shoppable for super::Equipment {
+impl Shoppable for Equipment {
     fn cost(&self) -> i32 {
         self.level * 500
     }

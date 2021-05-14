@@ -116,11 +116,13 @@ fn format_equipment(character: &Character) -> String {
     let sword = character
         .sword
         .as_ref()
-        .map_or(String::new(), |s| format!("sword[{}]", s.level));
+        .map_or(String::new(), |s| s.to_string());
     let shield = character
         .shield
         .as_ref()
-        .map_or(String::new(), |s| format!("shield[{}]", s.level));
+        .map_or(String::new(), |s| s.to_string());
+
+    // FIXME this join doesn't do what I wanted
     let equipment = [sword, shield].join(",");
     format!("equip:{{{}}}", equipment)
 }

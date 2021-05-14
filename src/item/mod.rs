@@ -1,3 +1,5 @@
+use core::fmt;
+
 use crate::character::class as character;
 use crate::game;
 use crate::location;
@@ -8,12 +10,16 @@ pub mod shop;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Equipment {
+    name: String,
     pub level: i32,
 }
 
 impl Equipment {
-    pub fn new(level: i32) -> Self {
-        Self { level }
+    pub fn new(name: &str, level: i32) -> Self {
+        Self {
+            level,
+            name: name.to_string(),
+        }
     }
 
     /// How many strength points get added to the player when
@@ -24,6 +30,12 @@ impl Equipment {
 
         // calculate the added strength as a function of the player strength
         (player_strength as f64 * 1.5).round() as i32
+    }
+}
+
+impl std::fmt::Display for Equipment {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}[{}]", self.name, self.level)
     }
 }
 
@@ -39,6 +51,12 @@ pub struct Potion {
 impl Potion {
     fn new(level: i32) -> Self {
         Self { level }
+    }
+}
+
+impl std::fmt::Display for Potion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "potion[{}]", self.level)
     }
 }
 
@@ -67,5 +85,11 @@ impl Item for Escape {
         // FIXME duplication, move to game
         let recovered = game.player.heal();
         log::heal(&game.player, &game.location, recovered);
+    }
+}
+
+impl std::fmt::Display for Escape {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "escape")
     }
 }
