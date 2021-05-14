@@ -22,17 +22,35 @@ pub fn list(player: &Character) {
 
 // FIXME try to remove duplication
 
-pub fn buy(game: &mut Game, item: &str) -> Result<(), String>{
+pub fn buy(game: &mut Game, item: &str) -> Result<(), String> {
     let player = &mut game.player;
 
     match item.to_lowercase().as_str() {
-        "sword" => {
+        "sw" | "sword" => {
             if let Some(sword) = next_equipment(&player, "sword", &player.sword) {
                 sword.buy(game)?;
                 game.player.sword = Some(sword);
             } else {
                 return Err("item not available".to_string());
             }
+        }
+        "sh" | "shield" => {
+            if let Some(shield) = next_equipment(&player, "shield", &player.shield) {
+                shield.buy(game)?;
+                game.player.shield = Some(shield);
+            } else {
+                return Err("item not available".to_string());
+            }
+        }
+        "p" | "potion" => {
+            let potion = super::Potion::new(available_level(&player));
+            potion.buy(game)?;
+            // FIXME add to inventory
+        }
+        "e" | "escape" => {
+            let escape = super::Escape::new();
+            escape.buy(game)?;
+            // FIXME add to inventory
         }
         _ => {
             return Err("item not available".to_string());
@@ -66,7 +84,7 @@ trait Shoppable {
     fn cost(&self) -> i32;
     fn buy(&self, game: &mut Game) -> Result<(), String> {
         if game.gold < self.cost() {
-            return Err("Not enough gold".to_string())
+            return Err("Not enough gold".to_string());
         }
         game.gold -= self.cost();
         Ok(())
