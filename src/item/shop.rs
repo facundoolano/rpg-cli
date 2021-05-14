@@ -1,5 +1,8 @@
 use super::Equipment;
 use crate::character::Character;
+use crate::game::Game;
+
+// FIXME try to remove duplication
 
 pub fn list(player: &Character) {
     if let Some(sword) = next_equipment(&player, "sword", &player.sword) {
@@ -17,8 +20,27 @@ pub fn list(player: &Character) {
     println!("{} {}g", escape, escape.cost());
 }
 
-pub fn buy(item: &str) {
-    println!("There isn't any {} for sale right now.", item);
+// FIXME try to remove duplication
+
+pub fn buy(game: &mut Game, item: &str) {
+    let player = &mut game.player;
+
+    match item.to_lowercase().as_str() {
+        "sword" => {
+            if let Some(sword) = next_equipment(&player, "sword", &player.sword) {
+                // FIXME encapsualte this in trait
+                if game.gold >= sword.cost() {
+                    game.gold -= sword.cost();
+                    game.player.sword = Some(sword);
+                } else {
+                    println!("Not enough gold");
+                }
+            } else {
+                println!("item not available");
+            }
+        }
+        _ => println!("item not available")
+    }
     todo!();
 }
 

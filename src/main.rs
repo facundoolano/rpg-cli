@@ -46,7 +46,7 @@ fn main() {
         game.reset()
     } else if opts.shop {
         // when -s flag is provided, the positional argument is assumed to be an item
-        shop(&game, &opts.destination);
+        shop(&mut game, &opts.destination);
     } else if opts.inventory {
         // when -i flag is provided, the positional argument is assumed to be an item
         inventory(&game, &opts.destination);
@@ -73,10 +73,10 @@ fn go_to(game: &mut Game, dest: &str) {
 
 // TODO move the checks to shop module, just print here
 /// Placeholder, for now there's no support for items.
-fn shop(game: &Game, item: &Option<String>) {
+fn shop(game: &mut Game, item: &Option<String>) {
     if game.location.is_home() {
         if let Some(item) = item {
-            item::shop::buy(item);
+            item::shop::buy(game, item);
         } else {
             item::shop::list(&game.player);
         }
