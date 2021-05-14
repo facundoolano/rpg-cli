@@ -71,13 +71,14 @@ fn go_to(game: &mut Game, dest: &str) {
     }
 }
 
+// TODO move the checks to shop module, just print here
 /// Placeholder, for now there's no support for items.
 fn shop(game: &Game, item: &Option<String>) {
     if game.location.is_home() {
         if let Some(item) = item {
             item::shop::buy(item);
         } else {
-            item::shop::list();
+            item::shop::list(&game.player);
         }
     } else {
         println!("Shop is only allowed at home.")

@@ -36,6 +36,12 @@ pub struct Potion {
     level: i32,
 }
 
+impl Potion {
+    fn new(level: i32) -> Self {
+        Self { level }
+    }
+}
+
 impl Item for Potion {
     fn apply(&self, game: &mut game::Game) {
         let (current, max) = (game.player.current_hp, game.player.max_hp);
@@ -48,6 +54,12 @@ impl Item for Potion {
 }
 
 pub struct Escape {}
+
+impl Escape {
+    fn new() -> Self {
+        Self {}
+    }
+}
 
 impl Item for Escape {
     fn apply(&self, game: &mut game::Game) {
