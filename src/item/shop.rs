@@ -22,26 +22,23 @@ pub fn list(player: &Character) {
 
 // FIXME try to remove duplication
 
-pub fn buy(game: &mut Game, item: &str) {
+pub fn buy(game: &mut Game, item: &str) -> Result<(), String>{
     let player = &mut game.player;
 
     match item.to_lowercase().as_str() {
         "sword" => {
             if let Some(sword) = next_equipment(&player, "sword", &player.sword) {
-                // FIXME encapsualte this in trait
-                if game.gold >= sword.cost() {
-                    game.gold -= sword.cost();
-                    game.player.sword = Some(sword);
-                } else {
-                    println!("Not enough gold");
-                }
+                sword.buy(game)?;
+                game.player.sword = Some(sword);
             } else {
-                println!("item not available");
+                return Err("item not available".to_string());
             }
         }
-        _ => println!("item not available")
+        _ => {
+            return Err("item not available".to_string());
+        }
     }
-    todo!();
+    Ok(())
 }
 
 fn next_equipment(
@@ -67,6 +64,13 @@ fn available_level(player: &Character) -> i32 {
 
 trait Shoppable {
     fn cost(&self) -> i32;
+    fn buy(&self, game: &mut Game) -> Result<(), String> {
+        if game.gold < self.cost() {
+            return Err("Not enough gold".to_string())
+        }
+        game.gold -= self.cost();
+        Ok(())
+    }
 }
 
 impl Shoppable for Equipment {
