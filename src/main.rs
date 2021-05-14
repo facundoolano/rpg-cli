@@ -1,8 +1,8 @@
 use game::Game;
 
 mod character;
-mod item;
 mod game;
+mod item;
 mod location;
 mod log;
 mod randomizer;
@@ -75,9 +75,9 @@ fn go_to(game: &mut Game, dest: &str) {
 fn shop(game: &Game, item: &Option<String>) {
     if game.location.is_home() {
         if let Some(item) = item {
-            println!("There isn't any {} for sale right now.", item);
+            item::shop::buy(item);
         } else {
-            println!("Shop's closed at the moment.");
+            item::shop::list();
         }
     } else {
         println!("Shop is only allowed at home.")
