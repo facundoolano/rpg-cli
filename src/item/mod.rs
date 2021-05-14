@@ -8,34 +8,51 @@ use serde::{Deserialize, Serialize};
 
 pub mod shop;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Equipment {
-    name: String,
-    pub level: i32,
-}
-
-impl Equipment {
-    pub fn new(name: &str, level: i32) -> Self {
-        Self {
-            level,
-            name: name.to_string(),
-        }
-    }
+pub trait Equipment: fmt::Display {
+    fn level(&self) -> i32;
 
     /// How many strength points get added to the player when
     /// the item is equipped.
-    pub fn strength(&self) -> i32 {
+    fn strength(&self) -> i32 {
         // get the base strength of the hero at this level
-        let player_strength = character::Class::HERO.strength_at(self.level);
+        let player_strength = character::Class::HERO.strength_at(self.level());
 
         // calculate the added strength as a function of the player strength
         (player_strength as f64 * 1.5).round() as i32
     }
 }
 
-impl std::fmt::Display for Equipment {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Sword {
+    level: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Shield {
+    level: i32,
+}
+
+impl fmt::Display for Sword {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}[{}]", self.name, self.level)
+        write!(f, "sword[{}]", self.level())
+    }
+}
+
+impl Equipment for Sword {
+    fn level(&self) -> i32 {
+        self.level
+    }
+}
+
+impl fmt::Display for Shield {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "shield[{}]", self.level())
+    }
+}
+
+impl Equipment for Shield {
+    fn level(&self) -> i32 {
+        self.level
     }
 }
 

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Display;
 
-use super::Equipment;
+use super::{Equipment, Shield, Sword};
 use crate::character::Character;
 use crate::game::Game;
 
@@ -10,8 +10,6 @@ pub fn list(player: &Character) {
         println!("{}  {}g", item, item.cost());
     }
 }
-
-// FIXME try to remove duplication
 
 pub fn buy(game: &mut Game, item: &str) -> Result<(), String> {
     let player = &mut game.player;
@@ -29,16 +27,17 @@ pub fn buy(game: &mut Game, item: &str) -> Result<(), String> {
 
 fn available_items(player: &Character) -> HashMap<String, Box<dyn Shoppable>> {
     let mut items = HashMap::<String, Box<dyn Shoppable>>::new();
+    let level = available_level(&player);
 
-    if let Some(sword) = next_equipment(&player, "sword", &player.sword) {
-        items.insert("sword".to_string(), Box::new(sword));
+    if player.sword.is_none() || player.sword.as_ref().unwrap().level < level {
+        items.insert("sword".to_string(), Box::new(Sword{level}));
     }
 
-    if let Some(shield) = next_equipment(&player, "shield", &player.shield) {
-        items.insert("shield".to_string(), Box::new(shield));
+    if player.shield.is_none() || player.shield.as_ref().unwrap().level < level {
+        items.insert("shield".to_string(), Box::new(Shield{level}));
     }
 
-    let potion = super::Potion::new(available_level(&player));
+    let potion = super::Potion::new(level);
     items.insert("potion".to_string(), Box::new(potion));
 
     let escape = super::Escape::new();
@@ -47,19 +46,6 @@ fn available_items(player: &Character) -> HashMap<String, Box<dyn Shoppable>> {
     items
 }
 
-fn next_equipment(
-    player: &Character,
-    name: &str,
-    current: &Option<Equipment>,
-) -> Option<Equipment> {
-    let level = available_level(&player);
-    if let Some(sword) = &current {
-        if sword.level >= level {
-            return None;
-        }
-    }
-    Some(Equipment::new(name, level))
-}
 /// The offered items/equipment have levels e.g. potion[1], sword[5], etc.
 /// they become available for purchase only when the player reaches that level
 fn available_level(player: &Character) -> i32 {
@@ -78,9 +64,15 @@ trait Shoppable: Display {
     }
 }
 
-impl Shoppable for Equipment {
+impl Shoppable for Sword {
     fn cost(&self) -> i32 {
-        self.level * 500
+        self.level() * 500
+    }
+}
+
+impl Shoppable for Shield {
+    fn cost(&self) -> i32 {
+        self.level() * 500
     }
 }
 

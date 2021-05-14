@@ -1,3 +1,4 @@
+use crate::item::Equipment;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
@@ -10,8 +11,8 @@ use class::Class;
 pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
-    pub sword: Option<item::Equipment>,
-    pub shield: Option<item::Equipment>,
+    pub sword: Option<item::Sword>,
+    pub shield: Option<item::Shield>,
 
     pub level: i32,
     pub xp: i32,
