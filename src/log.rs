@@ -113,18 +113,16 @@ fn format_character(character: &Character) -> String {
 }
 
 fn format_equipment(character: &Character) -> String {
-    let sword = character
-        .sword
-        .as_ref()
-        .map_or(String::new(), |s| s.to_string());
-    let shield = character
-        .shield
-        .as_ref()
-        .map_or(String::new(), |s| s.to_string());
+    let mut fragments = Vec::new();
 
-    // FIXME this join doesn't do what I wanted
-    let equipment = [sword, shield].join(",");
-    format!("equip:{{{}}}", equipment)
+    if let Some(sword) = &character.sword {
+        fragments.push(sword.to_string());
+    }
+
+    if let Some(shield) = &character.shield {
+        fragments.push(shield.to_string());
+    }
+    format!("equip:{{{}}}", fragments.join(","))
 }
 
 fn format_attack(attack: Attack, color: &str) -> String {
