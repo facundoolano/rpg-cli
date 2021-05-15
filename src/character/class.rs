@@ -27,14 +27,11 @@ impl Class {
     };
 
     pub fn strength_at(&self, level: i32) -> i32 {
-        let inc_rate = 1.0 + self.strength_rate;
-        (self.start_strength as f64 * inc_rate.powi(level)) as i32
+        stat_at(self.strength_rate, self.start_strength, level)
     }
 
-    // FIXME some duplication here
     pub fn hp_at(&self, level: i32) -> i32 {
-        let inc_rate = 1.0 + self.hp_rate;
-        (self.start_hp as f64 * inc_rate.powi(level)) as i32
+        stat_at(self.hp_rate, self.start_hp, level)
     }
 
     pub fn random_enemy(distance_from_home: i32) -> &'static Self {
@@ -48,6 +45,11 @@ impl Class {
             _ => random_choice(FAR_ENEMIES),
         }
     }
+}
+
+fn stat_at(stat_rate: f64, stat_start: i32, level: i32) -> i32 {
+    let inc_rate = 1.0 + stat_rate;
+    (stat_start as f64 * inc_rate.powi(level)) as i32
 }
 
 // At the moment the only criteria to choose one enemy class vs another is how far
