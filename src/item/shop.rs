@@ -38,12 +38,11 @@ fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
     let mut items = Vec::<(String, Box<dyn Shoppable>)>::new();
     let level = available_level(&player);
 
-    // FIXME this is still ugly
-    if player.sword.is_none() || player.sword.as_ref().unwrap().level() < level {
+    if can_upgrade_sword(player, level) {
         items.push(("sword".to_string(), Box::new(Sword::new(level))));
     }
 
-    if player.shield.is_none() || player.shield.as_ref().unwrap().level() < level {
+    if can_upgrade_shield(player, level) {
         items.push(("shield".to_string(), Box::new(Shield::new(level))));
     }
 
@@ -61,6 +60,15 @@ fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
 fn available_level(player: &Character) -> i32 {
     // allow level 1 or level 5n
     std::cmp::max(1, (player.level / 5) * 5)
+}
+
+fn can_upgrade_sword(player: &Character, level: i32) -> bool {
+    player.sword.is_none() || player.sword.as_ref().unwrap().level() < level
+}
+
+// duplicated but can't find a reasonable alternative
+fn can_upgrade_shield(player: &Character, level: i32) -> bool {
+    player.shield.is_none() || player.shield.as_ref().unwrap().level() < level
 }
 
 pub trait Shoppable: Display {
