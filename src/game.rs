@@ -56,11 +56,13 @@ impl Game {
         fs::write(data_file(), &data)
     }
 
-    pub fn reset(&self) {
+    /// Remove the game data and reset this reference
+    pub fn reset(&mut self) {
         let rpg_dir = rpg_dir();
         if rpg_dir.exists() {
             fs::remove_dir_all(&rpg_dir).unwrap();
         }
+        *self = Self::new()
     }
 
     /// Move the hero's location towards the given destination, one directory
