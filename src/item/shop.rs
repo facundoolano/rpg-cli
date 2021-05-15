@@ -74,15 +74,6 @@ impl Shoppable for Sword {
     fn add_to(&self, game: &mut Game) {
         game.player.sword = Some(self.clone())
     }
-
-    fn buy(&self, game: &mut Game) -> Result<(), String> {
-        if game.gold < self.cost() {
-            return Err("Not enough gold".to_string());
-        }
-        game.gold -= self.cost();
-        self.add_to(game);
-        Ok(())
-    }
 }
 
 impl Shoppable for Shield {
