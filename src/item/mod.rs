@@ -22,12 +22,12 @@ pub trait Equipment: fmt::Display {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Sword {
     level: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Shield {
     level: i32,
 }
@@ -56,6 +56,7 @@ impl Equipment for Shield {
     }
 }
 
+// TODO separate this and equipment into individual modules
 pub trait Item {
     fn apply(&self, game: &mut game::Game);
 }

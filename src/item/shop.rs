@@ -5,36 +5,36 @@ use super::{Equipment, Shield, Sword};
 use crate::character::Character;
 use crate::game::Game;
 
+/// Print the list of available items and their price.
 pub fn list(player: &Character) {
     for item in available_items(player).values() {
         println!("{}  {}g", item, item.cost());
     }
 }
 
+/// Buy an item and add it to the game.
 pub fn buy(game: &mut Game, item: &str) -> Result<(), String> {
     let player = &mut game.player;
     let mut items = available_items(player);
     if let Some(item) = items.remove(&item.to_lowercase()) {
         item.buy(game)?;
-        // FIXME do something with it
-        // TODO will require differentiating sword and shield
-        // game.player.sword = Some(sword);
         Ok(())
     } else {
         Err("item not available".to_string())
     }
 }
 
+/// Build a list of items currently available at the shop
 fn available_items(player: &Character) -> HashMap<String, Box<dyn Shoppable>> {
     let mut items = HashMap::<String, Box<dyn Shoppable>>::new();
     let level = available_level(&player);
 
     if player.sword.is_none() || player.sword.as_ref().unwrap().level < level {
-        items.insert("sword".to_string(), Box::new(Sword{level}));
+        items.insert("sword".to_string(), Box::new(Sword { level }));
     }
 
     if player.shield.is_none() || player.shield.as_ref().unwrap().level < level {
-        items.insert("shield".to_string(), Box::new(Shield{level}));
+        items.insert("shield".to_string(), Box::new(Shield { level }));
     }
 
     let potion = super::Potion::new(level);
@@ -60,13 +60,28 @@ trait Shoppable: Display {
             return Err("Not enough gold".to_string());
         }
         game.gold -= self.cost();
+        self.add_to(game);
         Ok(())
     }
+    fn add_to(&self, game: &mut Game);
 }
 
 impl Shoppable for Sword {
     fn cost(&self) -> i32 {
         self.level() * 500
+    }
+
+    fn add_to(&self, game: &mut Game) {
+        game.player.sword = Some(self.clone())
+    }
+
+    fn buy(&self, game: &mut Game) -> Result<(), String> {
+        if game.gold < self.cost() {
+            return Err("Not enough gold".to_string());
+        }
+        game.gold -= self.cost();
+        self.add_to(game);
+        Ok(())
     }
 }
 
@@ -74,16 +89,30 @@ impl Shoppable for Shield {
     fn cost(&self) -> i32 {
         self.level() * 500
     }
+
+    fn add_to(&self, game: &mut Game) {
+        game.player.shield = Some(self.clone())
+    }
 }
 
 impl Shoppable for super::Potion {
     fn cost(&self) -> i32 {
         self.level * 200
     }
+
+    fn add_to(&self, game: &mut Game) {
+        // TODO implement inventory
+        todo!()
+    }
 }
 
 impl Shoppable for super::Escape {
     fn cost(&self) -> i32 {
         1000
+    }
+
+    fn add_to(&self, game: &mut Game) {
+        // TODO implement inventory
+        todo!()
     }
 }
