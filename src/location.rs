@@ -100,8 +100,8 @@ pub enum Distance {
 impl Distance {
     fn from(len: i32) -> Self {
         match len {
-            n if n <= 3 => Self::Near(len),
-            n if n <= 8 => Self::Mid(len),
+            n if n <= 4 => Self::Near(len),
+            n if n <= 9 => Self::Mid(len),
             _ => Self::Far(len),
         }
     }
@@ -170,8 +170,14 @@ mod tests {
         assert_eq!(distance("/Users/facundo/other", "/Users/facundo/").len(), 1);
         assert_eq!(distance("/Users/facundo/other", "/").len(), 3);
         assert_eq!(distance("/", "/Users/facundo/other").len(), 3);
-        assert_eq!(distance("/Users/rusty/cage", "/Users/facundo/other").len(), 4);
-        assert_eq!(distance("/Users/facundo/other", "/Users/rusty/cage").len(), 4);
+        assert_eq!(
+            distance("/Users/rusty/cage", "/Users/facundo/other").len(),
+            4
+        );
+        assert_eq!(
+            distance("/Users/facundo/other", "/Users/rusty/cage").len(),
+            4
+        );
         assert_eq!(Location::home().distance_from_home().len(), 0);
     }
 

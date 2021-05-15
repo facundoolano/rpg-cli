@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
+use crate::location;
 use rand::Rng;
 use std::cmp::max;
-use crate::location;
 
 /// This struct exposes functions to deal with any element of the game that
 /// needs to incorporate randomness.

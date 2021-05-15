@@ -1,5 +1,5 @@
 use crate::location;
-use rand::seq::IteratorRandom;
+use rand::prelude::SliceRandom;
 
 /// Character classes, which will determine the parameters to start and
 /// increase the stats of the character.
@@ -36,16 +36,7 @@ impl Class {
     }
 
     pub fn random_enemy(distance: location::Distance) -> &'static Self {
-        // TODO use weights instead of separate lists
-        // e.g. when > 4 distance more likely to get medium
-        // but not impossible to get near enemies
-        // e.g. with bad luck you could find a boss in medium distance
-
-        match distance {
-            location::Distance::Near(_) => random_choice(NEAR_ENEMIES),
-            location::Distance::Mid(_) => random_choice(MEDIUM_ENEMIES),
-            location::Distance::Far(_) => random_choice(FAR_ENEMIES),
-        }
+        weighted_choice(distance)
     }
 }
 
@@ -54,15 +45,35 @@ fn stat_at(stat_rate: f64, stat_start: i32, level: i32) -> i32 {
     (stat_start as f64 * inc_rate.powi(level)) as i32
 }
 
-// At the moment the only criteria to choose one enemy class vs another is how far
-// from home they appear. Within the same group, the class is chosen randomly.
+// Enemy classes are grouped into near/mid/far groups
 const NEAR_ENEMIES: &[Class] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
 const MEDIUM_ENEMIES: &[Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
 const FAR_ENEMIES: &[Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
 
-fn random_choice(options: &[Class]) -> &Class {
+/// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
+fn weighted_choice(distance: location::Distance) -> &'static Class {
+    // the weights for each group of enemies are different depending on the distance
+    // the further from home, the bigger the chance to find difficult enemies
+    let (w_near, w_mid, w_far) = match distance {
+        location::Distance::Near(_) => (8, 2, 0),
+        location::Distance::Mid(_) => (3, 6, 1),
+        location::Distance::Far(_) => (2, 6, 3),
+    };
+
+    // assign weights to each group
+    let near = NEAR_ENEMIES.iter().map(|c| (c, w_near));
+    let mid = MEDIUM_ENEMIES.iter().map(|c| (c, w_mid));
+    let far = FAR_ENEMIES.iter().map(|c| (c, w_far));
+
+    // make a weighted random choice
     let mut rng = rand::thread_rng();
-    options.iter().choose(&mut rng).unwrap()
+    near.chain(mid)
+        .chain(far)
+        .collect::<Vec<(&Class, i32)>>()
+        .as_slice()
+        .choose_weighted(&mut rng, |(_c, weight)| *weight)
+        .unwrap()
+        .0
 }
 
 // TODO verify that the rates produce some realistic values for far enemies especially for far enemies
