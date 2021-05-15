@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use std::fmt::Display;
 
-use super::{Equipment, Shield, Sword};
+use super::equipment::{Equipment, Shield, Sword};
 use crate::character::Character;
 use crate::game::Game;
 
 pub enum Error {
     NotEnoughGold,
-    ItemNotAvailable
+    ItemNotAvailable,
 }
 
 /// Print the list of available items and their price.
@@ -34,11 +34,12 @@ fn available_items(player: &Character) -> HashMap<String, Box<dyn Shoppable>> {
     let mut items = HashMap::<String, Box<dyn Shoppable>>::new();
     let level = available_level(&player);
 
-    if player.sword.is_none() || player.sword.as_ref().unwrap().level < level {
+    // FIXME this is still ugly
+    if player.sword.is_none() || player.sword.as_ref().unwrap().level() < level {
         items.insert("sword".to_string(), Box::new(Sword::new(level)));
     }
 
-    if player.shield.is_none() || player.shield.as_ref().unwrap().level < level {
+    if player.shield.is_none() || player.shield.as_ref().unwrap().level() < level {
         items.insert("shield".to_string(), Box::new(Shield::new(level)));
     }
 

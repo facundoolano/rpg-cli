@@ -13,7 +13,7 @@ use std::{fs, io, path};
 pub enum Error {
     GameOver,
     NoDataFile,
-    ItemNotFound
+    ItemNotFound,
 }
 
 pub enum Attack {

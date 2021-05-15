@@ -126,7 +126,8 @@ fn format_equipment(character: &Character) -> String {
 }
 
 pub fn format_inventory(game: &Game) -> String {
-    let items = game.inventory()
+    let items = game
+        .inventory()
         .iter()
         .map(|(k, v)| format!("{}x{}", k, v))
         .collect::<Vec<String>>()
