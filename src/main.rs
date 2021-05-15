@@ -89,8 +89,8 @@ fn shop(game: &mut Game, item: &Option<String>) {
 /// Placeholder, for now there's no support for items.
 fn inventory(game: &mut Game, item_name: &Option<String>) {
     if let Some(item_name) = item_name {
-        // TODO handle missing error
-        game.use_item(item_name);
+        // FIXME print error
+        game.use_item(item_name).unwrap();
     } else {
         println!("{}", log::format_inventory(&game));
     }

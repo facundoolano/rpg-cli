@@ -13,6 +13,7 @@ use std::{fs, io, path};
 pub enum Error {
     GameOver,
     NoDataFile,
+    ItemNotFound
 }
 
 pub enum Attack {
@@ -100,8 +101,8 @@ impl Game {
         entry.push(item);
     }
 
-    // FIXME don't fail silently when the item is not found
-    pub fn use_item(&mut self, name: &str) {
+    pub fn use_item(&mut self, name: &str) -> Result<(), Error> {
+        // TODO general sanitize here
         let name = name.to_lowercase();
 
         // get all items of that type and use one
@@ -114,6 +115,10 @@ impl Game {
             if !items.is_empty() {
                 self.inventory.insert(name, items);
             }
+
+            Ok(())
+        } else {
+            Err(Error::ItemNotFound)
         }
     }
 
@@ -198,9 +203,11 @@ fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
     std::cmp::max(player_level / 2 + distance_from_home - 1 + random_delta, 1)
 }
 
+// these are kind of integration tests, may be better to move them out
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::item;
 
     #[test]
     fn test_enemy_level() {
@@ -266,5 +273,38 @@ mod tests {
         let mut enemy = Character::enemy(10, 1);
         let result = game.battle(&mut enemy);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn inventory() {
+        let mut game = Game::new();
+
+        assert_eq!(0, game.inventory().len());
+
+        let potion = item::Potion::new(1);
+        game.add_item("potion", Box::new(potion));
+        assert_eq!(1, game.inventory().len());
+        assert_eq!(1, *game.inventory().get("potion").unwrap());
+
+        let potion = item::Potion::new(1);
+        game.add_item("potion", Box::new(potion));
+        assert_eq!(1, game.inventory().len());
+        assert_eq!(2, *game.inventory().get("potion").unwrap());
+
+        game.player.current_hp -= 3;
+        assert_ne!(game.player.max_hp, game.player.current_hp);
+
+        assert!(game.use_item("potion").is_ok());
+
+        // check it actually restores the hp
+        assert_eq!(game.player.max_hp, game.player.current_hp);
+
+        // check item was consumed
+        assert_eq!(1, game.inventory().len());
+        assert_eq!(1, *game.inventory().get("potion").unwrap());
+
+        assert!(game.use_item("potion").is_ok());
+        assert_eq!(0, game.inventory().len());
+        assert!(game.use_item("potion").is_err());
     }
 }

@@ -77,7 +77,7 @@ pub struct Potion {
 }
 
 impl Potion {
-    fn new(level: i32) -> Self {
+    pub fn new(level: i32) -> Self {
         Self { level }
     }
 }
@@ -104,7 +104,7 @@ impl Item for Potion {
 pub struct Escape {}
 
 impl Escape {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 }
