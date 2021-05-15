@@ -87,15 +87,13 @@ impl Game {
     pub fn add_item(&mut self, name: &str, item: Box<dyn Item>) {
         let entry = self
             .inventory
-            .entry(name.to_lowercase())
+            .entry(name.to_string())
             .or_insert_with(Vec::new);
         entry.push(item);
     }
 
     pub fn use_item(&mut self, name: &str) -> Result<(), Error> {
-        // TODO general sanitize here
-        let name = name.to_lowercase();
-
+        let name = name.to_string();
         // get all items of that type and use one
         // if there are no remaining, drop the type from the inventory
         if let Some(mut items) = self.inventory.remove(&name) {

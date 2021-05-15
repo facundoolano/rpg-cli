@@ -21,7 +21,7 @@ pub fn list(player: &Character) {
 pub fn buy(game: &mut Game, item: &str) -> Result<(), Error> {
     let player = &mut game.player;
     let mut items = available_items(player);
-    if let Some(item) = items.remove(&item.to_lowercase()) {
+    if let Some(item) = items.remove(item) {
         item.buy(game)?;
         Ok(())
     } else {

@@ -74,10 +74,11 @@ fn go_to(game: &mut Game, dest: &str) {
 
 /// Buy an item from the shop or list the available items if no item name is provided.
 /// Shopping is only allowed when the player is at the home directory.
-fn shop(game: &mut Game, item: &Option<String>) {
+fn shop(game: &mut Game, item_name: &Option<String>) {
     if game.location.is_home() {
-        if let Some(item) = item {
-            match item::shop::buy(game, item) {
+        if let Some(item_name) = item_name {
+            let item_name = sanitize(item_name);
+            match item::shop::buy(game, &item_name) {
                 Err(item::shop::Error::NotEnoughGold) => {
                     println!("Not enough gold.")
                 }
@@ -97,10 +98,25 @@ fn shop(game: &mut Game, item: &Option<String>) {
 /// Use an item from the inventory or list the inventory contents if no item name is provided.
 fn inventory(game: &mut Game, item_name: &Option<String>) {
     if let Some(item_name) = item_name {
-        if let Err(game::Error::ItemNotFound) = game.use_item(item_name) {
+        let item_name = sanitize(item_name);
+        if let Err(game::Error::ItemNotFound) = game.use_item(&item_name) {
             println!("Item not found.");
         }
     } else {
         println!("{}", log::format_inventory(&game));
     }
+}
+
+/// Return a clean version of an item/equipment name, including aliases
+fn sanitize(name: &str) -> String {
+    let name = name.to_lowercase();
+    let name =
+    match name.as_str() {
+        "p" | "potion" => "potion",
+        "e" | "escape" => "escape",
+        "sw" | "sword" => "sword",
+        "sh" | "shield" => "shield",
+        n => n
+    };
+    name.to_string()
 }
