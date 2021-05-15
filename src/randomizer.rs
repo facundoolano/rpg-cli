@@ -2,6 +2,7 @@
 
 use rand::Rng;
 use std::cmp::max;
+use crate::location;
 
 /// This struct exposes functions to deal with any element of the game that
 /// needs to incorporate randomness.
@@ -11,14 +12,13 @@ use std::cmp::max;
 pub struct DefaultRandomizer {}
 
 impl DefaultRandomizer {
-    pub fn should_enemy_appear(distance_from_home: i32) -> bool {
+    pub fn should_enemy_appear(distance: &location::Distance) -> bool {
         let mut rng = rand::thread_rng();
 
-        // kind of duplicated from character class
-        match distance_from_home {
-            n if n <= 3 => rng.gen_ratio(1, 3),
-            n if n <= 8 => rng.gen_ratio(1, 2),
-            _ => rng.gen_ratio(2, 3),
+        match distance {
+            location::Distance::Near(_) => rng.gen_ratio(1, 3),
+            location::Distance::Mid(_) => rng.gen_ratio(1, 2),
+            location::Distance::Far(_) => rng.gen_ratio(2, 3),
         }
     }
 
@@ -75,7 +75,7 @@ impl DefaultRandomizer {
 pub struct TestRandomizer {}
 
 impl TestRandomizer {
-    pub fn should_enemy_appear(_distance: i32) -> bool {
+    pub fn should_enemy_appear(_distance: &location::Distance) -> bool {
         true
     }
 

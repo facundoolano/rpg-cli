@@ -122,8 +122,8 @@ impl Game {
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
         let distance = self.location.distance_from_home();
-        if Randomizer::should_enemy_appear(distance) {
-            let level = enemy_level(self.player.level, distance);
+        if Randomizer::should_enemy_appear(&distance) {
+            let level = enemy_level(self.player.level, distance.len());
             let enemy = Character::enemy(level, distance);
             log::enemy_appears(&enemy, &self.location);
             Some(enemy)
@@ -213,6 +213,7 @@ fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
 mod tests {
     use super::*;
     use crate::item;
+    use crate::location::Distance;
 
     #[test]
     fn test_enemy_level() {
@@ -236,7 +237,7 @@ mod tests {
     fn battle_won() {
         let mut game = Game::new();
         // same level as player
-        let mut enemy = Character::enemy(1, 1);
+        let mut enemy = Character::enemy(1, Distance::Near(1));
 
         game.player.speed = 2;
         game.player.current_hp = 20;
@@ -258,7 +259,7 @@ mod tests {
         assert_eq!(20, game.player.xp);
         assert_eq!(100, game.gold);
 
-        let mut enemy = Character::enemy(1, 1);
+        let mut enemy = Character::enemy(1, Distance::Near(1));
         enemy.speed = 1;
         enemy.current_hp = 15;
         enemy.strength = 5;
@@ -275,7 +276,8 @@ mod tests {
     #[test]
     fn battle_lost() {
         let mut game = Game::new();
-        let mut enemy = Character::enemy(10, 1);
+        let near = Distance::Near(1);
+        let mut enemy = Character::enemy(10, near);
         let result = game.battle(&mut enemy);
         assert!(result.is_err());
     }

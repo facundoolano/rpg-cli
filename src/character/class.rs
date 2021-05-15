@@ -1,3 +1,4 @@
+use crate::location;
 use rand::seq::IteratorRandom;
 
 /// Character classes, which will determine the parameters to start and
@@ -34,17 +35,16 @@ impl Class {
         stat_at(self.hp_rate, self.start_hp, level)
     }
 
-    pub fn random_enemy(distance_from_home: i32) -> &'static Self {
+    pub fn random_enemy(distance: location::Distance) -> &'static Self {
         // TODO use weights instead of separate lists
         // e.g. when > 4 distance more likely to get medium
         // but not impossible to get near enemies
         // e.g. with bad luck you could find a boss in medium distance
 
-        // TODO maybe these categories should be kept in the location module as enums
-        match distance_from_home {
-            n if n <= 3 => random_choice(NEAR_ENEMIES),
-            n if n <= 8 => random_choice(MEDIUM_ENEMIES),
-            _ => random_choice(FAR_ENEMIES),
+        match distance {
+            location::Distance::Near(_) => random_choice(NEAR_ENEMIES),
+            location::Distance::Mid(_) => random_choice(MEDIUM_ENEMIES),
+            location::Distance::Far(_) => random_choice(FAR_ENEMIES),
         }
     }
 }

@@ -53,7 +53,7 @@ impl Location {
         }
     }
 
-    pub fn distance_from(&self, other: &Self) -> i32 {
+    fn distance_from(&self, other: &Self) -> Distance {
         let mut current = self.path.as_path();
         let dest = other.path.as_path();
 
@@ -63,10 +63,11 @@ impl Location {
             distance += 1;
         }
         let dest = dest.strip_prefix(current).unwrap();
-        distance + dest.components().count() as i32
+        let len = distance + dest.components().count() as i32;
+        Distance::from(len)
     }
 
-    pub fn distance_from_home(&self) -> i32 {
+    pub fn distance_from_home(&self) -> Distance {
         self.distance_from(&Location::home())
     }
 }
@@ -85,6 +86,32 @@ impl std::fmt::Display for Location {
             loc = "home".to_string();
         }
         write!(f, "{}", loc)
+    }
+}
+
+/// Some decisions are made branching on whether the distance from the home dir
+/// is small, medium or large. This enum encapsulate the definition of those.
+pub enum Distance {
+    Near(i32),
+    Mid(i32),
+    Far(i32),
+}
+
+impl Distance {
+    fn from(len: i32) -> Self {
+        match len {
+            n if n <= 3 => Self::Near(len),
+            n if n <= 8 => Self::Mid(len),
+            _ => Self::Far(len),
+        }
+    }
+
+    pub fn len(&self) -> i32 {
+        match self {
+            Distance::Near(s) => *s,
+            Distance::Mid(s) => *s,
+            Distance::Far(s) => *s,
+        }
     }
 }
 
@@ -138,14 +165,14 @@ mod tests {
     fn test_distance() {
         let distance = |from, to| location_from(from).distance_from(&location_from(to));
 
-        assert_eq!(distance("/Users/facundo", "/Users/facundo"), 0);
-        assert_eq!(distance("/Users/facundo", "/Users/facundo/other"), 1);
-        assert_eq!(distance("/Users/facundo/other", "/Users/facundo/"), 1);
-        assert_eq!(distance("/Users/facundo/other", "/"), 3);
-        assert_eq!(distance("/", "/Users/facundo/other"), 3);
-        assert_eq!(distance("/Users/rusty/cage", "/Users/facundo/other"), 4);
-        assert_eq!(distance("/Users/facundo/other", "/Users/rusty/cage"), 4);
-        assert_eq!(Location::home().distance_from_home(), 0);
+        assert_eq!(distance("/Users/facundo", "/Users/facundo").len(), 0);
+        assert_eq!(distance("/Users/facundo", "/Users/facundo/other").len(), 1);
+        assert_eq!(distance("/Users/facundo/other", "/Users/facundo/").len(), 1);
+        assert_eq!(distance("/Users/facundo/other", "/").len(), 3);
+        assert_eq!(distance("/", "/Users/facundo/other").len(), 3);
+        assert_eq!(distance("/Users/rusty/cage", "/Users/facundo/other").len(), 4);
+        assert_eq!(distance("/Users/facundo/other", "/Users/rusty/cage").len(), 4);
+        assert_eq!(Location::home().distance_from_home().len(), 0);
     }
 
     /// test-only equivalent for Location::from, specifically to bypass

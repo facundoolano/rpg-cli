@@ -1,5 +1,6 @@
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
+use crate::location;
 use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
@@ -34,8 +35,8 @@ impl Character {
         Self::new(&Class::HERO, 1)
     }
 
-    pub fn enemy(level: i32, distance_from_home: i32) -> Self {
-        Self::new(Class::random_enemy(distance_from_home), level)
+    pub fn enemy(level: i32, distance: location::Distance) -> Self {
+        Self::new(Class::random_enemy(distance), level)
     }
 
     pub fn name(&self) -> String {
