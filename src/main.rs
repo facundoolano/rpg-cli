@@ -1,8 +1,8 @@
 use game::Game;
 
 mod character;
-mod equipment;
 mod game;
+mod item;
 mod location;
 mod log;
 mod randomizer;
@@ -46,49 +46,76 @@ fn main() {
         game.reset()
     } else if opts.shop {
         // when -s flag is provided, the positional argument is assumed to be an item
-        shop(&game, &opts.destination);
+        shop(&mut game, &opts.destination);
     } else if opts.inventory {
         // when -i flag is provided, the positional argument is assumed to be an item
-        inventory(&game, &opts.destination);
+        inventory(&mut game, &opts.destination);
     } else if let Some(dest) = opts.destination {
         go_to(&mut game, &dest);
     } else {
         log::status(&game);
     }
+
+    game.save().unwrap()
 }
 
 /// Main command, attempt to move the hero to the supplied location,
 /// possibly engaging in combat along the way.
 fn go_to(game: &mut Game, dest: &str) {
     if let Ok(dest) = Location::from(&dest) {
-        match game.go_to(&dest) {
-            Err(game::Error::GameOver) => game.reset(),
-            _ => game.save().unwrap(),
-        };
+        if let Err(game::Error::GameOver) = game.go_to(&dest) {
+            game.reset();
+        }
     } else {
         println!("No such file or directory");
         std::process::exit(1);
     }
 }
 
-/// Placeholder, for now there's no support for items.
-fn shop(game: &Game, item: &Option<String>) {
+/// Buy an item from the shop or list the available items if no item name is provided.
+/// Shopping is only allowed when the player is at the home directory.
+fn shop(game: &mut Game, item_name: &Option<String>) {
     if game.location.is_home() {
-        if let Some(item) = item {
-            println!("There isn't any {} for sale right now.", item);
+        if let Some(item_name) = item_name {
+            let item_name = sanitize(item_name);
+            match item::shop::buy(game, &item_name) {
+                Err(item::shop::Error::NotEnoughGold) => {
+                    println!("Not enough gold.")
+                }
+                Err(item::shop::Error::ItemNotAvailable) => {
+                    println!("Item not available.")
+                }
+                Ok(()) => {}
+            }
         } else {
-            println!("Shop's closed at the moment.");
+            item::shop::list(game);
         }
     } else {
         println!("Shop is only allowed at home.")
     }
 }
 
-/// Placeholder, for now there's no support for items.
-fn inventory(_game: &Game, item: &Option<String>) {
-    if let Some(item) = item {
-        println!("There isn't any {} in the inventory.", item);
+/// Use an item from the inventory or list the inventory contents if no item name is provided.
+fn inventory(game: &mut Game, item_name: &Option<String>) {
+    if let Some(item_name) = item_name {
+        let item_name = sanitize(item_name);
+        if let Err(game::Error::ItemNotFound) = game.use_item(&item_name) {
+            println!("Item not found.");
+        }
     } else {
-        println!("The inventory is empty.");
+        println!("{}", log::format_inventory(&game));
     }
+}
+
+/// Return a clean version of an item/equipment name, including aliases
+fn sanitize(name: &str) -> String {
+    let name = name.to_lowercase();
+    let name = match name.as_str() {
+        "p" | "potion" => "potion",
+        "e" | "escape" => "escape",
+        "sw" | "sword" => "sword",
+        "sh" | "shield" => "shield",
+        n => n,
+    };
+    name.to_string()
 }

@@ -1,8 +1,9 @@
+use crate::item::equipment;
+use crate::item::equipment::Equipment;
 use serde::{Deserialize, Serialize};
-use std::cmp::max;
+use std::cmp::{max, min};
 
 pub mod class;
-use crate::equipment;
 use crate::randomizer::Randomizer;
 use class::Class;
 
@@ -10,8 +11,8 @@ use class::Class;
 pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
-    pub sword: Option<equipment::Equipment>,
-    pub shield: Option<equipment::Equipment>,
+    pub sword: Option<equipment::Sword>,
+    pub shield: Option<equipment::Shield>,
 
     pub level: i32,
     pub xp: i32,
@@ -99,10 +100,17 @@ impl Character {
         self.current_hp == 0
     }
 
-    pub fn heal(&mut self) -> i32 {
-        let recovered = self.max_hp - self.current_hp;
-        self.current_hp = self.max_hp;
-        recovered
+    /// Restore up to the given amount of health points (not exceeding the max_hp).
+    /// Return the amount actually restored.
+    pub fn heal(&mut self, amount: i32) -> i32 {
+        let previous = self.current_hp;
+        self.current_hp = min(self.max_hp, self.current_hp + amount);
+        self.current_hp - previous
+    }
+
+    /// Restore all health points to the max_hp
+    pub fn heal_full(&mut self) -> i32 {
+        self.heal(self.max_hp)
     }
 
     /// How many experience points are required to move to the next level.
@@ -119,12 +127,12 @@ impl Character {
         max(1, Randomizer::damage(damage))
     }
 
-    fn attack(&self) -> i32 {
+    pub fn attack(&self) -> i32 {
         let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
         self.strength + sword_str
     }
 
-    fn deffense(&self) -> i32 {
+    pub fn deffense(&self) -> i32 {
         // we could incorporate strength here, but it's not clear if wouldn't just be noise
         // and it could also made it hard to make damage to stronger enemies
         self.shield.as_ref().map_or(0, |s| s.strength())
@@ -283,5 +291,34 @@ mod tests {
         assert!(level_up);
         assert_eq!(2, hero.level);
         assert_eq!(15, hero.xp);
+    }
+
+    #[test]
+    fn test_heal() {
+        let mut hero = new_char();
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
+
+        assert_eq!(0, hero.heal(100));
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
+
+        assert_eq!(0, hero.heal_full());
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
+
+        hero.current_hp = 10;
+        assert_eq!(5, hero.heal(5));
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(15, hero.current_hp);
+
+        assert_eq!(10, hero.heal(100));
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
+
+        hero.current_hp = 10;
+        assert_eq!(15, hero.heal_full());
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
     }
 }
