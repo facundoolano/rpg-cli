@@ -33,11 +33,8 @@ impl fmt::Display for Potion {
 #[typetag::serde]
 impl Item for Potion {
     fn apply(&self, game: &mut game::Game) {
-        let (current, max) = (game.player.current_hp, game.player.max_hp);
         let to_restore = character::Class::HERO.hp_at(self.level) / 2;
-        // FIXME adapt player.heal for this
-        let restored = std::cmp::min(to_restore, max - current);
-        game.player.current_hp += restored;
+        let restored = game.player.heal(to_restore);
         log::heal(&game.player, &game.location, restored);
     }
 }

@@ -89,7 +89,7 @@ impl Game {
     /// Set the current location to home, and apply related side-effects
     pub fn visit_home(&mut self) {
         self.location = Location::home();
-        let recovered = self.player.heal();
+        let recovered = self.player.heal_full();
         log::heal(&self.player, &self.location, recovered);
     }
 

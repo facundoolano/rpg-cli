@@ -1,7 +1,7 @@
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
 use serde::{Deserialize, Serialize};
-use std::cmp::max;
+use std::cmp::{max, min};
 
 pub mod class;
 use crate::randomizer::Randomizer;
@@ -100,10 +100,17 @@ impl Character {
         self.current_hp == 0
     }
 
-    pub fn heal(&mut self) -> i32 {
-        let recovered = self.max_hp - self.current_hp;
-        self.current_hp = self.max_hp;
-        recovered
+    /// Restore up to the given amount of health points (not exceeding the max_hp).
+    /// Return the amount actually restored.
+    pub fn heal(&mut self, amount: i32) -> i32 {
+        let previous = self.current_hp;
+        self.current_hp = min(self.max_hp, self.current_hp + amount);
+        self.current_hp - previous
+    }
+
+    /// Restore all health points to the max_hp
+    pub fn heal_full(&mut self) -> i32 {
+        self.heal(self.max_hp)
     }
 
     /// How many experience points are required to move to the next level.
@@ -284,5 +291,34 @@ mod tests {
         assert!(level_up);
         assert_eq!(2, hero.level);
         assert_eq!(15, hero.xp);
+    }
+
+    #[test]
+    fn test_heal() {
+        let mut hero = new_char();
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
+
+        assert_eq!(0, hero.heal(100));
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
+
+        assert_eq!(0, hero.heal_full());
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
+
+        hero.current_hp = 10;
+        assert_eq!(5, hero.heal(5));
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(15, hero.current_hp);
+
+        assert_eq!(10, hero.heal(100));
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
+
+        hero.current_hp = 10;
+        assert_eq!(15, hero.heal_full());
+        assert_eq!(25, hero.max_hp);
+        assert_eq!(25, hero.current_hp);
     }
 }
