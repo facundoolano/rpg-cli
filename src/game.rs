@@ -121,8 +121,8 @@ impl Game {
     }
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
-        if Randomizer::should_enemy_appear() {
-            let distance = self.location.distance_from_home();
+        let distance = self.location.distance_from_home();
+        if Randomizer::should_enemy_appear(distance) {
             let level = enemy_level(self.player.level, distance);
             let enemy = Character::enemy(level, distance);
             log::enemy_appears(&enemy, &self.location);

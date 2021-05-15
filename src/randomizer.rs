@@ -11,10 +11,15 @@ use std::cmp::max;
 pub struct DefaultRandomizer {}
 
 impl DefaultRandomizer {
-    pub fn should_enemy_appear() -> bool {
+    pub fn should_enemy_appear(distance_from_home: i32) -> bool {
         let mut rng = rand::thread_rng();
-        // TODO consider changing the ratio depending on distance from home
-        rng.gen_ratio(1, 3)
+
+        // kind of duplicated from character class
+        match distance_from_home {
+            n if n <= 3 => rng.gen_ratio(1, 3),
+            n if n <= 8 => rng.gen_ratio(1, 2),
+            _ => rng.gen_ratio(2, 3),
+        }
     }
 
     pub fn enemy_delta() -> i32 {
@@ -70,7 +75,7 @@ impl DefaultRandomizer {
 pub struct TestRandomizer {}
 
 impl TestRandomizer {
-    pub fn should_enemy_appear() -> bool {
+    pub fn should_enemy_appear(_distance: i32) -> bool {
         true
     }
 

@@ -39,9 +39,11 @@ impl Class {
         // e.g. when > 4 distance more likely to get medium
         // but not impossible to get near enemies
         // e.g. with bad luck you could find a boss in medium distance
+
+        // TODO maybe these categories should be kept in the location module as enums
         match distance_from_home {
-            n if n <= 4 => random_choice(NEAR_ENEMIES),
-            n if n <= 9 => random_choice(MEDIUM_ENEMIES),
+            n if n <= 3 => random_choice(NEAR_ENEMIES),
+            n if n <= 8 => random_choice(MEDIUM_ENEMIES),
             _ => random_choice(FAR_ENEMIES),
         }
     }
