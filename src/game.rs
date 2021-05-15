@@ -100,6 +100,14 @@ impl Game {
         entry.push(item);
     }
 
+    pub fn format_inventory(&self) -> String {
+        self.inventory
+            .iter()
+            .map(|(k, v)| format!("{}x{}", k, v.len()))
+            .collect::<Vec<String>>()
+            .join(",")
+    }
+
     // FIXME don't fail silently when the item is not found
     pub fn use_item(&mut self, name: &str) {
         let name = name.to_lowercase();

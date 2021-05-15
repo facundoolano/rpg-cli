@@ -74,7 +74,7 @@ pub fn status(game: &Game) {
         format!("{}g", game.gold).yellow()
     );
     println!("    {}", format_equipment(&player));
-    println!("    item:{{}}");
+    println!("    item:{{{}}}", game.format_inventory());
     println!();
 }
 
