@@ -15,7 +15,7 @@ pub trait Equipment: fmt::Display {
         let player_strength = character::Class::HERO.strength_at(self.level());
 
         // calculate the added strength as a function of the player strength
-        (player_strength as f64 * 1.5).round() as i32
+        (player_strength as f64 * 0.5).round() as i32
     }
 }
 
