@@ -30,15 +30,6 @@ pub struct Game {
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
 }
 
-// TODO factor out all dir/file management code
-fn rpg_dir() -> path::PathBuf {
-    dirs::home_dir().unwrap().join(".rpg")
-}
-
-fn data_file() -> path::PathBuf {
-    rpg_dir().join("data")
-}
-
 impl Game {
     pub fn new() -> Self {
         Self {
@@ -196,6 +187,20 @@ impl Game {
             }
         }
     }
+}
+
+impl Default for Game {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+fn rpg_dir() -> path::PathBuf {
+    dirs::home_dir().unwrap().join(".rpg")
+}
+
+fn data_file() -> path::PathBuf {
+    rpg_dir().join("data")
 }
 
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
