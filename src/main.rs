@@ -92,6 +92,6 @@ fn inventory(game: &mut Game, item_name: &Option<String>) {
         // TODO handle missing error
         game.use_item(item_name);
     } else {
-        println!("item:{{{}}}", game.format_inventory());
+        println!("{}", log::format_inventory(&game));
     }
 }

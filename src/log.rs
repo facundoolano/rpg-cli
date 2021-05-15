@@ -74,7 +74,7 @@ pub fn status(game: &Game) {
         format!("{}g", game.gold).yellow()
     );
     println!("    {}", format_equipment(&player));
-    println!("    item:{{{}}}", game.format_inventory());
+    println!("    {}", format_inventory(&game));
     println!();
 }
 
@@ -123,6 +123,16 @@ fn format_equipment(character: &Character) -> String {
         fragments.push(shield.to_string());
     }
     format!("equip:{{{}}}", fragments.join(","))
+}
+
+pub fn format_inventory(game: &Game) -> String {
+    let items = game.inventory()
+        .iter()
+        .map(|(k, v)| format!("{}x{}", k, v))
+        .collect::<Vec<String>>()
+        .join(",");
+
+    format!("item:{{{}}}", items)
 }
 
 fn format_attack(attack: Attack, color: &str) -> String {

@@ -117,12 +117,11 @@ impl Game {
         }
     }
 
-    pub fn format_inventory(&self) -> String {
+    pub fn inventory(&self) -> HashMap<&str, usize> {
         self.inventory
             .iter()
-            .map(|(k, v)| format!("{}x{}", k, v.len()))
-            .collect::<Vec<String>>()
-            .join(",")
+            .map(|(k, v)| (k.as_ref(), v.len()))
+            .collect::<HashMap<&str, usize>>()
     }
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
