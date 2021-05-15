@@ -109,10 +109,7 @@ impl Escape {
 
 impl Item for Escape {
     fn apply(&self, game: &mut game::Game) {
-        // FIXME duplication, move to game, e.g. update location
-        game.location = location::Location::home();
-        let recovered = game.player.heal();
-        log::heal(&game.player, &game.location, recovered);
+        game.visit_home();
     }
 }
 

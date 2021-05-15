@@ -73,13 +73,19 @@ impl Game {
         while self.location != *dest {
             self.location.go_to(&dest);
             if self.location.is_home() {
-                let recovered = self.player.heal();
-                log::heal(&self.player, &self.location, recovered);
+                self.visit_home();
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
                 return self.battle(&mut enemy);
             }
         }
         Ok(())
+    }
+
+    /// Set the current location to home, and apply related side-effects
+    pub fn visit_home(&mut self) {
+        self.location = Location::home();
+        let recovered = self.player.heal();
+        log::heal(&self.player, &self.location, recovered);
     }
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
