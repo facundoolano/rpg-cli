@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 pub mod shop;
 
 pub trait Equipment: fmt::Display {
+    fn new(level: i32) -> Self;
+
     fn level(&self) -> i32;
 
     /// How many strength points get added to the player when
@@ -39,6 +41,10 @@ impl fmt::Display for Sword {
 }
 
 impl Equipment for Sword {
+    fn new(level: i32) -> Self {
+        Self {level}
+    }
+
     fn level(&self) -> i32 {
         self.level
     }
@@ -51,6 +57,10 @@ impl fmt::Display for Shield {
 }
 
 impl Equipment for Shield {
+    fn new(level: i32) -> Self {
+        Self {level}
+    }
+
     fn level(&self) -> i32 {
         self.level
     }
@@ -72,7 +82,7 @@ impl Potion {
     }
 }
 
-impl std::fmt::Display for Potion {
+impl fmt::Display for Potion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "potion[{}]", self.level)
     }
@@ -99,14 +109,14 @@ impl Escape {
 
 impl Item for Escape {
     fn apply(&self, game: &mut game::Game) {
+        // FIXME duplication, move to game, e.g. update location
         game.location = location::Location::home();
-        // FIXME duplication, move to game
         let recovered = game.player.heal();
         log::heal(&game.player, &game.location, recovered);
     }
 }
 
-impl std::fmt::Display for Escape {
+impl fmt::Display for Escape {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "escape")
     }

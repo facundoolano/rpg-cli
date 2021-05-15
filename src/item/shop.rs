@@ -30,11 +30,11 @@ fn available_items(player: &Character) -> HashMap<String, Box<dyn Shoppable>> {
     let level = available_level(&player);
 
     if player.sword.is_none() || player.sword.as_ref().unwrap().level < level {
-        items.insert("sword".to_string(), Box::new(Sword { level }));
+        items.insert("sword".to_string(), Box::new(Sword::new(level)));
     }
 
     if player.shield.is_none() || player.shield.as_ref().unwrap().level < level {
-        items.insert("shield".to_string(), Box::new(Shield { level }));
+        items.insert("shield".to_string(), Box::new(Shield::new(level)));
     }
 
     let potion = super::Potion::new(level);
