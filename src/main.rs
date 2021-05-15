@@ -55,16 +55,17 @@ fn main() {
     } else {
         log::status(&game);
     }
+
+    game.save().unwrap()
 }
 
 /// Main command, attempt to move the hero to the supplied location,
 /// possibly engaging in combat along the way.
 fn go_to(game: &mut Game, dest: &str) {
     if let Ok(dest) = Location::from(&dest) {
-        match game.go_to(&dest) {
-            Err(game::Error::GameOver) => game.reset(),
-            _ => game.save().unwrap(),
-        };
+        if let Err(game::Error::GameOver) = game.go_to(&dest) {
+            game.reset();
+        }
     } else {
         println!("No such file or directory");
         std::process::exit(1);
@@ -76,7 +77,7 @@ fn shop(game: &mut Game, item: &Option<String>) {
     if game.location.is_home() {
         if let Some(item) = item {
             // FIXME print error
-            item::shop::buy(game, item);
+            item::shop::buy(game, item).unwrap();
         } else {
             item::shop::list(&game.player);
         }
