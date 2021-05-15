@@ -100,6 +100,7 @@ impl Game {
         entry.push(item);
     }
 
+    // FIXME don't fail silently when the item is not found
     pub fn use_item(&mut self, name: &str) {
         let name = name.to_lowercase();
 

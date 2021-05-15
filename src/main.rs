@@ -49,7 +49,7 @@ fn main() {
         shop(&mut game, &opts.destination);
     } else if opts.inventory {
         // when -i flag is provided, the positional argument is assumed to be an item
-        inventory(&game, &opts.destination);
+        inventory(&mut game, &opts.destination);
     } else if let Some(dest) = opts.destination {
         go_to(&mut game, &dest);
     } else {
@@ -86,10 +86,12 @@ fn shop(game: &mut Game, item: &Option<String>) {
 }
 
 /// Placeholder, for now there's no support for items.
-fn inventory(_game: &Game, item: &Option<String>) {
-    if let Some(item) = item {
-        println!("There isn't any {} in the inventory.", item);
+fn inventory(game: &mut Game, item_name: &Option<String>) {
+    if let Some(item_name) = item_name {
+        // TODO handle missing error
+        game.use_item(item_name);
     } else {
+        // FIXME print available
         println!("The inventory is empty.");
     }
 }
