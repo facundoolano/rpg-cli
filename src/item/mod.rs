@@ -2,7 +2,6 @@ use core::fmt;
 
 use crate::character::class as character;
 use crate::game;
-use crate::location;
 use crate::log;
 use serde::{Deserialize, Serialize};
 
@@ -42,7 +41,7 @@ impl fmt::Display for Sword {
 
 impl Equipment for Sword {
     fn new(level: i32) -> Self {
-        Self {level}
+        Self { level }
     }
 
     fn level(&self) -> i32 {
@@ -58,7 +57,7 @@ impl fmt::Display for Shield {
 
 impl Equipment for Shield {
     fn new(level: i32) -> Self {
-        Self {level}
+        Self { level }
     }
 
     fn level(&self) -> i32 {
@@ -67,11 +66,12 @@ impl Equipment for Shield {
 }
 
 // TODO separate this and equipment into individual modules
+#[typetag::serde(tag = "type")]
 pub trait Item {
     fn apply(&self, game: &mut game::Game);
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Potion {
     level: i32,
 }
@@ -88,6 +88,7 @@ impl fmt::Display for Potion {
     }
 }
 
+#[typetag::serde]
 impl Item for Potion {
     fn apply(&self, game: &mut game::Game) {
         let (current, max) = (game.player.current_hp, game.player.max_hp);
@@ -99,6 +100,7 @@ impl Item for Potion {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Escape {}
 
 impl Escape {
@@ -107,6 +109,7 @@ impl Escape {
     }
 }
 
+#[typetag::serde]
 impl Item for Escape {
     fn apply(&self, game: &mut game::Game) {
         game.visit_home();

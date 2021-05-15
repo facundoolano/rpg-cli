@@ -101,8 +101,7 @@ impl Shoppable for super::Potion {
     }
 
     fn add_to(&self, game: &mut Game) {
-        // TODO implement inventory
-        todo!()
+        game.add_item("potion", Box::new(self.clone()));
     }
 }
 
@@ -112,7 +111,6 @@ impl Shoppable for super::Escape {
     }
 
     fn add_to(&self, game: &mut Game) {
-        // TODO implement inventory
-        todo!()
+        game.add_item("escape", Box::new(self.clone()));
     }
 }

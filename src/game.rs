@@ -1,10 +1,12 @@
 extern crate dirs;
 
 use crate::character::Character;
+use crate::item::Item;
 use crate::location::Location;
 use crate::log;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::{fs, io, path};
 
 #[derive(Debug)]
@@ -19,11 +21,12 @@ pub enum Attack {
     Miss,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct Game {
     pub player: Character,
     pub location: Location,
     pub gold: i32,
+    inventory: HashMap<String, Vec<Box<dyn Item>>>,
 }
 
 // TODO factor out all dir/file management code
@@ -41,6 +44,7 @@ impl Game {
             location: Location::home(),
             player: Character::player(),
             gold: 0,
+            inventory: HashMap::new(),
         }
     }
 
@@ -86,6 +90,30 @@ impl Game {
         self.location = Location::home();
         let recovered = self.player.heal();
         log::heal(&self.player, &self.location, recovered);
+    }
+
+    pub fn add_item(&mut self, name: &str, item: Box<dyn Item>) {
+        let entry = self
+            .inventory
+            .entry(name.to_lowercase())
+            .or_insert_with(Vec::new);
+        entry.push(item);
+    }
+
+    pub fn use_item(&mut self, name: &str) {
+        let name = name.to_lowercase();
+
+        // get all items of that type and use one
+        // if there are no remaining, drop the type from the inventory
+        if let Some(mut items) = self.inventory.remove(&name) {
+            if let Some(item) = items.pop() {
+                item.apply(self);
+            }
+
+            if !items.is_empty() {
+                self.inventory.insert(name, items);
+            }
+        }
     }
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
