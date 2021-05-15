@@ -127,12 +127,12 @@ impl Character {
         max(1, Randomizer::damage(damage))
     }
 
-    fn attack(&self) -> i32 {
+    pub fn attack(&self) -> i32 {
         let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
         self.strength + sword_str
     }
 
-    fn deffense(&self) -> i32 {
+    pub fn deffense(&self) -> i32 {
         // we could incorporate strength here, but it's not clear if wouldn't just be noise
         // and it could also made it hard to make damage to stronger enemies
         self.shield.as_ref().map_or(0, |s| s.strength())
