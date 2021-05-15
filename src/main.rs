@@ -72,12 +72,20 @@ fn go_to(game: &mut Game, dest: &str) {
     }
 }
 
-/// Placeholder, for now there's no support for items.
+/// Buy an item from the shop or list the available items if no item name is provided.
+/// Shopping is only allowed when the player is at the home directory.
 fn shop(game: &mut Game, item: &Option<String>) {
     if game.location.is_home() {
         if let Some(item) = item {
-            // FIXME print error
-            item::shop::buy(game, item).unwrap();
+            match item::shop::buy(game, item) {
+                Err(item::shop::Error::NotEnoughGold) => {
+                    println!("Not enough gold.")
+                }
+                Err(item::shop::Error::ItemNotAvailable) => {
+                    println!("Item not available.")
+                }
+                Ok(()) => {}
+            }
         } else {
             item::shop::list(&game.player);
         }
@@ -86,11 +94,12 @@ fn shop(game: &mut Game, item: &Option<String>) {
     }
 }
 
-/// Placeholder, for now there's no support for items.
+/// Use an item from the inventory or list the inventory contents if no item name is provided.
 fn inventory(game: &mut Game, item_name: &Option<String>) {
     if let Some(item_name) = item_name {
-        // FIXME print error
-        game.use_item(item_name).unwrap();
+        if let Err(game::Error::ItemNotFound) = game.use_item(item_name) {
+            println!("Item not found.");
+        }
     } else {
         println!("{}", log::format_inventory(&game));
     }

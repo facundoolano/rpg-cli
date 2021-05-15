@@ -5,6 +5,11 @@ use super::{Equipment, Shield, Sword};
 use crate::character::Character;
 use crate::game::Game;
 
+pub enum Error {
+    NotEnoughGold,
+    ItemNotAvailable
+}
+
 /// Print the list of available items and their price.
 pub fn list(player: &Character) {
     for item in available_items(player).values() {
@@ -13,14 +18,14 @@ pub fn list(player: &Character) {
 }
 
 /// Buy an item and add it to the game.
-pub fn buy(game: &mut Game, item: &str) -> Result<(), String> {
+pub fn buy(game: &mut Game, item: &str) -> Result<(), Error> {
     let player = &mut game.player;
     let mut items = available_items(player);
     if let Some(item) = items.remove(&item.to_lowercase()) {
         item.buy(game)?;
         Ok(())
     } else {
-        Err("item not available".to_string())
+        Err(Error::ItemNotAvailable)
     }
 }
 
@@ -55,9 +60,9 @@ fn available_level(player: &Character) -> i32 {
 
 trait Shoppable: Display {
     fn cost(&self) -> i32;
-    fn buy(&self, game: &mut Game) -> Result<(), String> {
+    fn buy(&self, game: &mut Game) -> Result<(), Error> {
         if game.gold < self.cost() {
-            return Err("Not enough gold".to_string());
+            return Err(Error::NotEnoughGold);
         }
         game.gold -= self.cost();
         self.add_to(game);
