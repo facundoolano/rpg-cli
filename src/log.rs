@@ -1,5 +1,6 @@
 use crate::character::Character;
 use crate::game::{Attack, Game};
+use crate::item::shop;
 use crate::location::Location;
 use colored::*;
 
@@ -39,10 +40,10 @@ pub fn battle_won(player: &Character, location: &Location, xp: i32, level_up: bo
         &player,
         &location,
         &format!(
-            "{}{} {}",
+            "{}{} +{}",
             format!("+{}xp", xp).bold(),
             level_str,
-            format!("+{}g", gold).yellow()
+            format_gold(gold)
         ),
     );
 }
@@ -73,7 +74,18 @@ pub fn status(game: &Game) {
     );
     println!("    {}", format_equipment(&player));
     println!("    {}", format_inventory(&game));
-    println!("    {}", format!("{}g", game.gold).yellow());
+    println!("    {}", format_gold(game.gold));
+    println!();
+}
+
+pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
+    println!();
+    for item in items {
+        let display = format!("{}", item);
+        println!("    {:<10}  {}", display, format_gold(item.cost()));
+    }
+
+    println!("\n    funds: {}", format_gold(game.gold));
     println!();
 }
 
@@ -190,6 +202,10 @@ fn bar_display(
 fn bar_slots(slots: i32, total: i32, current: i32) -> (i32, i32) {
     let units = (current as f64 * slots as f64 / total as f64).ceil() as i32;
     (units, slots - units)
+}
+
+fn format_gold(gold: i32) -> ColoredString {
+    format!("{}g", gold).yellow()
 }
 
 #[cfg(test)]

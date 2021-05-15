@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
 use super::equipment::{Equipment, Shield, Sword};
 use crate::character::Character;
 use crate::game::Game;
+use crate::log;
 
 pub enum Error {
     NotEnoughGold,
@@ -11,16 +11,20 @@ pub enum Error {
 }
 
 /// Print the list of available items and their price.
-pub fn list(player: &Character) {
-    for item in available_items(player).values() {
-        println!("{}  {}g", item, item.cost());
-    }
+pub fn list(game: &Game) {
+    let items = available_items(&game.player)
+        .into_iter()
+        .map(|(_, item)| item)
+        .collect::<Vec<Box<dyn Shoppable>>>();
+    log::shop_list(game, items);
 }
 
 /// Buy an item and add it to the game.
 pub fn buy(game: &mut Game, item: &str) -> Result<(), Error> {
     let player = &mut game.player;
-    let mut items = available_items(player);
+    let mut items = available_items(player)
+        .into_iter()
+        .collect::<HashMap<String, Box<dyn Shoppable>>>();
     if let Some(item) = items.remove(item) {
         item.buy(game)?;
         Ok(())
@@ -30,24 +34,24 @@ pub fn buy(game: &mut Game, item: &str) -> Result<(), Error> {
 }
 
 /// Build a list of items currently available at the shop
-fn available_items(player: &Character) -> HashMap<String, Box<dyn Shoppable>> {
-    let mut items = HashMap::<String, Box<dyn Shoppable>>::new();
+fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
+    let mut items = Vec::<(String, Box<dyn Shoppable>)>::new();
     let level = available_level(&player);
 
     // FIXME this is still ugly
     if player.sword.is_none() || player.sword.as_ref().unwrap().level() < level {
-        items.insert("sword".to_string(), Box::new(Sword::new(level)));
+        items.push(("sword".to_string(), Box::new(Sword::new(level))));
     }
 
     if player.shield.is_none() || player.shield.as_ref().unwrap().level() < level {
-        items.insert("shield".to_string(), Box::new(Shield::new(level)));
+        items.push(("shield".to_string(), Box::new(Shield::new(level))));
     }
 
     let potion = super::Potion::new(level);
-    items.insert("potion".to_string(), Box::new(potion));
+    items.push(("potion".to_string(), Box::new(potion)));
 
     let escape = super::Escape::new();
-    items.insert("escape".to_string(), Box::new(escape));
+    items.push(("escape".to_string(), Box::new(escape)));
 
     items
 }
@@ -59,7 +63,7 @@ fn available_level(player: &Character) -> i32 {
     std::cmp::max(1, (player.level / 5) * 5)
 }
 
-trait Shoppable: Display {
+pub trait Shoppable: Display {
     fn cost(&self) -> i32;
     fn buy(&self, game: &mut Game) -> Result<(), Error> {
         if game.gold < self.cost() {

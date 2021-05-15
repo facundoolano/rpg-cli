@@ -88,7 +88,7 @@ fn shop(game: &mut Game, item_name: &Option<String>) {
                 Ok(()) => {}
             }
         } else {
-            item::shop::list(&game.player);
+            item::shop::list(game);
         }
     } else {
         println!("Shop is only allowed at home.")
@@ -110,13 +110,12 @@ fn inventory(game: &mut Game, item_name: &Option<String>) {
 /// Return a clean version of an item/equipment name, including aliases
 fn sanitize(name: &str) -> String {
     let name = name.to_lowercase();
-    let name =
-    match name.as_str() {
+    let name = match name.as_str() {
         "p" | "potion" => "potion",
         "e" | "escape" => "escape",
         "sw" | "sword" => "sword",
         "sh" | "shield" => "shield",
-        n => n
+        n => n,
     };
     name.to_string()
 }
