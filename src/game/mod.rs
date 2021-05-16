@@ -162,10 +162,11 @@ impl Game {
             let gold = gold_gained(enemy.level);
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
-            log::battle_won(&self.player, &self.location, xp, level_up, gold);
 
+            log::battle_won(&self.player, &self.location, xp, level_up, gold);
             Ok(())
         } else {
+            log::battle_lost(&self.player, &self.location);
             Err(Error::GameOver)
         }
     }

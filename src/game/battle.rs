@@ -36,7 +36,6 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, ()> {
         }
 
         if game.player.is_dead() {
-            log::battle_lost(&game.player, &game.location);
             return Err(());
         }
     }
