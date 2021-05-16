@@ -164,52 +164,64 @@ impl Game {
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
         // this could be generalized to player vs enemy parties
         let (mut pl_accum, mut en_accum) = (0, 0);
-        let player = &mut self.player;
         let mut xp = 0;
 
         while !enemy.is_dead() {
-            pl_accum += player.speed;
+            pl_accum += self.player.speed;
             en_accum += enemy.speed;
 
             if pl_accum >= en_accum {
-                if !Self::autopotion(player, enemy) {
-                    let new_xp = Self::player_attack(player, enemy);
+                if !self.autopotion(enemy) {
+                    let new_xp = self.player_attack(enemy);
                     xp += new_xp;
                 }
                 pl_accum = -1;
             } else {
-                Self::enemy_attack(player, enemy);
+                self.enemy_attack(enemy);
                 en_accum = -1;
             }
 
-            if player.is_dead() {
-                log::battle_lost(&player, &self.location);
+            if self.player.is_dead() {
+                log::battle_lost(&self.player, &self.location);
                 return Err(Error::GameOver);
             }
         }
 
         let gold = gold_gained(enemy.level);
         self.gold += gold;
-        let level_up = player.add_experience(xp);
-        log::battle_won(&player, &self.location, xp, level_up, gold);
+        let level_up = self.player.add_experience(xp);
+        log::battle_won(&self.player, &self.location, xp, level_up, gold);
 
         Ok(())
     }
 
-    fn autopotion(player: &mut Character, enemy: &Character) -> bool {
-        // TODO
-        false
+    /// If the player is low on hp and has a potion available use it
+    /// instead of attacking in the current turn.
+    fn autopotion(&mut self, enemy: &Character) -> bool {
+        if self.player.current_hp > self.player.max_hp / 3 {
+            return false;
+        }
+
+        // If there's a good chance of winning the battle on the next attack,
+        // don't use the potion.
+        let potential_damage = self.player.damage(&enemy);
+        if potential_damage >= enemy.current_hp {
+            return false
+        }
+
+        // FIXME this prints in the non battle format
+        self.use_item("potion").is_ok()
     }
 
-    fn player_attack(player: &Character, enemy: &mut Character) -> i32{
-        let (damage, new_xp) = Self::attack(player, enemy);
+    fn player_attack(&self, enemy: &mut Character) -> i32{
+        let (damage, new_xp) = Self::attack(&self.player, enemy);
         log::player_attack(&enemy, damage);
         new_xp
     }
 
-    fn enemy_attack(player: &mut Character, enemy: &Character) {
-        let (damage, _) = Self::attack(enemy, player);
-        log::enemy_attack(player, damage);
+    fn enemy_attack(&mut self, enemy: &Character) {
+        let (damage, _) = Self::attack(enemy, &mut self.player);
+        log::enemy_attack(&self.player, damage);
     }
 
     /// Inflict damage from attacker to receiver, return the inflicted

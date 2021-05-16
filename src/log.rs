@@ -36,6 +36,16 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
         );
     }
 }
+
+pub fn battle_heal(player: &Character, recovered: i32) {
+    if recovered > 0 {
+        battle_log(
+            &player,
+            &format!("+{}hp", recovered).green().to_string(),
+        );
+    }
+}
+
 pub fn player_attack(enemy: &Character, attack: Attack) {
     battle_log(&enemy, &format_attack(attack, "white"));
 }
