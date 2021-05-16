@@ -172,14 +172,13 @@ impl Game {
             en_accum += enemy.speed;
 
             if pl_accum >= en_accum {
-                let (damage, new_xp) = Self::attack(player, enemy);
-                xp += new_xp;
-
-                log::player_attack(&enemy, damage);
+                if !Self::autopotion(player, enemy) {
+                    let new_xp = Self::player_attack(player, enemy);
+                    xp += new_xp;
+                }
                 pl_accum = -1;
             } else {
-                let (damage, _) = Self::attack(enemy, player);
-                log::enemy_attack(&player, damage);
+                Self::enemy_attack(player, enemy);
                 en_accum = -1;
             }
 
@@ -197,9 +196,25 @@ impl Game {
         Ok(())
     }
 
+    fn autopotion(player: &mut Character, enemy: &Character) -> bool {
+        // TODO
+        false
+    }
+
+    fn player_attack(player: &Character, enemy: &mut Character) -> i32{
+        let (damage, new_xp) = Self::attack(player, enemy);
+        log::player_attack(&enemy, damage);
+        new_xp
+    }
+
+    fn enemy_attack(player: &mut Character, enemy: &Character) {
+        let (damage, _) = Self::attack(enemy, player);
+        log::enemy_attack(player, damage);
+    }
+
     /// Inflict damage from attacker to receiver, return the inflicted
     /// damage and the experience that will be gain if the battle is won
-    fn attack(attacker: &mut Character, receiver: &mut Character) -> (Attack, i32) {
+    fn attack(attacker: &Character, receiver: &mut Character) -> (Attack, i32) {
         if Randomizer::should_miss(attacker.speed, receiver.speed) {
             (Attack::Miss, 0)
         } else {
