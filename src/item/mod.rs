@@ -38,7 +38,7 @@ impl Item for Potion {
 
         // we prefer the battle here since its less ugly to show battle-like
         // output outside battle than the other way around
-        log::battle_heal(&game.player, restored);
+        log::potion(&game.player, restored);
     }
 }
 

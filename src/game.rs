@@ -206,14 +206,14 @@ impl Game {
         // don't use the potion.
         let potential_damage = self.player.damage(&enemy);
         if potential_damage >= enemy.current_hp {
-            return false
+            return false;
         }
 
         // FIXME this prints in the non battle format
         self.use_item("potion").is_ok()
     }
 
-    fn player_attack(&self, enemy: &mut Character) -> i32{
+    fn player_attack(&self, enemy: &mut Character) -> i32 {
         let (damage, new_xp) = Self::attack(&self.player, enemy);
         log::player_attack(&enemy, damage);
         new_xp
