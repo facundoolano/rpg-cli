@@ -3,14 +3,20 @@ use crate::character::Character;
 use crate::log;
 use crate::randomizer::Randomizer;
 
+/// Outcome of an attack attempt.
+/// This affects primarily how the attack is displayed.
 pub enum Attack {
     Regular(i32),
     Critical(i32),
     Miss,
 }
 
+/// Run a turn-based combat between the game's player and the given enemy.
+/// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
 pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, ()> {
-    // this could be generalized to player vs enemy parties
+    // These accumulators get increased based on the characters speed:
+    // the faster will get more frequent turns.
+    // This could be generalized to player vs enemy parties
     let (mut pl_accum, mut en_accum) = (0, 0);
     let mut xp = 0;
 
