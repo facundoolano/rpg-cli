@@ -67,12 +67,20 @@ impl Game {
 
     /// Move the hero's location towards the given destination, one directory
     /// at a time, with some chance of enemies appearing on each one.
-    pub fn go_to(&mut self, dest: &Location) -> Result<(), Error> {
+    pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), Error> {
         while self.location != *dest {
             self.location.go_to(&dest);
             if self.location.is_home() {
                 self.visit_home();
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
+                if bribe && self.bribe(&enemy) {
+                    return Ok(());
+                }
+
+                if run && self.run_away(&enemy) {
+                    return Ok(());
+                }
+
                 return self.battle(&mut enemy);
             }
         }
@@ -132,6 +140,27 @@ impl Game {
         }
     }
 
+    fn bribe(&mut self, enemy: &Character) -> bool {
+        let bribe_cost = gold_gained(enemy.level) / 2;
+
+        if self.gold >= bribe_cost && Randomizer::bribe_succeeds() {
+            self.gold -= bribe_cost;
+            log::bribe_success(&self.player, bribe_cost);
+            return true;
+        };
+        log::bribe_failure(&self.player);
+        false
+    }
+
+    fn run_away(&self, enemy: &Character) -> bool {
+        if Randomizer::run_away_succeeds(self.player.level, enemy.level) {
+            log::run_away_success(&self.player);
+            return true;
+        };
+        log::run_away_failure(&self.player);
+        false
+    }
+
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
         // this could be generalized to player vs enemy parties
         let (mut pl_accum, mut en_accum) = (0, 0);
@@ -160,7 +189,7 @@ impl Game {
             }
         }
 
-        let gold = Randomizer::gold_gained(enemy.level * 100);
+        let gold = gold_gained(enemy.level);
         self.gold += gold;
         let level_up = player.add_experience(xp);
         log::battle_won(&player, &self.location, xp, level_up, gold);
@@ -206,6 +235,10 @@ fn data_file() -> path::PathBuf {
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
     let random_delta = Randomizer::enemy_delta();
     std::cmp::max(player_level / 2 + distance_from_home - 1 + random_delta, 1)
+}
+
+fn gold_gained(enemy_level: i32) -> i32 {
+    Randomizer::gold_gained(enemy_level * 100)
 }
 
 // these are kind of integration tests, may be better to move them out

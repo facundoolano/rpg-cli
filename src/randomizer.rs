@@ -22,6 +22,20 @@ impl DefaultRandomizer {
         }
     }
 
+    pub fn bribe_succeeds() -> bool {
+        let mut rng = rand::thread_rng();
+        rng.gen_ratio(1, 2)
+    }
+
+    pub fn run_away_succeeds(player_level: i32, enemy_level: i32) -> bool {
+        let mut rng = rand::thread_rng();
+        match player_level {
+            pl if pl == enemy_level => rng.gen_ratio(1, 3),
+            pl if pl > enemy_level => rng.gen_ratio(2, 3),
+            _ => rng.gen_ratio(1, 5),
+        }
+    }
+
     pub fn enemy_delta() -> i32 {
         let mut rng = rand::thread_rng();
         rng.gen_range(-1..2)
@@ -77,6 +91,14 @@ pub struct TestRandomizer {}
 impl TestRandomizer {
     pub fn should_enemy_appear(_distance: &location::Distance) -> bool {
         true
+    }
+
+    pub fn bribe_succeeds() -> bool {
+        false
+    }
+
+    pub fn run_away_succeeds(_player_level: i32, _enemy_level: i32) -> bool {
+        false
     }
 
     pub fn enemy_delta() -> i32 {

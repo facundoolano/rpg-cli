@@ -8,6 +8,25 @@ pub fn enemy_appears(enemy: &Character, location: &Location) {
     log(&enemy, &location, "");
 }
 
+pub fn bribe_success(player: &Character, amount: i32) {
+    let suffix = format!("bribed {}", format!("-{}g", amount).yellow());
+    battle_log(&player, &suffix);
+    println!();
+}
+
+pub fn bribe_failure(player: &Character) {
+    battle_log(&player, "can't bribe!");
+}
+
+pub fn run_away_success(player: &Character) {
+    battle_log(&player, "fled!");
+    println!();
+}
+
+pub fn run_away_failure(player: &Character) {
+    battle_log(&player, "can't run!");
+}
+
 pub fn heal(player: &Character, location: &Location, recovered: i32) {
     if recovered > 0 {
         log(

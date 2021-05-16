@@ -24,6 +24,14 @@ struct Opts {
     #[clap(long)]
     reset: bool,
 
+    /// Attempt to avoid battles by running away.
+    #[clap(long)]
+    run: bool,
+
+    /// Attempt to avoid battles by bribing the enemy.
+    #[clap(long)]
+    bribe: bool,
+
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
     #[clap(short, long)]
@@ -51,7 +59,7 @@ fn main() {
         // when -i flag is provided, the positional argument is assumed to be an item
         inventory(&mut game, &opts.destination);
     } else if let Some(dest) = opts.destination {
-        go_to(&mut game, &dest);
+        go_to(&mut game, &dest, opts.run, opts.bribe);
     } else {
         log::status(&game);
     }
@@ -61,9 +69,9 @@ fn main() {
 
 /// Main command, attempt to move the hero to the supplied location,
 /// possibly engaging in combat along the way.
-fn go_to(game: &mut Game, dest: &str) {
+fn go_to(game: &mut Game, dest: &str, run: bool, bribe: bool) {
     if let Ok(dest) = Location::from(&dest) {
-        if let Err(game::Error::GameOver) = game.go_to(&dest) {
+        if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
             game.reset();
         }
     } else {
