@@ -9,17 +9,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::{fs, io, path};
 
+pub mod battle;
+
 #[derive(Debug)]
 pub enum Error {
     GameOver,
     NoDataFile,
     ItemNotFound,
-}
-
-pub enum Attack {
-    Regular(i32),
-    Critical(i32),
-    Miss,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -162,58 +158,16 @@ impl Game {
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        // this could be generalized to player vs enemy parties
-        let (mut pl_accum, mut en_accum) = (0, 0);
-        let player = &mut self.player;
-        let mut xp = 0;
+        if let Ok(xp) = battle::run(self, enemy) {
+            let gold = gold_gained(enemy.level);
+            self.gold += gold;
+            let level_up = self.player.add_experience(xp);
 
-        while !enemy.is_dead() {
-            pl_accum += player.speed;
-            en_accum += enemy.speed;
-
-            if pl_accum >= en_accum {
-                let (damage, new_xp) = Self::attack(player, enemy);
-                xp += new_xp;
-
-                log::player_attack(&enemy, damage);
-                pl_accum = -1;
-            } else {
-                let (damage, _) = Self::attack(enemy, player);
-                log::enemy_attack(&player, damage);
-                en_accum = -1;
-            }
-
-            if player.is_dead() {
-                log::battle_lost(&player, &self.location);
-                return Err(Error::GameOver);
-            }
-        }
-
-        let gold = gold_gained(enemy.level);
-        self.gold += gold;
-        let level_up = player.add_experience(xp);
-        log::battle_won(&player, &self.location, xp, level_up, gold);
-
-        Ok(())
-    }
-
-    /// Inflict damage from attacker to receiver, return the inflicted
-    /// damage and the experience that will be gain if the battle is won
-    fn attack(attacker: &mut Character, receiver: &mut Character) -> (Attack, i32) {
-        if Randomizer::should_miss(attacker.speed, receiver.speed) {
-            (Attack::Miss, 0)
+            log::battle_won(&self.player, &self.location, xp, level_up, gold);
+            Ok(())
         } else {
-            let damage = attacker.damage(&receiver);
-            let xp = attacker.xp_gained(&receiver, damage);
-
-            if Randomizer::should_critical() {
-                let damage = damage * 2;
-                receiver.receive_damage(damage);
-                (Attack::Critical(damage), xp)
-            } else {
-                receiver.receive_damage(damage);
-                (Attack::Regular(damage), xp)
-            }
+            log::battle_lost(&self.player, &self.location);
+            Err(Error::GameOver)
         }
     }
 }
@@ -241,12 +195,10 @@ fn gold_gained(enemy_level: i32) -> i32 {
     Randomizer::gold_gained(enemy_level * 100)
 }
 
-// these are kind of integration tests, may be better to move them out
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::item;
-    use crate::location::Distance;
 
     #[test]
     fn test_enemy_level() {
@@ -264,55 +216,6 @@ mod tests {
         assert_eq!(5, enemy_level(10, 1));
         assert_eq!(6, enemy_level(10, 2));
         assert_eq!(7, enemy_level(10, 3));
-    }
-
-    #[test]
-    fn battle_won() {
-        let mut game = Game::new();
-        // same level as player
-        let mut enemy = Character::enemy(1, Distance::Near(1));
-
-        game.player.speed = 2;
-        game.player.current_hp = 20;
-        game.player.strength = 10; // each hit will take 10hp
-
-        enemy.speed = 1;
-        enemy.current_hp = 15;
-        enemy.strength = 5;
-
-        // expected turns
-        // enemy - 10hp
-        // player - 5 hp
-        // enemy - 10hp
-
-        let result = game.battle(&mut enemy);
-        assert!(result.is_ok());
-        assert_eq!(15, game.player.current_hp);
-        assert_eq!(1, game.player.level);
-        assert_eq!(20, game.player.xp);
-        assert_eq!(100, game.gold);
-
-        let mut enemy = Character::enemy(1, Distance::Near(1));
-        enemy.speed = 1;
-        enemy.current_hp = 15;
-        enemy.strength = 5;
-
-        // same turns, added xp increases level
-
-        let result = game.battle(&mut enemy);
-        assert!(result.is_ok());
-        assert_eq!(2, game.player.level);
-        assert_eq!(10, game.player.xp);
-        assert_eq!(200, game.gold);
-    }
-
-    #[test]
-    fn battle_lost() {
-        let mut game = Game::new();
-        let near = Distance::Near(1);
-        let mut enemy = Character::enemy(10, near);
-        let result = game.battle(&mut enemy);
-        assert!(result.is_err());
     }
 
     #[test]

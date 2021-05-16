@@ -1,5 +1,6 @@
 use crate::character::Character;
-use crate::game::{Attack, Game};
+use crate::game::battle::Attack;
+use crate::game::Game;
 use crate::item::shop;
 use crate::location::Location;
 use colored::*;
@@ -36,6 +37,16 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
         );
     }
 }
+
+pub fn potion(player: &Character, recovered: i32) {
+    if recovered > 0 {
+        battle_log(
+            &player,
+            &format!("+{}hp potion", recovered).green().to_string(),
+        );
+    }
+}
+
 pub fn player_attack(enemy: &Character, attack: Attack) {
     battle_log(&enemy, &format_attack(attack, "white"));
 }

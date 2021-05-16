@@ -35,7 +35,10 @@ impl Item for Potion {
     fn apply(&self, game: &mut game::Game) {
         let to_restore = character::Class::HERO.hp_at(self.level) / 2;
         let restored = game.player.heal(to_restore);
-        log::heal(&game.player, &game.location, restored);
+
+        // we prefer the battle here since its less ugly to show battle-like
+        // output outside battle than the other way around
+        log::potion(&game.player, restored);
     }
 }
 
