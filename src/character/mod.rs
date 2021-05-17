@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
-use crate::randomizer::Randomizer;
+use crate::randomizer::{random, Randomizer};
 use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -71,13 +71,13 @@ impl Character {
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
         self.level += 1;
-        self.strength = Randomizer::stat(self.strength, self.class.strength_rate);
-        self.speed = Randomizer::stat(self.speed, self.class.speed_rate);
+        self.strength = random().stat_increase(self.strength, self.class.strength_rate);
+        self.speed = random().stat_increase(self.speed, self.class.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = Randomizer::stat(self.max_hp, self.class.hp_rate);
+        self.max_hp = random().stat_increase(self.max_hp, self.class.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -124,8 +124,7 @@ impl Character {
     /// Generate a randomized damage numer based on the attacker strength
     /// and the receiver strength.
     pub fn damage(&self, receiver: &Self) -> i32 {
-        let damage = self.attack() - receiver.deffense();
-        max(1, Randomizer::damage(damage))
+        self.attack() - receiver.deffense()
     }
 
     pub fn attack(&self) -> i32 {

@@ -4,6 +4,7 @@ use crate::character::Character;
 use crate::item::Item;
 use crate::location::Location;
 use crate::log;
+use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -126,8 +127,9 @@ impl Game {
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
         let distance = self.location.distance_from_home();
-        if Randomizer::should_enemy_appear(&distance) {
+        if random().should_enemy_appear(&distance) {
             let level = enemy_level(self.player.level, distance.len());
+            let level = random().enemy_level(level);
             let enemy = Character::enemy(level, distance);
             log::enemy_appears(&enemy, &self.location);
             Some(enemy)
@@ -139,7 +141,7 @@ impl Game {
     fn bribe(&mut self, enemy: &Character) -> bool {
         let bribe_cost = gold_gained(enemy.level) / 2;
 
-        if self.gold >= bribe_cost && Randomizer::bribe_succeeds() {
+        if self.gold >= bribe_cost && random().bribe_succeeds() {
             self.gold -= bribe_cost;
             log::bribe_success(&self.player, bribe_cost);
             return true;
@@ -149,7 +151,7 @@ impl Game {
     }
 
     fn run_away(&self, enemy: &Character) -> bool {
-        if Randomizer::run_away_succeeds(self.player.level, enemy.level) {
+        if random().run_away_succeeds(self.player.level, enemy.level) {
             log::run_away_success(&self.player);
             return true;
         };
@@ -187,12 +189,11 @@ fn data_file() -> path::PathBuf {
 }
 
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
-    let random_delta = Randomizer::enemy_delta();
-    std::cmp::max(player_level / 2 + distance_from_home - 1 + random_delta, 1)
+    std::cmp::max(player_level / 2 + distance_from_home - 1, 1)
 }
 
 fn gold_gained(enemy_level: i32) -> i32 {
-    Randomizer::gold_gained(enemy_level * 100)
+    random().gold_gained(enemy_level * 100)
 }
 
 #[cfg(test)]
@@ -207,7 +208,7 @@ mod tests {
         assert_eq!(1, enemy_level(1, 2));
         assert_eq!(2, enemy_level(1, 3));
 
-        // player level 5
+        // Player level 5
         assert_eq!(2, enemy_level(5, 1));
         assert_eq!(3, enemy_level(5, 2));
         assert_eq!(4, enemy_level(5, 3));

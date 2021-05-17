@@ -1,7 +1,7 @@
 use super::Game;
 use crate::character::Character;
 use crate::log;
-use crate::randomizer::Randomizer;
+use crate::randomizer::{random, Randomizer};
 
 /// Outcome of an attack attempt.
 /// This affects primarily how the attack is displayed.
@@ -57,13 +57,13 @@ fn enemy_attack(game: &mut Game, enemy: &Character) {
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
 fn attack(attacker: &Character, receiver: &mut Character) -> (Attack, i32) {
-    if Randomizer::should_miss(attacker.speed, receiver.speed) {
+    if random().is_miss(attacker.speed, receiver.speed) {
         (Attack::Miss, 0)
     } else {
-        let damage = attacker.damage(&receiver);
+        let damage = random().damage(attacker.damage(&receiver));
         let xp = attacker.xp_gained(&receiver, damage);
 
-        if Randomizer::should_critical() {
+        if random().is_critical() {
             let damage = damage * 2;
             receiver.receive_damage(damage);
             (Attack::Critical(damage), xp)
