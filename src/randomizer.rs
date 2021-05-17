@@ -4,6 +4,14 @@ use crate::location;
 use rand::Rng;
 use std::cmp::max;
 
+pub fn default() -> DefaultRandomizer {
+    DefaultRandomizer{}
+}
+
+pub fn test() -> TestRandomizer {
+    TestRandomizer{}
+}
+
 pub trait Randomizer {
     fn should_enemy_appear(&self, _distance: &location::Distance) -> bool {
         true

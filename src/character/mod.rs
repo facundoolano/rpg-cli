@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
-use crate::randomizer::{DefaultRandomizer, Randomizer};
+use crate::randomizer;
+use crate::randomizer::Randomizer;
 use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -61,9 +62,8 @@ impl Character {
             speed: class.start_speed,
         };
 
-        let rand = DefaultRandomizer{};
         for _ in 1..level {
-            character.increase_level(&rand);
+            character.increase_level(&randomizer::default());
         }
 
         character
@@ -84,12 +84,10 @@ impl Character {
 
     /// Add to the accumulated experience points, possibly increasing the level.
     pub fn add_experience(&mut self, xp: i32) -> bool {
-        let rand = DefaultRandomizer{};
-
         self.xp += xp;
         let for_next = self.xp_for_next();
         if self.xp >= for_next {
-            self.increase_level(&rand);
+            self.increase_level(&randomizer::default());
             self.xp -= for_next;
             return true;
         }
@@ -156,7 +154,6 @@ impl Character {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::randomizer::TestRandomizer;
 
     const TEST_CLASS: Class = Class {
         name: "test",
@@ -189,7 +186,7 @@ mod tests {
     // FIXME this is affected by randomization
     #[test]
     fn test_increase_level() {
-        let rand = TestRandomizer{};
+        let rand = randomizer::test();
         let mut hero = new_char();
 
         // assert what we're assuming are the params in the rest of the test
@@ -274,7 +271,7 @@ mod tests {
 
     #[test]
     fn test_xp_for_next() {
-        let rand = TestRandomizer{};
+        let rand = randomizer::test();
 
         let mut hero = new_char();
         assert_eq!(30, hero.xp_for_next());
