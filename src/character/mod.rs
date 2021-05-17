@@ -124,8 +124,7 @@ impl Character {
     /// Generate a randomized damage numer based on the attacker strength
     /// and the receiver strength.
     pub fn damage(&self, receiver: &Self) -> i32 {
-        let damage = self.attack() - receiver.deffense();
-        max(1, Randomizer::damage(damage))
+        self.attack() - receiver.deffense()
     }
 
     pub fn attack(&self) -> i32 {

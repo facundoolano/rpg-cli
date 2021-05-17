@@ -61,6 +61,7 @@ fn attack(attacker: &Character, receiver: &mut Character) -> (Attack, i32) {
         (Attack::Miss, 0)
     } else {
         let damage = attacker.damage(&receiver);
+        let damage = std::cmp::max(1, Randomizer::damage(damage));
         let xp = attacker.xp_gained(&receiver, damage);
 
         if Randomizer::should_critical() {
