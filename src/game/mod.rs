@@ -187,6 +187,7 @@ fn data_file() -> path::PathBuf {
     rpg_dir().join("data")
 }
 
+// FIXME remove delta and apply above
 fn enemy_level(player_level: i32, distance_from_home: i32, random_delta: i32) -> i32 {
     std::cmp::max(player_level / 2 + distance_from_home - 1 + random_delta, 1)
 }

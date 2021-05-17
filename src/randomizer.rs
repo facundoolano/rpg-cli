@@ -4,14 +4,10 @@ use crate::location;
 use rand::Rng;
 use std::cmp::max;
 
-pub fn default() -> DefaultRandomizer {
-    DefaultRandomizer {}
-}
-
-pub fn test() -> TestRandomizer {
-    TestRandomizer {}
-}
-
+/// This trait exposes functions to deal with any element of the game that
+/// needs to incorporate randomness.
+/// It basically wraps all calls to the rand crate, allowing to replace it with a
+/// noop implementation in tests to make the logic deterministic.
 pub trait Randomizer {
     fn should_enemy_appear(&self, _distance: &location::Distance) -> bool {
         true
@@ -50,11 +46,15 @@ pub trait Randomizer {
     }
 }
 
-/// This struct exposes functions to deal with any element of the game that
-/// needs to incorporate randomness.
-/// It basically wraps all calls to the rand crate, allowing to turn it off
-/// during testing to make the logic deterministic.
-// DISCLAIMER: I'm not convinced this is a good idea.
+// TODO consider making these static
+pub fn default() -> DefaultRandomizer {
+    DefaultRandomizer {}
+}
+
+pub fn test() -> TestRandomizer {
+    TestRandomizer {}
+}
+
 pub struct DefaultRandomizer {}
 
 impl Randomizer for DefaultRandomizer {
@@ -142,8 +142,7 @@ mod tests {
 
     #[test]
     fn test_increase_stat() {
-        // we explicitly test the default implementation, not test one here
-        let rand = DefaultRandomizer {};
+        let rand = default();
 
         // current hp lvl1: increase in .3 +/- .15
         let value = rand.stat(20, 0.3);
