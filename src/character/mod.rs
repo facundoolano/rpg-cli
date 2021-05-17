@@ -5,8 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
-use crate::randomizer::default as random;
-use crate::randomizer::Randomizer;
+use crate::randomizer::{random, Randomizer};
 use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -63,22 +62,22 @@ impl Character {
         };
 
         for _ in 1..level {
-            character.increase_level(&random());
+            character.increase_level();
         }
 
         character
     }
 
     /// Raise the level and all the character stats.
-    fn increase_level(&mut self, rand: &dyn Randomizer) {
+    fn increase_level(&mut self) {
         self.level += 1;
-        self.strength = rand.stat_increase(self.strength, self.class.strength_rate);
-        self.speed = rand.stat_increase(self.speed, self.class.speed_rate);
+        self.strength = random().stat_increase(self.strength, self.class.strength_rate);
+        self.speed = random().stat_increase(self.speed, self.class.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = rand.stat_increase(self.max_hp, self.class.hp_rate);
+        self.max_hp = random().stat_increase(self.max_hp, self.class.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -87,7 +86,7 @@ impl Character {
         self.xp += xp;
         let for_next = self.xp_for_next();
         if self.xp >= for_next {
-            self.increase_level(&random());
+            self.increase_level();
             self.xp -= for_next;
             return true;
         }
@@ -154,7 +153,6 @@ impl Character {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::randomizer;
 
     const TEST_CLASS: Class = Class {
         name: "test",
@@ -186,7 +184,6 @@ mod tests {
 
     #[test]
     fn test_increase_level() {
-        let rand = randomizer::test();
         let mut hero = new_char();
 
         // assert what we're assuming are the params in the rest of the test
@@ -199,7 +196,7 @@ mod tests {
         hero.strength = 10;
         hero.speed = 5;
 
-        hero.increase_level(&rand);
+        hero.increase_level();
         assert_eq!(2, hero.level);
         assert_eq!(26, hero.max_hp);
         assert_eq!(11, hero.strength);
@@ -208,7 +205,7 @@ mod tests {
         let damage = 7;
         hero.current_hp -= damage;
 
-        hero.increase_level(&rand);
+        hero.increase_level();
         assert_eq!(3, hero.level);
         assert_eq!(hero.current_hp, hero.max_hp - damage);
     }
@@ -271,13 +268,11 @@ mod tests {
 
     #[test]
     fn test_xp_for_next() {
-        let rand = randomizer::test();
-
         let mut hero = new_char();
         assert_eq!(30, hero.xp_for_next());
-        hero.increase_level(&rand);
+        hero.increase_level();
         assert_eq!(84, hero.xp_for_next());
-        hero.increase_level(&rand);
+        hero.increase_level();
         assert_eq!(155, hero.xp_for_next());
     }
 

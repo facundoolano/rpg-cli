@@ -1,11 +1,11 @@
 extern crate dirs;
 
+use crate::character::Character;
 use crate::item::Item;
 use crate::location::Location;
 use crate::log;
-use crate::randomizer::default as random;
+use crate::randomizer::random;
 use crate::randomizer::Randomizer;
-use crate::character::Character;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::{fs, io, path};
@@ -160,7 +160,7 @@ impl Game {
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        if let Ok(xp) = battle::run(self, enemy, &random()) {
+        if let Ok(xp) = battle::run(self, enemy) {
             let gold = gold_gained(enemy.level);
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
@@ -196,7 +196,6 @@ fn gold_gained(enemy_level: i32) -> i32 {
     random().gold_gained(enemy_level * 100)
 }
 
-// TODO restore some testing for this side's part of battle (xp, level, gold)
 #[cfg(test)]
 mod tests {
     use super::*;

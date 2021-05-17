@@ -15,7 +15,7 @@ pub trait Randomizer {
 
     fn run_away_succeeds(&self, player_level: i32, enemy_level: i32) -> bool;
 
-    fn enemy_level(&self, level:i32) -> i32;
+    fn enemy_level(&self, level: i32) -> i32;
 
     fn damage(&self, value: i32) -> i32;
 
@@ -28,11 +28,14 @@ pub trait Randomizer {
     fn stat_increase(&self, current: i32, rate: f64) -> i32;
 }
 
-pub fn default() -> DefaultRandomizer {
+#[cfg(not(test))]
+pub fn random() -> DefaultRandomizer {
     DefaultRandomizer {}
 }
 
-pub fn test() -> TestRandomizer {
+// pick the noop randomizer when testing
+#[cfg(test)]
+pub fn random() -> TestRandomizer {
     TestRandomizer {}
 }
 
@@ -159,7 +162,7 @@ mod tests {
 
     #[test]
     fn test_increase_stat() {
-        let rand = default();
+        let rand = DefaultRandomizer {};
 
         // current hp lvl1: increase in .3 +/- .15
         let value = rand.stat_increase(20, 0.3);

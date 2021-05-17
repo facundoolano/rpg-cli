@@ -1,7 +1,7 @@
 use super::Game;
 use crate::character::Character;
 use crate::log;
-use crate::randomizer::Randomizer;
+use crate::randomizer::{random, Randomizer};
 
 /// Outcome of an attack attempt.
 /// This affects primarily how the attack is displayed.
@@ -13,7 +13,7 @@ pub enum Attack {
 
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
-pub fn run(game: &mut Game, enemy: &mut Character, rand: &dyn Randomizer) -> Result<i32, ()> {
+pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, ()> {
     // These accumulators get increased based on the characters speed:
     // the faster will get more frequent turns.
     // This could be generalized to player vs enemy parties
@@ -26,12 +26,12 @@ pub fn run(game: &mut Game, enemy: &mut Character, rand: &dyn Randomizer) -> Res
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                let new_xp = player_attack(game, enemy, rand);
+                let new_xp = player_attack(game, enemy);
                 xp += new_xp;
             }
             pl_accum = -1;
         } else {
-            enemy_attack(game, enemy, rand);
+            enemy_attack(game, enemy);
             en_accum = -1;
         }
 
@@ -43,27 +43,27 @@ pub fn run(game: &mut Game, enemy: &mut Character, rand: &dyn Randomizer) -> Res
     Ok(xp)
 }
 
-fn player_attack(game: &Game, enemy: &mut Character, rand: &dyn Randomizer) -> i32 {
-    let (damage, new_xp) = attack(&game.player, enemy, rand);
+fn player_attack(game: &Game, enemy: &mut Character) -> i32 {
+    let (damage, new_xp) = attack(&game.player, enemy);
     log::player_attack(&enemy, damage);
     new_xp
 }
 
-fn enemy_attack(game: &mut Game, enemy: &Character, rand: &dyn Randomizer) {
-    let (damage, _) = attack(enemy, &mut game.player, rand);
+fn enemy_attack(game: &mut Game, enemy: &Character) {
+    let (damage, _) = attack(enemy, &mut game.player);
     log::enemy_attack(&game.player, damage);
 }
 
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
-fn attack(attacker: &Character, receiver: &mut Character, rand: &dyn Randomizer) -> (Attack, i32) {
-    if rand.is_miss(attacker.speed, receiver.speed) {
+fn attack(attacker: &Character, receiver: &mut Character) -> (Attack, i32) {
+    if random().is_miss(attacker.speed, receiver.speed) {
         (Attack::Miss, 0)
     } else {
-        let damage = rand.damage(attacker.damage(&receiver));
+        let damage = random().damage(attacker.damage(&receiver));
         let xp = attacker.xp_gained(&receiver, damage);
 
-        if rand.is_critical() {
+        if random().is_critical() {
             let damage = damage * 2;
             receiver.receive_damage(damage);
             (Attack::Critical(damage), xp)
@@ -95,12 +95,9 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
 mod tests {
     use super::*;
     use crate::location::Distance;
-    use crate::randomizer;
 
     #[test]
     fn won() {
-        let rand = randomizer::test();
-
         let mut game = Game::new();
         // same level as player
         let mut enemy = Character::enemy(1, Distance::Near(1));
@@ -118,18 +115,17 @@ mod tests {
         // player - 5 hp
         // enemy - 10hp
 
-        let result = run(&mut game, &mut enemy, &rand);
+        let result = run(&mut game, &mut enemy);
         assert!(result.is_ok());
         assert_eq!(20, result.unwrap());
     }
 
     #[test]
     fn lost() {
-        let rand = randomizer::test();
         let mut game = Game::new();
         let near = Distance::Near(1);
         let mut enemy = Character::enemy(10, near);
-        let result = run(&mut game, &mut enemy, &rand);
+        let result = run(&mut game, &mut enemy);
         assert!(result.is_err());
     }
 }
