@@ -1,9 +1,10 @@
 extern crate dirs;
 
-use crate::{character::Character, randomizer::DefaultRandomizer};
+use crate::character::Character;
 use crate::item::Item;
 use crate::location::Location;
 use crate::log;
+use crate::randomizer;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -125,7 +126,7 @@ impl Game {
     }
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
-        let rand = DefaultRandomizer{};
+        let rand = randomizer::default();
 
         let distance = self.location.distance_from_home();
         if rand.should_enemy_appear(&distance) {
@@ -139,7 +140,7 @@ impl Game {
     }
 
     fn bribe(&mut self, enemy: &Character) -> bool {
-        let rand = DefaultRandomizer{};
+        let rand = randomizer::default();
         let bribe_cost = gold_gained(enemy.level) / 2;
 
         if self.gold >= bribe_cost && rand.bribe_succeeds() {
@@ -152,7 +153,7 @@ impl Game {
     }
 
     fn run_away(&self, enemy: &Character) -> bool {
-        let rand = DefaultRandomizer{};
+        let rand = randomizer::default();
         if rand.run_away_succeeds(self.player.level, enemy.level) {
             log::run_away_success(&self.player);
             return true;
@@ -162,8 +163,8 @@ impl Game {
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        let rand = DefaultRandomizer{};
-        if let Ok(xp) = battle::run(&rand, self, enemy) {
+        let rand = randomizer::default();
+        if let Ok(xp) = battle::run(self, enemy, &rand) {
             let gold = gold_gained(enemy.level);
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
@@ -196,7 +197,7 @@ fn enemy_level(player_level: i32, distance_from_home: i32, random_delta: i32) ->
 }
 
 fn gold_gained(enemy_level: i32) -> i32 {
-    let rand = DefaultRandomizer{};
+    let rand = randomizer::default();
     rand.gold_gained(enemy_level * 100)
 }
 
