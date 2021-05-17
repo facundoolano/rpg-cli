@@ -127,7 +127,7 @@ impl Game {
     fn maybe_spawn_enemy(&self) -> Option<Character> {
         let distance = self.location.distance_from_home();
         if Randomizer::should_enemy_appear(&distance) {
-            let level = enemy_level(self.player.level, distance.len());
+            let level = enemy_level(self.player.level, distance.len(), Randomizer::enemy_delta());
             let enemy = Character::enemy(level, distance);
             log::enemy_appears(&enemy, &self.location);
             Some(enemy)
@@ -186,8 +186,7 @@ fn data_file() -> path::PathBuf {
     rpg_dir().join("data")
 }
 
-fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
-    let random_delta = Randomizer::enemy_delta();
+fn enemy_level(player_level: i32, distance_from_home: i32, random_delta: i32) -> i32 {
     std::cmp::max(player_level / 2 + distance_from_home - 1 + random_delta, 1)
 }
 
@@ -203,19 +202,19 @@ mod tests {
     #[test]
     fn test_enemy_level() {
         // player level 1
-        assert_eq!(1, enemy_level(1, 1));
-        assert_eq!(1, enemy_level(1, 2));
-        assert_eq!(2, enemy_level(1, 3));
+        assert_eq!(1, enemy_level(1, 1, 0));
+        assert_eq!(1, enemy_level(1, 2, 0));
+        assert_eq!(2, enemy_level(1, 3, 0));
 
-        // player level 5
-        assert_eq!(2, enemy_level(5, 1));
-        assert_eq!(3, enemy_level(5, 2));
-        assert_eq!(4, enemy_level(5, 3));
+        // Player level 5
+        assert_eq!(2, enemy_level(5, 1, 0));
+        assert_eq!(3, enemy_level(5, 2, 0));
+        assert_eq!(4, enemy_level(5, 3, 0));
 
         // player level 10
-        assert_eq!(5, enemy_level(10, 1));
-        assert_eq!(6, enemy_level(10, 2));
-        assert_eq!(7, enemy_level(10, 3));
+        assert_eq!(5, enemy_level(10, 1, 0));
+        assert_eq!(6, enemy_level(10, 2, 0));
+        assert_eq!(7, enemy_level(10, 3, 0));
     }
 
     #[test]
