@@ -115,9 +115,25 @@ mod tests {
         // player - 5 hp
         // enemy - 10hp
 
-        let result = run(&mut game, &mut enemy);
+        let result = game.battle(&mut enemy);
         assert!(result.is_ok());
-        assert_eq!(20, result.unwrap());
+        assert_eq!(15, game.player.current_hp);
+        assert_eq!(1, game.player.level);
+        assert_eq!(20, game.player.xp);
+        assert_eq!(100, game.gold);
+
+        let mut enemy = Character::enemy(1, Distance::Near(1));
+        enemy.speed = 1;
+        enemy.current_hp = 15;
+        enemy.strength = 5;
+
+        // same turns, added xp increases level
+
+        let result = game.battle(&mut enemy);
+        assert!(result.is_ok());
+        assert_eq!(2, game.player.level);
+        assert_eq!(10, game.player.xp);
+        assert_eq!(200, game.gold);
     }
 
     #[test]
@@ -125,7 +141,7 @@ mod tests {
         let mut game = Game::new();
         let near = Distance::Near(1);
         let mut enemy = Character::enemy(10, near);
-        let result = run(&mut game, &mut enemy);
+        let result = game.battle(&mut enemy);
         assert!(result.is_err());
     }
 }
