@@ -61,6 +61,7 @@ fn attack(attacker: &Character, receiver: &mut Character, rand: &dyn Randomizer)
         (Attack::Miss, 0)
     } else {
         let damage = attacker.damage(&receiver);
+        // FIXME move the max thing to rand
         let damage = std::cmp::max(1, rand.damage(damage));
         let xp = attacker.xp_gained(&receiver, damage);
 

@@ -183,7 +183,6 @@ mod tests {
         assert_eq!(TEST_CLASS.start_speed, hero.speed);
     }
 
-    // FIXME this is affected by randomization
     #[test]
     fn test_increase_level() {
         let rand = randomizer::test();
