@@ -29,11 +29,12 @@ pub trait Randomizer {
 }
 
 #[cfg(not(test))]
+/// Get the randomizer instance. This function provides indirection
+/// so randomness can be turned off during tests to make them deterministic
 pub fn random() -> DefaultRandomizer {
     DefaultRandomizer {}
 }
 
-// pick the noop randomizer when testing
 #[cfg(test)]
 pub fn random() -> TestRandomizer {
     TestRandomizer {}
