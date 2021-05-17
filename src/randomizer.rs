@@ -15,7 +15,7 @@ pub trait Randomizer {
 
     fn run_away_succeeds(&self, player_level: i32, enemy_level: i32) -> bool;
 
-    fn enemy_delta(&self) -> i32;
+    fn enemy_level(&self, level:i32) -> i32;
 
     fn damage(&self, value: i32) -> i32;
 
@@ -63,9 +63,9 @@ impl Randomizer for DefaultRandomizer {
         }
     }
 
-    fn enemy_delta(&self) -> i32 {
+    fn enemy_level(&self, level: i32) -> i32 {
         let mut rng = rand::thread_rng();
-        rng.gen_range(-1..2)
+        max(1, level + rng.gen_range(-1..2))
     }
 
     /// add +/- 20% variance to a the damage
@@ -73,9 +73,9 @@ impl Randomizer for DefaultRandomizer {
         let value = value as f64;
 
         let mut rng = rand::thread_rng();
-        let min = (value * 0.8).floor() as i32;
-        let max = (value * 1.2).ceil() as i32;
-        rng.gen_range(min..=max)
+        let min_val = (value * 0.8).floor() as i32;
+        let max_val = (value * 1.2).ceil() as i32;
+        max(1, rng.gen_range(min_val..=max_val))
     }
 
     fn is_critical(&self) -> bool {
@@ -128,7 +128,7 @@ impl Randomizer for TestRandomizer {
         false
     }
 
-    fn enemy_delta(&self) -> i32 {
+    fn enemy_level(&self, _level: i32) -> i32 {
         0
     }
 

@@ -60,9 +60,7 @@ fn attack(attacker: &Character, receiver: &mut Character, rand: &dyn Randomizer)
     if rand.is_miss(attacker.speed, receiver.speed) {
         (Attack::Miss, 0)
     } else {
-        let damage = attacker.damage(&receiver);
-        // FIXME move the max thing to rand
-        let damage = std::cmp::max(1, rand.damage(damage));
+        let damage = rand.damage(attacker.damage(&receiver));
         let xp = attacker.xp_gained(&receiver, damage);
 
         if rand.is_critical() {
