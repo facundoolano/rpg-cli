@@ -8,7 +8,6 @@ use std::cmp::max;
 /// needs to incorporate randomness.
 /// It basically wraps all calls to the rand crate, allowing to replace it with a
 /// noop implementation in tests to make the logic deterministic.
-// TODO add docstrings here
 pub trait Randomizer {
     fn should_enemy_appear(&self, distance: &location::Distance) -> bool;
 
@@ -29,7 +28,6 @@ pub trait Randomizer {
     fn stat_increase(&self, current: i32, rate: f64) -> i32;
 }
 
-// TODO consider making these static
 pub fn default() -> DefaultRandomizer {
     DefaultRandomizer {}
 }
