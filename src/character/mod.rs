@@ -61,17 +61,16 @@ impl Character {
             speed: class.start_speed,
         };
 
+        let rand = DefaultRandomizer{};
         for _ in 1..level {
-            character.increase_level();
+            character.increase_level(&rand);
         }
 
         character
     }
 
     /// Raise the level and all the character stats.
-    fn increase_level(&mut self) {
-        let rand = DefaultRandomizer{};
-
+    fn increase_level(&mut self, rand: &dyn Randomizer) {
         self.level += 1;
         self.strength = rand.stat(self.strength, self.class.strength_rate);
         self.speed = rand.stat(self.speed, self.class.speed_rate);
@@ -85,10 +84,12 @@ impl Character {
 
     /// Add to the accumulated experience points, possibly increasing the level.
     pub fn add_experience(&mut self, xp: i32) -> bool {
+        let rand = DefaultRandomizer{};
+
         self.xp += xp;
         let for_next = self.xp_for_next();
         if self.xp >= for_next {
-            self.increase_level();
+            self.increase_level(&rand);
             self.xp -= for_next;
             return true;
         }
@@ -155,6 +156,7 @@ impl Character {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::randomizer::TestRandomizer;
 
     const TEST_CLASS: Class = Class {
         name: "test",
@@ -187,6 +189,7 @@ mod tests {
     // FIXME this is affected by randomization
     #[test]
     fn test_increase_level() {
+        let rand = TestRandomizer{};
         let mut hero = new_char();
 
         // assert what we're assuming are the params in the rest of the test
@@ -199,7 +202,7 @@ mod tests {
         hero.strength = 10;
         hero.speed = 5;
 
-        hero.increase_level();
+        hero.increase_level(&rand);
         assert_eq!(2, hero.level);
         assert_eq!(26, hero.max_hp);
         assert_eq!(11, hero.strength);
@@ -208,7 +211,7 @@ mod tests {
         let damage = 7;
         hero.current_hp -= damage;
 
-        hero.increase_level();
+        hero.increase_level(&rand);
         assert_eq!(3, hero.level);
         assert_eq!(hero.current_hp, hero.max_hp - damage);
     }
@@ -271,11 +274,13 @@ mod tests {
 
     #[test]
     fn test_xp_for_next() {
+        let rand = TestRandomizer{};
+
         let mut hero = new_char();
         assert_eq!(30, hero.xp_for_next());
-        hero.increase_level();
+        hero.increase_level(&rand);
         assert_eq!(84, hero.xp_for_next());
-        hero.increase_level();
+        hero.increase_level(&rand);
         assert_eq!(155, hero.xp_for_next());
     }
 
