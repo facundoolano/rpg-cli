@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
-use crate::randomizer;
+use crate::randomizer::default as random;
 use crate::randomizer::Randomizer;
 use class::Class;
 
@@ -63,7 +63,7 @@ impl Character {
         };
 
         for _ in 1..level {
-            character.increase_level(&randomizer::default());
+            character.increase_level(&random());
         }
 
         character
@@ -87,7 +87,7 @@ impl Character {
         self.xp += xp;
         let for_next = self.xp_for_next();
         if self.xp >= for_next {
-            self.increase_level(&randomizer::default());
+            self.increase_level(&random());
             self.xp -= for_next;
             return true;
         }
@@ -154,6 +154,7 @@ impl Character {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::randomizer;
 
     const TEST_CLASS: Class = Class {
         name: "test",
