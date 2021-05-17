@@ -13,7 +13,7 @@ pub enum Attack {
 
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
-pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, ()> {
+pub fn run(rand: &dyn Randomizer, game: &mut Game, enemy: &mut Character) -> Result<i32, ()> {
     // These accumulators get increased based on the characters speed:
     // the faster will get more frequent turns.
     // This could be generalized to player vs enemy parties
@@ -26,12 +26,12 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, ()> {
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                let new_xp = player_attack(game, enemy);
+                let new_xp = player_attack(rand, game, enemy);
                 xp += new_xp;
             }
             pl_accum = -1;
         } else {
-            enemy_attack(game, enemy);
+            enemy_attack(rand, game, enemy);
             en_accum = -1;
         }
 
@@ -43,28 +43,28 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, ()> {
     Ok(xp)
 }
 
-fn player_attack(game: &Game, enemy: &mut Character) -> i32 {
-    let (damage, new_xp) = attack(&game.player, enemy);
+fn player_attack(rand: &dyn Randomizer, game: &Game, enemy: &mut Character) -> i32 {
+    let (damage, new_xp) = attack(rand, &game.player, enemy);
     log::player_attack(&enemy, damage);
     new_xp
 }
 
-fn enemy_attack(game: &mut Game, enemy: &Character) {
-    let (damage, _) = attack(enemy, &mut game.player);
+fn enemy_attack(rand: &dyn Randomizer, game: &mut Game, enemy: &Character) {
+    let (damage, _) = attack(rand, enemy, &mut game.player);
     log::enemy_attack(&game.player, damage);
 }
 
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
-fn attack(attacker: &Character, receiver: &mut Character) -> (Attack, i32) {
-    if Randomizer::should_miss(attacker.speed, receiver.speed) {
+fn attack(rand: &dyn Randomizer, attacker: &Character, receiver: &mut Character) -> (Attack, i32) {
+    if rand.should_miss(attacker.speed, receiver.speed) {
         (Attack::Miss, 0)
     } else {
         let damage = attacker.damage(&receiver);
-        let damage = std::cmp::max(1, Randomizer::damage(damage));
+        let damage = std::cmp::max(1, rand.damage(damage));
         let xp = attacker.xp_gained(&receiver, damage);
 
-        if Randomizer::should_critical() {
+        if rand.should_critical() {
             let damage = damage * 2;
             receiver.receive_damage(damage);
             (Attack::Critical(damage), xp)
@@ -92,13 +92,17 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
     game.use_item("potion").is_ok()
 }
 
+// FIXME rewrite these from this module's perspective instead of game
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::location::Distance;
+    use crate::randomizer::TestRandomizer;
 
     #[test]
     fn won() {
+        let rand = TestRandomizer{};
+
         let mut game = Game::new();
         // same level as player
         let mut enemy = Character::enemy(1, Distance::Near(1));
@@ -116,33 +120,18 @@ mod tests {
         // player - 5 hp
         // enemy - 10hp
 
-        let result = game.battle(&mut enemy);
+        let result = run(&rand, &mut game, &mut enemy);
         assert!(result.is_ok());
-        assert_eq!(15, game.player.current_hp);
-        assert_eq!(1, game.player.level);
-        assert_eq!(20, game.player.xp);
-        assert_eq!(100, game.gold);
-
-        let mut enemy = Character::enemy(1, Distance::Near(1));
-        enemy.speed = 1;
-        enemy.current_hp = 15;
-        enemy.strength = 5;
-
-        // same turns, added xp increases level
-
-        let result = game.battle(&mut enemy);
-        assert!(result.is_ok());
-        assert_eq!(2, game.player.level);
-        assert_eq!(10, game.player.xp);
-        assert_eq!(200, game.gold);
+        assert_eq!(20, result.unwrap());
     }
 
     #[test]
     fn lost() {
+        let rand = TestRandomizer{};
         let mut game = Game::new();
         let near = Distance::Near(1);
         let mut enemy = Character::enemy(10, near);
-        let result = game.battle(&mut enemy);
+        let result = run(&rand, &mut game, &mut enemy);
         assert!(result.is_err());
     }
 }

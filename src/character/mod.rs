@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
-use crate::randomizer::Randomizer;
+use crate::randomizer::{DefaultRandomizer, Randomizer};
 use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -70,14 +70,16 @@ impl Character {
 
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
+        let rand = DefaultRandomizer{};
+
         self.level += 1;
-        self.strength = Randomizer::stat(self.strength, self.class.strength_rate);
-        self.speed = Randomizer::stat(self.speed, self.class.speed_rate);
+        self.strength = rand.stat(self.strength, self.class.strength_rate);
+        self.speed = rand.stat(self.speed, self.class.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = Randomizer::stat(self.max_hp, self.class.hp_rate);
+        self.max_hp = rand.stat(self.max_hp, self.class.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -182,6 +184,7 @@ mod tests {
         assert_eq!(TEST_CLASS.start_speed, hero.speed);
     }
 
+    // FIXME this is affected by randomization
     #[test]
     fn test_increase_level() {
         let mut hero = new_char();

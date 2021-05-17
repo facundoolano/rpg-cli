@@ -1,6 +1,6 @@
 extern crate dirs;
 
-use crate::character::Character;
+use crate::{character::Character, randomizer::DefaultRandomizer};
 use crate::item::Item;
 use crate::location::Location;
 use crate::log;
@@ -125,9 +125,11 @@ impl Game {
     }
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
+        let rand = DefaultRandomizer{};
+
         let distance = self.location.distance_from_home();
-        if Randomizer::should_enemy_appear(&distance) {
-            let level = enemy_level(self.player.level, distance.len(), Randomizer::enemy_delta());
+        if rand.should_enemy_appear(&distance) {
+            let level = enemy_level(self.player.level, distance.len(), rand.enemy_delta());
             let enemy = Character::enemy(level, distance);
             log::enemy_appears(&enemy, &self.location);
             Some(enemy)
@@ -137,9 +139,10 @@ impl Game {
     }
 
     fn bribe(&mut self, enemy: &Character) -> bool {
+        let rand = DefaultRandomizer{};
         let bribe_cost = gold_gained(enemy.level) / 2;
 
-        if self.gold >= bribe_cost && Randomizer::bribe_succeeds() {
+        if self.gold >= bribe_cost && rand.bribe_succeeds() {
             self.gold -= bribe_cost;
             log::bribe_success(&self.player, bribe_cost);
             return true;
@@ -149,7 +152,8 @@ impl Game {
     }
 
     fn run_away(&self, enemy: &Character) -> bool {
-        if Randomizer::run_away_succeeds(self.player.level, enemy.level) {
+        let rand = DefaultRandomizer{};
+        if rand.run_away_succeeds(self.player.level, enemy.level) {
             log::run_away_success(&self.player);
             return true;
         };
@@ -158,7 +162,8 @@ impl Game {
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        if let Ok(xp) = battle::run(self, enemy) {
+        let rand = DefaultRandomizer{};
+        if let Ok(xp) = battle::run(&rand, self, enemy) {
             let gold = gold_gained(enemy.level);
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
@@ -191,7 +196,8 @@ fn enemy_level(player_level: i32, distance_from_home: i32, random_delta: i32) ->
 }
 
 fn gold_gained(enemy_level: i32) -> i32 {
-    Randomizer::gold_gained(enemy_level * 100)
+    let rand = DefaultRandomizer{};
+    rand.gold_gained(enemy_level * 100)
 }
 
 #[cfg(test)]
