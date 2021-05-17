@@ -1,11 +1,11 @@
 extern crate dirs;
 
-use crate::{character::Character, randomizer::DefaultRandomizer};
 use crate::item::Item;
 use crate::location::Location;
 use crate::log;
 use crate::randomizer;
 use crate::randomizer::Randomizer;
+use crate::{character::Character, randomizer::DefaultRandomizer};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::{fs, io, path};

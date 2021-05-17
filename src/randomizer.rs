@@ -8,44 +8,25 @@ use std::cmp::max;
 /// needs to incorporate randomness.
 /// It basically wraps all calls to the rand crate, allowing to replace it with a
 /// noop implementation in tests to make the logic deterministic.
-// FIXME move the noop implementations to the test randomizer
 // TODO add docstrings here
 pub trait Randomizer {
-    fn should_enemy_appear(&self, _distance: &location::Distance) -> bool {
-        true
-    }
+    fn should_enemy_appear(&self, distance: &location::Distance) -> bool;
 
-    fn bribe_succeeds(&self) -> bool {
-        false
-    }
+    fn bribe_succeeds(&self) -> bool;
 
-    fn run_away_succeeds(&self, _player_level: i32, _enemy_level: i32) -> bool {
-        false
-    }
+    fn run_away_succeeds(&self, player_level: i32, enemy_level: i32) -> bool;
 
-    fn enemy_delta(&self) -> i32 {
-        0
-    }
+    fn enemy_delta(&self) -> i32;
 
-    fn damage(&self, value: i32) -> i32 {
-        value
-    }
+    fn damage(&self, value: i32) -> i32;
 
-    fn is_critical(&self) -> bool {
-        false
-    }
+    fn is_critical(&self) -> bool;
 
-    fn is_miss(&self, _attacker_speed: i32, _receiver_speed: i32) -> bool {
-        false
-    }
+    fn is_miss(&self, attacker_speed: i32, receiver_speed: i32) -> bool;
 
-    fn gold_gained(&self, base: i32) -> i32 {
-        base
-    }
+    fn gold_gained(&self, base: i32) -> i32;
 
-    fn stat_increase(&self, current: i32, rate: f64) -> i32 {
-        current + (current as f64 * rate).ceil() as i32
-    }
+    fn stat_increase(&self, current: i32, rate: f64) -> i32;
 }
 
 // TODO consider making these static
@@ -57,7 +38,7 @@ pub fn test() -> TestRandomizer {
     TestRandomizer {}
 }
 
-pub struct DefaultRandomizer {}
+pub struct DefaultRandomizer;
 
 impl Randomizer for DefaultRandomizer {
     fn should_enemy_appear(&self, distance: &location::Distance) -> bool {
@@ -134,9 +115,45 @@ impl Randomizer for DefaultRandomizer {
 
 /// The test randomizer just exposes the same functions as the default one
 /// but return deterministic results.
-pub struct TestRandomizer {}
+pub struct TestRandomizer;
 
-impl Randomizer for TestRandomizer {}
+impl Randomizer for TestRandomizer {
+    fn should_enemy_appear(&self, _distance: &location::Distance) -> bool {
+        true
+    }
+
+    fn bribe_succeeds(&self) -> bool {
+        false
+    }
+
+    fn run_away_succeeds(&self, _player_level: i32, _enemy_level: i32) -> bool {
+        false
+    }
+
+    fn enemy_delta(&self) -> i32 {
+        0
+    }
+
+    fn damage(&self, value: i32) -> i32 {
+        value
+    }
+
+    fn is_critical(&self) -> bool {
+        false
+    }
+
+    fn is_miss(&self, _attacker_speed: i32, _receiver_speed: i32) -> bool {
+        false
+    }
+
+    fn gold_gained(&self, base: i32) -> i32 {
+        base
+    }
+
+    fn stat_increase(&self, current: i32, rate: f64) -> i32 {
+        current + (current as f64 * rate).ceil() as i32
+    }
+}
 
 #[cfg(test)]
 mod tests {
