@@ -57,7 +57,7 @@ fn enemy_attack(game: &mut Game, enemy: &Character, rand: &dyn Randomizer) {
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
 fn attack(attacker: &Character, receiver: &mut Character, rand: &dyn Randomizer) -> (Attack, i32) {
-    if rand.should_miss(attacker.speed, receiver.speed) {
+    if rand.is_miss(attacker.speed, receiver.speed) {
         (Attack::Miss, 0)
     } else {
         let damage = attacker.damage(&receiver);
@@ -65,7 +65,7 @@ fn attack(attacker: &Character, receiver: &mut Character, rand: &dyn Randomizer)
         let damage = std::cmp::max(1, rand.damage(damage));
         let xp = attacker.xp_gained(&receiver, damage);
 
-        if rand.should_critical() {
+        if rand.is_critical() {
             let damage = damage * 2;
             receiver.receive_damage(damage);
             (Attack::Critical(damage), xp)

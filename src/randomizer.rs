@@ -8,6 +8,8 @@ use std::cmp::max;
 /// needs to incorporate randomness.
 /// It basically wraps all calls to the rand crate, allowing to replace it with a
 /// noop implementation in tests to make the logic deterministic.
+// FIXME move the noop implementations to the test randomizer
+// TODO add docstrings here
 pub trait Randomizer {
     fn should_enemy_appear(&self, _distance: &location::Distance) -> bool {
         true
@@ -29,11 +31,11 @@ pub trait Randomizer {
         value
     }
 
-    fn should_critical(&self) -> bool {
+    fn is_critical(&self) -> bool {
         false
     }
 
-    fn should_miss(&self, _attacker_speed: i32, _receiver_speed: i32) -> bool {
+    fn is_miss(&self, _attacker_speed: i32, _receiver_speed: i32) -> bool {
         false
     }
 
@@ -41,7 +43,7 @@ pub trait Randomizer {
         base
     }
 
-    fn stat(&self, current: i32, rate: f64) -> i32 {
+    fn stat_increase(&self, current: i32, rate: f64) -> i32 {
         current + (current as f64 * rate).ceil() as i32
     }
 }
@@ -97,12 +99,12 @@ impl Randomizer for DefaultRandomizer {
         rng.gen_range(min..=max)
     }
 
-    fn should_critical(&self) -> bool {
+    fn is_critical(&self) -> bool {
         let mut rng = rand::thread_rng();
         rng.gen_ratio(1, 20)
     }
 
-    fn should_miss(&self, attacker_speed: i32, receiver_speed: i32) -> bool {
+    fn is_miss(&self, attacker_speed: i32, receiver_speed: i32) -> bool {
         if receiver_speed > attacker_speed {
             let ratio = receiver_speed / attacker_speed;
             let ratio = max(1, 5 - ratio) as u32;
@@ -119,7 +121,7 @@ impl Randomizer for DefaultRandomizer {
         rng.gen_range(min..=max)
     }
 
-    fn stat(&self, current: i32, rate: f64) -> i32 {
+    fn stat_increase(&self, current: i32, rate: f64) -> i32 {
         // if rate is .3, increase can be in .15-.45
         let current_f = current as f64;
         let min_value = max(1, (current_f * (rate - rate / 2.0)).round() as i32);
@@ -145,27 +147,27 @@ mod tests {
         let rand = default();
 
         // current hp lvl1: increase in .3 +/- .15
-        let value = rand.stat(20, 0.3);
+        let value = rand.stat_increase(20, 0.3);
         assert!((23..=29).contains(&value), "value was {}", value);
 
         // current strength lvl1
-        let value = rand.stat(10, 0.1);
+        let value = rand.stat_increase(10, 0.1);
         assert!((11..=12).contains(&value), "value was {}", value);
 
         // current speed lvl1
-        let value = rand.stat(5, 0.1);
+        let value = rand.stat_increase(5, 0.1);
         assert_eq!(6, value);
 
         // ~ hp lvl2
-        let value = rand.stat(26, 0.3);
+        let value = rand.stat_increase(26, 0.3);
         assert!((30..=38).contains(&value), "value was {}", value);
 
         // ~ hp lvl3
-        let value = rand.stat(34, 0.3);
+        let value = rand.stat_increase(34, 0.3);
         assert!((39..=49).contains(&value), "value was {}", value);
 
         // small numbers
-        let value = rand.stat(3, 0.07);
+        let value = rand.stat_increase(3, 0.07);
         assert_eq!(4, value);
     }
 }

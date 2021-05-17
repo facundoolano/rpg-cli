@@ -72,13 +72,13 @@ impl Character {
     /// Raise the level and all the character stats.
     fn increase_level(&mut self, rand: &dyn Randomizer) {
         self.level += 1;
-        self.strength = rand.stat(self.strength, self.class.strength_rate);
-        self.speed = rand.stat(self.speed, self.class.speed_rate);
+        self.strength = rand.stat_increase(self.strength, self.class.strength_rate);
+        self.speed = rand.stat_increase(self.speed, self.class.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = rand.stat(self.max_hp, self.class.hp_rate);
+        self.max_hp = rand.stat_increase(self.max_hp, self.class.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
