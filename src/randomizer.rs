@@ -5,11 +5,11 @@ use rand::Rng;
 use std::cmp::max;
 
 pub fn default() -> DefaultRandomizer {
-    DefaultRandomizer{}
+    DefaultRandomizer {}
 }
 
 pub fn test() -> TestRandomizer {
-    TestRandomizer{}
+    TestRandomizer {}
 }
 
 pub trait Randomizer {
@@ -134,7 +134,7 @@ impl Randomizer for DefaultRandomizer {
 /// but return deterministic results.
 pub struct TestRandomizer {}
 
-impl Randomizer for TestRandomizer{}
+impl Randomizer for TestRandomizer {}
 
 #[cfg(test)]
 mod tests {
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn test_increase_stat() {
         // we explicitly test the default implementation, not test one here
-        let rand = DefaultRandomizer{};
+        let rand = DefaultRandomizer {};
 
         // current hp lvl1: increase in .3 +/- .15
         let value = rand.stat(20, 0.3);
