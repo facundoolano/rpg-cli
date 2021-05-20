@@ -59,9 +59,10 @@ pub fn battle_lost(player: &Character, location: &Location) {
     log(&player, &location, "\u{1F480}");
 }
 
-pub fn battle_won(player: &Character, location: &Location, xp: i32, level_up: bool, gold: i32) {
-    let level_str = if level_up {
-        " +level".cyan().to_string()
+pub fn battle_won(player: &Character, location: &Location, xp: i32, levels_up: i32, gold: i32) {
+    let level_str = if levels_up > 0 {
+        let plus = (0..levels_up).map(|_| "+").collect::<String>();
+        format!(" {}level", plus).cyan().to_string()
     } else {
         "".to_string()
     };

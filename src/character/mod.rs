@@ -82,15 +82,18 @@ impl Character {
     }
 
     /// Add to the accumulated experience points, possibly increasing the level.
-    pub fn add_experience(&mut self, xp: i32) -> bool {
+    pub fn add_experience(&mut self, xp: i32) -> i32 {
         self.xp += xp;
-        let for_next = self.xp_for_next();
-        if self.xp >= for_next {
+
+        let mut increased_levels = 0;
+        let mut for_next = self.xp_for_next();
+        while self.xp >= for_next {
             self.increase_level();
             self.xp -= for_next;
-            return true;
+            increased_levels += 1;
+            for_next = self.xp_for_next();
         }
-        false
+        increased_levels
     }
 
     pub fn receive_damage(&mut self, damage: i32) {
@@ -282,15 +285,20 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        let level_up = hero.add_experience(20);
-        assert!(!level_up);
+        assert_eq!(0, hero.add_experience(20));
         assert_eq!(1, hero.level);
         assert_eq!(20, hero.xp);
 
-        let level_up = hero.add_experience(25);
-        assert!(level_up);
+        assert_eq!(1, hero.add_experience(25));
         assert_eq!(2, hero.level);
         assert_eq!(15, hero.xp);
+
+        // multiple increases at once
+        let mut hero = new_char();
+        assert_eq!(2, hero.add_experience(120));
+        assert!(hero.xp < hero.xp_for_next());
+        assert_eq!(3, hero.level);
+        assert_eq!(6, hero.xp);
     }
 
     #[test]
