@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::path;
 
-#[derive(Serialize, Deserialize, Debug, Eq)]
+#[derive(Serialize, Deserialize, Debug, Eq, Clone)]
 pub struct Location {
     path: path::PathBuf,
 }

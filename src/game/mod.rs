@@ -56,13 +56,18 @@ impl Game {
         fs::write(data_file(), &data)
     }
 
-    /// Remove the game data and reset this reference
+    /// Remove the game data and reset this reference.
+    /// Tombstones are preserved across games.
     pub fn reset(&mut self) {
-        let rpg_dir = rpg_dir();
-        if rpg_dir.exists() {
-            fs::remove_dir_all(&rpg_dir).unwrap();
-        }
-        *self = Self::new()
+        // FIXME is this still necessary?
+        reset_game_data();
+
+        // move the tombstones to the new game
+        let mut new_game = Self::new();
+        new_game.tombstones = self.tombstones.drain().collect();
+
+        // replace the current, finished game with the new one
+        *self = new_game;
     }
 
     /// Move the hero's location towards the given destination, one directory
@@ -171,6 +176,10 @@ impl Game {
             log::battle_won(&self.player, &self.location, xp, level_up, gold);
             Ok(())
         } else {
+            // leave hero items in the location
+            let tombstone = Tombstone::drop(self);
+            self.tombstones.insert(self.location.clone(), tombstone);
+
             log::battle_lost(&self.player, &self.location);
             Err(Error::GameOver)
         }
@@ -183,12 +192,21 @@ impl Default for Game {
     }
 }
 
+// TODO  game data handling could be extracted to its own module
+
 fn rpg_dir() -> path::PathBuf {
     dirs::home_dir().unwrap().join(".rpg")
 }
 
 fn data_file() -> path::PathBuf {
     rpg_dir().join("data")
+}
+
+fn reset_game_data() {
+    let rpg_dir = rpg_dir();
+    if rpg_dir.exists() {
+        fs::remove_dir_all(&rpg_dir).unwrap();
+    }
 }
 
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
