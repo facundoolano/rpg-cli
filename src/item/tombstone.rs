@@ -16,12 +16,12 @@ pub struct Tombstone {
 
 impl Tombstone {
     /// Dump the equipment, items and gold from a hero.
-    pub fn drop(game: &mut game::Game) {
+    pub fn drop(game: &mut game::Game) -> Self {
         todo!();
     }
 
     /// Add the items of the tombstone to the current game
-    pub fn pick_up(game: &mut game::Game) {
+    pub fn pick_up(&self, game: &mut game::Game) {
         // items and gold are always picked up
         // the equipment is picked up only if it's better than the current one
         todo!();

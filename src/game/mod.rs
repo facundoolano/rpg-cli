@@ -2,6 +2,7 @@ extern crate dirs;
 
 use crate::character::Character;
 use crate::item::Item;
+use crate::item::tombstone::Tombstone;
 use crate::location::Location;
 use crate::log;
 use crate::randomizer::random;
@@ -25,6 +26,7 @@ pub struct Game {
     pub location: Location,
     pub gold: i32,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
+    tombstones: HashMap<Location, Tombstone>
 }
 
 impl Game {
@@ -34,6 +36,7 @@ impl Game {
             player: Character::player(),
             gold: 0,
             inventory: HashMap::new(),
+            tombstones: HashMap::new(),
         }
     }
 

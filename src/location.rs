@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::path;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq)]
 pub struct Location {
     path: path::PathBuf,
 }
@@ -75,6 +75,12 @@ impl Location {
 impl PartialEq for Location {
     fn eq(&self, other: &Self) -> bool {
         self.path == other.path
+    }
+}
+
+impl std::hash::Hash for Location {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.path.hash(state)
     }
 }
 
