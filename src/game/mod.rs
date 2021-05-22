@@ -77,6 +77,8 @@ impl Game {
             self.location.go_to(&dest);
             if self.location.is_home() {
                 self.visit_home();
+            } else if self.pick_up_tombstone() {
+                return Ok(());
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
                 if bribe && self.bribe(&enemy) {
                     return Ok(());
@@ -131,6 +133,16 @@ impl Game {
             .iter()
             .map(|(k, v)| (k.as_ref(), v.len()))
             .collect::<HashMap<&str, usize>>()
+    }
+
+    /// If there's a tombstone laying in the current location, pick up its items
+    fn pick_up_tombstone(&mut self) -> bool {
+        if let Some(mut tombstone) = self.tombstones.remove(&self.location) {
+            tombstone.pick_up(self);
+            true
+        } else {
+            false
+        }
     }
 
     fn maybe_spawn_enemy(&self) -> Option<Character> {
