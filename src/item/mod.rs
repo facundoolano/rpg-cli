@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod equipment;
 pub mod shop;
+pub mod tombstone;
 
 #[typetag::serde(tag = "type")]
 pub trait Item {
