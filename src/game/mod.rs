@@ -138,6 +138,7 @@ impl Game {
     /// If there's a tombstone laying in the current location, pick up its items
     fn pick_up_tombstone(&mut self) -> bool {
         if let Some(mut tombstone) = self.tombstones.remove(&self.location) {
+            log::tombstone_found(&self.location);
             tombstone.pick_up(self);
             true
         } else {
