@@ -1,6 +1,6 @@
-use super::Item;
+use crate::item::Item;
 use crate::game;
-use super::equipment::{Shield, Sword};
+use crate::item::equipment::{Shield, Sword};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -9,15 +9,27 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize)]
 pub struct Tombstone {
     items: HashMap<String, Vec<Box<dyn Item>>>,
-    pub sword: Option<Sword>,
-    pub shield: Option<Shield>,
-    pub gold: i32,
+    sword: Option<Sword>,
+    shield: Option<Shield>,
+    gold: i32,
 }
 
 impl Tombstone {
+
     /// Dump the equipment, items and gold from a hero.
     pub fn drop(game: &mut game::Game) -> Self {
-        todo!();
+        let sword = game.player.sword.take();
+        let shield = game.player.shield.take();
+        let items = game.inventory.drain().collect();
+        let gold = game.gold;
+        game.gold = 0;
+
+        Self {
+            items,
+            sword,
+            shield,
+            gold
+        }
     }
 
     /// Add the items of the tombstone to the current game
@@ -25,5 +37,20 @@ impl Tombstone {
         // items and gold are always picked up
         // the equipment is picked up only if it's better than the current one
         todo!();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_empty_drop_pickup() {
+
+    }
+
+    #[test]
+    fn test_full_drop_pickup() {
+
     }
 }

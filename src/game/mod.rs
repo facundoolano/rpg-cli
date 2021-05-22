@@ -2,7 +2,6 @@ extern crate dirs;
 
 use crate::character::Character;
 use crate::item::Item;
-use crate::item::tombstone::Tombstone;
 use crate::location::Location;
 use crate::log;
 use crate::randomizer::random;
@@ -10,8 +9,10 @@ use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::{fs, io, path};
+use tombstone::Tombstone;
 
 pub mod battle;
+pub mod tombstone;
 
 #[derive(Debug)]
 pub enum Error {

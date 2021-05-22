@@ -2,7 +2,6 @@ use crate::character::Character;
 use crate::game::battle::Attack;
 use crate::game::Game;
 use crate::item::shop;
-use crate::item::tombstone::Tombstone;
 use crate::location::Location;
 use colored::*;
 
