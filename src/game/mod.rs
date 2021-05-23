@@ -221,6 +221,9 @@ fn gold_gained(enemy_level: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
+    use item::equipment::Equipment;
+    use crate::location::Distance;
+
     use super::*;
     use crate::item;
 
@@ -243,7 +246,7 @@ mod tests {
     }
 
     #[test]
-    fn inventory() {
+    fn test_inventory() {
         let mut game = Game::new();
 
         assert_eq!(0, game.inventory().len());
@@ -273,5 +276,76 @@ mod tests {
         assert!(game.use_item("potion").is_ok());
         assert_eq!(0, game.inventory().len());
         assert!(game.use_item("potion").is_err());
+    }
+
+    // FIXME this doesn't work if randomness is turned off completely
+    // it takes the dodge + critical factors out, which is not realistic
+    // e.g. always lose to golem, which is supposed to be slow and have less hit ratio
+    #[test]
+    fn test_not_unbeatable() {
+        let times = 10;
+
+        // TODO it's probably better to test against each class specifically
+
+        // The premise of this test is: a player with enough potions and its
+        // level's equipment, should be able to beat any enemy of its same level
+        // without relying in randomness.
+        let (wins, lost_to) = run_battles_at(1, 1, 1, times);
+        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+
+        let (wins, lost_to) = run_battles_at(1, 1, 4, times);
+        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+
+        let (wins, lost_to) = run_battles_at(5, 5, 5, times);
+        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+
+        let (wins, lost_to) = run_battles_at(10, 10, 5, times);
+        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+
+        let (wins, lost_to) = run_battles_at(15, 15, 13, times);
+        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+
+        // it should be able to beat most times a slightly weaker enemy
+
+        // it should be able to beat some times a slightly stronger enemy
+    }
+
+    fn run_battles_at(player_level: i32, enemy_level: i32, distance: i32, times: i32) -> (i32, Vec<String>) {
+        let mut wins = 0;
+        let mut lost_to = Vec::new();
+
+        for _ in 0..times {
+            let mut game = full_game_at(player_level);
+            let mut enemy = Character::enemy(enemy_level, Distance::from(distance));
+
+            if battle::run(&mut game, &mut enemy).is_ok() {
+                wins += 1
+            } else {
+                lost_to.push(format!("{}[{}]", enemy.name(), enemy.level));
+            }
+        }
+
+        (wins, lost_to)
+    }
+
+    fn full_game_at(level: i32) -> Game {
+        let mut game = Game::new();
+
+        // get a player of the given level
+        for _ in 0..level-1 {
+            game.player.add_experience(game.player.xp_for_next());
+        }
+        assert_eq!(level, game.player.level);
+
+        // add potions of the given level
+        for _ in 0..5 {
+            game.add_item("potion", Box::new(item::Potion::new(level)));
+        }
+
+        // add equipment of the given level
+        game.player.sword = Some(item::equipment::Sword::new(level));
+        game.player.shield = Some(item::equipment::Shield::new(level));
+
+        game
     }
 }
