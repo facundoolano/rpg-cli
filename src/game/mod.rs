@@ -78,11 +78,12 @@ impl Game {
             } else if self.pick_up_tombstone() {
                 return Ok(());
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
-                if bribe && self.bribe(&enemy) {
-                    return Ok(());
-                }
-
-                if run && self.run_away(&enemy) {
+                // don't attempt bribe and run in the same turn
+                if bribe {
+                    if self.bribe(&enemy) {
+                        return Ok(());
+                    }
+                } else if run && self.run_away(&enemy) {
                     return Ok(());
                 }
 
