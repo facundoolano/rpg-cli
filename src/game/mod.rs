@@ -279,12 +279,11 @@ mod tests {
         assert!(game.use_item("potion").is_err());
     }
 
-    // FIXME instead of fixing the enemy level, to really test the actual playability
-    // it should be derived directly from distance from home
-    // and not try to test specifically for weaker/stronger
+    // TODO should do the same with fixed character classes
+    // e.g. verify all classes can be beat at the game
     #[test]
     fn test_not_unbeatable() {
-        let times = 10;
+        let times = 100;
         // The premise of this test is: a player with enough potions and its
         // level's equipment, should be able to beat any enemy of its same level
         // without relying in randomness.
@@ -300,28 +299,34 @@ mod tests {
         let (wins, lost_to) = run_battles_at(10, 5, times);
         assert_wins(times, wins, 0.75, &lost_to);
 
+        let (wins, lost_to) = run_battles_at(10, 10, times);
+        assert_wins(times, wins, 0.4, &lost_to);
+
         let (wins, lost_to) = run_battles_at(15, 13, times);
         assert_wins(times, wins, 0.75, &lost_to);
 
-        // it shouldn't be too hard either --stronger enemies should have
-        // good chances of winning (even with all the equipment)
+        let (wins, lost_to) = run_battles_at(15, 15, times);
+        assert_wins(times, wins, 0.5, &lost_to);
+
+        // it shouldn't be too easy either --stronger enemies should have
+        // chances of winning (even with all the equipment)
         let (wins, _) = run_battles_at(1, 6, times);
-        assert_loses(times, wins, 0.3);
+        assert_loses(times, wins, 0.2);
 
         let (wins, _) = run_battles_at(1, 10, times);
-        assert_loses(times, wins, 0.4);
-
-        let (wins, _) = run_battles_at(5, 10, times);
         assert_loses(times, wins, 0.3);
 
+        let (wins, _) = run_battles_at(5, 10, times);
+        assert_loses(times, wins, 0.2);
+
         let (wins, _) = run_battles_at(5, 15, times);
-        assert_loses(times, wins, 0.5);
+        assert_loses(times, wins, 0.35);
 
         let (wins, _) = run_battles_at(10, 15, times);
-        assert_loses(times, wins, 0.4);
+        assert_loses(times, wins, 0.2);
 
         let (wins, _) = run_battles_at(15, 20, times);
-        assert_loses(times, wins, 0.4);
+        assert_loses(times, wins, 0.2);
     }
 
     fn assert_wins(total: i32, wins: i32, expected_ratio: f64, lost_to: &Vec<String>) {

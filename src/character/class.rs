@@ -57,7 +57,7 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
     let (w_near, w_mid, w_far) = match distance {
         location::Distance::Near(_) => (9, 2, 0),
         location::Distance::Mid(_) => (4, 6, 1),
-        location::Distance::Far(_) => (2, 5, 2),
+        location::Distance::Far(_) => (1, 6, 3),
     };
 
     // assign weights to each group
@@ -90,9 +90,9 @@ const BASE: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.10,
-    strength_rate: 0.05,
-    speed_rate: 0.05,
+    hp_rate: 0.15,
+    strength_rate: 0.07,
+    speed_rate: 0.07,
 };
 
 const RAT: Class = Class {
@@ -197,7 +197,7 @@ const DRAGON: Class = Class {
 const GOLEM: Class = Class {
     name: "golem",
     start_hp: 50,
-    start_strength: 50,
+    start_strength: 40,
     start_speed: 2,
 
     ..BASE
