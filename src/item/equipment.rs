@@ -17,6 +17,14 @@ pub trait Equipment: fmt::Display {
         // calculate the added strength as a function of the player strength
         (player_strength as f64 * 0.5).round() as i32
     }
+
+    fn is_upgrade_from(&self, maybe_other: &Option<&Self>) -> bool {
+        if let Some(equip) = maybe_other {
+            self.level() > equip.level()
+        } else {
+            true
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
