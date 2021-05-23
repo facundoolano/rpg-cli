@@ -198,9 +198,9 @@ const GOLEM: Class = Class {
     name: "golem",
     start_hp: 50,
     start_strength: 45,
-    start_speed: 2,
+    start_speed: 1,
 
-    speed_rate: 0.05,
+    speed_rate: 0.04,
 
     ..BASE
 };
