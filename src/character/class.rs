@@ -76,10 +76,8 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
         .0
 }
 
-// TODO verify that the rates produce some realistic values for far enemies especially for far enemies
-// which will only appear at high levels (i.e. the high start values can grow too big at their actual level)
-// we shouldn't end up in a place were the hero raises its value and as a consequence the enemies
-// raise it too.
+// NOTE: we shouldn't end up in a place were the hero raises its value and as
+// a consequence the enemies raise it too, making them unbeatable.
 // Consider: 1. raising the enemy level solely (or primarily) based on distance;
 // 2. decreasing rates to prevent overgrowth at higher levels
 // as a starting measure, using increase rates way below those of the player

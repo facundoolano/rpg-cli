@@ -226,6 +226,7 @@ mod tests {
 
     use super::*;
     use crate::item;
+    use crate::randomizer;
 
     #[test]
     fn test_enemy_level() {
@@ -278,47 +279,89 @@ mod tests {
         assert!(game.use_item("potion").is_err());
     }
 
-    // FIXME this doesn't work if randomness is turned off completely
-    // it takes the dodge + critical factors out, which is not realistic
-    // e.g. always lose to golem, which is supposed to be slow and have less hit ratio
+    // FIXME instead of fixing the enemy level, to really test the actual playability
+    // it should be derived directly from distance from home
+    // and not try to test specifically for weaker/stronger
     #[test]
     fn test_not_unbeatable() {
         let times = 10;
-
-        // TODO it's probably better to test against each class specifically
-
         // The premise of this test is: a player with enough potions and its
         // level's equipment, should be able to beat any enemy of its same level
         // without relying in randomness.
         let (wins, lost_to) = run_battles_at(1, 1, 1, times);
-        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+        assert_wins(times, wins, 0.75, &lost_to);
 
         let (wins, lost_to) = run_battles_at(1, 1, 4, times);
-        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+        assert_wins(times, wins, 0.75, &lost_to);
 
         let (wins, lost_to) = run_battles_at(5, 5, 5, times);
-        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+        assert_wins(times, wins, 0.75, &lost_to);
 
         let (wins, lost_to) = run_battles_at(10, 10, 5, times);
-        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+        assert_wins(times, wins, 0.75, &lost_to);
 
         let (wins, lost_to) = run_battles_at(15, 15, 13, times);
-        assert!(wins > times * 3/4, "won {} out of {}. Lost to {:?}", wins, times, lost_to);
+        assert_wins(times, wins, 0.75, &lost_to);
 
         // it should be able to beat most times a slightly weaker enemy
+        let (wins, lost_to) = run_battles_at(5, 4, 5, times);
+        assert_wins(times, wins, 0.5, &lost_to);
+
+        let (wins, lost_to) = run_battles_at(10, 8, 5, times);
+        assert_wins(times, wins, 0.5, &lost_to);
+
+        let (wins, lost_to) = run_battles_at(15, 13, 13, times);
+        assert_wins(times, wins, 0.5, &lost_to);
 
         // it should be able to beat some times a slightly stronger enemy
+        let (wins, lost_to) = run_battles_at(1, 3, 1, times);
+        assert_wins(times, wins, 0.1, &lost_to);
+
+        let (wins, lost_to) = run_battles_at(5, 7, 5, times);
+        assert_wins(times, wins, 0.1, &lost_to);
+
+        let (wins, lost_to) = run_battles_at(10, 12, 5, times);
+        assert_wins(times, wins, 0.1, &lost_to);
+
+        let (wins, lost_to) = run_battles_at(15, 17, 13, times);
+        assert_wins(times, wins, 0.1, &lost_to);
+
+        // it shouldn't bee too easy either -- stronger enemies should
+        // have good chances of beating the player
+        let (wins, _) = run_battles_at(1, 4, 1, times);
+        assert_loses(times, wins, 0.7);
+
+        let (wins, _) = run_battles_at(5, 10, 5, times);
+        assert_loses(times, wins, 0.7);
+
+        let (wins, _) = run_battles_at(10, 15, 5, times);
+        assert_loses(times, wins, 0.7);
+
+        let (wins, _) = run_battles_at(15, 20, 13, times);
+        assert_loses(times, wins, 0.7);
+    }
+
+    fn assert_wins(total: i32, wins: i32, expected_ratio: f64, lost_to: &Vec<String>) {
+        assert!(wins as f64 >= total as f64 * expected_ratio , "won {} out of {}. Lost to {:?}", wins, total, lost_to);
+    }
+
+    fn assert_loses(total: i32, wins: i32, expected_ratio: f64) {
+        let expected = (total as f64) * (1.0 - expected_ratio);
+        assert!((wins as f64) <= expected, "won {} out of {} expected at most {}", wins, total, expected);
     }
 
     fn run_battles_at(player_level: i32, enemy_level: i32, distance: i32, times: i32) -> (i32, Vec<String>) {
         let mut wins = 0;
         let mut lost_to = Vec::new();
 
+        // we don't want randomization turned off for this test
+        let random = randomizer::DefaultRandomizer{};
+
         for _ in 0..times {
             let mut game = full_game_at(player_level);
             let mut enemy = Character::enemy(enemy_level, Distance::from(distance));
 
-            if battle::run(&mut game, &mut enemy).is_ok() {
+            if battle::run(&mut game, &mut enemy, &random).is_ok() {
                 wins += 1
             } else {
                 lost_to.push(format!("{}[{}]", enemy.name(), enemy.level));
