@@ -30,16 +30,19 @@ pub fn run_away_failure(player: &Character) {
 
 pub fn tombstone_found(location: &Location) {
     println!();
-    println!("    \u{1FAA6}@{}", location);
-    println!();
+    println!("    \u{1FAA6} @{}", location);
 }
 
 pub fn tombstone_items(items: &[String], gold: i32) {
-    println!();
+    if gold > 0 || !items.is_empty() {
+        println!();
+    }
     for item in items {
         println!("    +{}", item);
     }
-    println!("    {}", format_gold_plus(gold));
+    if gold > 0 {
+        println!("    {}", format_gold_plus(gold));
+    }
     println!();
 }
 
