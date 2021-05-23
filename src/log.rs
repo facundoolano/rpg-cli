@@ -28,6 +28,24 @@ pub fn run_away_failure(player: &Character) {
     battle_log(&player, "can't run!");
 }
 
+pub fn tombstone_found(location: &Location) {
+    println!();
+    println!("    \u{1FAA6} @{}", location);
+}
+
+pub fn tombstone_items(items: &[String], gold: i32) {
+    if gold > 0 || !items.is_empty() {
+        println!();
+    }
+    for item in items {
+        println!("    +{}", item);
+    }
+    if gold > 0 {
+        println!("    {}", format_gold_plus(gold));
+    }
+    println!();
+}
+
 pub fn heal(player: &Character, location: &Location, recovered: i32) {
     if recovered > 0 {
         log(
@@ -71,10 +89,10 @@ pub fn battle_won(player: &Character, location: &Location, xp: i32, levels_up: i
         &player,
         &location,
         &format!(
-            "{}{} +{}",
+            "{}{} {}",
             format!("+{}xp", xp).bold(),
             level_str,
-            format_gold(gold)
+            format_gold_plus(gold)
         ),
     );
 }
@@ -237,6 +255,10 @@ fn bar_slots(slots: i32, total: i32, current: i32) -> (i32, i32) {
 
 fn format_gold(gold: i32) -> ColoredString {
     format!("{}g", gold).yellow()
+}
+
+fn format_gold_plus(gold: i32) -> ColoredString {
+    format!("+{}g", gold).yellow()
 }
 
 #[cfg(test)]

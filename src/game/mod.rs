@@ -9,8 +9,10 @@ use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::{fs, io, path};
+use tombstone::Tombstone;
 
 pub mod battle;
+pub mod tombstone;
 
 #[derive(Debug)]
 pub enum Error {
@@ -25,6 +27,7 @@ pub struct Game {
     pub location: Location,
     pub gold: i32,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
+    tombstones: HashMap<Location, Tombstone>,
 }
 
 impl Game {
@@ -34,6 +37,7 @@ impl Game {
             player: Character::player(),
             gold: 0,
             inventory: HashMap::new(),
+            tombstones: HashMap::new(),
         }
     }
 
@@ -53,13 +57,15 @@ impl Game {
         fs::write(data_file(), &data)
     }
 
-    /// Remove the game data and reset this reference
+    /// Remove the game data and reset this reference.
+    /// Tombstones are preserved across games.
     pub fn reset(&mut self) {
-        let rpg_dir = rpg_dir();
-        if rpg_dir.exists() {
-            fs::remove_dir_all(&rpg_dir).unwrap();
-        }
-        *self = Self::new()
+        // move the tombstones to the new game
+        let mut new_game = Self::new();
+        new_game.tombstones = self.tombstones.drain().collect();
+
+        // replace the current, finished game with the new one
+        *self = new_game;
     }
 
     /// Move the hero's location towards the given destination, one directory
@@ -69,6 +75,8 @@ impl Game {
             self.location.go_to(&dest);
             if self.location.is_home() {
                 self.visit_home();
+            } else if self.pick_up_tombstone() {
+                return Ok(());
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
                 if bribe && self.bribe(&enemy) {
                     return Ok(());
@@ -125,6 +133,17 @@ impl Game {
             .collect::<HashMap<&str, usize>>()
     }
 
+    /// If there's a tombstone laying in the current location, pick up its items
+    fn pick_up_tombstone(&mut self) -> bool {
+        if let Some(mut tombstone) = self.tombstones.remove(&self.location) {
+            log::tombstone_found(&self.location);
+            tombstone.pick_up(self);
+            true
+        } else {
+            false
+        }
+    }
+
     fn maybe_spawn_enemy(&self) -> Option<Character> {
         let distance = self.location.distance_from_home();
         if random().should_enemy_appear(&distance) {
@@ -168,6 +187,10 @@ impl Game {
             log::battle_won(&self.player, &self.location, xp, level_up, gold);
             Ok(())
         } else {
+            // leave hero items in the location
+            let tombstone = Tombstone::drop(self);
+            self.tombstones.insert(self.location.clone(), tombstone);
+
             log::battle_lost(&self.player, &self.location);
             Err(Error::GameOver)
         }
