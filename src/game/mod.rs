@@ -60,9 +60,6 @@ impl Game {
     /// Remove the game data and reset this reference.
     /// Tombstones are preserved across games.
     pub fn reset(&mut self) {
-        // FIXME is this still necessary?
-        reset_game_data();
-
         // move the tombstones to the new game
         let mut new_game = Self::new();
         new_game.tombstones = self.tombstones.drain().collect();
@@ -206,21 +203,12 @@ impl Default for Game {
     }
 }
 
-// TODO  game data handling could be extracted to its own module
-
 fn rpg_dir() -> path::PathBuf {
     dirs::home_dir().unwrap().join(".rpg")
 }
 
 fn data_file() -> path::PathBuf {
     rpg_dir().join("data")
-}
-
-fn reset_game_data() {
-    let rpg_dir = rpg_dir();
-    if rpg_dir.exists() {
-        fs::remove_dir_all(&rpg_dir).unwrap();
-    }
 }
 
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
