@@ -1,7 +1,7 @@
-use crate::item::{Item, equipment::Equipment};
 use crate::game;
-use crate::log;
 use crate::item::equipment::{Shield, Sword};
+use crate::item::{equipment::Equipment, Item};
+use crate::log;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -16,7 +16,6 @@ pub struct Tombstone {
 }
 
 impl Tombstone {
-
     /// Dump the equipment, items and gold from a hero.
     pub fn drop(game: &mut game::Game) -> Self {
         let sword = game.player.sword.take();
@@ -29,13 +28,12 @@ impl Tombstone {
             items,
             sword,
             shield,
-            gold
+            gold,
         }
     }
 
     /// Add the items of the tombstone to the current game
     pub fn pick_up(&mut self, game: &mut game::Game) {
-
         // items and gold are always picked up
         game.gold += self.gold;
         game.inventory.extend(self.items.drain());
@@ -61,8 +59,8 @@ impl Tombstone {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::item::equipment::{Shield, Sword};
     use crate::item::Potion;
-    use crate::item::equipment::{Sword, Shield};
 
     #[test]
     fn test_empty_drop_pickup() {

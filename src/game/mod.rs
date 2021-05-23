@@ -27,7 +27,7 @@ pub struct Game {
     pub location: Location,
     pub gold: i32,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
-    tombstones: HashMap<Location, Tombstone>
+    tombstones: HashMap<Location, Tombstone>,
 }
 
 impl Game {
