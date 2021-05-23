@@ -87,7 +87,7 @@ Also at the home directory, you can buy items and equipment:
 
 The shorcut `rpg -s p` would also work above.
 
-The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health your hero is likely to die in battle, causing the game to reset.
+The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health your hero is likely to die in battle, causing the game to restart.
 
     ~ $ rpg ~/dev/facundoolano/rpg-cli/target/debug/examples/
 
@@ -98,6 +98,16 @@ The further from home you move the hero, the tougher the enemies will get. If yo
         hero[1][----] -16hp
 
         hero[1][----][----]@~/dev/facundoolano/rpg-cli 💀
+
+Death is permanent: you can't save your progress and reload after dying, but if you take your new hero to the location of the previous one's death,
+you can recover gold, items and equipment:
+
+    ~ $ rpg ~/dev/facundoolano/rpg-cli/
+
+        🪦 @~/dev/facundoolano/rpg-cli/
+
+        +potionx1
+        +75g
 
 
 Try `rpg --help` for more options.
