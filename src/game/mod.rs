@@ -288,57 +288,40 @@ mod tests {
         // The premise of this test is: a player with enough potions and its
         // level's equipment, should be able to beat any enemy of its same level
         // without relying in randomness.
-        let (wins, lost_to) = run_battles_at(1, 1, 1, times);
+        let (wins, lost_to) = run_battles_at(1, 1, times);
         assert_wins(times, wins, 0.75, &lost_to);
 
-        let (wins, lost_to) = run_battles_at(1, 1, 4, times);
+        let (wins, lost_to) = run_battles_at(1, 3, times);
+        assert_wins(times, wins, 0.3, &lost_to);
+
+        let (wins, lost_to) = run_battles_at(5, 5, times);
         assert_wins(times, wins, 0.75, &lost_to);
 
-        let (wins, lost_to) = run_battles_at(5, 5, 5, times);
+        let (wins, lost_to) = run_battles_at(10, 5, times);
         assert_wins(times, wins, 0.75, &lost_to);
 
-        let (wins, lost_to) = run_battles_at(10, 10, 5, times);
+        let (wins, lost_to) = run_battles_at(15, 13, times);
         assert_wins(times, wins, 0.75, &lost_to);
 
-        let (wins, lost_to) = run_battles_at(15, 15, 13, times);
-        assert_wins(times, wins, 0.75, &lost_to);
+        // it shouldn't be too hard either --stronger enemies should have
+        // good chances of winning (even with all the equipment)
+        let (wins, _) = run_battles_at(1, 6, times);
+        assert_loses(times, wins, 0.3);
 
-        // it should be able to beat most times a slightly weaker enemy
-        let (wins, lost_to) = run_battles_at(5, 4, 5, times);
-        assert_wins(times, wins, 0.5, &lost_to);
+        let (wins, _) = run_battles_at(1, 10, times);
+        assert_loses(times, wins, 0.4);
 
-        let (wins, lost_to) = run_battles_at(10, 8, 5, times);
-        assert_wins(times, wins, 0.5, &lost_to);
+        let (wins, _) = run_battles_at(5, 10, times);
+        assert_loses(times, wins, 0.3);
 
-        let (wins, lost_to) = run_battles_at(15, 13, 13, times);
-        assert_wins(times, wins, 0.5, &lost_to);
+        let (wins, _) = run_battles_at(5, 15, times);
+        assert_loses(times, wins, 0.5);
 
-        // it should be able to beat some times a slightly stronger enemy
-        let (wins, lost_to) = run_battles_at(1, 3, 1, times);
-        assert_wins(times, wins, 0.1, &lost_to);
+        let (wins, _) = run_battles_at(10, 15, times);
+        assert_loses(times, wins, 0.4);
 
-        let (wins, lost_to) = run_battles_at(5, 7, 5, times);
-        assert_wins(times, wins, 0.1, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(10, 12, 5, times);
-        assert_wins(times, wins, 0.1, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(15, 17, 13, times);
-        assert_wins(times, wins, 0.1, &lost_to);
-
-        // it shouldn't bee too easy either -- stronger enemies should
-        // have good chances of beating the player
-        let (wins, _) = run_battles_at(1, 4, 1, times);
-        assert_loses(times, wins, 0.7);
-
-        let (wins, _) = run_battles_at(5, 10, 5, times);
-        assert_loses(times, wins, 0.7);
-
-        let (wins, _) = run_battles_at(10, 15, 5, times);
-        assert_loses(times, wins, 0.7);
-
-        let (wins, _) = run_battles_at(15, 20, 13, times);
-        assert_loses(times, wins, 0.7);
+        let (wins, _) = run_battles_at(15, 20, times);
+        assert_loses(times, wins, 0.4);
     }
 
     fn assert_wins(total: i32, wins: i32, expected_ratio: f64, lost_to: &Vec<String>) {
@@ -350,7 +333,7 @@ mod tests {
         assert!((wins as f64) <= expected, "won {} out of {} expected at most {}", wins, total, expected);
     }
 
-    fn run_battles_at(player_level: i32, enemy_level: i32, distance: i32, times: i32) -> (i32, Vec<String>) {
+    fn run_battles_at(player_level: i32, distance: i32, times: i32) -> (i32, Vec<String>) {
         let mut wins = 0;
         let mut lost_to = Vec::new();
 
@@ -359,7 +342,11 @@ mod tests {
 
         for _ in 0..times {
             let mut game = full_game_at(player_level);
-            let mut enemy = Character::enemy(enemy_level, Distance::from(distance));
+
+            // duplicate randomization from the game
+            let e_level = enemy_level(player_level, distance);
+            let e_level = random.enemy_level(e_level);
+            let mut enemy = Character::enemy(e_level, Distance::from(distance));
 
             if battle::run(&mut game, &mut enemy, &random).is_ok() {
                 wins += 1
