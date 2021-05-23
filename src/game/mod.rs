@@ -279,6 +279,9 @@ mod tests {
         assert!(game.use_item("potion").is_err());
     }
 
+    // NOTE: this tests are random and brittle and therefore bad unit tests but they
+    // give a reasonable measure of how difficult the game is, so they are better than
+    // nothing
     // TODO should do the same with fixed character classes
     // e.g. verify all classes can be beat at the game
     #[test]
