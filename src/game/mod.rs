@@ -373,7 +373,7 @@ mod tests {
         assert_eq!(level, game.player.level);
 
         // add potions of the given level
-        for _ in 0..5 {
+        for _ in 0..10 {
             game.add_item("potion", Box::new(item::Potion::new(level)));
         }
 

@@ -197,8 +197,10 @@ const DRAGON: Class = Class {
 const GOLEM: Class = Class {
     name: "golem",
     start_hp: 50,
-    start_strength: 40,
+    start_strength: 45,
     start_speed: 2,
+
+    speed_rate: 0.05,
 
     ..BASE
 };
