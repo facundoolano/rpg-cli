@@ -34,7 +34,7 @@ pub fn tombstone_found(location: &Location) {
     println!();
 }
 
-pub fn tombstone_items(items: Vec<Box<dyn shop::Shoppable>>, gold: i32) {
+pub fn tombstone_items(items: &[String], gold: i32) {
     println!();
     for item in items {
         println!("    +{}", item);

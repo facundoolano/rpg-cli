@@ -34,25 +34,36 @@ impl Tombstone {
 
     /// Add the items of the tombstone to the current game
     pub fn pick_up(&mut self, game: &mut game::Game) {
-        // items and gold are always picked up
-        game.gold += self.gold;
-        game.inventory.extend(self.items.drain());
+        let mut to_log = Vec::new();
 
         // the equipment is picked up only if it's better than the current one
         if let Some(sword) = self.sword.take() {
             if sword.is_upgrade_from(&game.player.sword.as_ref()) {
+                to_log.push(sword.to_string());
                 game.player.sword = Some(sword);
             }
         }
 
         if let Some(shield) = self.shield.take() {
             if shield.is_upgrade_from(&game.player.shield.as_ref()) {
+                to_log.push(shield.to_string());
                 game.player.shield = Some(shield);
             }
         }
 
-        // FIXME implement
-        // log::tombstone_items(&items, self.gold);
+        // items and gold are always picked up
+        for (name, items) in self.items.drain() {
+            // this is kind of leaking logging logic but well
+            to_log.push(format!("{}x{}", name, items.len()));
+
+            for item in items {
+                game.add_item(&name, item);
+            }
+        }
+
+        game.gold += self.gold;
+
+        log::tombstone_items(&to_log, self.gold);
     }
 }
 
@@ -106,6 +117,7 @@ mod tests {
         assert_eq!(2, *game.inventory().get("potion").unwrap());
     }
 
+    #[test]
     fn test_pickup_extends() {
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
@@ -127,11 +139,11 @@ mod tests {
 
         assert_eq!(150, game.gold);
 
-        // the shield was upgrade, picked it up
-        assert_eq!(10, game.player.sword.as_ref().unwrap().level());
+        // the sword was upgrade, picked it up
+        assert_eq!(5, game.player.sword.as_ref().unwrap().level());
 
         // the shield was downgrade, kept the current one
-        assert_eq!(5, game.player.shield.as_ref().unwrap().level());
+        assert_eq!(10, game.player.shield.as_ref().unwrap().level());
 
         assert_eq!(3, *game.inventory().get("potion").unwrap());
     }
