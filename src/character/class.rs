@@ -56,7 +56,7 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
     // the further from home, the bigger the chance to find difficult enemies
     let (w_near, w_mid, w_far) = match distance {
         location::Distance::Near(_) => (9, 2, 0),
-        location::Distance::Mid(_) => (4, 6, 1),
+        location::Distance::Mid(_) => (7, 10, 1),
         location::Distance::Far(_) => (1, 6, 3),
     };
 
