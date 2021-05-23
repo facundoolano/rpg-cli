@@ -326,10 +326,10 @@ mod tests {
         assert_loses(times, wins, 0.35);
 
         let (wins, _) = run_battles_at(10, 15, times);
-        assert_loses(times, wins, 0.2);
+        assert_loses(times, wins, 0.15);
 
         let (wins, _) = run_battles_at(15, 20, times);
-        assert_loses(times, wins, 0.2);
+        assert_loses(times, wins, 0.15);
     }
 
     fn assert_wins(total: i32, wins: i32, expected_ratio: f64, lost_to: &Vec<String>) {
