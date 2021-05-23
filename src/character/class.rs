@@ -56,8 +56,8 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
     // the further from home, the bigger the chance to find difficult enemies
     let (w_near, w_mid, w_far) = match distance {
         location::Distance::Near(_) => (9, 2, 0),
-        location::Distance::Mid(_) => (4, 6, 1),
-        location::Distance::Far(_) => (2, 5, 2),
+        location::Distance::Mid(_) => (7, 10, 1),
+        location::Distance::Far(_) => (1, 6, 3),
     };
 
     // assign weights to each group
@@ -76,10 +76,8 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
         .0
 }
 
-// TODO verify that the rates produce some realistic values for far enemies especially for far enemies
-// which will only appear at high levels (i.e. the high start values can grow too big at their actual level)
-// we shouldn't end up in a place were the hero raises its value and as a consequence the enemies
-// raise it too.
+// NOTE: we shouldn't end up in a place were the hero raises its value and as
+// a consequence the enemies raise it too, making them unbeatable.
 // Consider: 1. raising the enemy level solely (or primarily) based on distance;
 // 2. decreasing rates to prevent overgrowth at higher levels
 // as a starting measure, using increase rates way below those of the player
@@ -92,9 +90,9 @@ const BASE: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.10,
-    strength_rate: 0.05,
-    speed_rate: 0.05,
+    hp_rate: 0.15,
+    strength_rate: 0.07,
+    speed_rate: 0.07,
 };
 
 const RAT: Class = Class {
@@ -199,8 +197,10 @@ const DRAGON: Class = Class {
 const GOLEM: Class = Class {
     name: "golem",
     start_hp: 50,
-    start_strength: 50,
+    start_strength: 45,
     start_speed: 2,
+
+    speed_rate: 0.05,
 
     ..BASE
 };

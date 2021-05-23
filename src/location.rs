@@ -104,7 +104,7 @@ pub enum Distance {
 }
 
 impl Distance {
-    fn from(len: i32) -> Self {
+    pub fn from(len: i32) -> Self {
         match len {
             n if n <= 4 => Self::Near(len),
             n if n <= 9 => Self::Mid(len),
