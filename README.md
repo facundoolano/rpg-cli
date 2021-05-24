@@ -4,13 +4,13 @@ rpg-cli is a bare-bones [JRPG](https://en.wikipedia.org/wiki/JRPG)-inspired term
 
 ![](rpg-cli.png)
 
-## Installation
+## Setup
 
-### From binary
+### Installing from binary
 
 Just download the binary for your platform (linux/macOS) from the [GitHub releases page](https://github.com/facundoolano/rpg-cli/releases/latest).
 
-### From source
+### Installing from source
 Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/getting-started/installation.html#install-rust-and-cargo), clone the repo and run:
 
     $ cargo build --release
@@ -19,7 +19,8 @@ The binary will be available at `target/release/rpg-cli`.
 
 ### Use as a cd replacement (recommended)
 
-To setup the game to work as a `cd` replacement (so the working directory is updated according to the hero's progress), you can add something like this to your `.bashrc` (with the `RPG_CLI` variable pointing to the binary location):
+Once the binary is installed with one of the methods described above, it can be wrapped on a shell function or alias
+so the working directory is updated to track to the hero's progress. You can set that up by adding something like this to your `.bashrc` (with the `RPG_CLI` variable pointing to the binary location):
 
 ```sh
 RPG_CLI=/Users/facundo/dev/facundoolano/rpg-cli/target/release/rpg-cli
