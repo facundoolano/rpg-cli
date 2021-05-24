@@ -8,7 +8,7 @@ rpg-cli is a bare-bones [JRPG](https://en.wikipedia.org/wiki/JRPG)-inspired term
 
 ### From binary
 
-Just download the binary for your platform (linux/macOS) from the [GitHub releases page](releases/latest).
+Just download the binary for your platform (linux/macOS) from the [GitHub releases page](https://github.com/facundoolano/rpg-cli/releases/latest).
 
 ### From source
 Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/getting-started/installation.html#install-rust-and-cargo), clone the repo and run:
