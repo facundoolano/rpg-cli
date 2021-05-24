@@ -4,6 +4,15 @@ rpg-cli is a bare-bones [JRPG](https://en.wikipedia.org/wiki/JRPG)-inspired term
 
 ![](rpg-cli.png)
 
+Features:
+
+* Automatic turn-based combat.
+* 15+ enemy classes.
+* Character stats and leveling system.
+* Basic item and equipment support.
+* Permadeath with item recovering.
+* Run and bribe to escape battles.
+
 ## Setup
 
 ### Installing from binary
