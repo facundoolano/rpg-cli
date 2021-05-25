@@ -35,7 +35,7 @@ so the working directory is updated to track to the hero's progress. You can set
 RPG_CLI=/Users/facundo/dev/facundoolano/rpg-cli/target/release/rpg-cli
 rpg () {
    $RPG_CLI "$@"
-   cd $($RPG_CLI --pwd)
+   cd "$($RPG_CLI --pwd)"
 }
 ```
 
