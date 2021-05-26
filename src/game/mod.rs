@@ -159,7 +159,7 @@ impl Game {
     }
 
     fn bribe(&mut self, enemy: &Character) -> bool {
-        let bribe_cost = gold_gained(enemy.level) / 2;
+        let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
 
         if self.gold >= bribe_cost && random().bribe_succeeds() {
             self.gold -= bribe_cost;
@@ -181,7 +181,7 @@ impl Game {
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
         if let Ok(xp) = battle::run(self, enemy, &random()) {
-            let gold = gold_gained(enemy.level);
+            let gold = gold_gained(self.player.level, enemy.level);
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
 
@@ -216,8 +216,9 @@ fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
     std::cmp::max(player_level / 2 + distance_from_home - 1, 1)
 }
 
-fn gold_gained(enemy_level: i32) -> i32 {
-    random().gold_gained(enemy_level * 100)
+fn gold_gained(player_level: i32, enemy_level: i32) -> i32 {
+   let level =  std::cmp::max(2, enemy_level - player_level);
+    random().gold_gained(level * 100)
 }
 
 #[cfg(test)]
