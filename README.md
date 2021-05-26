@@ -40,6 +40,16 @@ rpg () {
 
 This assumes `rpg-cli` is in your path, update with the specific location if not. You can `source ~/.bashrc` to apply the change without opening a new shell.
 
+Or, if you want to go all the way and *really* use it in place of `cd`:
+
+```sh
+cd () {
+   rpg-cli "$@"
+   builtin cd "$(rpg-cli --pwd)"
+}
+```
+
+
 ### Troubleshooting
 
 * The program doesn't currently work in Windows (since I don't have a dev environment handy for that platform). If you have input on how to fix it, please comment [here](https://github.com/facundoolano/rpg-cli/issues/17). Patches are very welcome as well.
