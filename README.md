@@ -32,9 +32,9 @@ Once the binary is installed with one of the methods described above, it can be 
 so the working directory is updated to track to the hero's progress. You can set that up by adding something like this to your `.bashrc`:
 
 ```sh
-rpg () {
+cd () {
    rpg-cli "$@"
-   cd "$(rpg-cli --pwd)"
+   builtin cd "$(rpg-cli --pwd)"
 }
 ```
 
