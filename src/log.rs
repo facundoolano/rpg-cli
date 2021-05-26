@@ -186,14 +186,14 @@ fn format_equipment(character: &Character) -> String {
 }
 
 pub fn format_inventory(game: &Game) -> String {
-    let items = game
+    let mut items = game
         .inventory()
         .iter()
         .map(|(k, v)| format!("{}x{}", k, v))
-        .collect::<Vec<String>>()
-        .join(",");
+        .collect::<Vec<String>>();
 
-    format!("item:{{{}}}", items)
+    items.sort();
+    format!("item:{{{}}}", items.join(","))
 }
 
 fn format_attack(attack: Attack, color: &str) -> String {
