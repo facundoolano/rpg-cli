@@ -39,6 +39,11 @@ rpg () {
 }
 ```
 
+### Troubleshooting
+
+* The program doesn't currently work in Windows (since I don't have a dev environment handy for that platform). If you have input on how to fix it, please comment [here](https://github.com/facundoolano/rpg-cli/issues/17). Patches are very welcome as well.
+* The release binary for macOS [is not signed](https://github.com/facundoolano/rpg-cli/issues/27). To open it for the first time, right click on the binary and select "Open" from the menu.
+
 ## Usage
 
 The first time you run the program, a new hero is created at the user's home directory.
