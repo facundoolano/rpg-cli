@@ -19,12 +19,12 @@ Features:
 
 Just download the binary for your platform (linux/macOS) from the [GitHub releases page](https://github.com/facundoolano/rpg-cli/releases/latest).
 
-### Installing from source
-Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/getting-started/installation.html#install-rust-and-cargo), clone the repo and run:
+### Installing with Cargo
+Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/getting-started/installation.html#install-rust-and-cargo):
 
-    $ cargo build --release
+    $ cargo install --git https://github.com/facundoolano/rpg-cli --branch main
 
-The binary will be available at `target/release/rpg-cli`.
+The binary should be available as `rpg-cli` (assuming you have `~/.cargo/bin` in your `$PATH`).
 
 ### Use as a cd replacement (recommended)
 
