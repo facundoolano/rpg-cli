@@ -222,8 +222,8 @@ fn gold_gained(enemy_level: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use item::equipment::Equipment;
     use crate::location::Distance;
+    use item::equipment::Equipment;
 
     use super::*;
     use crate::item;
@@ -334,12 +334,24 @@ mod tests {
     }
 
     fn assert_wins(total: i32, wins: i32, expected_ratio: f64, lost_to: &Vec<String>) {
-        assert!(wins as f64 >= total as f64 * expected_ratio , "won {} out of {}. Lost to {:?}", wins, total, lost_to);
+        assert!(
+            wins as f64 >= total as f64 * expected_ratio,
+            "won {} out of {}. Lost to {:?}",
+            wins,
+            total,
+            lost_to
+        );
     }
 
     fn assert_loses(total: i32, wins: i32, expected_ratio: f64) {
         let expected = (total as f64) * (1.0 - expected_ratio);
-        assert!((wins as f64) <= expected, "won {} out of {} expected at most {}", wins, total, expected);
+        assert!(
+            (wins as f64) <= expected,
+            "won {} out of {} expected at most {}",
+            wins,
+            total,
+            expected
+        );
     }
 
     fn run_battles_at(player_level: i32, distance: i32, times: i32) -> (i32, Vec<String>) {
@@ -347,7 +359,7 @@ mod tests {
         let mut lost_to = Vec::new();
 
         // we don't want randomization turned off for this test
-        let random = randomizer::DefaultRandomizer{};
+        let random = randomizer::DefaultRandomizer {};
 
         for _ in 0..times {
             let mut game = full_game_at(player_level);
@@ -371,7 +383,7 @@ mod tests {
         let mut game = Game::new();
 
         // get a player of the given level
-        for _ in 0..level-1 {
+        for _ in 0..level - 1 {
             game.player.add_experience(game.player.xp_for_next());
         }
         assert_eq!(level, game.player.level);

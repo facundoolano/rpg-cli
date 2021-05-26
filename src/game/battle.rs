@@ -56,7 +56,11 @@ fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
 
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
-fn attack(attacker: &Character, receiver: &mut Character, random: &dyn Randomizer) -> (Attack, i32) {
+fn attack(
+    attacker: &Character,
+    receiver: &mut Character,
+    random: &dyn Randomizer,
+) -> (Attack, i32) {
     if random.is_miss(attacker.speed, receiver.speed) {
         (Attack::Miss, 0)
     } else {
