@@ -29,15 +29,16 @@ The binary should be available as `rpg-cli` (assuming you have `~/.cargo/bin` in
 ### Use as a cd replacement (recommended)
 
 Once the binary is installed with one of the methods described above, it can be wrapped on a shell function or alias
-so the working directory is updated to track to the hero's progress. You can set that up by adding something like this to your `.bashrc` (with the `RPG_CLI` variable pointing to the binary location):
+so the working directory is updated to track to the hero's progress. You can set that up by adding something like this to your `.bashrc`:
 
 ```sh
-RPG_CLI=/Users/facundo/dev/facundoolano/rpg-cli/target/release/rpg-cli
 rpg () {
-   $RPG_CLI "$@"
-   cd "$($RPG_CLI --pwd)"
+   rpg-cli "$@"
+   cd "$(rpg-cli --pwd)"
 }
 ```
+
+This assumes `rpg-cli` is in your path, update with the specific location if not. You can `source ~/.bashrc` to apply the change without opening a new shell.
 
 ### Troubleshooting
 
