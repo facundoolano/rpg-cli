@@ -71,13 +71,13 @@ impl Character {
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
         self.level += 1;
-        self.strength = random().stat_increase(self.strength, self.class.strength_rate);
-        self.speed = random().stat_increase(self.speed, self.class.speed_rate);
+        self.strength = random().stat_increase(self.level, self.strength, self.class.strength_rate);
+        self.speed = random().stat_increase(self.level, self.speed, self.class.speed_rate);
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = random().stat_increase(self.max_hp, self.class.hp_rate);
+        self.max_hp = random().stat_increase(self.level, self.max_hp, self.class.hp_rate);
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -124,7 +124,7 @@ impl Character {
         (base_xp * (self.level as f64).powf(exp)) as i32
     }
 
-    /// Generate a randomized damage numer based on the attacker strength
+    /// Generate a randomized damage number based on the attacker strength
     /// and the receiver strength.
     pub fn damage(&self, receiver: &Self) -> i32 {
         max(1, self.attack() - receiver.deffense())
@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn test_overflow() {
-        let mut hero = new_char();
+        let mut hero = Character::player();
 
         while hero.level < 200 {
             hero.add_experience(hero.xp_for_next());
@@ -355,5 +355,6 @@ mod tests {
             assert!(hero.speed > 0);
             assert!(hero.attack() > 0);
         }
+        // assert!(false);
     }
 }

@@ -22,7 +22,7 @@ impl Class {
         start_strength: 10,
         start_speed: 5,
 
-        hp_rate: 0.3,
+        hp_rate: 0.25,
         strength_rate: 0.2,
         speed_rate: 0.1,
     };
@@ -40,7 +40,9 @@ impl Class {
     }
 }
 
+// FIXME this is no longer true, and has become more like an equipment related function
 fn stat_at(stat_rate: f64, stat_start: i32, level: i32) -> i32 {
+    let stat_rate = stat_rate / ((level / 25 + 1 ) as f64);
     let inc_rate = 1.0 + stat_rate;
     (stat_start as f64 * inc_rate.powi(level)) as i32
 }
