@@ -8,6 +8,10 @@ pub mod class;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 
+/// If we let the stats grow indefinitely they would eventually overflow
+/// 500 levels seems a reasonable ceiling
+const MAX_LEVEL: i32 = 500;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
     #[serde(skip, default = "default_class")]
@@ -71,14 +75,18 @@ impl Character {
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
         self.level += 1;
-        self.strength = random().stat_increase(self.level, self.strength, self.class.strength_rate);
-        self.speed = random().stat_increase(self.level, self.speed, self.class.speed_rate);
 
-        // the current should increase proportionally but not
-        // erase previous damage
-        let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = random().stat_increase(self.level, self.max_hp, self.class.hp_rate);
-        self.current_hp = self.max_hp - previous_damage;
+        // after this we increase the number but not the stats
+        if self.level < MAX_LEVEL {
+            self.strength = random().stat_increase(self.level, self.strength, self.class.strength_rate);
+            self.speed = random().stat_increase(self.level, self.speed, self.class.speed_rate);
+
+            // the current should increase proportionally but not
+            // erase previous damage
+            let previous_damage = self.max_hp - self.current_hp;
+            self.max_hp = random().stat_increase(self.level, self.max_hp, self.class.hp_rate);
+            self.current_hp = self.max_hp - previous_damage;
+        }
     }
 
     /// Add to the accumulated experience points, possibly increasing the level.
@@ -334,7 +342,7 @@ mod tests {
     fn test_overflow() {
         let mut hero = Character::player();
 
-        while hero.level < 200 {
+        while hero.level < MAX_LEVEL {
             hero.add_experience(hero.xp_for_next());
             hero.sword = Some(equipment::Sword::new(hero.level));
             let turns_unarmed = hero.max_hp / hero.strength;
