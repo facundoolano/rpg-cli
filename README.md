@@ -39,6 +39,11 @@ rpg () {
 }
 ```
 
+Then use this command to reload `.bashrc` without logging out and back in again:
+```sh
+source ~/.bashrc
+```
+
 ## Usage
 
 The first time you run the program, a new hero is created at the user's home directory.
