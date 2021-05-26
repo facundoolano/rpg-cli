@@ -292,22 +292,22 @@ mod tests {
         // level's equipment, should be able to beat any enemy of its same level
         // without relying in randomness.
         let (wins, lost_to) = run_battles_at(1, 1, times);
-        assert_wins(times, wins, 0.75, &lost_to);
+        assert_wins(times, wins, 0.7, &lost_to);
 
         let (wins, lost_to) = run_battles_at(1, 3, times);
         assert_wins(times, wins, 0.3, &lost_to);
 
         let (wins, lost_to) = run_battles_at(5, 5, times);
-        assert_wins(times, wins, 0.75, &lost_to);
+        assert_wins(times, wins, 0.7, &lost_to);
 
         let (wins, lost_to) = run_battles_at(10, 5, times);
-        assert_wins(times, wins, 0.75, &lost_to);
+        assert_wins(times, wins, 0.7, &lost_to);
 
         let (wins, lost_to) = run_battles_at(10, 10, times);
         assert_wins(times, wins, 0.4, &lost_to);
 
         let (wins, lost_to) = run_battles_at(15, 13, times);
-        assert_wins(times, wins, 0.75, &lost_to);
+        assert_wins(times, wins, 0.7, &lost_to);
 
         let (wins, lost_to) = run_battles_at(15, 15, times);
         assert_wins(times, wins, 0.5, &lost_to);

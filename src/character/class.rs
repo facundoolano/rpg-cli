@@ -92,7 +92,7 @@ const BASE: Class = Class {
     start_strength: 10,
     start_speed: 3,
 
-    hp_rate: 0.15,
+    hp_rate: 0.10,
     strength_rate: 0.07,
     speed_rate: 0.07,
 };
