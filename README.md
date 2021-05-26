@@ -109,7 +109,7 @@ Also at the home directory, you can buy items and equipment:
         item:{potion[1]x1}
         75g
 
-The shorcut `rpg -s p` would also work above.
+The shortcut `rpg -s p` would also work above.
 
 The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health your hero is likely to die in battle, causing the game to restart.
 
