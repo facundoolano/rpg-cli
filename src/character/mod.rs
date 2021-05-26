@@ -329,4 +329,31 @@ mod tests {
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
     }
+
+    #[test]
+    fn test_overflow() {
+        let mut hero = new_char();
+
+        while hero.level < 200 {
+            hero.add_experience(hero.xp_for_next());
+            hero.sword = Some(equipment::Sword::new(hero.level));
+            let turns_unarmed = hero.max_hp / hero.strength;
+            let turns_armed = hero.max_hp / hero.attack();
+            println!(
+                "hero[{}] next={} hp={} spd={} str={} att={} turns_u={} turns_a={}",
+                hero.level,
+                hero.xp_for_next(),
+                hero.max_hp,
+                hero.speed,
+                hero.strength,
+                hero.attack(),
+                turns_unarmed,
+                turns_armed
+            );
+
+            assert!(hero.max_hp > 0);
+            assert!(hero.speed > 0);
+            assert!(hero.attack() > 0);
+        }
+    }
 }
