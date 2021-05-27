@@ -25,7 +25,7 @@ pub trait Randomizer {
 
     fn gold_gained(&self, base: i32) -> i32;
 
-    fn stat_increase(&self, level: i32, current: i32, rate: f64) -> i32;
+    fn stat_increase(&self, increase: i32) -> i32;
 }
 
 #[cfg(not(test))]
@@ -104,16 +104,12 @@ impl Randomizer for DefaultRandomizer {
         rng.gen_range(min..=max)
     }
 
-    fn stat_increase(&self, level: i32, current: i32, rate: f64) -> i32 {
-        let rate = rate / ((level / 10 + 1 ) as f64);
-
-        // if rate is .3, increase can be in .15-.45
-        let current_f = current as f64;
-        let min_value = max(1, (current_f * (rate - rate / 2.0)).round() as i32);
-        let max_value = max(1, (current_f * rate + rate / 2.0).round() as i32);
+    fn stat_increase(&self, increase: i32) -> i32 {
+        let min_value = max(1, increase / 2);
+        let max_value = 3 * increase * 2;
 
         let mut rng = rand::thread_rng();
-        current + rng.gen_range(min_value..=max_value)
+        rng.gen_range(min_value..=max_value)
     }
 }
 
@@ -154,9 +150,8 @@ impl Randomizer for TestRandomizer {
         base
     }
 
-    fn stat_increase(&self, level: i32, current: i32, rate: f64) -> i32 {
-        let rate = rate / ((level / 10 + 1 ) as f64);
-        current + (current as f64 * rate).ceil() as i32
+    fn stat_increase(&self, increase: i32) -> i32 {
+        increase
     }
 }
 

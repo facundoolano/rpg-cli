@@ -1,50 +1,54 @@
 use crate::location;
 use rand::prelude::SliceRandom;
 
+#[derive(Debug)]
+struct Stat {
+    pub base: i32,
+    // TODO does it make sense to make this a rate, and make those calculations, if it's always going to be fixed?
+    pub inc_rate: f64,
+}
+
+impl Stat {
+    pub fn at(&self, level: i32) -> i32 {
+        self.base + level * self.increase()
+    }
+
+    pub fn increase(&self) -> i32 {
+        (self.base as f64 * self.inc_rate).ceil() as i32
+    }
+}
+
 /// Character classes, which will determine the parameters to start and
 /// increase the stats of the character.
 #[derive(Debug)]
 pub struct Class {
     pub name: &'static str,
-    pub start_hp: i32,
-    pub start_strength: i32,
-    pub start_speed: i32,
 
-    pub hp_rate: f64,
-    pub strength_rate: f64,
-    pub speed_rate: f64,
+    pub hp: Stat,
+    pub strength: Stat,
+    pub speed: Stat,
 }
 
 impl Class {
     pub const HERO: Self = Self {
         name: "hero",
-        start_hp: 25,
-        start_strength: 10,
-        start_speed: 5,
-
-        hp_rate: 0.25,
-        strength_rate: 0.2,
-        speed_rate: 0.1,
+        hp: Stat {
+            base: 25,
+            inc_rate: 0.25,
+        },
+        strength: Stat {
+            base: 10,
+            inc_rate: 0.2,
+        },
+        speed: Stat {
+            base: 5,
+            inc_rate: 0.1,
+        },
     };
-
-    pub fn strength_at(&self, level: i32) -> i32 {
-        stat_at(self.strength_rate, self.start_strength, level)
-    }
-
-    pub fn hp_at(&self, level: i32) -> i32 {
-        stat_at(self.hp_rate, self.start_hp, level)
-    }
 
     pub fn random_enemy(distance: location::Distance) -> &'static Self {
         weighted_choice(distance)
     }
-}
-
-// FIXME this is no longer true, and has become more like an equipment related function
-fn stat_at(stat_rate: f64, stat_start: i32, level: i32) -> i32 {
-    let stat_rate = stat_rate / ((level / 25 + 1 ) as f64);
-    let inc_rate = 1.0 + stat_rate;
-    (stat_start as f64 * inc_rate.powi(level)) as i32
 }
 
 // Enemy classes are grouped into near/mid/far groups
@@ -88,13 +92,18 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
 /// For when it's not obvious how a given class would differ from the resst.
 const BASE: Class = Class {
     name: "enemy",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
-
-    hp_rate: 0.10,
-    strength_rate: 0.07,
-    speed_rate: 0.07,
+    hp: Stat {
+        base: 20,
+        inc_rate: 0.10,
+    },
+    strength: Stat {
+        base: 10,
+        inc_rate: 0.07,
+    },
+    speed: Stat {
+        base: 3,
+        inc_rate: 0.07,
+    },
 };
 
 const RAT: Class = Class {

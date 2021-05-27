@@ -217,7 +217,7 @@ fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
 }
 
 fn gold_gained(player_level: i32, enemy_level: i32) -> i32 {
-    let level =  std::cmp::max(1, enemy_level - player_level);
+    let level = std::cmp::max(1, enemy_level - player_level);
     random().gold_gained(level * 100)
 }
 

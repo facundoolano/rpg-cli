@@ -59,10 +59,12 @@ impl Character {
             shield: None,
             level: 1,
             xp: 0,
-            max_hp: class.start_hp,
-            current_hp: class.start_hp,
-            strength: class.start_strength,
-            speed: class.start_speed,
+
+            // TODO these could be randomized from the start
+            max_hp: class.hp.base,
+            current_hp: class.hp.base,
+            strength: class.hp.base,
+            speed: class.speed.base,
         };
 
         for _ in 1..level {
@@ -78,13 +80,14 @@ impl Character {
 
         // after this we increase the number but not the stats
         if self.level < MAX_LEVEL {
-            self.strength = random().stat_increase(self.level, self.strength, self.class.strength_rate);
-            self.speed = random().stat_increase(self.level, self.speed, self.class.speed_rate);
+            self.strength =
+                random().stat_increase(self.class.strength.increase());
+            self.speed = random().stat_increase(self.class.speed.increase());
 
             // the current should increase proportionally but not
             // erase previous damage
             let previous_damage = self.max_hp - self.current_hp;
-            self.max_hp = random().stat_increase(self.level, self.max_hp, self.class.hp_rate);
+            self.max_hp = random().stat_increase(self.class.hp.increase());
             self.current_hp = self.max_hp - previous_damage;
         }
     }
