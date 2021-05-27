@@ -8,10 +8,6 @@ pub mod class;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 
-/// If we let the stats grow indefinitely they would eventually overflow
-/// 500 levels seems a reasonable ceiling
-const MAX_LEVEL: i32 = 500;
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
     #[serde(skip, default = "default_class")]
@@ -61,10 +57,10 @@ impl Character {
             xp: 0,
 
             // TODO these could be randomized from the start
-            max_hp: class.hp.base,
-            current_hp: class.hp.base,
-            strength: class.hp.base,
-            speed: class.speed.base,
+            max_hp: class.hp.base(),
+            current_hp: class.hp.base(),
+            strength: class.hp.base(),
+            speed: class.speed.base(),
         };
 
         for _ in 1..level {
@@ -78,18 +74,14 @@ impl Character {
     fn increase_level(&mut self) {
         self.level += 1;
 
-        // after this we increase the number but not the stats
-        if self.level < MAX_LEVEL {
-            self.strength =
-                random().stat_increase(self.class.strength.increase());
-            self.speed = random().stat_increase(self.class.speed.increase());
+        self.strength = random().stat_increase(self.class.strength.increase());
+        self.speed = random().stat_increase(self.class.speed.increase());
 
-            // the current should increase proportionally but not
-            // erase previous damage
-            let previous_damage = self.max_hp - self.current_hp;
-            self.max_hp = random().stat_increase(self.class.hp.increase());
-            self.current_hp = self.max_hp - previous_damage;
-        }
+        // the current should increase proportionally but not
+        // erase previous damage
+        let previous_damage = self.max_hp - self.current_hp;
+        self.max_hp = random().stat_increase(self.class.hp.increase());
+        self.current_hp = self.max_hp - previous_damage;
     }
 
     /// Add to the accumulated experience points, possibly increasing the level.
@@ -345,7 +337,7 @@ mod tests {
     fn test_overflow() {
         let mut hero = Character::player();
 
-        while hero.level < MAX_LEVEL {
+        while hero.level < 500 {
             hero.add_experience(hero.xp_for_next());
             hero.sword = Some(equipment::Sword::new(hero.level));
             let turns_unarmed = hero.max_hp / hero.strength;

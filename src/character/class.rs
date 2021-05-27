@@ -2,19 +2,20 @@ use crate::location;
 use rand::prelude::SliceRandom;
 
 #[derive(Debug)]
-struct Stat {
-    pub base: i32,
-    // TODO does it make sense to make this a rate, and make those calculations, if it's always going to be fixed?
-    pub inc_rate: f64,
-}
+pub struct Stat(i32, i32);
 
+/// FIXME
 impl Stat {
-    pub fn at(&self, level: i32) -> i32 {
-        self.base + level * self.increase()
+    pub fn base(&self) -> i32 {
+        self.0
     }
 
     pub fn increase(&self) -> i32 {
-        (self.base as f64 * self.inc_rate).ceil() as i32
+        self.1
+    }
+
+    pub fn at(&self, level: i32) -> i32 {
+        self.0 + level * self.increase()
     }
 }
 
@@ -32,18 +33,9 @@ pub struct Class {
 impl Class {
     pub const HERO: Self = Self {
         name: "hero",
-        hp: Stat {
-            base: 25,
-            inc_rate: 0.25,
-        },
-        strength: Stat {
-            base: 10,
-            inc_rate: 0.2,
-        },
-        speed: Stat {
-            base: 5,
-            inc_rate: 0.1,
-        },
+        hp: Stat(25, 7),
+        strength: Stat(10, 3),
+        speed: Stat(10, 2),
     };
 
     pub fn random_enemy(distance: location::Distance) -> &'static Self {
@@ -88,175 +80,121 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
 // 2. decreasing rates to prevent overgrowth at higher levels
 // as a starting measure, using increase rates way below those of the player
 
-/// Defaults for all enemies.
-/// For when it's not obvious how a given class would differ from the resst.
-const BASE: Class = Class {
-    name: "enemy",
-    hp: Stat {
-        base: 20,
-        inc_rate: 0.10,
-    },
-    strength: Stat {
-        base: 10,
-        inc_rate: 0.07,
-    },
-    speed: Stat {
-        base: 3,
-        inc_rate: 0.07,
-    },
-};
-
 const RAT: Class = Class {
     name: "rat",
-    start_hp: 10,
-    start_strength: 5,
-    start_speed: 8,
-
-    ..BASE
+    hp: Stat(10, 3),
+    strength: Stat(5, 2),
+    speed: Stat(16, 2),
 };
 
 const WOLF: Class = Class {
     name: "wolf",
-    start_hp: 15,
-    start_strength: 8,
-    start_speed: 6,
-
-    ..BASE
+    hp: Stat(15, 3),
+    strength: Stat(8, 2),
+    speed: Stat(12, 2),
 };
 
 const SNAKE: Class = Class {
     name: "snake",
-    start_hp: 13,
-    start_strength: 7,
-    start_speed: 3,
-
-    ..BASE
+    hp: Stat(13, 3),
+    strength: Stat(7, 2),
+    speed: Stat(6, 2),
 };
 
 const SLIME: Class = Class {
     name: "slime",
-    start_hp: 100,
-    start_strength: 3,
-    start_speed: 2,
-
-    ..BASE
+    hp: Stat(80, 3),
+    strength: Stat(3, 2),
+    speed: Stat(4, 2),
 };
 
 const SPIDER: Class = Class {
     name: "spider",
-    start_hp: 10,
-    start_strength: 9,
-    start_speed: 6,
-
-    ..BASE
+    hp: Stat(10, 3),
+    strength: Stat(9, 2),
+    speed: Stat(12, 2),
 };
 
 const ZOMBIE: Class = Class {
     name: "zombie",
-    start_hp: 50,
-    start_strength: 8,
-    start_speed: 3,
-
-    ..BASE
+    hp: Stat(50, 3),
+    strength: Stat(8, 2),
+    speed: Stat(6, 2),
 };
 
 const ORC: Class = Class {
     name: "orc",
-    start_hp: 35,
-    start_strength: 13,
-    start_speed: 6,
-
-    ..BASE
+    hp: Stat(35, 3),
+    strength: Stat(13, 2),
+    speed: Stat(12, 2),
 };
 
 const SKELETON: Class = Class {
     name: "skeleton",
-    start_hp: 30,
-    start_strength: 10,
-    start_speed: 5,
-
-    ..BASE
+    hp: Stat(30, 3),
+    strength: Stat(10, 2),
+    speed: Stat(10, 2),
 };
 
 const DEMON: Class = Class {
     name: "demon",
-    start_hp: 50,
-    start_strength: 10,
-    start_speed: 9,
-
-    ..BASE
+    hp: Stat(50, 3),
+    strength: Stat(10, 2),
+    speed: Stat(18, 2),
 };
 
 const VAMPIRE: Class = Class {
     name: "vampire",
-    start_hp: 50,
-    start_strength: 13,
-    start_speed: 5,
-
-    ..BASE
+    hp: Stat(50, 3),
+    strength: Stat(13, 2),
+    speed: Stat(10, 2),
 };
 
 const DRAGON: Class = Class {
     name: "dragon",
-    start_hp: 100,
-    start_strength: 25,
-    start_speed: 4,
-
-    ..BASE
+    hp: Stat(100, 3),
+    strength: Stat(25, 2),
+    speed: Stat(8, 2),
 };
 
 const GOLEM: Class = Class {
     name: "golem",
-    start_hp: 50,
-    start_strength: 45,
-    start_speed: 1,
-
-    speed_rate: 0.04,
-
-    ..BASE
+    hp: Stat(50, 3),
+    strength: Stat(45, 2),
+    speed: Stat(2, 1),
 };
 
 const CHIMERA: Class = Class {
     name: "chimera",
-    start_hp: 200,
-    start_strength: 90,
-    start_speed: 8,
-
-    ..BASE
+    hp: Stat(200, 2),
+    strength: Stat(90, 2),
+    speed: Stat(16, 2),
 };
 
 const BASILISK: Class = Class {
     name: "basilisk",
-    start_hp: 150,
-    start_strength: 100,
-    start_speed: 9,
-
-    ..BASE
+    hp: Stat(150, 3),
+    strength: Stat(100, 2),
+    speed: Stat(18, 2),
 };
 
 const MINOTAUR: Class = Class {
     name: "minotaur",
-    start_hp: 100,
-    start_strength: 60,
-    start_speed: 20,
-
-    ..BASE
+    hp: Stat(100, 3),
+    strength: Stat(60, 2),
+    speed: Stat(40, 2),
 };
 
 const BALROG: Class = Class {
     name: "balrog",
-    start_hp: 200,
-    start_strength: 200,
-    start_speed: 7,
-
-    ..BASE
+    hp: Stat(200, 3),
+    strength: Stat(200, 2),
+    speed: Stat(14, 2),
 };
 
 const PHOENIX: Class = Class {
     name: "phoenix",
-    start_hp: 350,
-    start_strength: 180,
-    start_speed: 14,
-
-    ..BASE
+    hp: Stat(350, 3),
+    strength: Stat(180, 2),
+    speed: Stat(28, 2),
 };
