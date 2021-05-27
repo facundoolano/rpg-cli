@@ -2,7 +2,7 @@ use crate::location;
 use rand::prelude::SliceRandom;
 
 #[derive(Debug)]
-pub struct Stat(i32, i32);
+pub struct Stat(pub i32, pub i32);
 
 /// FIXME
 impl Stat {

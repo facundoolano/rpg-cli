@@ -55,11 +55,9 @@ impl Character {
             shield: None,
             level: 1,
             xp: 0,
-
-            // TODO these could be randomized from the start
             max_hp: class.hp.base(),
             current_hp: class.hp.base(),
-            strength: class.hp.base(),
+            strength: class.strength.base(),
             speed: class.speed.base(),
         };
 
@@ -74,13 +72,13 @@ impl Character {
     fn increase_level(&mut self) {
         self.level += 1;
 
-        self.strength = random().stat_increase(self.class.strength.increase());
-        self.speed = random().stat_increase(self.class.speed.increase());
+        self.strength += random().stat_increase(self.class.strength.increase());
+        self.speed += random().stat_increase(self.class.speed.increase());
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = random().stat_increase(self.class.hp.increase());
+        self.max_hp += random().stat_increase(self.class.hp.increase());
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -159,16 +157,13 @@ impl Character {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use class::Stat;
 
     const TEST_CLASS: Class = Class {
         name: "test",
-        start_hp: 25,
-        start_strength: 10,
-        start_speed: 5,
-
-        hp_rate: 0.3,
-        strength_rate: 0.1,
-        speed_rate: 0.1,
+        hp: Stat(25, 7),
+        strength: Stat(10, 3),
+        speed: Stat(10, 2),
     };
 
     fn new_char() -> Character {
@@ -182,10 +177,10 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        assert_eq!(TEST_CLASS.start_hp, hero.current_hp);
-        assert_eq!(TEST_CLASS.start_hp, hero.max_hp);
-        assert_eq!(TEST_CLASS.start_strength, hero.strength);
-        assert_eq!(TEST_CLASS.start_speed, hero.speed);
+        assert_eq!(TEST_CLASS.hp.base(), hero.current_hp);
+        assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
+        assert_eq!(TEST_CLASS.strength.base(), hero.strength);
+        assert_eq!(TEST_CLASS.speed.base(), hero.speed);
     }
 
     #[test]
@@ -193,9 +188,9 @@ mod tests {
         let mut hero = new_char();
 
         // assert what we're assuming are the params in the rest of the test
-        assert_eq!(0.3, TEST_CLASS.hp_rate);
-        assert_eq!(0.1, TEST_CLASS.strength_rate);
-        assert_eq!(0.1, TEST_CLASS.speed_rate);
+        assert_eq!(7, TEST_CLASS.hp.increase());
+        assert_eq!(3, TEST_CLASS.strength.increase());
+        assert_eq!(2, TEST_CLASS.speed.increase());
 
         hero.max_hp = 20;
         hero.current_hp = 20;
@@ -204,9 +199,9 @@ mod tests {
 
         hero.increase_level();
         assert_eq!(2, hero.level);
-        assert_eq!(26, hero.max_hp);
-        assert_eq!(11, hero.strength);
-        assert_eq!(6, hero.speed);
+        assert_eq!(27, hero.max_hp);
+        assert_eq!(13, hero.strength);
+        assert_eq!(7, hero.speed);
 
         let damage = 7;
         hero.current_hp -= damage;
