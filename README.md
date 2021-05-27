@@ -33,8 +33,8 @@ so the working directory is updated to track to the hero's progress. You can set
 
 ```sh
 rpg () {
-   rpg-cli "$@"
-   cd "$(rpg-cli --pwd)"
+    rpg-cli "$@"
+    cd "$(rpg-cli --pwd)"
 }
 ```
 
@@ -44,8 +44,16 @@ Or, if you want to go all the way and *really* use it in place of `cd`:
 
 ```sh
 cd () {
-   rpg-cli "$@"
-   builtin cd "$(rpg-cli --pwd)"
+    if [ "$#" -eq 0 ]
+    then
+        rpg-cli "$HOME"
+    elif [ "$1" == "-" ]
+    then
+        rpg-cli "$OLDPWD"
+    else
+        rpg-cli "$@"
+    fi
+    builtin cd "$(rpg-cli --pwd)"
 }
 ```
 
