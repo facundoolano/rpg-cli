@@ -352,6 +352,9 @@ mod tests {
             assert!(hero.max_hp > 0);
             assert!(hero.speed > 0);
             assert!(hero.attack() > 0);
+
+            assert!(turns_armed < turns_unarmed);
+            assert!(turns_armed < 20);
         }
         // assert!(false);
     }

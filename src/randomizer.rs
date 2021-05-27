@@ -165,14 +165,18 @@ mod tests {
 
         // current hp lvl1
         let value = rand.stat_increase(7);
-        assert!((4..=10).contains(&value), "value was {}", value);
+        assert!((3..=10).contains(&value), "value was {}", value);
 
         // current strength lvl1
         let value = rand.stat_increase(3);
-        assert!((2..=4).contains(&value), "value was {}", value);
+        assert!((1..=4).contains(&value), "value was {}", value);
 
         // current speed lvl1
         let value = rand.stat_increase(2);
         assert!((1..=3).contains(&value), "value was {}", value);
+
+        // small increase
+        let value = rand.stat_increase(1);
+        assert!((1..=2).contains(&value), "value was {}", value);
     }
 }

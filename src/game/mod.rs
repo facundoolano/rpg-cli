@@ -293,7 +293,7 @@ mod tests {
         // level's equipment, should be able to beat any enemy of its same level
         // without relying in randomness.
         let (wins, lost_to) = run_battles_at(1, 1, times);
-        assert_wins(times, wins, 0.7, &lost_to);
+        assert_wins(times, wins, 0.5, &lost_to);
 
         let (wins, lost_to) = run_battles_at(1, 3, times);
         assert_wins(times, wins, 0.3, &lost_to);
@@ -313,6 +313,12 @@ mod tests {
         let (wins, lost_to) = run_battles_at(15, 15, times);
         assert_wins(times, wins, 0.5, &lost_to);
 
+        let (wins, lost_to) = run_battles_at(50, 50, times);
+        assert_wins(times, wins, 0.4, &lost_to);
+
+        let (wins, lost_to) = run_battles_at(100, 100, times);
+        assert_wins(times, wins, 0.4, &lost_to);
+
         // it shouldn't be too easy either --stronger enemies should have
         // chances of winning (even with all the equipment)
         let (wins, _) = run_battles_at(1, 6, times);
@@ -331,6 +337,12 @@ mod tests {
         assert_loses(times, wins, 0.15);
 
         let (wins, _) = run_battles_at(15, 20, times);
+        assert_loses(times, wins, 0.15);
+
+        let (wins, _) = run_battles_at(15, 20, times);
+        assert_loses(times, wins, 0.15);
+
+        let (wins, _) = run_battles_at(50, 60, times);
         assert_loses(times, wins, 0.15);
     }
 

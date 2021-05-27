@@ -33,9 +33,9 @@ pub struct Class {
 impl Class {
     pub const HERO: Self = Self {
         name: "hero",
-        hp: Stat(25, 7),
-        strength: Stat(10, 3),
-        speed: Stat(10, 2),
+        hp: Stat(30, 7),
+        strength: Stat(12, 3),
+        speed: Stat(11, 2),
     };
 
     pub fn random_enemy(distance: location::Distance) -> &'static Self {
