@@ -7,7 +7,7 @@ rust:
   - stable
   
 # https://levans.fr/rust_travis_cache.html
-cache: cargocache:
+cache:
   directories:
     - /home/travis/.cargo
 before_cache:
