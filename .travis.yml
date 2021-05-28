@@ -1,12 +1,13 @@
 os:
   - linux
   - osx
+  - windows
 language: rust
 rust:
   - stable
   
 # https://levans.fr/rust_travis_cache.html
-cache: cargocache:
+cache:
   directories:
     - /home/travis/.cargo
 before_cache:
@@ -22,4 +23,4 @@ script:
   - cargo +nightly clippy
   - cargo fmt -- --check
   - cargo run
-  - cargo run -- ~
+  - cargo run -- .
