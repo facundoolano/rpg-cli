@@ -19,7 +19,10 @@ impl Location {
             path.to_string()
         };
 
-        let path = path::Path::new(&path).canonicalize()?;
+        let path = path::Path::new(&path);
+        // this is a replacement to std::fs::canonicalize()
+        // that circumvents windows quirks with paths
+        let path = dunce::canonicalize(&path)?;
         Ok(Self { path })
     }
 
