@@ -8,9 +8,11 @@ mod log;
 mod randomizer;
 
 use crate::location::Location;
-use clap::Clap;
+use clap::{Clap, crate_version};
 
+/// Your filesystem as a dungeon!
 #[derive(Clap)]
+#[clap(version = crate_version!(), author = "Facundo Olano <facundo.olano@gmail.com>")]
 struct Opts {
     /// Moves the hero to the supplied destination.
     /// When omitted to just prints the hero's status
