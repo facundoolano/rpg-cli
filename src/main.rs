@@ -8,7 +8,7 @@ mod log;
 mod randomizer;
 
 use crate::location::Location;
-use clap::{Clap, crate_version};
+use clap::{crate_version, Clap};
 
 /// Your filesystem as a dungeon!
 #[derive(Clap)]
