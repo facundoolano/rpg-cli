@@ -24,3 +24,26 @@ script:
   - cargo fmt -- --check
   - cargo run
   - cargo run -- .
+
+GH_TOKEN: &GH_TOKEN
+  secure: "CQZR/NoQcgw+jymU5ZbEAoOnDAP+TB3/aAvAz3a/n0qMYfGW5NSKCQPXRYlxsWqVHJc/eY1sjLUBlrFKR4BdNuZZdLsKl211mi4IDnpouLIkQvQz9BuCC10dGakvW38ovtYU5Hfpr519Hct+rg7BQJtYllpMBC1DB6mHYNgVqOaUajtaex7PhZUI6uITd/YbNd4YX5B2WNeAzgrMMmMuGhuSoi0RwF2liZLe8GtI/nmR4/SIMbamThyLq9dQu0Bkk/hxSkVndqfn/l1C2aOTCHGITTM7cuiqSeoMByvJYtngVwUqV/k59wgDBHyjgsqGalgGvVDVFHCE5j6t7e/w6YSmoVsZkNgLzEkRvJhUttsKW2aOB2hIypwICtAChAwVjYLQZLVmFJIR5CBlu9nE11E29ZxQNR+d+whUsp6uxHLt4QY604mr8V5iclMr9QEer6Kw8vPppa0aTgXl40A0w148C7AVDAmNtazBq3/M08fL17WkVDmjopNJvjN7n7QyGey9VpClTu4nQ3mhU//GlzIbF3esMe6mcJcdbH0ugl0AqebLfpW+RFN1tAzXj0EzCGnhMFX9+AmxR2yCGWNODQo4KYMlRH5XkLSqBUgVezn8Xn57SjfRvsUpd0vQZdnEJjgF9knELzT4UBMqqTzXN2+PMjAkBNtNkskmUjUoLkU="
+    
+before_deploy:
+  - cargo build --release --target $TARGET
+  - cp target/release/rpg-cli "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
+deploy:
+  - provider: releases
+    api_key: *GH_TOKEN
+    env: TARGET=x86_64-unknown-linux-musl
+    file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
+    skip_cleanup: true
+    draft: true
+    addons:
+      apt:
+        packages:
+          - musl-tools
+    on:
+      # FIXME uncomment, remove draft & branch, set tags: true
+      branch: github_releases
+      condition: $TRAVIS_OS_NAME = linux
+  
