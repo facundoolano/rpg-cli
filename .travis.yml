@@ -6,7 +6,13 @@ language: rust
 rust:
   - stable
   
-cache: cargo
+# https://levans.fr/rust_travis_cache.html
+cache: cargocache:
+  directories:
+    - /home/travis/.cargo
+before_cache:
+  - rm -rf /home/travis/.cargo/registry
+  
 before_install:
   - rustup toolchain add nightly
   - rustup component add clippy --toolchain=nightly
