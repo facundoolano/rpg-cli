@@ -31,28 +31,22 @@ GH_TOKEN: &GH_TOKEN
 before_deploy:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export TARGET=x86_64-unknown-linux-musl  ; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update && sudo apt-get -y install musl-tools  ; fi
+  
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export TARGET=x86_64-apple-darwin  ; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export MACOSX_DEPLOYMENT_TARGET=10.7  ; fi
+
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then export TARGET=x86_64-pc-windows-msvc  ; fi
+  
   - rustup target add $TARGET
   - cargo build --release --target $TARGET
-  - cp target/$TARGET/rpg-cli "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
+  - cp target/$TARGET/release/rpg-cli "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
 deploy:
-  - provider: releases
-    api_key: *GH_TOKEN
-    file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
-    skip_cleanup: true
-    draft: true
-    on:
-      # FIXME uncomment, remove draft & branch, set tags: true
-      branch: github_releases
-      condition: $TRAVIS_OS_NAME = linux
-  - provider: releases
-    api_key: *GH_TOKEN
-    file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
-    skip_cleanup: true
-    draft: true
-    on:
-      # FIXME uncomment, remove draft & branch, set tags: true
-      branch: github_releases
-      condition: $TRAVIS_OS_NAME = osx
+  provider: releases
+  api_key: *GH_TOKEN
+  file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
+  skip_cleanup: true
+  draft: true
+  on:
+    # FIXME uncomment, remove draft & branch, set tags: true
+    branch: github_releases
   
