@@ -17,7 +17,7 @@ before_install:
   - rustup toolchain add nightly
   - rustup component add clippy --toolchain=nightly
   - rustup component add rustfmt
-
+ 
 script:
   - cargo test --verbose --workspace
   - cargo +nightly clippy
