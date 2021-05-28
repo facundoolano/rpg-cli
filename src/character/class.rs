@@ -1,48 +1,49 @@
 use crate::location;
 use rand::prelude::SliceRandom;
 
-/// Character classes, which will determine the parameters to start and
-/// increase the stats of the character.
+/// A stat represents an attribute of a character, such as strength or speed.
+/// This struct contains a stat starting value and the amount that should be
+/// applied when the level increases.
+#[derive(Debug)]
+pub struct Stat(pub i32, pub i32);
+
+impl Stat {
+    pub fn base(&self) -> i32 {
+        self.0
+    }
+
+    pub fn increase(&self) -> i32 {
+        self.1
+    }
+
+    pub fn at(&self, level: i32) -> i32 {
+        self.0 + level * self.increase()
+    }
+}
+
+/// Classes are archetypes for characters.
+/// The struct contains a specific stat configuration such that all instances of
+/// the class have a similar combat behavior.
 #[derive(Debug)]
 pub struct Class {
     pub name: &'static str,
-    pub start_hp: i32,
-    pub start_strength: i32,
-    pub start_speed: i32,
 
-    pub hp_rate: f64,
-    pub strength_rate: f64,
-    pub speed_rate: f64,
+    pub hp: Stat,
+    pub strength: Stat,
+    pub speed: Stat,
 }
 
 impl Class {
     pub const HERO: Self = Self {
         name: "hero",
-        start_hp: 25,
-        start_strength: 10,
-        start_speed: 5,
-
-        hp_rate: 0.3,
-        strength_rate: 0.2,
-        speed_rate: 0.1,
+        hp: Stat(30, 7),
+        strength: Stat(12, 3),
+        speed: Stat(11, 2),
     };
-
-    pub fn strength_at(&self, level: i32) -> i32 {
-        stat_at(self.strength_rate, self.start_strength, level)
-    }
-
-    pub fn hp_at(&self, level: i32) -> i32 {
-        stat_at(self.hp_rate, self.start_hp, level)
-    }
 
     pub fn random_enemy(distance: location::Distance) -> &'static Self {
         weighted_choice(distance)
     }
-}
-
-fn stat_at(stat_rate: f64, stat_start: i32, level: i32) -> i32 {
-    let inc_rate = 1.0 + stat_rate;
-    (stat_start as f64 * inc_rate.powi(level)) as i32
 }
 
 // Enemy classes are grouped into near/mid/far groups
@@ -82,170 +83,121 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
 // 2. decreasing rates to prevent overgrowth at higher levels
 // as a starting measure, using increase rates way below those of the player
 
-/// Defaults for all enemies.
-/// For when it's not obvious how a given class would differ from the resst.
-const BASE: Class = Class {
-    name: "enemy",
-    start_hp: 20,
-    start_strength: 10,
-    start_speed: 3,
-
-    hp_rate: 0.15,
-    strength_rate: 0.07,
-    speed_rate: 0.07,
-};
-
 const RAT: Class = Class {
     name: "rat",
-    start_hp: 10,
-    start_strength: 5,
-    start_speed: 8,
-
-    ..BASE
+    hp: Stat(10, 3),
+    strength: Stat(5, 2),
+    speed: Stat(16, 2),
 };
 
 const WOLF: Class = Class {
     name: "wolf",
-    start_hp: 15,
-    start_strength: 8,
-    start_speed: 6,
-
-    ..BASE
+    hp: Stat(15, 3),
+    strength: Stat(8, 2),
+    speed: Stat(12, 2),
 };
 
 const SNAKE: Class = Class {
     name: "snake",
-    start_hp: 13,
-    start_strength: 7,
-    start_speed: 3,
-
-    ..BASE
+    hp: Stat(13, 3),
+    strength: Stat(7, 2),
+    speed: Stat(6, 2),
 };
 
 const SLIME: Class = Class {
     name: "slime",
-    start_hp: 100,
-    start_strength: 3,
-    start_speed: 2,
-
-    ..BASE
+    hp: Stat(80, 3),
+    strength: Stat(3, 2),
+    speed: Stat(4, 2),
 };
 
 const SPIDER: Class = Class {
     name: "spider",
-    start_hp: 10,
-    start_strength: 9,
-    start_speed: 6,
-
-    ..BASE
+    hp: Stat(10, 3),
+    strength: Stat(9, 2),
+    speed: Stat(12, 2),
 };
 
 const ZOMBIE: Class = Class {
     name: "zombie",
-    start_hp: 50,
-    start_strength: 8,
-    start_speed: 3,
-
-    ..BASE
+    hp: Stat(50, 3),
+    strength: Stat(8, 2),
+    speed: Stat(6, 2),
 };
 
 const ORC: Class = Class {
     name: "orc",
-    start_hp: 35,
-    start_strength: 13,
-    start_speed: 6,
-
-    ..BASE
+    hp: Stat(35, 3),
+    strength: Stat(13, 2),
+    speed: Stat(12, 2),
 };
 
 const SKELETON: Class = Class {
     name: "skeleton",
-    start_hp: 30,
-    start_strength: 10,
-    start_speed: 5,
-
-    ..BASE
+    hp: Stat(30, 3),
+    strength: Stat(10, 2),
+    speed: Stat(10, 2),
 };
 
 const DEMON: Class = Class {
     name: "demon",
-    start_hp: 50,
-    start_strength: 10,
-    start_speed: 9,
-
-    ..BASE
+    hp: Stat(50, 3),
+    strength: Stat(10, 2),
+    speed: Stat(18, 2),
 };
 
 const VAMPIRE: Class = Class {
     name: "vampire",
-    start_hp: 50,
-    start_strength: 13,
-    start_speed: 5,
-
-    ..BASE
+    hp: Stat(50, 3),
+    strength: Stat(13, 2),
+    speed: Stat(10, 2),
 };
 
 const DRAGON: Class = Class {
     name: "dragon",
-    start_hp: 100,
-    start_strength: 25,
-    start_speed: 4,
-
-    ..BASE
+    hp: Stat(100, 3),
+    strength: Stat(25, 2),
+    speed: Stat(8, 2),
 };
 
 const GOLEM: Class = Class {
     name: "golem",
-    start_hp: 50,
-    start_strength: 45,
-    start_speed: 1,
-
-    speed_rate: 0.04,
-
-    ..BASE
+    hp: Stat(50, 3),
+    strength: Stat(45, 2),
+    speed: Stat(2, 1),
 };
 
 const CHIMERA: Class = Class {
     name: "chimera",
-    start_hp: 200,
-    start_strength: 90,
-    start_speed: 8,
-
-    ..BASE
+    hp: Stat(200, 2),
+    strength: Stat(90, 2),
+    speed: Stat(16, 2),
 };
 
 const BASILISK: Class = Class {
     name: "basilisk",
-    start_hp: 150,
-    start_strength: 100,
-    start_speed: 9,
-
-    ..BASE
+    hp: Stat(150, 3),
+    strength: Stat(100, 2),
+    speed: Stat(18, 2),
 };
 
 const MINOTAUR: Class = Class {
     name: "minotaur",
-    start_hp: 100,
-    start_strength: 60,
-    start_speed: 20,
-
-    ..BASE
+    hp: Stat(100, 3),
+    strength: Stat(60, 2),
+    speed: Stat(40, 2),
 };
 
 const BALROG: Class = Class {
     name: "balrog",
-    start_hp: 200,
-    start_strength: 200,
-    start_speed: 7,
-
-    ..BASE
+    hp: Stat(200, 3),
+    strength: Stat(200, 2),
+    speed: Stat(14, 2),
 };
 
 const PHOENIX: Class = Class {
     name: "phoenix",
-    start_hp: 350,
-    start_strength: 180,
-    start_speed: 14,
-
-    ..BASE
+    hp: Stat(350, 3),
+    strength: Stat(180, 2),
+    speed: Stat(28, 2),
 };

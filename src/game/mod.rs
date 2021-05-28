@@ -159,7 +159,7 @@ impl Game {
     }
 
     fn bribe(&mut self, enemy: &Character) -> bool {
-        let bribe_cost = gold_gained(enemy.level) / 2;
+        let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
 
         if self.gold >= bribe_cost && random().bribe_succeeds() {
             self.gold -= bribe_cost;
@@ -181,7 +181,7 @@ impl Game {
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
         if let Ok(xp) = battle::run(self, enemy, &random()) {
-            let gold = gold_gained(enemy.level);
+            let gold = gold_gained(self.player.level, enemy.level);
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
 
@@ -216,14 +216,15 @@ fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
     std::cmp::max(player_level / 2 + distance_from_home - 1, 1)
 }
 
-fn gold_gained(enemy_level: i32) -> i32 {
-    random().gold_gained(enemy_level * 100)
+fn gold_gained(player_level: i32, enemy_level: i32) -> i32 {
+    let level = std::cmp::max(1, enemy_level - player_level);
+    random().gold_gained(level * 50)
 }
 
 #[cfg(test)]
 mod tests {
-    use item::equipment::Equipment;
     use crate::location::Distance;
+    use item::equipment::Equipment;
 
     use super::*;
     use crate::item;
@@ -292,25 +293,31 @@ mod tests {
         // level's equipment, should be able to beat any enemy of its same level
         // without relying in randomness.
         let (wins, lost_to) = run_battles_at(1, 1, times);
-        assert_wins(times, wins, 0.75, &lost_to);
+        assert_wins(times, wins, 0.5, &lost_to);
 
         let (wins, lost_to) = run_battles_at(1, 3, times);
         assert_wins(times, wins, 0.3, &lost_to);
 
         let (wins, lost_to) = run_battles_at(5, 5, times);
-        assert_wins(times, wins, 0.75, &lost_to);
+        assert_wins(times, wins, 0.7, &lost_to);
 
         let (wins, lost_to) = run_battles_at(10, 5, times);
-        assert_wins(times, wins, 0.75, &lost_to);
+        assert_wins(times, wins, 0.7, &lost_to);
 
         let (wins, lost_to) = run_battles_at(10, 10, times);
         assert_wins(times, wins, 0.4, &lost_to);
 
         let (wins, lost_to) = run_battles_at(15, 13, times);
-        assert_wins(times, wins, 0.75, &lost_to);
+        assert_wins(times, wins, 0.7, &lost_to);
 
         let (wins, lost_to) = run_battles_at(15, 15, times);
         assert_wins(times, wins, 0.5, &lost_to);
+
+        let (wins, lost_to) = run_battles_at(50, 50, times);
+        assert_wins(times, wins, 0.4, &lost_to);
+
+        let (wins, lost_to) = run_battles_at(100, 100, times);
+        assert_wins(times, wins, 0.4, &lost_to);
 
         // it shouldn't be too easy either --stronger enemies should have
         // chances of winning (even with all the equipment)
@@ -331,15 +338,33 @@ mod tests {
 
         let (wins, _) = run_battles_at(15, 20, times);
         assert_loses(times, wins, 0.15);
+
+        let (wins, _) = run_battles_at(15, 20, times);
+        assert_loses(times, wins, 0.15);
+
+        let (wins, _) = run_battles_at(50, 60, times);
+        assert_loses(times, wins, 0.15);
     }
 
     fn assert_wins(total: i32, wins: i32, expected_ratio: f64, lost_to: &Vec<String>) {
-        assert!(wins as f64 >= total as f64 * expected_ratio , "won {} out of {}. Lost to {:?}", wins, total, lost_to);
+        assert!(
+            wins as f64 >= total as f64 * expected_ratio,
+            "won {} out of {}. Lost to {:?}",
+            wins,
+            total,
+            lost_to
+        );
     }
 
     fn assert_loses(total: i32, wins: i32, expected_ratio: f64) {
         let expected = (total as f64) * (1.0 - expected_ratio);
-        assert!((wins as f64) <= expected, "won {} out of {} expected at most {}", wins, total, expected);
+        assert!(
+            (wins as f64) <= expected,
+            "won {} out of {} expected at most {}",
+            wins,
+            total,
+            expected
+        );
     }
 
     fn run_battles_at(player_level: i32, distance: i32, times: i32) -> (i32, Vec<String>) {
@@ -347,7 +372,7 @@ mod tests {
         let mut lost_to = Vec::new();
 
         // we don't want randomization turned off for this test
-        let random = randomizer::DefaultRandomizer{};
+        let random = randomizer::DefaultRandomizer {};
 
         for _ in 0..times {
             let mut game = full_game_at(player_level);
@@ -371,7 +396,7 @@ mod tests {
         let mut game = Game::new();
 
         // get a player of the given level
-        for _ in 0..level-1 {
+        for _ in 0..level - 1 {
             game.player.add_experience(game.player.xp_for_next());
         }
         assert_eq!(level, game.player.level);

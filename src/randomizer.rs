@@ -25,7 +25,7 @@ pub trait Randomizer {
 
     fn gold_gained(&self, base: i32) -> i32;
 
-    fn stat_increase(&self, current: i32, rate: f64) -> i32;
+    fn stat_increase(&self, increase: i32) -> i32;
 }
 
 #[cfg(not(test))]
@@ -104,14 +104,12 @@ impl Randomizer for DefaultRandomizer {
         rng.gen_range(min..=max)
     }
 
-    fn stat_increase(&self, current: i32, rate: f64) -> i32 {
-        // if rate is .3, increase can be in .15-.45
-        let current_f = current as f64;
-        let min_value = max(1, (current_f * (rate - rate / 2.0)).round() as i32);
-        let max_value = max(1, (current_f * rate + rate / 2.0).round() as i32);
+    fn stat_increase(&self, increase: i32) -> i32 {
+        let min_value = max(1, increase / 2);
+        let max_value = 3 * increase / 2;
 
         let mut rng = rand::thread_rng();
-        current + rng.gen_range(min_value..=max_value)
+        rng.gen_range(min_value..=max_value)
     }
 }
 
@@ -152,8 +150,8 @@ impl Randomizer for TestRandomizer {
         base
     }
 
-    fn stat_increase(&self, current: i32, rate: f64) -> i32 {
-        current + (current as f64 * rate).ceil() as i32
+    fn stat_increase(&self, increase: i32) -> i32 {
+        increase
     }
 }
 
@@ -165,28 +163,20 @@ mod tests {
     fn test_increase_stat() {
         let rand = DefaultRandomizer {};
 
-        // current hp lvl1: increase in .3 +/- .15
-        let value = rand.stat_increase(20, 0.3);
-        assert!((23..=29).contains(&value), "value was {}", value);
+        // current hp lvl1
+        let value = rand.stat_increase(7);
+        assert!((3..=10).contains(&value), "value was {}", value);
 
         // current strength lvl1
-        let value = rand.stat_increase(10, 0.1);
-        assert!((11..=12).contains(&value), "value was {}", value);
+        let value = rand.stat_increase(3);
+        assert!((1..=4).contains(&value), "value was {}", value);
 
         // current speed lvl1
-        let value = rand.stat_increase(5, 0.1);
-        assert_eq!(6, value);
+        let value = rand.stat_increase(2);
+        assert!((1..=3).contains(&value), "value was {}", value);
 
-        // ~ hp lvl2
-        let value = rand.stat_increase(26, 0.3);
-        assert!((30..=38).contains(&value), "value was {}", value);
-
-        // ~ hp lvl3
-        let value = rand.stat_increase(34, 0.3);
-        assert!((39..=49).contains(&value), "value was {}", value);
-
-        // small numbers
-        let value = rand.stat_increase(3, 0.07);
-        assert_eq!(4, value);
+        // small increase
+        let value = rand.stat_increase(1);
+        assert!((1..=2).contains(&value), "value was {}", value);
     }
 }

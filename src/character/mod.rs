@@ -55,10 +55,10 @@ impl Character {
             shield: None,
             level: 1,
             xp: 0,
-            max_hp: class.start_hp,
-            current_hp: class.start_hp,
-            strength: class.start_strength,
-            speed: class.start_speed,
+            max_hp: class.hp.base(),
+            current_hp: class.hp.base(),
+            strength: class.strength.base(),
+            speed: class.speed.base(),
         };
 
         for _ in 1..level {
@@ -71,13 +71,14 @@ impl Character {
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
         self.level += 1;
-        self.strength = random().stat_increase(self.strength, self.class.strength_rate);
-        self.speed = random().stat_increase(self.speed, self.class.speed_rate);
+
+        self.strength += random().stat_increase(self.class.strength.increase());
+        self.speed += random().stat_increase(self.class.speed.increase());
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp = random().stat_increase(self.max_hp, self.class.hp_rate);
+        self.max_hp += random().stat_increase(self.class.hp.increase());
         self.current_hp = self.max_hp - previous_damage;
     }
 
@@ -124,7 +125,7 @@ impl Character {
         (base_xp * (self.level as f64).powf(exp)) as i32
     }
 
-    /// Generate a randomized damage numer based on the attacker strength
+    /// Generate a randomized damage number based on the attacker strength
     /// and the receiver strength.
     pub fn damage(&self, receiver: &Self) -> i32 {
         max(1, self.attack() - receiver.deffense())
@@ -156,16 +157,13 @@ impl Character {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use class::Stat;
 
     const TEST_CLASS: Class = Class {
         name: "test",
-        start_hp: 25,
-        start_strength: 10,
-        start_speed: 5,
-
-        hp_rate: 0.3,
-        strength_rate: 0.1,
-        speed_rate: 0.1,
+        hp: Stat(25, 7),
+        strength: Stat(10, 3),
+        speed: Stat(10, 2),
     };
 
     fn new_char() -> Character {
@@ -179,10 +177,10 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        assert_eq!(TEST_CLASS.start_hp, hero.current_hp);
-        assert_eq!(TEST_CLASS.start_hp, hero.max_hp);
-        assert_eq!(TEST_CLASS.start_strength, hero.strength);
-        assert_eq!(TEST_CLASS.start_speed, hero.speed);
+        assert_eq!(TEST_CLASS.hp.base(), hero.current_hp);
+        assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
+        assert_eq!(TEST_CLASS.strength.base(), hero.strength);
+        assert_eq!(TEST_CLASS.speed.base(), hero.speed);
     }
 
     #[test]
@@ -190,9 +188,9 @@ mod tests {
         let mut hero = new_char();
 
         // assert what we're assuming are the params in the rest of the test
-        assert_eq!(0.3, TEST_CLASS.hp_rate);
-        assert_eq!(0.1, TEST_CLASS.strength_rate);
-        assert_eq!(0.1, TEST_CLASS.speed_rate);
+        assert_eq!(7, TEST_CLASS.hp.increase());
+        assert_eq!(3, TEST_CLASS.strength.increase());
+        assert_eq!(2, TEST_CLASS.speed.increase());
 
         hero.max_hp = 20;
         hero.current_hp = 20;
@@ -201,9 +199,9 @@ mod tests {
 
         hero.increase_level();
         assert_eq!(2, hero.level);
-        assert_eq!(26, hero.max_hp);
-        assert_eq!(11, hero.strength);
-        assert_eq!(6, hero.speed);
+        assert_eq!(27, hero.max_hp);
+        assert_eq!(13, hero.strength);
+        assert_eq!(7, hero.speed);
 
         let damage = 7;
         hero.current_hp -= damage;
@@ -328,5 +326,36 @@ mod tests {
         assert_eq!(15, hero.heal_full());
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
+    }
+
+    #[test]
+    fn test_overflow() {
+        let mut hero = Character::player();
+
+        while hero.level < 500 {
+            hero.add_experience(hero.xp_for_next());
+            hero.sword = Some(equipment::Sword::new(hero.level));
+            let turns_unarmed = hero.max_hp / hero.strength;
+            let turns_armed = hero.max_hp / hero.attack();
+            println!(
+                "hero[{}] next={} hp={} spd={} str={} att={} turns_u={} turns_a={}",
+                hero.level,
+                hero.xp_for_next(),
+                hero.max_hp,
+                hero.speed,
+                hero.strength,
+                hero.attack(),
+                turns_unarmed,
+                turns_armed
+            );
+
+            assert!(hero.max_hp > 0);
+            assert!(hero.speed > 0);
+            assert!(hero.attack() > 0);
+
+            assert!(turns_armed < turns_unarmed);
+            assert!(turns_armed < 20);
+        }
+        // assert!(false);
     }
 }

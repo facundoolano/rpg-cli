@@ -56,7 +56,11 @@ fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
 
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
-fn attack(attacker: &Character, receiver: &mut Character, random: &dyn Randomizer) -> (Attack, i32) {
+fn attack(
+    attacker: &Character,
+    receiver: &mut Character,
+    random: &dyn Randomizer,
+) -> (Attack, i32) {
     if random.is_miss(attacker.speed, receiver.speed) {
         (Attack::Miss, 0)
     } else {
@@ -120,7 +124,7 @@ mod tests {
         assert_eq!(15, game.player.current_hp);
         assert_eq!(1, game.player.level);
         assert_eq!(20, game.player.xp);
-        assert_eq!(100, game.gold);
+        assert_eq!(50, game.gold);
 
         let mut enemy = Character::enemy(1, Distance::Near(1));
         enemy.speed = 1;
@@ -133,7 +137,7 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(2, game.player.level);
         assert_eq!(10, game.player.xp);
-        assert_eq!(200, game.gold);
+        assert_eq!(100, game.gold);
     }
 
     #[test]
