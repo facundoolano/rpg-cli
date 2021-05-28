@@ -1,10 +1,12 @@
 use crate::location;
 use rand::prelude::SliceRandom;
 
+/// A stat represents an attribute of a character, such as strength or speed.
+/// This struct contains a stat starting value and the amount that should be
+/// applied when the level increases.
 #[derive(Debug)]
 pub struct Stat(pub i32, pub i32);
 
-/// FIXME
 impl Stat {
     pub fn base(&self) -> i32 {
         self.0
@@ -19,8 +21,9 @@ impl Stat {
     }
 }
 
-/// Character classes, which will determine the parameters to start and
-/// increase the stats of the character.
+/// Classes are archetypes for characters.
+/// The struct contains a specific stat configuration such that all instances of
+/// the class have a similar combat behavior.
 #[derive(Debug)]
 pub struct Class {
     pub name: &'static str,
