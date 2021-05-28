@@ -1,5 +1,19 @@
+os:
+  - linux
+  - osx
 language: rust
 rust:
   - stable
-  - beta
-  - nightly
+  
+cache: cargo
+before_install:
+  - rustup toolchain add nightly
+  - rustup component add clippy --toolchain=nightly
+  - rustup component add rustfmt
+
+script:
+  - cargo test --verbose --workspace
+  - cargo +nightly clippy
+  - cargo fmt -- --check
+  - cargo run
+  - cargo run -- ~
