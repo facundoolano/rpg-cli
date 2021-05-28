@@ -30,8 +30,10 @@ GH_TOKEN: &GH_TOKEN
     
 before_deploy:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export TARGET=x86_64-unknown-linux-musl  ; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get -y install musl-tools  ; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export TARGET=x86_64-apple-darwin  ; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export MACOSX_DEPLOYMENT_TARGET=10.7  ; fi
+  - rustup target add $TARGET
   - cargo build --release --target $TARGET
   - cp target/release/rpg-cli "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
 deploy:
@@ -40,10 +42,6 @@ deploy:
     file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
     skip_cleanup: true
     draft: true
-    addons:
-      apt:
-        packages:
-          - musl-tools
     on:
       # FIXME uncomment, remove draft & branch, set tags: true
       branch: github_releases
