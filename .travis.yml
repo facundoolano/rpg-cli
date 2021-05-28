@@ -1,4 +1,6 @@
 os:
+  - linux
+  - osx
   - windows
 language: rust
 rust:
@@ -16,5 +18,3 @@ script:
   - cargo fmt -- --check
   - cargo run
   - cargo run -- .
-  - powershell cargo run
-  - powershell cargo run '--' .
