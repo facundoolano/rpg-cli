@@ -16,5 +16,5 @@ script:
   - cargo fmt -- --check
   - cargo run
   - cargo run -- .
-  - powershell -Command cargo run
-  - powershell -Comamand cargo run '--' .
+  - powershell cargo run
+  - powershell cargo run '--' .
