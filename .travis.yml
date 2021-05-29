@@ -17,10 +17,37 @@ before_install:
   - rustup toolchain add nightly
   - rustup component add clippy --toolchain=nightly
   - rustup component add rustfmt
-
+ 
 script:
   - cargo test --verbose --workspace
   - cargo +nightly clippy
   - cargo fmt -- --check
   - cargo run
   - cargo run -- .
+
+before_deploy:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export TARGET=x86_64-unknown-linux-musl  ; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update && sudo apt-get -y install musl-tools  ; fi
+  
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export TARGET=x86_64-apple-darwin  ; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export MACOSX_DEPLOYMENT_TARGET=10.7  ; fi
+
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then export TARGET=x86_64-pc-windows-gnu  ; fi
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then export EXTENSION=.exe  ; fi
+  
+  - rustup target add $TARGET
+  - cargo build --release --target $TARGET
+  - cp target/$TARGET/release/rpg-cli$EXTENSION "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG$EXTENSION"
+  
+deploy:
+  provider: releases
+  api_key:
+    secure: "nvAKwIwu0P6/4C4d+JczZyy1PJx089ILKLdFnLYdXM3t1+rxKUjYzf+iZ/fDdU5rJgq11hYaaypHwqCX/NZvcKuECzX0uy2KsyJwit5ETDN+aUxwhBJfurS8HRaC/0X72SMwM5me95GD4ivEDYWp5SSwFjykX+Rvps2+SR8yk//bvr8FY0iJFjSezCQiiR7/iYcYSbKEUh5S3ZA9q3nMl3cGXxOskForiqPDdONgy2Ly0WfGfwCI/VhnRHPHUq1jozSlJQN6Y/bwNbiKW9N9xoX1buForEBjoA3Jjj733kJgPJ5APsH12YiVlAhH7DBSC16wOG5nJWt53t+yyaH2AepcFsGG9rQ4lHOqS/wregYSN8XY9+VUWvrHD42d2SdQ10GrqH2BzB+Pyx16s+k2gnQa5yqNT/scZldUP3YLOLPgnT24ZJ1MRqg2oiCwXAqiVHiPlhOEwtV89eJf5WBBtxeMji3dm7mzHC3RIhY/WSt5sm7Q/PBpRkCa++dns5j1Ot7/eQ8ulce8Ty6E2xv2OonlD5Jizoc0rdhtHgOWozeaYpWOW158z59t3DF+MuJnJArhDPUrfdVTkz+pojpLRzwLlja2phhgn3aKmTs2lo+BmLNphtv52tbMF5NuY/Wpv39Vt+O7vALJ1naG/TancpLB+fZNleYz1JG116oT3t8="
+    
+  file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG$EXTENSION"
+  skip_cleanup: true
+  name: $TRAVIS_TAG
+  draft: true
+  on:
+    tags: true
+  
