@@ -32,7 +32,7 @@ before_deploy:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export TARGET=x86_64-apple-darwin  ; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export MACOSX_DEPLOYMENT_TARGET=10.7  ; fi
 
-  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then export TARGET=x86_64-pc-windows-msvc  ; fi
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then export TARGET=x86_64-pc-windows-gnu  ; fi
   - if [ "$TRAVIS_OS_NAME" = "windows" ]; then export EXTENSION=.exe  ; fi
   
   - rustup target add $TARGET
@@ -45,6 +45,7 @@ deploy:
     
   file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG$EXTENSION"
   skip_cleanup: true
+  name: $TRAVIS_TAG
   draft: true
   on:
     # FIXME uncomment, remove draft & branch, set tags: true
