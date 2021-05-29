@@ -46,10 +46,8 @@ deploy:
     
   file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG$EXTENSION"
   skip_cleanup: true
-  # FIXME uncomment
-  # name: $TRAVIS_TAG
+  name: $TRAVIS_TAG
   draft: true
   on:
-    # FIXME uncomment, remove draft & branch, set tags: true
-    branch: github_releases
+    tags: true
   
