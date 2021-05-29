@@ -38,9 +38,7 @@ before_deploy:
   - rustup target add $TARGET
   - cargo build --release --target $TARGET
   - cp target/$TARGET/release/rpg-cli$EXTENSION "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG$EXTENSION"
-
-  # FIXME remove
-  - export TRAVIS_TAG=test
+  
 deploy:
   provider: releases
   api_key:
@@ -48,7 +46,8 @@ deploy:
     
   file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG$EXTENSION"
   skip_cleanup: true
-  name: $TRAVIS_TAG
+  # FIXME uncomment
+  # name: $TRAVIS_TAG
   draft: true
   on:
     # FIXME uncomment, remove draft & branch, set tags: true
