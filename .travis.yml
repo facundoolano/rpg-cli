@@ -47,7 +47,6 @@ deploy:
   file: "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG$EXTENSION"
   skip_cleanup: true
   name: $TRAVIS_TAG
-  draft: true
   on:
     tags: true
   
