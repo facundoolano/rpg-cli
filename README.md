@@ -57,6 +57,14 @@ cd () {
 }
 ```
 
+If you use fish shell, update `~/.config/fish/config.fish` instead:
+
+```fish
+function rpg 
+    rpg-cli $argv
+    cd (rpg-cli --pwd)
+end
+```
 
 ### Troubleshooting
 
