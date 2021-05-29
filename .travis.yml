@@ -33,10 +33,11 @@ before_deploy:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export MACOSX_DEPLOYMENT_TARGET=10.7  ; fi
 
   - if [ "$TRAVIS_OS_NAME" = "windows" ]; then export TARGET=x86_64-pc-windows-msvc  ; fi
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then export EXTENSION=.exe  ; fi
   
   - rustup target add $TARGET
   - cargo build --release --target $TARGET
-  - cp target/$TARGET/release/rpg-cli "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG"
+  - cp target/$TARGET/release/rpg-cli$EXTENSION "rpg-cli-$TRAVIS_OS_NAME-$TRAVIS_TAG$EXTENSION"
 deploy:
   provider: releases
   api_key:
