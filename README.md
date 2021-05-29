@@ -17,7 +17,7 @@ Features:
 
 ### Installing from binary
 
-Just download the binary for your platform (linux/macOS) from the [GitHub releases page](https://github.com/facundoolano/rpg-cli/releases/latest).
+Just download the binary for your platform (linux/macOS/windows) from the [GitHub releases page](https://github.com/facundoolano/rpg-cli/releases/latest).
 
 ### Installing with Cargo
 Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/getting-started/installation.html#install-rust-and-cargo):
@@ -60,7 +60,6 @@ cd () {
 
 ### Troubleshooting
 
-* The program doesn't currently work in Windows (since I don't have a dev environment handy for that platform). If you have input on how to fix it, please comment [here](https://github.com/facundoolano/rpg-cli/issues/17). Patches are very welcome as well.
 * The release binary for macOS [is not signed](https://github.com/facundoolano/rpg-cli/issues/27). To open it for the first time, right click on the binary and select "Open" from the menu.
 
 ## Usage
