@@ -15,8 +15,11 @@ use clap::{crate_version, Clap};
 #[clap(version = crate_version!(), author = "Facundo Olano <facundo.olano@gmail.com>")]
 struct Opts {
     /// Moves the hero to the supplied destination.
-    /// When omitted to just prints the hero's status
     destination: Option<String>,
+
+    /// Print the hero's stats
+    #[clap(short, long)]
+    stat: bool,
 
     /// Prints the hero's current location
     #[clap(long)]
@@ -49,7 +52,9 @@ fn main() {
 
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
-    if opts.pwd {
+    if opts.stat {
+        log::status(&game);
+    } else if opts.pwd {
         println!("{}", game.location.path_string());
     } else if opts.reset {
         game.reset()
@@ -61,8 +66,6 @@ fn main() {
         item(&mut game, &opts.destination);
     } else if let Some(dest) = opts.destination {
         go_to(&mut game, &dest, opts.run, opts.bribe);
-    } else {
-        log::status(&game);
     }
 
     game.save().unwrap()
