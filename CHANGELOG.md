@@ -5,6 +5,7 @@
 * This Changelog
 
 ### Changed
+* --shop,-s renamed to --buy,-b and --inventory,-i renamed to --use,-u f737a81
 * always print hero location on cd command 05b661e
 
 ## [0.3.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.2.0) - 2021-05-28
