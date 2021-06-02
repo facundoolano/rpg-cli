@@ -73,11 +73,11 @@ pub fn enemy_attack(player: &Character, attack: Attack) {
     battle_log(&player, &format_attack(attack, "bright red"));
 }
 
-pub fn battle_lost(player: &Character, location: &Location) {
-    log(&player, &location, "\u{1F480}");
+pub fn battle_lost(player: &Character) {
+    battle_log(&player, "\u{1F480}");
 }
 
-pub fn battle_won(player: &Character, location: &Location, xp: i32, levels_up: i32, gold: i32) {
+pub fn battle_won(player: &Character, xp: i32, levels_up: i32, gold: i32) {
     let level_str = if levels_up > 0 {
         let plus = (0..levels_up).map(|_| "+").collect::<String>();
         format!(" {}level", plus).cyan().to_string()
@@ -85,9 +85,8 @@ pub fn battle_won(player: &Character, location: &Location, xp: i32, levels_up: i
         "".to_string()
     };
 
-    log(
+    battle_log(
         &player,
-        &location,
         &format!(
             "{}{} {}",
             format!("+{}xp", xp).bold(),
@@ -95,6 +94,10 @@ pub fn battle_won(player: &Character, location: &Location, xp: i32, levels_up: i
             format_gold_plus(gold)
         ),
     );
+}
+
+pub fn short_status(game: &Game) {
+    log(&game.player, &game.location, "");
 }
 
 pub fn status(game: &Game) {

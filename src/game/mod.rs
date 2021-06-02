@@ -185,14 +185,14 @@ impl Game {
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
 
-            log::battle_won(&self.player, &self.location, xp, level_up, gold);
+            log::battle_won(&self.player, xp, level_up, gold);
             Ok(())
         } else {
             // leave hero items in the location
             let tombstone = Tombstone::drop(self);
             self.tombstones.insert(self.location.clone(), tombstone);
 
-            log::battle_lost(&self.player, &self.location);
+            log::battle_lost(&self.player);
             Err(Error::GameOver)
         }
     }

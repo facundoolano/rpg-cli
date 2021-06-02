@@ -76,6 +76,7 @@ fn go_to(game: &mut Game, dest: &str, run: bool, bribe: bool) {
         if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
             game.reset();
         }
+        log::short_status(&game);
     } else {
         println!("No such file or directory");
         std::process::exit(1);
