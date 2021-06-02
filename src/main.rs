@@ -37,12 +37,11 @@ struct Opts {
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
     #[clap(short, long)]
-    shop: bool,
+    buy: bool,
 
     /// Uses an item from the inventory.
-    /// If name is omitted lists the inventory contents.
-    #[clap(short, long)]
-    inventory: bool,
+    #[clap(name="use", short, long)]
+    item: bool,
 }
 
 fn main() {
@@ -54,12 +53,12 @@ fn main() {
         println!("{}", game.location.path_string());
     } else if opts.reset {
         game.reset()
-    } else if opts.shop {
+    } else if opts.buy {
         // when -s flag is provided, the positional argument is assumed to be an item
         shop(&mut game, &opts.destination);
-    } else if opts.inventory {
+    } else if opts.item {
         // when -i flag is provided, the positional argument is assumed to be an item
-        inventory(&mut game, &opts.destination);
+        item(&mut game, &opts.destination);
     } else if let Some(dest) = opts.destination {
         go_to(&mut game, &dest, opts.run, opts.bribe);
     } else {
@@ -107,7 +106,7 @@ fn shop(game: &mut Game, item_name: &Option<String>) {
 }
 
 /// Use an item from the inventory or list the inventory contents if no item name is provided.
-fn inventory(game: &mut Game, item_name: &Option<String>) {
+fn item(game: &mut Game, item_name: &Option<String>) {
     if let Some(item_name) = item_name {
         let item_name = sanitize(item_name);
         if let Err(game::Error::ItemNotFound) = game.use_item(&item_name) {
