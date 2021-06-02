@@ -4,6 +4,9 @@
 ### Added
 * This Changelog
 
+### Changed
+* always print hero location on cd command 05b661e
+
 ## [0.3.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.2.0) - 2021-05-28
 ### Added
 * Binary upload from travis on GitHub releases #36
