@@ -6,7 +6,7 @@ use crate::location::Location;
 use colored::*;
 
 pub fn enemy_appears(enemy: &Character, location: &Location) {
-    log(&enemy, &location, "");
+    log(&enemy, &location, "\n");
 }
 
 pub fn bribe_success(player: &Character, amount: i32) {
@@ -51,7 +51,7 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
         log(
             &player,
             &location,
-            &format!("+{}hp", recovered).green().to_string(),
+            &format!("+{}hp\n", recovered).green().to_string(),
         );
     }
 }
@@ -74,7 +74,7 @@ pub fn enemy_attack(player: &Character, attack: Attack) {
 }
 
 pub fn battle_lost(player: &Character) {
-    battle_log(&player, "\u{1F480}");
+    battle_log(&player, "\u{1F480}\n");
 }
 
 pub fn battle_won(player: &Character, xp: i32, levels_up: i32, gold: i32) {
@@ -88,7 +88,7 @@ pub fn battle_won(player: &Character, xp: i32, levels_up: i32, gold: i32) {
     battle_log(
         &player,
         &format!(
-            "{}{} {}",
+            "{}{} {}\n",
             format!("+{}xp", xp).bold(),
             level_str,
             format_gold_plus(gold)
@@ -104,7 +104,6 @@ pub fn status(game: &Game) {
     let player = &game.player;
     let location = &game.location;
 
-    println!();
     println!("{}@{}", format_character(&player), location);
     println!(
         "    hp:{} {}/{}",
@@ -127,18 +126,15 @@ pub fn status(game: &Game) {
     println!("    {}", format_equipment(&player));
     println!("    {}", format_inventory(&game));
     println!("    {}", format_gold(game.gold));
-    println!();
 }
 
 pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
-    println!();
     for item in items {
         let display = format!("{}", item);
         println!("    {:<10}  {}", display, format_gold(item.cost()));
     }
 
     println!("\n    funds: {}", format_gold(game.gold));
-    println!();
 }
 
 // HELPERS
@@ -147,7 +143,7 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
 /// of a player status at some location, with an optional event suffix.
 fn log(character: &Character, location: &Location, suffix: &str) {
     println!(
-        "\n{}{}{}@{} {}\n",
+        "{}{}{}@{} {}",
         format_character(&character),
         hp_display(&character, 4),
         xp_display(&character, 4),
