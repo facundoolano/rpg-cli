@@ -37,7 +37,8 @@ so the working directory is updated to track to the hero's progress. You can set
 
 ```sh
 rpg () {
-    rpg-cli "$@"
+    ABSPATH=$(realtpath $1)
+    rpg-cli $ABSPATH "${@:2}"
     cd "$(rpg-cli --pwd)"
 }
 ```
