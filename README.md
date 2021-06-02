@@ -37,6 +37,15 @@ so the working directory is updated to track to the hero's progress. You can set
 
 ```sh
 rpg () {
+    rpg-cli "$@"
+    cd "$(rpg-cli --pwd)"
+}
+```
+
+The previous snippet won't continue to go into subdirectories if a fight happens in a directory. The next example will take you to the desired directory but with the obvious tradeoff that you won't be able to decide on your next steps after a battle.
+
+```sh
+rpg () {
     ABSPATH=$(realtpath $1)
     rpg-cli $ABSPATH "${@:2}"
     cd "$(rpg-cli --pwd)"
