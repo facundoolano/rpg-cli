@@ -30,10 +30,11 @@ The binary should be available as `rpg-cli` (assuming you have `~/.cargo/bin` in
 If you use nix/nixos you can get rpg-cli from nixpkgs, either install it by adding it to your system config, installing it with `nix-env -i rpg-cli` or try it in a ephemeral shell with `nix-shell -p rpg-cli`.
 Note that at the current time of writing, the package hasn't hit any of the channels yet. When you try it, check that it's in your channel.
 
-### Use as a cd replacement (recommended)
+### Shell integration (recommended)
 
-Once the binary is installed with one of the methods described above, it can be wrapped on a shell function or alias
-so the working directory is updated to track to the hero's progress. You can set that up by adding something like this to your `.bashrc`:
+The game is designed to integrate with common file system operations, such as changing directories or deleting files.
+
+The most basic type of integration consists in wrapping rpg-cli in a shell function, such that the working directory is updated to track to the hero's progress, effectively working as a `cd` alternative:
 
 ```sh
 rpg () {
@@ -41,8 +42,6 @@ rpg () {
     cd "$(rpg-cli --pwd)"
 }
 ```
-
-This assumes `rpg-cli` is in your path, update with the specific location if not. You can `source ~/.bashrc` to apply the change without opening a new shell.
 
 Or, if you want to go all the way and *really* use it in place of `cd`:
 
@@ -53,20 +52,15 @@ cd () {
 }
 ```
 
-If you use fish shell, update `~/.config/fish/config.fish` instead:
-
-```fish
-function rpg
-    rpg-cli $argv
-    cd (rpg-cli --pwd)
-end
-```
+Other commands like `rm`, `mkdir`, `touch`, etc. can also be aliased. Check the [shell integration guide](shell/README.md) for more sophisticated examples, as well as their fish shell equivalents.
 
 ### Troubleshooting
 
 * The release binary for macOS [is not signed](https://github.com/facundoolano/rpg-cli/issues/27). To open it for the first time, right click on the binary and select "Open" from the menu.
 
 ## Usage
+
+This example session assumes a basic `rpg` function as described in the previous section.
 
 The first time you run the program, a new hero is created at the user's home directory.
 
