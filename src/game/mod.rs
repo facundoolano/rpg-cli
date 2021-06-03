@@ -78,16 +78,7 @@ impl Game {
             } else if self.pick_up_tombstone() {
                 return Ok(());
             } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
-                // don't attempt bribe and run in the same turn
-                if bribe {
-                    if self.bribe(&enemy) {
-                        return Ok(());
-                    }
-                } else if run && self.run_away(&enemy) {
-                    return Ok(());
-                }
-
-                return self.battle(&mut enemy);
+                return self.maybe_battle(&mut enemy, run, bribe);
             }
         }
         Ok(())
@@ -145,7 +136,7 @@ impl Game {
         }
     }
 
-    fn maybe_spawn_enemy(&self) -> Option<Character> {
+    pub fn maybe_spawn_enemy(&self) -> Option<Character> {
         let distance = self.location.distance_from_home();
         if random().should_enemy_appear(&distance) {
             let level = enemy_level(self.player.level, distance.len());
@@ -156,6 +147,24 @@ impl Game {
         } else {
             None
         }
+    }
+
+    pub fn maybe_battle(
+        &mut self,
+        enemy: &mut Character,
+        run: bool,
+        bribe: bool,
+    ) -> Result<(), Error> {
+        // don't attempt bribe and run in the same turn
+        if bribe {
+            if self.bribe(enemy) {
+                return Ok(());
+            }
+        } else if run && self.run_away(&enemy) {
+            return Ok(());
+        }
+
+        self.battle(enemy)
     }
 
     fn bribe(&mut self, enemy: &Character) -> bool {

@@ -49,6 +49,10 @@ struct Opts {
     /// Move the hero's to a different location without spawning enemies.
     #[clap(long)]
     mv: Option<String>,
+
+    /// Potentially spawns an enemy in the current directory.
+    #[clap(long)]
+    battle: bool,
 }
 
 fn main() {
@@ -70,6 +74,8 @@ fn main() {
     } else if opts.item {
         // when -i flag is provided, the positional argument is assumed to be an item
         item(&mut game, &opts.destination);
+    } else if opts.battle {
+        battle(&mut game, opts.run, opts.bribe);
     } else {
         // when omitting the destination, go to home to match `cd` behavior
         let dest = opts.destination.unwrap_or_else(|| String::from("~"));
@@ -126,6 +132,17 @@ fn item(game: &mut Game, item_name: &Option<String>) {
     } else {
         println!("{}", log::format_inventory(&game));
     }
+}
+
+/// Potentially run a battle at the current location, independently from
+/// the hero's movement.
+fn battle(game: &mut Game, run: bool, bribe: bool) {
+    if let Some(mut enemy) = game.maybe_spawn_enemy() {
+        if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
+            game.reset();
+        }
+    }
+    log::short_status(&game);
 }
 
 /// Override the hero's current location.
