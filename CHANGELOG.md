@@ -2,6 +2,7 @@
 
 ## Unreleased
 ### Added
+* --battle initiates a battle (with a probability) at the hero's current location b349362
 * --mv sets the hero location without initiating battles, intended for custom shell integrations 7ab2401
 * --stat,-s prints the hero status 8da1090
 *  This Changelog
