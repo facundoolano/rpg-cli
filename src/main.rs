@@ -45,6 +45,10 @@ struct Opts {
     /// Uses an item from the inventory.
     #[clap(name = "use", short, long)]
     item: bool,
+
+    /// Move the hero's to a different location without spawning enemies.
+    #[clap(long)]
+    mv: Option<String>,
 }
 
 fn main() {
@@ -56,6 +60,8 @@ fn main() {
         log::status(&game);
     } else if opts.pwd {
         println!("{}", game.location.path_string());
+    } else if let Some(dest) = opts.mv {
+        mv(&mut game, &dest);
     } else if opts.reset {
         game.reset()
     } else if opts.buy {
@@ -119,6 +125,17 @@ fn item(game: &mut Game, item_name: &Option<String>) {
         }
     } else {
         println!("{}", log::format_inventory(&game));
+    }
+}
+
+/// Override the hero's current location.
+/// Intended for finer-grained shell integration.
+fn mv(game: &mut Game, dest: &str) {
+    if let Ok(dest) = Location::from(&dest) {
+        game.location = dest;
+    } else {
+        println!("No such file or directory");
+        std::process::exit(1);
     }
 }
 
