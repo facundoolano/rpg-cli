@@ -43,7 +43,7 @@ struct Opts {
     buy: bool,
 
     /// Uses an item from the inventory.
-    #[clap(name="use", short, long)]
+    #[clap(name = "use", short, long)]
     item: bool,
 }
 
@@ -64,7 +64,9 @@ fn main() {
     } else if opts.item {
         // when -i flag is provided, the positional argument is assumed to be an item
         item(&mut game, &opts.destination);
-    } else if let Some(dest) = opts.destination {
+    } else {
+        // when omitting the destination, go to home to match `cd` behavior
+        let dest = opts.destination.unwrap_or_else(|| String::from("~"));
         go_to(&mut game, &dest, opts.run, opts.bribe);
     }
 

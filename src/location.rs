@@ -11,13 +11,12 @@ impl Location {
     /// The path is validated to exist and converted to it's canonical form.
     pub fn from(path: &str) -> Result<Self, std::io::Error> {
         // if input doesn't come from shell, we want to interpret ~ as home ourselves
-        let path = if path.starts_with('~') {
+        let mut path = patch_oldpwd(path);
+        if path.starts_with('~') {
             // TODO figure out these string lossy stuff
             let home_str = dirs::home_dir().unwrap().to_string_lossy().to_string();
-            path.replacen("~", &home_str, 1)
-        } else {
-            path.to_string()
-        };
+            path = path.replacen("~", &home_str, 1)
+        }
 
         let path = path::Path::new(&path);
         // this is a replacement to std::fs::canonicalize()
@@ -72,6 +71,21 @@ impl Location {
 
     pub fn distance_from_home(&self) -> Distance {
         self.distance_from(&Location::home())
+    }
+}
+
+/// To match the `cd` behavior, when the path '-' is passed try to
+/// go to the previous location based on $OLDPWD.
+/// If that env var is missing go home.
+fn patch_oldpwd(path: &str) -> String {
+    if path == "-" {
+        if let Ok(val) = std::env::var("OLDPWD") {
+            val
+        } else {
+            String::from("~")
+        }
+    } else {
+        path.to_string()
     }
 }
 
