@@ -108,14 +108,12 @@ fn go_to(game: &mut Game, dest: &str, run: bool, bribe: bool) -> i32 {
 /// the hero's movement.
 fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
     let mut exit_code = 0;
-    // FIXME duplication here
     if let Some(mut enemy) = game.maybe_spawn_enemy() {
         if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
             game.reset();
             exit_code = 1;
         }
     }
-    log::short_status(&game);
     exit_code
 }
 
