@@ -2,9 +2,11 @@
 
 ## Unreleased
 ### Added
-* This Changelog
+* --stat,-s prints the hero status 8da1090
+*  This Changelog
 
 ### Changed
+* `rpg` without args moves the hero to home and `rpg -` moves it to `$OLDPWD` (when present) to match the `cd` behavior 4ba4c59
 * --shop,-s renamed to --buy,-b and --inventory,-i renamed to --use,-u f737a81
 * always print hero location on cd command 05b661e
 
