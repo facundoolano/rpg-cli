@@ -59,6 +59,7 @@ fn main() {
     let opts: Opts = Opts::parse();
 
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
+    let mut exit_code = 0;
 
     if opts.stat {
         log::status(&game);
@@ -75,24 +76,54 @@ fn main() {
         // when -i flag is provided, the positional argument is assumed to be an item
         item(&mut game, &opts.destination);
     } else if opts.battle {
-        battle(&mut game, opts.run, opts.bribe);
+        exit_code = battle(&mut game, opts.run, opts.bribe);
     } else {
         // when omitting the destination, go to home to match `cd` behavior
         let dest = opts.destination.unwrap_or_else(|| String::from("~"));
-        go_to(&mut game, &dest, opts.run, opts.bribe);
+        exit_code = go_to(&mut game, &dest, opts.run, opts.bribe);
     }
 
-    game.save().unwrap()
+    game.save().unwrap();
+    std::process::exit(exit_code);
 }
 
 /// Main command, attempt to move the hero to the supplied location,
 /// possibly engaging in combat along the way.
-fn go_to(game: &mut Game, dest: &str, run: bool, bribe: bool) {
+fn go_to(game: &mut Game, dest: &str, run: bool, bribe: bool) -> i32 {
+    let mut exit_code = 0;
     if let Ok(dest) = Location::from(&dest) {
         if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
             game.reset();
+            exit_code = 1;
         }
         log::short_status(&game);
+    } else {
+        println!("No such file or directory");
+        exit_code = 1
+    }
+    exit_code
+}
+
+/// Potentially run a battle at the current location, independently from
+/// the hero's movement.
+fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
+    let mut exit_code = 0;
+    // FIXME duplication here
+    if let Some(mut enemy) = game.maybe_spawn_enemy() {
+        if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
+            game.reset();
+            exit_code = 1;
+        }
+    }
+    log::short_status(&game);
+    exit_code
+}
+
+/// Override the hero's current location.
+/// Intended for finer-grained shell integration.
+fn mv(game: &mut Game, dest: &str) {
+    if let Ok(dest) = Location::from(&dest) {
+        game.location = dest;
     } else {
         println!("No such file or directory");
         std::process::exit(1);
@@ -131,28 +162,6 @@ fn item(game: &mut Game, item_name: &Option<String>) {
         }
     } else {
         println!("{}", log::format_inventory(&game));
-    }
-}
-
-/// Potentially run a battle at the current location, independently from
-/// the hero's movement.
-fn battle(game: &mut Game, run: bool, bribe: bool) {
-    if let Some(mut enemy) = game.maybe_spawn_enemy() {
-        if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
-            game.reset();
-        }
-    }
-    log::short_status(&game);
-}
-
-/// Override the hero's current location.
-/// Intended for finer-grained shell integration.
-fn mv(game: &mut Game, dest: &str) {
-    if let Ok(dest) = Location::from(&dest) {
-        game.location = dest;
-    } else {
-        println!("No such file or directory");
-        std::process::exit(1);
     }
 }
 
