@@ -96,7 +96,9 @@ fn go_to(game: &mut Game, dest: &str, run: bool, bribe: bool) -> i32 {
             game.reset();
             exit_code = 1;
         }
-        log::short_status(&game);
+        // FIXME this verbosity is annoying when using as a cd alias
+        // it's not a good default. Re-enable based on a verbosity flag
+        // log::short_status(&game);
     } else {
         println!("No such file or directory");
         exit_code = 1
