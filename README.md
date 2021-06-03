@@ -48,15 +48,7 @@ Or, if you want to go all the way and *really* use it in place of `cd`:
 
 ```sh
 cd () {
-    if [ "$#" -eq 0 ]
-    then
-        rpg-cli "$HOME"
-    elif [ "$1" == "-" ]
-    then
-        rpg-cli "$OLDPWD"
-    else
-        rpg-cli "$@"
-    fi
+    rpg-cli "$@"
     builtin cd "$(rpg-cli --pwd)"
 }
 ```
@@ -64,7 +56,7 @@ cd () {
 If you use fish shell, update `~/.config/fish/config.fish` instead:
 
 ```fish
-function rpg 
+function rpg
     rpg-cli $argv
     cd (rpg-cli --pwd)
 end
