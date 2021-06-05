@@ -14,7 +14,6 @@ use clap::{crate_version, Clap};
 #[derive(Clap)]
 #[clap(version = crate_version!(), author = "Facundo Olano <facundo.olano@gmail.com>")]
 struct Opts {
-    /// Potentially spawns an enemy in the current directory.
     #[clap(subcommand)]
     cmd: Option<Command>,
 }
@@ -24,16 +23,19 @@ enum Command {
     /// Display the hero's status.
     #[clap(aliases=&["s", "status"])]
     Stat {
+        /// Print a short status line.
         #[clap(long, short)]
         quiet: bool,
 
+        /// Print a machine-readable status line.
         #[clap(long)]
         plain: bool,
     },
 
-    /// Moves the hero to the supplied destination.
+    /// Moves the hero to the supplied destination, potentially initiating battles along the way.
     #[clap(name = "cd")]
     ChangeDir {
+        /// Directory to move to. Defaults to home.
         #[clap(default_value = "~")]
         destination: String,
 
@@ -46,6 +48,7 @@ enum Command {
         bribe: bool,
 
         /// Move the hero's to a different location without spawning enemies.
+        /// Intended for scripts and shell integration.
         #[clap(short, long)]
         force: bool,
     },
@@ -66,6 +69,7 @@ enum Command {
     #[clap(name = "pwd")]
     PrintWorkDir,
 
+    /// Potentially initiates a battle in the hero's current location.
     Battle {
         /// Attempt to avoid battles by running away.
         #[clap(long)]
@@ -111,6 +115,7 @@ fn main() {
     std::process::exit(exit_code);
 }
 
+/// Print the hero status according to options
 fn status(game: &Game, quiet: bool, plain: bool) {
     if plain {
         log::plain_status(game);
@@ -187,7 +192,6 @@ fn use_item(game: &mut Game, item_name: &Option<String>) {
     }
 }
 
-// FIXME can this coercion be done as part of clap arg parsing?
 /// Return a clean version of an item/equipment name, including aliases
 fn sanitize(name: &str) -> String {
     let name = name.to_lowercase();
