@@ -6,10 +6,10 @@ rpg-cli is a bare-bones [JRPG](https://en.wikipedia.org/wiki/JRPG)-inspired term
 
 Features:
 
-* Automatic turn-based combat.
-* 15+ enemy classes.
 * Character stats and leveling system.
-* Basic item and equipment support.
+* Automatic turn-based combat.
+* Item and equipment support.
+* 15+ enemy classes.
 * Permadeath with item recovering.
 * Run and bribe to escape battles.
 
@@ -33,8 +33,7 @@ Note that at the current time of writing, the package hasn't hit any of the chan
 ### Shell integration (recommended)
 
 The game is designed to integrate with common file system operations, such as changing directories or deleting files.
-
-The most basic type of integration consists in wrapping rpg-cli in a shell function, such that the working directory is updated to track to the hero's progress, effectively working as a `cd` alternative:
+The most basic type of integration consists in wrapping rpg-cli in a shell function, such that the working directory is updated to match the hero's progress, effectively working as a `cd` alternative:
 
 ```sh
 rpg () {
@@ -43,7 +42,7 @@ rpg () {
 }
 ```
 
-Or, if you want to go all the way and *really* use it in place of `cd`:
+If you want to go all the way and *really* use it in place of `cd`:
 
 ```sh
 cd () {
@@ -73,7 +72,7 @@ The first time you run the program, a new hero is created at the user's home dir
         item:{}
         0g
 
-When running without parameters, as above, the hero status is printed (health points, accumulated experience, etc.). If you pass in a path as parameter, that will instruct the hero to move:
+When running without parameters, as above, the hero status is printed (health points, accumulated experience, etc.). If you use the `cd` with a path as parameter, it will instruct the hero to move:
 
     ~ $ rpg cd dev/
     ~/dev $ rpg
@@ -85,7 +84,7 @@ When running without parameters, as above, the hero status is printed (health po
         item:{}
         0g
 
-In this case, the hero moved to `~/dev/facundoolano`. Sometimes enemies will appear as you move through the directories,
+In this case, the hero moved to `~/dev`. Sometimes enemies will appear as you move through the directories,
 and both characters will engage in battle:
 
     ~/dev $ rpg cd facundoolano/
@@ -124,9 +123,9 @@ Also at the home directory, you can buy items and equipment:
         item:{potion[1]x1}
         75g
 
-The shortcut `rpg b p` would also work above.
+The shortcut `rpg b p` would also work above. The item can then be used as `rpg use potion`.
 
-The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health your hero is likely to die in battle, causing the game to restart.
+The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health, your hero is likely to die in battle, causing the game to restart at the home directory.
 
     ~ $ rpg cd ~/dev/facundoolano/rpg-cli/target/debug/examples/
          orc[1][xxxx]@~/dev/facundoolano/rpg-cli
@@ -138,8 +137,8 @@ The further from home you move the hero, the tougher the enemies will get. If yo
 Death is permanent: you can't save your progress and reload after dying, but if you take your new hero to the location of the previous one's death,
 you can recover gold, items and equipment:
 
-    ~ $ rpg ~/dev/facundoolano/rpg-cli/
+    ~ $ rpg cd -
        hero[🪦]@~/dev/facundoolano/rpg-cli/ +potionx1 +75g
 
 
-Try `rpg --help` for more options.
+Try `rpg --help` for more options and check the [shell integration guide](shell/README.md) for ideas to adapt the game to your preferences.
