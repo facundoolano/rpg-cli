@@ -13,7 +13,7 @@ you need to write a function so the working directory is changed to match that o
 ```sh
 rpg () {
     rpg-cli "$@"
-    cd "$(rpg-cli --pwd)"
+    cd "$(rpg-cli pwd)"
 }
 ```
 
@@ -24,7 +24,7 @@ If you use fish shell, update `~/.config/fish/config.fish` instead:
 ```fish
 function rpg
     rpg-cli $argv
-    cd (rpg-cli --pwd)
+    cd (rpg-cli pwd)
 end
 ```
 
@@ -34,8 +34,8 @@ If you like having enemies popping up while using `cd`, you can override that in
 
 ```sh
 cd () {
-    rpg-cli "$@"
-    builtin cd "$(rpg-cli --pwd)"
+    rpg-cli cd "$@"
+    builtin cd "$(rpg-cli pwd)"
 }
 ```
 
@@ -43,9 +43,11 @@ cd () {
 
 To better adapt for different usage patterns, finer-grained commands are provided:
 
-* `rpg-cli --mv <path>` will set the hero's location to `<path>` without initiating battles.
-* `rpg-cli --pwd` will print the hero's current location.
-* `rpg-cli --battle` will initiate a battle with a probability that changes based on the distance from home. If the battle is lost the exit code of the program will be non-negative.
+* `rpg-cli cd --force <path>` will set the hero's location to `<path>` without initiating battles.
+* `rpg-cli pwd` will print the hero's current location.
+* `rpg-cli battle` will initiate a battle with a probability that changes based on the distance from home. If the battle is lost the exit code of the program will be non-negative.
+* `rpg-cli stat --quiet` will return hero stats in a succinct format.
+* `rpg-cli stat --plain` will return hero stats as tab separated fields, to facilitate parsing (e.g. to integrate to the prompt).
 
 ## Prevent intermediate battles
 
@@ -60,8 +62,8 @@ A better alternative for this usage pattern is enabled by the other integration 
 ```sh
 cd () {
     builtin cd "$@"
-    rpg-cli --mv .
-    rpg-cli --battle
+    rpg-cli cd -f .
+    rpg-cli battle
 }
 ```
 
@@ -70,7 +72,7 @@ cd () {
 Another way to use rpg-cli is to initiate battles when attempting to execute file-modifying operations. Only when the battle is won the operation is allowed:
 
 ```sh
-alias rpg-battle="rpg-cli --mv . && rpg-cli --battle"
+alias rpg-battle="rpg-cli cd -f . && rpg-cli battle"
 
 alias rm="rpg-battle && rm"
 alias rmdir="rpg-battle && rmdir"
