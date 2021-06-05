@@ -113,7 +113,7 @@ fn main() {
 
 fn status(game: &Game, quiet: bool, plain: bool) {
     if plain {
-        todo!();
+        log::plain_status(game);
     } else if quiet {
         log::short_status(game);
     } else {

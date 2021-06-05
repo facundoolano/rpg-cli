@@ -100,6 +100,26 @@ pub fn short_status(game: &Game) {
     log(&game.player, &game.location, "");
 }
 
+pub fn plain_status(game: &Game) {
+    let player = &game.player;
+    println!(
+        "{}[{}]\t@{}\thp:{}/{}\txp:{}/{}\tatt:{}\tdef:{}\tspd:{}\t{}\t{}\tg:{}",
+        player.name(),
+        player.level,
+        game.location,
+        player.current_hp,
+        player.max_hp,
+        player.xp,
+        player.xp_for_next(),
+        player.attack(),
+        player.deffense(),
+        player.speed,
+        format_equipment(player),
+        format_inventory(game),
+        game.gold
+    );
+}
+
 pub fn status(game: &Game) {
     let player = &game.player;
     let location = &game.location;
