@@ -19,10 +19,10 @@ struct Opts {
     cmd: Option<Command>,
 }
 
-// TODO consider adding subcommand shorthands, e.g rpg b
 #[derive(Clap)]
 enum Command {
     /// Display the hero's status.
+    #[clap(aliases=&["s", "status"])]
     Stat,
 
     /// Moves the hero to the supplied destination.
@@ -49,9 +49,11 @@ enum Command {
 
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
+    #[clap(alias="b")]
     Buy { item: Option<String> },
 
     /// Uses an item from the inventory.
+    #[clap(alias="u")]
     Use { item: Option<String> },
 
     /// Prints the hero's current location
