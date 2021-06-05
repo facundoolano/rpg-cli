@@ -35,7 +35,7 @@ enum Command {
     /// Moves the hero to the supplied destination, potentially initiating battles along the way.
     #[clap(name = "cd")]
     ChangeDir {
-        /// Directory to move to. Defaults to home.
+        /// Directory to move to.
         #[clap(default_value = "~")]
         destination: String,
 
@@ -132,7 +132,6 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
 /// the hero's movement.
 fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
     let mut exit_code = 0;
-    // TODO try to wrap this in game?
     if let Some(mut enemy) = game.maybe_spawn_enemy() {
         if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
             game.reset();
