@@ -19,13 +19,12 @@ struct Opts {
     cmd: Option<Command>,
 }
 
-// FIXME check if the {} is actually necessary
 #[derive(Clap)]
 enum Command {
     /// Moves the hero to the supplied destination.
     #[clap(name = "cd")]
     ChangeDir {
-        #[clap(default_value="~")]
+        #[clap(default_value = "~")]
         destination: String,
 
         /// Attempt to avoid battles by running away.
@@ -42,7 +41,7 @@ enum Command {
     },
 
     /// Resets the current game.
-    Reset {},
+    Reset,
 
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
@@ -53,7 +52,7 @@ enum Command {
 
     /// Prints the hero's current location
     #[clap(name = "pwd")]
-    PrintWorkDir {},
+    PrintWorkDir,
 
     Battle {
         /// Attempt to avoid battles by running away.
@@ -74,7 +73,7 @@ fn main() {
 
     match opts.cmd {
         None => log::status(&game),
-        Some(Command::PrintWorkDir {}) => println!("{}", game.location.path_string()),
+        Some(Command::PrintWorkDir) => println!("{}", game.location.path_string()),
         Some(Command::ChangeDir {
             destination,
             run,
@@ -94,7 +93,7 @@ fn main() {
         Some(Command::Battle { run, bribe }) => {
             exit_code = battle(&mut game, run, bribe);
         }
-        Some(Command::Reset {}) => game.reset(),
+        Some(Command::Reset) => game.reset(),
         Some(Command::Buy { item }) => shop(&mut game, &item),
         Some(Command::Use { item }) => use_item(&mut game, &item),
     }
