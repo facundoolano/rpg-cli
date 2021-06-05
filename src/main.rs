@@ -19,8 +19,12 @@ struct Opts {
     cmd: Option<Command>,
 }
 
+// TODO consider adding subcommand shorthands, e.g rpg b
 #[derive(Clap)]
 enum Command {
+    /// Display the hero's status.
+    Stat,
+
     /// Moves the hero to the supplied destination.
     #[clap(name = "cd")]
     ChangeDir {
@@ -71,31 +75,32 @@ fn main() {
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
     let mut exit_code = 0;
 
-    match opts.cmd {
-        None => log::status(&game),
-        Some(Command::PrintWorkDir) => println!("{}", game.location.path_string()),
-        Some(Command::ChangeDir {
+    let cmd = opts.cmd.unwrap_or(Command::Stat);
+    match cmd {
+        Command::Stat => log::status(&game),
+        Command::PrintWorkDir => println!("{}", game.location.path_string()),
+        Command::ChangeDir {
             destination,
             run,
             bribe,
             force: false,
-        }) => {
+        } => {
             exit_code = go_to(&mut game, &destination, run, bribe);
         }
-        Some(Command::ChangeDir {
+        Command::ChangeDir {
             destination,
             force: true,
             ..
-        }) => {
+        } => {
             // FIXME move this special case to the general change dir handling
             mv(&mut game, &destination);
         }
-        Some(Command::Battle { run, bribe }) => {
+        Command::Battle { run, bribe } => {
             exit_code = battle(&mut game, run, bribe);
         }
-        Some(Command::Reset) => game.reset(),
-        Some(Command::Buy { item }) => shop(&mut game, &item),
-        Some(Command::Use { item }) => use_item(&mut game, &item),
+        Command::Reset => game.reset(),
+        Command::Buy { item } => shop(&mut game, &item),
+        Command::Use { item } => use_item(&mut game, &item),
     }
 
     game.save().unwrap();
