@@ -8,7 +8,7 @@ mod log;
 mod randomizer;
 
 use crate::location::Location;
-use clap::{crate_version, Clap, AppSettings};
+use clap::{crate_version, AppSettings, Clap};
 
 /// Your filesystem as a dungeon!
 #[derive(Clap)]
@@ -34,7 +34,7 @@ enum Command {
     Stat,
 
     /// Moves the hero to the supplied destination, potentially initiating battles along the way.
-    #[clap(name = "cd", display_order=1)]
+    #[clap(name = "cd", display_order = 1)]
     ChangeDir {
         /// Directory to move to.
         #[clap(default_value = "~")]
@@ -59,11 +59,11 @@ enum Command {
 
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
-    #[clap(alias = "b", display_order=2)]
+    #[clap(alias = "b", display_order = 2)]
     Buy { item: Option<String> },
 
     /// Uses an item from the inventory.
-    #[clap(alias = "u", display_order=3)]
+    #[clap(alias = "u", display_order = 3)]
     Use { item: Option<String> },
 
     /// Prints the hero's current location
