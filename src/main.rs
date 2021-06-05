@@ -25,7 +25,8 @@ enum Command {
     /// Moves the hero to the supplied destination.
     #[clap(name = "cd")]
     ChangeDir {
-        destination: Option<String>,
+        #[clap(default_value="~")]
+        destination: String,
 
         /// Attempt to avoid battles by running away.
         #[clap(long)]
@@ -80,19 +81,15 @@ fn main() {
             bribe,
             force: false,
         }) => {
-            // when omitting the destination, go to home to match `cd` behavior
-            let dest = destination.unwrap_or_else(|| String::from("~"));
-            exit_code = go_to(&mut game, &dest, run, bribe);
+            exit_code = go_to(&mut game, &destination, run, bribe);
         }
         Some(Command::ChangeDir {
             destination,
             force: true,
             ..
         }) => {
-            // FIXME can this default be specified at clap level?
-            let dest = destination.unwrap_or_else(|| String::from("~"));
             // FIXME move this special case to the general change dir handling
-            mv(&mut game, &dest);
+            mv(&mut game, &destination);
         }
         Some(Command::Battle { run, bribe }) => {
             exit_code = battle(&mut game, run, bribe);
