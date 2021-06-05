@@ -18,11 +18,11 @@ struct Opts {
     cmd: Option<Command>,
 
     /// Print succinct output when possible.
-    #[clap(long, short)]
+    #[clap(long, short, global=true)]
     quiet: bool,
 
     /// Print machine-readable output when possible.
-    #[clap(long)]
+    #[clap(long, global=true)]
     plain: bool,
 }
 
