@@ -63,7 +63,7 @@ impl Tombstone {
 
         game.gold += self.gold;
 
-        log::tombstone_items(&to_log, self.gold);
+        log::tombstone(&game.location, &to_log, self.gold);
     }
 }
 

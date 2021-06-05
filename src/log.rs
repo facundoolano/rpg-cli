@@ -4,9 +4,40 @@ use crate::game::Game;
 use crate::item::shop;
 use crate::location::Location;
 use colored::*;
+use once_cell::sync::OnceCell;
+
+// This are initialized based on input args and then act as constants
+// this prevents having to pass around the flags or lazily parsing the opts
+static QUIET: OnceCell<bool> = OnceCell::new();
+static PLAIN: OnceCell<bool> = OnceCell::new();
+
+/// Set the global output preferences
+pub fn init(quiet: bool, plain: bool) {
+    QUIET.set(quiet).unwrap();
+    PLAIN.set(plain).unwrap();
+}
+
+fn quiet() -> bool {
+    *QUIET.get().unwrap_or(&false)
+}
+
+fn plain() -> bool {
+    *PLAIN.get().unwrap_or(&false)
+}
+
+/// Print the hero status according to options
+pub fn status(game: &Game) {
+    if plain() {
+        plain_status(game);
+    } else if quiet() {
+        short_status(game);
+    } else {
+        long_status(&game)
+    }
+}
 
 pub fn enemy_appears(enemy: &Character, location: &Location) {
-    log(&enemy, &location, "\n");
+    log(&enemy, &location, "");
 }
 
 pub fn bribe_success(player: &Character, amount: i32) {
@@ -21,27 +52,20 @@ pub fn bribe_failure(player: &Character) {
 
 pub fn run_away_success(player: &Character) {
     battle_log(&player, "fled!");
-    println!();
 }
 
 pub fn run_away_failure(player: &Character) {
     battle_log(&player, "can't run!");
 }
 
-pub fn tombstone_found(location: &Location) {
-    println!();
-    println!("    \u{1FAA6} @{}", location);
-}
-
-pub fn tombstone_items(items: &[String], gold: i32) {
-    if gold > 0 || !items.is_empty() {
-        println!();
+pub fn tombstone(location: &Location, items: &[String], gold: i32) {
+    let name = format!("{:>8}", "hero");
+    print!("{}[\u{1FAA6} ]@{}", name, location);
+    if gold > 0 {
+        print!(" {}", format_gold_plus(gold));
     }
     for item in items {
-        println!("    +{}", item);
-    }
-    if gold > 0 {
-        println!("    {}", format_gold_plus(gold));
+        print!(" +{}", item);
     }
     println!();
 }
@@ -51,7 +75,7 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
         log(
             &player,
             &location,
-            &format!("+{}hp\n", recovered).green().to_string(),
+            &format!("+{}hp", recovered).green().to_string(),
         );
     }
 }
@@ -66,18 +90,22 @@ pub fn potion(player: &Character, recovered: i32) {
 }
 
 pub fn player_attack(enemy: &Character, attack: Attack) {
-    battle_log(&enemy, &format_attack(attack, "white"));
+    if !quiet() {
+        battle_log(&enemy, &format_attack(attack, "white"));
+    }
 }
 
 pub fn enemy_attack(player: &Character, attack: Attack) {
-    battle_log(&player, &format_attack(attack, "bright red"));
+    if !quiet() {
+        battle_log(&player, &format_attack(attack, "bright red"));
+    }
 }
 
 pub fn battle_lost(player: &Character) {
-    battle_log(&player, "\u{1F480}\n");
+    battle_log(&player, "\u{1F480}");
 }
 
-pub fn battle_won(player: &Character, xp: i32, levels_up: i32, gold: i32) {
+pub fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32) {
     let level_str = if levels_up > 0 {
         let plus = (0..levels_up).map(|_| "+").collect::<String>();
         format!(" {}level", plus).cyan().to_string()
@@ -86,21 +114,18 @@ pub fn battle_won(player: &Character, xp: i32, levels_up: i32, gold: i32) {
     };
 
     battle_log(
-        &player,
+        &game.player,
         &format!(
-            "{}{} {}\n",
+            "{}{} {}",
             format!("+{}xp", xp).bold(),
             level_str,
             format_gold_plus(gold)
         ),
     );
+    short_status(game);
 }
 
-pub fn short_status(game: &Game) {
-    log(&game.player, &game.location, "");
-}
-
-pub fn status(game: &Game) {
+fn long_status(game: &Game) {
     let player = &game.player;
     let location = &game.location;
 
@@ -126,6 +151,30 @@ pub fn status(game: &Game) {
     println!("    {}", format_equipment(&player));
     println!("    {}", format_inventory(&game));
     println!("    {}", format_gold(game.gold));
+}
+
+fn short_status(game: &Game) {
+    log(&game.player, &game.location, "");
+}
+
+fn plain_status(game: &Game) {
+    let player = &game.player;
+    println!(
+        "{}[{}]\t@{}\thp:{}/{}\txp:{}/{}\tatt:{}\tdef:{}\tspd:{}\t{}\t{}\tg:{}",
+        player.name(),
+        player.level,
+        game.location,
+        player.current_hp,
+        player.max_hp,
+        player.xp,
+        player.xp_for_next(),
+        player.attack(),
+        player.deffense(),
+        player.speed,
+        format_equipment(player),
+        format_inventory(game),
+        game.gold
+    );
 }
 
 pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {

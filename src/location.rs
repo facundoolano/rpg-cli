@@ -39,20 +39,15 @@ impl Location {
         self.path == dirs::home_dir().unwrap()
     }
 
-    /// Move this location one step towards the given destination
-    pub fn go_to(&mut self, dest: &Self) {
-        if !dest.path.starts_with(&self.path) {
-            self.path = self.path.parent().unwrap().to_path_buf();
-        } else if dest != self {
-            let next = dest
-                .path
-                .strip_prefix(&self.path)
-                .unwrap()
-                .components()
-                .next()
-                .unwrap();
-            self.path = self.path.join(next);
-        }
+    /// Return a new location that it's one dir closer to the given destination.
+    pub fn go_to(&self, dest: &Self) -> Self {
+        let next = if !dest.path.starts_with(&self.path) {
+            self.path.parent().unwrap().to_path_buf()
+        } else {
+            let self_len = self.path.components().count();
+            dest.path.components().take(self_len + 1).collect()
+        };
+        Self { path: next }
     }
 
     fn distance_from(&self, other: &Self) -> Distance {
@@ -159,28 +154,28 @@ mod tests {
 
     #[test]
     fn test_walk_towards() {
-        let mut source = location_from("/Users/facundo/dev/");
+        let source = location_from("/Users/facundo/dev/");
         let dest = location_from("/");
 
-        source.go_to(&dest);
+        let source = source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/"), source);
-        source.go_to(&dest);
+        let source = source.go_to(&dest);
         assert_eq!(location_from("/Users/"), source);
-        source.go_to(&dest);
+        let source = source.go_to(&dest);
         assert_eq!(location_from("/"), source);
-        source.go_to(&dest);
+        let source = source.go_to(&dest);
         assert_eq!(location_from("/"), source);
 
-        let mut source = location_from("/Users/facundo/rust/rpg");
+        let source = location_from("/Users/facundo/rust/rpg");
         let dest = location_from("/Users/facundo/erlang/app");
 
-        source.go_to(&dest);
+        let source = source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/rust/"), source);
-        source.go_to(&dest);
+        let source = source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/"), source);
-        source.go_to(&dest);
+        let source = source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/erlang"), source);
-        source.go_to(&dest);
+        let source = source.go_to(&dest);
         assert_eq!(location_from("/Users/facundo/erlang/app"), source);
     }
 

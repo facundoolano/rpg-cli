@@ -23,7 +23,7 @@ script:
   - cargo +nightly clippy
   - cargo fmt -- --check
   - cargo run
-  - cargo run -- .
+  - cargo run -- cd -f .
 
 before_deploy:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export TARGET=x86_64-unknown-linux-musl  ; fi

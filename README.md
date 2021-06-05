@@ -22,7 +22,7 @@ Just download the binary for your platform (linux/macOS/windows) from the [GitHu
 ### Installing with Cargo
 Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/getting-started/installation.html#install-rust-and-cargo):
 
-    $ cargo install --git https://github.com/facundoolano/rpg-cli --branch main
+    $ cargo install --git https://github.com/facundoolano/rpg-cli --force --branch main
 
 The binary should be available as `rpg-cli` (assuming you have `~/.cargo/bin` in your `$PATH`).
 
@@ -39,7 +39,7 @@ The most basic type of integration consists in wrapping rpg-cli in a shell funct
 ```sh
 rpg () {
     rpg-cli "$@"
-    cd "$(rpg-cli --pwd)"
+    cd "$(rpg-cli pwd)"
 }
 ```
 
@@ -47,8 +47,8 @@ Or, if you want to go all the way and *really* use it in place of `cd`:
 
 ```sh
 cd () {
-    rpg-cli "$@"
-    builtin cd "$(rpg-cli --pwd)"
+    rpg-cli cd "$@"
+    builtin cd "$(rpg-cli pwd)"
 }
 ```
 
@@ -65,7 +65,6 @@ This example session assumes a basic `rpg` function as described in the previous
 The first time you run the program, a new hero is created at the user's home directory.
 
     ~ $ rpg
-
         hero[1]@home
         hp:[xxxxxxxxxx] 25/25
         xp:[----------] 0/30
@@ -76,9 +75,8 @@ The first time you run the program, a new hero is created at the user's home dir
 
 When running without parameters, as above, the hero status is printed (health points, accumulated experience, etc.). If you pass in a path as parameter, that will instruct the hero to move:
 
-    ~ $ rpg dev/
+    ~ $ rpg cd dev/
     ~/dev $ rpg
-
         hero[1]@~/dev
         hp:[xxxxxxxxxx] 25/25
         xp:[----------] 0/30
@@ -90,28 +88,25 @@ When running without parameters, as above, the hero status is printed (health po
 In this case, the hero moved to `~/dev/facundoolano`. Sometimes enemies will appear as you move through the directories,
 and both characters will engage in battle:
 
-    ~/dev $ rpg facundoolano/
-
+    ~/dev $ rpg cd facundoolano/
        snake[1][xxxx]@~/dev/facundoolano
-
        snake[1][x---] -12hp
         hero[1][xxxx]  dodged!
        snake[1][----] -12hp
-
-        hero[1][xxxx][xxxx]@~/dev/facundoolano +24xp +75g
+        hero[1][xxxx] +24xp +75g
+        hero[1][xxxx][xxxx]@~/dev/facundoolano
 
 Each character attacks in turn (the frequency being determined by their `speed` stat).
 Whenever you win a fight, your hero gains experience points and eventually raises its level, along with their other stats.
 
 When you return to the home directory, the hero's health points are restored:
 
-    ~/dev/facundoolano/rpg-cli $ rpg ~
+    ~/dev/facundoolano/rpg-cli $ rpg cd ~
         hero[1][xxxx][xxxx]@home +20hp
 
 Also at the home directory, you can buy items and equipment:
 
-    ~ $ rpg --shop
-
+    ~ $ rpg buy
         sword[1]    500g
         shield[1]   500g
         potion[1]   200g
@@ -119,9 +114,8 @@ Also at the home directory, you can buy items and equipment:
 
         funds: 275g
 
-    ~ $ rpg --shop potion
+    ~ $ rpg buy potion
     ~ $ rpg
-
         hero[3]@home
         hp:[xxxxxxxxxx] 37/37
         xp:[xx--------] 19/155
@@ -130,29 +124,22 @@ Also at the home directory, you can buy items and equipment:
         item:{potion[1]x1}
         75g
 
-The shortcut `rpg -s p` would also work above.
+The shortcut `rpg b p` would also work above.
 
 The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health your hero is likely to die in battle, causing the game to restart.
 
-    ~ $ rpg ~/dev/facundoolano/rpg-cli/target/debug/examples/
-
+    ~ $ rpg cd ~/dev/facundoolano/rpg-cli/target/debug/examples/
          orc[1][xxxx]@~/dev/facundoolano/rpg-cli
-
         hero[1][x---] -20hp critical!
          orc[1][xxx-] -9hp
         hero[1][----] -16hp
-
-        hero[1][----][----]@~/dev/facundoolano/rpg-cli 💀
+        hero[1][----] 💀
 
 Death is permanent: you can't save your progress and reload after dying, but if you take your new hero to the location of the previous one's death,
 you can recover gold, items and equipment:
 
     ~ $ rpg ~/dev/facundoolano/rpg-cli/
-
-        🪦 @~/dev/facundoolano/rpg-cli/
-
-        +potionx1
-        +75g
+       hero[🪦]@~/dev/facundoolano/rpg-cli/ +potionx1 +75g
 
 
 Try `rpg --help` for more options.
