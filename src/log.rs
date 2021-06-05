@@ -4,20 +4,32 @@ use crate::game::Game;
 use crate::item::shop;
 use crate::location::Location;
 use colored::*;
+use once_cell::sync::OnceCell;
 
-const QUIET: bool = false;
-const PLAIN: bool = false;
+// This are initialized based on input args and then act as constants
+// this prevents having to pass around the flags or lazily parsing the opts
+static QUIET: OnceCell<bool> = OnceCell::new();
+static PLAIN: OnceCell<bool> = OnceCell::new();
 
 /// Set the global output preferences
 pub fn init(quiet: bool, plain: bool) {
-    todo!();
+    QUIET.set(quiet).unwrap();
+    PLAIN.set(plain).unwrap();
+}
+
+fn quiet() -> bool {
+    *QUIET.get().unwrap_or(&false)
+}
+
+fn plain() -> bool {
+    *PLAIN.get().unwrap_or(&false)
 }
 
 /// Print the hero status according to options
 pub fn status(game: &Game) {
-    if PLAIN {
+    if plain() {
         plain_status(game);
-    } else if QUIET {
+    } else if quiet() {
         short_status(game);
     } else {
         long_status(&game)
