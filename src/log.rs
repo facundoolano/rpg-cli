@@ -59,7 +59,8 @@ pub fn run_away_failure(player: &Character) {
 }
 
 pub fn tombstone(location: &Location, items: &[String], gold: i32) {
-    print!("    \u{1FAA6} @{}", location);
+    let name = format!("{:>8}", "hero");
+    print!("{}[\u{1FAA6} ]@{}", name, location);
     if gold > 0 {
         print!(" {}", format_gold_plus(gold));
     }
