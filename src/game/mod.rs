@@ -134,7 +134,6 @@ impl Game {
     /// If there's a tombstone laying in the current location, pick up its items
     fn pick_up_tombstone(&mut self) -> bool {
         if let Some(mut tombstone) = self.tombstones.remove(&self.location) {
-            log::tombstone_found(&self.location);
             tombstone.pick_up(self);
             true
         } else {
@@ -200,7 +199,7 @@ impl Game {
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
 
-            log::battle_won(&self.player, xp, level_up, gold);
+            log::battle_won(&self, xp, level_up, gold);
             Ok(())
         } else {
             // leave hero items in the location

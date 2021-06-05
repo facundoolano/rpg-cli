@@ -58,21 +58,15 @@ pub fn run_away_failure(player: &Character) {
     battle_log(&player, "can't run!");
 }
 
-pub fn tombstone_found(location: &Location) {
+pub fn tombstone(location: &Location, items: &[String], gold: i32) {
     print!("    \u{1FAA6} @{}", location);
-}
-
-pub fn tombstone_items(items: &[String], gold: i32) {
     if gold > 0 {
-        println!(" {}", format_gold_plus(gold));
-    } else {
-        println!();
+        print!(" {}", format_gold_plus(gold));
     }
-    if !quiet() {
-        for item in items {
-            println!("    +{}", item);
-        }
+    for item in items {
+        print!(" +{}", item);
     }
+    println!();
 }
 
 pub fn heal(player: &Character, location: &Location, recovered: i32) {
@@ -110,7 +104,7 @@ pub fn battle_lost(player: &Character) {
     battle_log(&player, "\u{1F480}");
 }
 
-pub fn battle_won(player: &Character, xp: i32, levels_up: i32, gold: i32) {
+pub fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32) {
     let level_str = if levels_up > 0 {
         let plus = (0..levels_up).map(|_| "+").collect::<String>();
         format!(" {}level", plus).cyan().to_string()
@@ -119,7 +113,7 @@ pub fn battle_won(player: &Character, xp: i32, levels_up: i32, gold: i32) {
     };
 
     battle_log(
-        &player,
+        &game.player,
         &format!(
             "{}{} {}",
             format!("+{}xp", xp).bold(),
@@ -127,6 +121,7 @@ pub fn battle_won(player: &Character, xp: i32, levels_up: i32, gold: i32) {
             format_gold_plus(gold)
         ),
     );
+    short_status(game);
 }
 
 fn long_status(game: &Game) {
