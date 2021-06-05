@@ -131,7 +131,7 @@ fn status(game: &Game, quiet: bool, plain: bool) {
 fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) -> i32 {
     if let Ok(dest) = Location::from(&dest) {
         if force {
-            game.location = dest;
+            game.visit(dest);
         } else if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
             game.reset();
             return 1;
