@@ -74,9 +74,10 @@ impl Game {
         while self.location != *dest {
             self.visit(self.location.go_to(&dest));
 
-            // TODO extract and reuse for battle
-            if let Some(mut enemy) = self.maybe_spawn_enemy() {
-                return self.maybe_battle(&mut enemy, run, bribe);
+            if !self.location.is_home() {
+                if let Some(mut enemy) = self.maybe_spawn_enemy() {
+                    return self.maybe_battle(&mut enemy, run, bribe);
+                }
             }
         }
         Ok(())
