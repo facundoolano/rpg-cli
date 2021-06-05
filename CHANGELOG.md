@@ -2,15 +2,18 @@
 
 ## Unreleased
 ### Added
-* --battle initiates a battle (with a probability) at the hero's current location b349362
-* --mv sets the hero location without initiating battles, intended for custom shell integrations 7ab2401
-* --stat,-s prints the hero status 8da1090
-*  This Changelog
+* This Changelog
+* `rpg cd -f` sets the hero location without initiating battles, intended for custom shell integrations
+* `rpg battle` initiates a battle (with a probability) at the hero's current location.
+* --quiet,-q option to reduce output while changing directories and printing the hero status.
+* --plain to facilitate scripting around the hero stats.
+* Documentation for shell integrations.
 
 ### Changed
-* `rpg` without args moves the hero to home and `rpg -` moves it to `$OLDPWD` (when present) to match the `cd` behavior 4ba4c59
-* --shop,-s renamed to --buy,-b and --inventory,-i renamed to --use,-u f737a81
-* always print hero location on cd command 05b661e
+* General command overhaul, now all actions are done via a subcommand: `rpg cd`, `rpg stat`, etc., with status printing being the default.
+* `rpg cd` without args moves the hero to home and `rpg cd -` moves it to `$OLDPWD` (when present) to match the `cd` behavior 4ba4c59
+* --shop,-s renamed to buy,b and --inventory,-i renamed to use,u f737a81
+* Removed most empty lines from output.
 
 ## [0.3.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.2.0) - 2021-05-28
 ### Added
