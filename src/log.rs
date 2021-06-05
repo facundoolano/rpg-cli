@@ -52,7 +52,6 @@ pub fn bribe_failure(player: &Character) {
 
 pub fn run_away_success(player: &Character) {
     battle_log(&player, "fled!");
-    println!();
 }
 
 pub fn run_away_failure(player: &Character) {
@@ -60,19 +59,18 @@ pub fn run_away_failure(player: &Character) {
 }
 
 pub fn tombstone_found(location: &Location) {
-    println!("    \u{1FAA6} @{}", location);
+    print!("    \u{1FAA6} @{}", location);
 }
 
 pub fn tombstone_items(items: &[String], gold: i32) {
+    if gold > 0 {
+        println!(" {}", format_gold_plus(gold));
+    } else {
+        println!();
+    }
     if !quiet() {
-        if gold > 0 || !items.is_empty() {
-            println!();
-        }
         for item in items {
             println!("    +{}", item);
-        }
-        if gold > 0 {
-            println!("    {}", format_gold_plus(gold));
         }
     }
 }
