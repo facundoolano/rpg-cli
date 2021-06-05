@@ -70,34 +70,27 @@ enum Command {
 }
 
 fn main() {
-    let opts: Opts = Opts::parse();
-
-    let mut game = Game::load().unwrap_or_else(|_| Game::new());
     let mut exit_code = 0;
+    let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
+    let opts: Opts = Opts::parse();
+    // print status as the default command if non is provided
     let cmd = opts.cmd.unwrap_or(Command::Stat);
+
     match cmd {
         Command::Stat => log::status(&game),
-        Command::PrintWorkDir => println!("{}", game.location.path_string()),
         Command::ChangeDir {
             destination,
             run,
             bribe,
-            force: false,
+            force,
         } => {
-            exit_code = go_to(&mut game, &destination, run, bribe);
-        }
-        Command::ChangeDir {
-            destination,
-            force: true,
-            ..
-        } => {
-            // FIXME move this special case to the general change dir handling
-            mv(&mut game, &destination);
+            exit_code = change_dir(&mut game, &destination, run, bribe, force);
         }
         Command::Battle { run, bribe } => {
             exit_code = battle(&mut game, run, bribe);
         }
+        Command::PrintWorkDir => println!("{}", game.location.path_string()),
         Command::Reset => game.reset(),
         Command::Buy { item } => shop(&mut game, &item),
         Command::Use { item } => use_item(&mut game, &item),
@@ -107,29 +100,28 @@ fn main() {
     std::process::exit(exit_code);
 }
 
-/// Main command, attempt to move the hero to the supplied location,
-/// possibly engaging in combat along the way.
-fn go_to(game: &mut Game, dest: &str, run: bool, bribe: bool) -> i32 {
-    let mut exit_code = 0;
+/// Attempt to move the hero to the supplied location, possibly engaging
+/// in combat along the way.
+fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) -> i32 {
     if let Ok(dest) = Location::from(&dest) {
-        if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
+        if force {
+            game.location = dest;
+        } else if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
             game.reset();
-            exit_code = 1;
+            return 1;
         }
-        // FIXME this verbosity is annoying when using as a cd alias
-        // it's not a good default. Re-enable based on a verbosity flag
-        // log::short_status(&game);
     } else {
         println!("No such file or directory");
-        exit_code = 1
+        return 1;
     }
-    exit_code
+    0
 }
 
 /// Potentially run a battle at the current location, independently from
 /// the hero's movement.
 fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
     let mut exit_code = 0;
+    // TODO try to wrap this in game?
     if let Some(mut enemy) = game.maybe_spawn_enemy() {
         if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
             game.reset();
@@ -137,17 +129,6 @@ fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
         }
     }
     exit_code
-}
-
-/// Override the hero's current location.
-/// Intended for finer-grained shell integration.
-fn mv(game: &mut Game, dest: &str) {
-    if let Ok(dest) = Location::from(&dest) {
-        game.location = dest;
-    } else {
-        println!("No such file or directory");
-        std::process::exit(1);
-    }
 }
 
 /// Buy an item from the shop or list the available items if no item name is provided.
