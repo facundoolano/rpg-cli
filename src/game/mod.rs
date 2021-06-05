@@ -72,23 +72,29 @@ impl Game {
     /// at a time, with some chance of enemies appearing on each one.
     pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), Error> {
         while self.location != *dest {
-            self.location.go_to(&dest);
-            if self.location.is_home() {
-                self.visit_home();
-            } else if self.pick_up_tombstone() {
-                return Ok(());
-            } else if let Some(mut enemy) = self.maybe_spawn_enemy() {
+            self.visit(self.location.go_to(&dest));
+
+            // TODO extract and reuse for battle
+            if let Some(mut enemy) = self.maybe_spawn_enemy() {
                 return self.maybe_battle(&mut enemy, run, bribe);
             }
         }
         Ok(())
     }
 
+    /// Set the hero's location to the one given, and apply related side effects.
+    pub fn visit(&mut self, location: Location) {
+        self.location = location;
+        if self.location.is_home() {
+            let recovered = self.player.heal_full();
+            log::heal(&self.player, &self.location, recovered);
+        }
+        self.pick_up_tombstone();
+    }
+
     /// Set the current location to home, and apply related side-effects
     pub fn visit_home(&mut self) {
-        self.location = Location::home();
-        let recovered = self.player.heal_full();
-        log::heal(&self.player, &self.location, recovered);
+        self.visit(Location::home());
     }
 
     pub fn add_item(&mut self, name: &str, item: Box<dyn Item>) {
