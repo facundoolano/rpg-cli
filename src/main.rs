@@ -14,45 +14,55 @@ use clap::{crate_version, Clap};
 #[derive(Clap)]
 #[clap(version = crate_version!(), author = "Facundo Olano <facundo.olano@gmail.com>")]
 struct Opts {
+    /// Potentially spawns an enemy in the current directory.
+    #[clap(subcommand)]
+    cmd: Option<Command>,
+}
+
+// FIXME check if the {} is actually necessary
+#[derive(Clap)]
+enum Command {
     /// Moves the hero to the supplied destination.
-    destination: Option<String>,
+    #[clap(name = "cd")]
+    ChangeDir {
+        destination: Option<String>,
 
-    /// Print the hero's stats
-    #[clap(short, long)]
-    stat: bool,
+        /// Attempt to avoid battles by running away.
+        #[clap(long)]
+        run: bool,
 
-    /// Prints the hero's current location
-    #[clap(long)]
-    pwd: bool,
+        /// Attempt to avoid battles by bribing the enemy.
+        #[clap(long)]
+        bribe: bool,
+
+        /// Move the hero's to a different location without spawning enemies.
+        #[clap(short, long)]
+        force: bool,
+    },
 
     /// Resets the current game.
-    #[clap(long)]
-    reset: bool,
-
-    /// Attempt to avoid battles by running away.
-    #[clap(long)]
-    run: bool,
-
-    /// Attempt to avoid battles by bribing the enemy.
-    #[clap(long)]
-    bribe: bool,
+    Reset {},
 
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
-    #[clap(short, long)]
-    buy: bool,
+    Buy { item: Option<String> },
 
     /// Uses an item from the inventory.
-    #[clap(name = "use", short, long)]
-    item: bool,
+    Use { item: Option<String> },
 
-    /// Move the hero's to a different location without spawning enemies.
-    #[clap(long)]
-    mv: Option<String>,
+    /// Prints the hero's current location
+    #[clap(name = "pwd")]
+    PrintWorkDir {},
 
-    /// Potentially spawns an enemy in the current directory.
-    #[clap(long)]
-    battle: bool,
+    Battle {
+        /// Attempt to avoid battles by running away.
+        #[clap(long)]
+        run: bool,
+
+        /// Attempt to avoid battles by bribing the enemy.
+        #[clap(long)]
+        bribe: bool,
+    },
 }
 
 fn main() {
@@ -61,26 +71,40 @@ fn main() {
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
     let mut exit_code = 0;
 
-    if opts.stat {
+    if opts.cmd.is_none() {
         log::status(&game);
-    } else if opts.pwd {
+    } else if let Some(Command::PrintWorkDir {}) = opts.cmd {
         println!("{}", game.location.path_string());
-    } else if let Some(dest) = opts.mv {
-        mv(&mut game, &dest);
-    } else if opts.reset {
-        game.reset()
-    } else if opts.buy {
-        // when -s flag is provided, the positional argument is assumed to be an item
-        shop(&mut game, &opts.destination);
-    } else if opts.item {
-        // when -i flag is provided, the positional argument is assumed to be an item
-        item(&mut game, &opts.destination);
-    } else if opts.battle {
-        exit_code = battle(&mut game, opts.run, opts.bribe);
-    } else {
+    } else if let Some(Command::ChangeDir {
+        destination,
+        run,
+        bribe,
+        force: false,
+    }) = opts.cmd
+    {
         // when omitting the destination, go to home to match `cd` behavior
-        let dest = opts.destination.unwrap_or_else(|| String::from("~"));
-        exit_code = go_to(&mut game, &dest, opts.run, opts.bribe);
+        let dest = destination.unwrap_or_else(|| String::from("~"));
+        exit_code = go_to(&mut game, &dest, run, bribe);
+    } else if let Some(Command::ChangeDir {
+        destination,
+        force: true,
+        ..
+    }) = opts.cmd
+    {
+        // FIXME can this default be specified at clap level?
+        let dest = destination.unwrap_or_else(|| String::from("~"));
+        mv(&mut game, &dest);
+    } else if let Some(Command::Reset {}) = opts.cmd {
+        game.reset()
+    } else if let Some(Command::Buy { item }) = opts.cmd {
+        // when -s flag is provided, the positional argument is assumed to be an item
+        shop(&mut game, &item);
+    } else if let Some(Command::Use { item }) = opts.cmd {
+        // when -i flag is provided, the positional argument is assumed to be an item
+        use_item(&mut game, &item);
+    } else if let Some(Command::Battle { run, bribe }) = opts.cmd {
+        exit_code = battle(&mut game, run, bribe);
+    } else {
     }
 
     game.save().unwrap();
@@ -154,7 +178,7 @@ fn shop(game: &mut Game, item_name: &Option<String>) {
 }
 
 /// Use an item from the inventory or list the inventory contents if no item name is provided.
-fn item(game: &mut Game, item_name: &Option<String>) {
+fn use_item(game: &mut Game, item_name: &Option<String>) {
     if let Some(item_name) = item_name {
         let item_name = sanitize(item_name);
         if let Err(game::Error::ItemNotFound) = game.use_item(&item_name) {
@@ -165,6 +189,7 @@ fn item(game: &mut Game, item_name: &Option<String>) {
     }
 }
 
+// FIXME can this coercion be done as part of clap arg parsing?
 /// Return a clean version of an item/equipment name, including aliases
 fn sanitize(name: &str) -> String {
     let name = name.to_lowercase();
