@@ -22,7 +22,7 @@ Just download the binary for your platform (linux/macOS/windows) from the [GitHu
 ### Installing with Cargo
 Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/getting-started/installation.html#install-rust-and-cargo):
 
-    $ cargo install --git https://github.com/facundoolano/rpg-cli --branch main
+    $ cargo install --git https://github.com/facundoolano/rpg-cli --force --branch main
 
 The binary should be available as `rpg-cli` (assuming you have `~/.cargo/bin` in your `$PATH`).
 
