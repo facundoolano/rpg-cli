@@ -5,6 +5,25 @@ use crate::item::shop;
 use crate::location::Location;
 use colored::*;
 
+const QUIET: bool = false;
+const PLAIN: bool = false;
+
+/// Set the global output preferences
+pub fn init(quiet: bool, plain: bool) {
+    todo!();
+}
+
+/// Print the hero status according to options
+pub fn status(game: &Game) {
+    if PLAIN {
+        plain_status(game);
+    } else if QUIET {
+        short_status(game);
+    } else {
+        long_status(&game)
+    }
+}
+
 pub fn enemy_appears(enemy: &Character, location: &Location) {
     log(&enemy, &location, "\n");
 }
@@ -96,11 +115,11 @@ pub fn battle_won(player: &Character, xp: i32, levels_up: i32, gold: i32) {
     );
 }
 
-pub fn short_status(game: &Game) {
+fn long_status(game: &Game) {
     log(&game.player, &game.location, "");
 }
 
-pub fn plain_status(game: &Game) {
+fn plain_status(game: &Game) {
     let player = &game.player;
     println!(
         "{}[{}]\t@{}\thp:{}/{}\txp:{}/{}\tatt:{}\tdef:{}\tspd:{}\t{}\t{}\tg:{}",
@@ -120,7 +139,7 @@ pub fn plain_status(game: &Game) {
     );
 }
 
-pub fn status(game: &Game) {
+fn short_status(game: &Game) {
     let player = &game.player;
     let location = &game.location;
 

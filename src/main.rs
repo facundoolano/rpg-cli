@@ -16,21 +16,21 @@ use clap::{crate_version, Clap};
 struct Opts {
     #[clap(subcommand)]
     cmd: Option<Command>,
+
+    /// Print succinct output when possible.
+    #[clap(long, short)]
+    quiet: bool,
+
+    /// Print machine-readable output when possible.
+    #[clap(long)]
+    plain: bool,
 }
 
 #[derive(Clap)]
 enum Command {
     /// Display the hero's status.
     #[clap(aliases=&["s", "status"])]
-    Stat {
-        /// Print a short status line.
-        #[clap(long, short)]
-        quiet: bool,
-
-        /// Print a machine-readable status line.
-        #[clap(long)]
-        plain: bool,
-    },
+    Stat,
 
     /// Moves the hero to the supplied destination, potentially initiating battles along the way.
     #[clap(name = "cd")]
@@ -86,14 +86,10 @@ fn main() {
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
     let opts: Opts = Opts::parse();
-    // print status as the default command if non is provided
-    let cmd = opts.cmd.unwrap_or(Command::Stat {
-        quiet: false,
-        plain: false,
-    });
+    log::init(opts.quiet, opts.plain);
 
-    match cmd {
-        Command::Stat { quiet, plain } => status(&game, quiet, plain),
+    match opts.cmd.unwrap_or(Command::Stat) {
+        Command::Stat => log::status(&game),
         Command::ChangeDir {
             destination,
             run,
@@ -113,17 +109,6 @@ fn main() {
 
     game.save().unwrap();
     std::process::exit(exit_code);
-}
-
-/// Print the hero status according to options
-fn status(game: &Game, quiet: bool, plain: bool) {
-    if plain {
-        log::plain_status(game);
-    } else if quiet {
-        log::short_status(game);
-    } else {
-        log::status(&game)
-    }
 }
 
 /// Attempt to move the hero to the supplied location, possibly engaging
