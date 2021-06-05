@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+## [0.4.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.4.0) - 2021-06-05
 ### Added
 * This Changelog
 * `rpg cd -f` sets the hero location without initiating battles, intended for custom shell integrations
@@ -15,7 +16,7 @@
 * --shop,-s renamed to buy,b and --inventory,-i renamed to use,u f737a81
 * Removed most empty lines from output.
 
-## [0.3.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.2.0) - 2021-05-28
+## [0.3.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.3.0) - 2021-05-28
 ### Added
 * Binary upload from travis on GitHub releases #36
 * Experimental support for windows #35
