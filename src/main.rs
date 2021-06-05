@@ -71,40 +71,35 @@ fn main() {
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
     let mut exit_code = 0;
 
-    if opts.cmd.is_none() {
-        log::status(&game);
-    } else if let Some(Command::PrintWorkDir {}) = opts.cmd {
-        println!("{}", game.location.path_string());
-    } else if let Some(Command::ChangeDir {
-        destination,
-        run,
-        bribe,
-        force: false,
-    }) = opts.cmd
-    {
-        // when omitting the destination, go to home to match `cd` behavior
-        let dest = destination.unwrap_or_else(|| String::from("~"));
-        exit_code = go_to(&mut game, &dest, run, bribe);
-    } else if let Some(Command::ChangeDir {
-        destination,
-        force: true,
-        ..
-    }) = opts.cmd
-    {
-        // FIXME can this default be specified at clap level?
-        let dest = destination.unwrap_or_else(|| String::from("~"));
-        mv(&mut game, &dest);
-    } else if let Some(Command::Reset {}) = opts.cmd {
-        game.reset()
-    } else if let Some(Command::Buy { item }) = opts.cmd {
-        // when -s flag is provided, the positional argument is assumed to be an item
-        shop(&mut game, &item);
-    } else if let Some(Command::Use { item }) = opts.cmd {
-        // when -i flag is provided, the positional argument is assumed to be an item
-        use_item(&mut game, &item);
-    } else if let Some(Command::Battle { run, bribe }) = opts.cmd {
-        exit_code = battle(&mut game, run, bribe);
-    } else {
+    match opts.cmd {
+        None => log::status(&game),
+        Some(Command::PrintWorkDir {}) => println!("{}", game.location.path_string()),
+        Some(Command::ChangeDir {
+            destination,
+            run,
+            bribe,
+            force: false,
+        }) => {
+            // when omitting the destination, go to home to match `cd` behavior
+            let dest = destination.unwrap_or_else(|| String::from("~"));
+            exit_code = go_to(&mut game, &dest, run, bribe);
+        }
+        Some(Command::ChangeDir {
+            destination,
+            force: true,
+            ..
+        }) => {
+            // FIXME can this default be specified at clap level?
+            let dest = destination.unwrap_or_else(|| String::from("~"));
+            // FIXME move this special case to the general change dir handling
+            mv(&mut game, &dest);
+        }
+        Some(Command::Battle { run, bribe }) => {
+            exit_code = battle(&mut game, run, bribe);
+        }
+        Some(Command::Reset {}) => game.reset(),
+        Some(Command::Buy { item }) => shop(&mut game, &item),
+        Some(Command::Use { item }) => use_item(&mut game, &item),
     }
 
     game.save().unwrap();
