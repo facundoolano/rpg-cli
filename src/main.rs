@@ -23,7 +23,13 @@ struct Opts {
 enum Command {
     /// Display the hero's status.
     #[clap(aliases=&["s", "status"])]
-    Stat,
+    Stat {
+        #[clap(long, short)]
+        quiet: bool,
+
+        #[clap(long)]
+        plain: bool,
+    },
 
     /// Moves the hero to the supplied destination.
     #[clap(name = "cd")]
@@ -49,11 +55,11 @@ enum Command {
 
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
-    #[clap(alias="b")]
+    #[clap(alias = "b")]
     Buy { item: Option<String> },
 
     /// Uses an item from the inventory.
-    #[clap(alias="u")]
+    #[clap(alias = "u")]
     Use { item: Option<String> },
 
     /// Prints the hero's current location
@@ -77,10 +83,13 @@ fn main() {
 
     let opts: Opts = Opts::parse();
     // print status as the default command if non is provided
-    let cmd = opts.cmd.unwrap_or(Command::Stat);
+    let cmd = opts.cmd.unwrap_or(Command::Stat {
+        quiet: false,
+        plain: false,
+    });
 
     match cmd {
-        Command::Stat => log::status(&game),
+        Command::Stat { quiet, plain } => status(&game, quiet, plain),
         Command::ChangeDir {
             destination,
             run,
@@ -100,6 +109,16 @@ fn main() {
 
     game.save().unwrap();
     std::process::exit(exit_code);
+}
+
+fn status(game: &Game, quiet: bool, plain: bool) {
+    if plain {
+        todo!();
+    } else if quiet {
+        log::short_status(game);
+    } else {
+        log::status(&game)
+    }
 }
 
 /// Attempt to move the hero to the supplied location, possibly engaging
