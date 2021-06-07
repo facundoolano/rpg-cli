@@ -67,6 +67,11 @@ fn attack(
         let damage = random.damage(attacker.damage(receiver));
         let xp = attacker.xp_gained(receiver, damage);
 
+        if receiver.condition.is_none() {
+            let condition = random.produces_condition();
+            receiver.receive_condition(condition);
+        }
+
         if random.is_critical() {
             let damage = damage * 2;
             receiver.receive_damage(damage);

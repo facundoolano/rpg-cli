@@ -8,6 +8,14 @@ pub mod class;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub enum Condition {
+    Burned,
+    Poisoned,
+    Dizzy,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
     #[serde(skip, default = "default_class")]
@@ -23,6 +31,7 @@ pub struct Character {
 
     pub strength: i32,
     pub speed: i32,
+    pub condition: Option<Condition>,
 }
 
 // Always attach the static hero class to deserialized characters
@@ -59,6 +68,7 @@ impl Character {
             current_hp: class.hp.base(),
             strength: class.strength.base(),
             speed: class.speed.base(),
+            condition: None,
         };
 
         for _ in 1..level {
@@ -152,6 +162,10 @@ impl Character {
             damage / (1 + self.level - receiver.level)
         }
     }
+
+    pub fn receive_condition(&mut self, condition: Option<Condition>) {
+        self.condition = condition;
+    }
 }
 
 #[cfg(test)]
@@ -181,6 +195,7 @@ mod tests {
         assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
         assert_eq!(TEST_CLASS.strength.base(), hero.strength);
         assert_eq!(TEST_CLASS.speed.base(), hero.speed);
+        assert_eq!(None, hero.condition);
     }
 
     #[test]
@@ -357,5 +372,13 @@ mod tests {
             assert!(turns_armed < 20);
         }
         // assert!(false);
+    }
+
+    #[test]
+    fn test_receive_condition() {
+        let mut hero = Character::player();
+
+        hero.receive_condition(Some(Condition::Burned));
+        assert_eq!(Condition::Burned, hero.condition.unwrap());
     }
 }

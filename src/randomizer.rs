@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::location;
+use crate::character;
 use rand::Rng;
 use std::cmp::max;
 
@@ -26,6 +27,8 @@ pub trait Randomizer {
     fn gold_gained(&self, base: i32) -> i32;
 
     fn stat_increase(&self, increase: i32) -> i32;
+
+    fn produces_condition(&self) -> Option<character::Condition>;
 }
 
 #[cfg(not(test))]
@@ -111,6 +114,10 @@ impl Randomizer for DefaultRandomizer {
         let mut rng = rand::thread_rng();
         rng.gen_range(min_value..=max_value)
     }
+
+    fn produces_condition(&self) -> Option<character::Condition> {
+        Some(character::Condition::Burned)
+    }
 }
 
 /// The test randomizer just exposes the same functions as the default one
@@ -152,6 +159,10 @@ impl Randomizer for TestRandomizer {
 
     fn stat_increase(&self, increase: i32) -> i32 {
         increase
+    }
+
+    fn produces_condition(&self) -> Option<character::Condition> {
+        None
     }
 }
 
