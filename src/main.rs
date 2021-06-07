@@ -55,7 +55,11 @@ enum Command {
     },
 
     /// Resets the current game.
-    Reset,
+    Reset {
+        /// Reset data files, losing cross-hero progress.
+        #[clap(long)]
+        hard: bool,
+    },
 
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
@@ -103,7 +107,8 @@ fn main() {
             exit_code = battle(&mut game, run, bribe);
         }
         Command::PrintWorkDir => println!("{}", game.location.path_string()),
-        Command::Reset => game.reset(),
+        Command::Reset{hard: false} => game.reset(),
+        Command::Reset{hard: true} => game.reset_hard(),
         Command::Buy { item } => shop(&mut game, &item),
         Command::Use { item } => use_item(&mut game, &item),
     }

@@ -68,6 +68,15 @@ impl Game {
         *self = new_game;
     }
 
+    pub fn reset_hard(&mut self) {
+        let rpg_dir = rpg_dir();
+        if !rpg_dir.exists() {
+            fs::remove_dir_all(&rpg_dir).unwrap();
+        }
+
+        *self = Self::new();
+    }
+
     /// Move the hero's location towards the given destination, one directory
     /// at a time, with some chance of enemies appearing on each one.
     pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), Error> {
