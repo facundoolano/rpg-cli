@@ -41,11 +41,11 @@ impl Location {
 
     /// Return a new location that it's one dir closer to the given destination.
     pub fn go_to(&self, dest: &Self) -> Self {
-        let next = if !dest.path.starts_with(&self.path) {
-            self.path.parent().unwrap().to_path_buf()
-        } else {
+        let next = if dest.path.starts_with(&self.path) {
             let self_len = self.path.components().count();
             dest.path.components().take(self_len + 1).collect()
+        } else {
+            self.path.parent().unwrap().to_path_buf()
         };
         Self { path: next }
     }

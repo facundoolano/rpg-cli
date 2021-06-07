@@ -32,30 +32,30 @@ pub fn status(game: &Game) {
     } else if quiet() {
         short_status(game);
     } else {
-        long_status(&game)
+        long_status(game)
     }
 }
 
 pub fn enemy_appears(enemy: &Character, location: &Location) {
-    log(&enemy, &location, "");
+    log(enemy, location, "");
 }
 
 pub fn bribe_success(player: &Character, amount: i32) {
     let suffix = format!("bribed {}", format!("-{}g", amount).yellow());
-    battle_log(&player, &suffix);
+    battle_log(player, &suffix);
     println!();
 }
 
 pub fn bribe_failure(player: &Character) {
-    battle_log(&player, "can't bribe!");
+    battle_log(player, "can't bribe!");
 }
 
 pub fn run_away_success(player: &Character) {
-    battle_log(&player, "fled!");
+    battle_log(player, "fled!");
 }
 
 pub fn run_away_failure(player: &Character) {
-    battle_log(&player, "can't run!");
+    battle_log(player, "can't run!");
 }
 
 pub fn tombstone(location: &Location, items: &[String], gold: i32) {
@@ -73,8 +73,8 @@ pub fn tombstone(location: &Location, items: &[String], gold: i32) {
 pub fn heal(player: &Character, location: &Location, recovered: i32) {
     if recovered > 0 {
         log(
-            &player,
-            &location,
+            player,
+            location,
             &format!("+{}hp", recovered).green().to_string(),
         );
     }
@@ -83,7 +83,7 @@ pub fn heal(player: &Character, location: &Location, recovered: i32) {
 pub fn potion(player: &Character, recovered: i32) {
     if recovered > 0 {
         battle_log(
-            &player,
+            player,
             &format!("+{}hp potion", recovered).green().to_string(),
         );
     }
@@ -91,18 +91,18 @@ pub fn potion(player: &Character, recovered: i32) {
 
 pub fn player_attack(enemy: &Character, attack: Attack) {
     if !quiet() {
-        battle_log(&enemy, &format_attack(attack, "white"));
+        battle_log(enemy, &format_attack(attack, "white"));
     }
 }
 
 pub fn enemy_attack(player: &Character, attack: Attack) {
     if !quiet() {
-        battle_log(&player, &format_attack(attack, "bright red"));
+        battle_log(player, &format_attack(attack, "bright red"));
     }
 }
 
 pub fn battle_lost(player: &Character) {
-    battle_log(&player, "\u{1F480}");
+    battle_log(player, "\u{1F480}");
 }
 
 pub fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32) {
@@ -129,16 +129,16 @@ fn long_status(game: &Game) {
     let player = &game.player;
     let location = &game.location;
 
-    println!("{}@{}", format_character(&player), location);
+    println!("{}@{}", format_character(player), location);
     println!(
         "    hp:{} {}/{}",
-        hp_display(&player, 10),
+        hp_display(player, 10),
         player.current_hp,
         player.max_hp
     );
     println!(
         "    xp:{} {}/{}",
-        xp_display(&player, 10),
+        xp_display(player, 10),
         player.xp,
         player.xp_for_next()
     );
@@ -148,8 +148,8 @@ fn long_status(game: &Game) {
         player.deffense(),
         player.speed
     );
-    println!("    {}", format_equipment(&player));
-    println!("    {}", format_inventory(&game));
+    println!("    {}", format_equipment(player));
+    println!("    {}", format_inventory(game));
     println!("    {}", format_gold(game.gold));
 }
 
@@ -193,9 +193,9 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
 fn log(character: &Character, location: &Location, suffix: &str) {
     println!(
         "{}{}{}@{} {}",
-        format_character(&character),
-        hp_display(&character, 4),
-        xp_display(&character, 4),
+        format_character(character),
+        hp_display(character, 4),
+        xp_display(character, 4),
         location,
         suffix
     );
@@ -204,8 +204,8 @@ fn log(character: &Character, location: &Location, suffix: &str) {
 fn battle_log(character: &Character, suffix: &str) {
     println!(
         "{}{} {}",
-        format_character(&character),
-        hp_display(&character, 4),
+        format_character(character),
+        hp_display(character, 4),
         suffix
     );
 }

@@ -72,7 +72,7 @@ impl Game {
     /// at a time, with some chance of enemies appearing on each one.
     pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), Error> {
         while self.location != *dest {
-            self.visit(self.location.go_to(&dest));
+            self.visit(self.location.go_to(dest));
 
             if !self.location.is_home() {
                 if let Some(mut enemy) = self.maybe_spawn_enemy() {
@@ -200,7 +200,7 @@ impl Game {
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
 
-            log::battle_won(&self, xp, level_up, gold);
+            log::battle_won(self, xp, level_up, gold);
             Ok(())
         } else {
             // leave hero items in the location

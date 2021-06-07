@@ -45,7 +45,7 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
 fn player_attack(game: &Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
     let (damage, new_xp) = attack(&game.player, enemy, random);
-    log::player_attack(&enemy, damage);
+    log::player_attack(enemy, damage);
     new_xp
 }
 
@@ -64,8 +64,8 @@ fn attack(
     if random.is_miss(attacker.speed, receiver.speed) {
         (Attack::Miss, 0)
     } else {
-        let damage = random.damage(attacker.damage(&receiver));
-        let xp = attacker.xp_gained(&receiver, damage);
+        let damage = random.damage(attacker.damage(receiver));
+        let xp = attacker.xp_gained(receiver, damage);
 
         if random.is_critical() {
             let damage = damage * 2;
@@ -87,7 +87,7 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
 
     // If there's a good chance of winning the battle on the next attack,
     // don't use the potion.
-    let potential_damage = game.player.damage(&enemy);
+    let potential_damage = game.player.damage(enemy);
     if potential_damage >= enemy.current_hp {
         return false;
     }
