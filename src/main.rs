@@ -6,6 +6,7 @@ mod item;
 mod location;
 mod log;
 mod randomizer;
+mod quest;
 
 use crate::location::Location;
 use clap::{crate_version, AppSettings, Clap};
