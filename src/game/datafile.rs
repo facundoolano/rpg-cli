@@ -1,7 +1,7 @@
 use std::{fs, io, path};
 
 pub fn read() -> io::Result<Vec<u8>> {
-    fs::read(data_file())
+    fs::read(file())
 }
 
 pub fn write(data: Vec<u8>) -> Result<(), io::Error> {
@@ -9,7 +9,7 @@ pub fn write(data: Vec<u8>) -> Result<(), io::Error> {
     if !rpg_dir.exists() {
         fs::create_dir(&rpg_dir).unwrap();
     }
-    fs::write(data_file(), &data)
+    fs::write(file(), &data)
 }
 
 pub fn remove() {
@@ -23,6 +23,6 @@ fn rpg_dir() -> path::PathBuf {
     dirs::home_dir().unwrap().join(".rpg")
 }
 
-fn data_file() -> path::PathBuf {
+fn file() -> path::PathBuf {
     rpg_dir().join("data")
 }

@@ -123,7 +123,7 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
         if force {
             game.visit(dest);
         } else if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
-            game.reset();
+            game.reset(false);
             return 1;
         }
     } else {
@@ -139,7 +139,7 @@ fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
     let mut exit_code = 0;
     if let Some(mut enemy) = game.maybe_spawn_enemy() {
         if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
-            game.reset();
+            game.reset(false);
             exit_code = 1;
         }
     }

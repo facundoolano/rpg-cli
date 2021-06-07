@@ -12,7 +12,7 @@ use std::io;
 use tombstone::Tombstone;
 
 pub mod battle;
-mod data;
+mod datafile;
 pub mod tombstone;
 
 #[derive(Debug)]
@@ -43,14 +43,14 @@ impl Game {
     }
 
     pub fn load() -> Result<Self, Error> {
-        let data: Vec<u8> = data::read().or(Err(Error::NoDataFile))?;
+        let data: Vec<u8> = datafile::read().or(Err(Error::NoDataFile))?;
         let game: Game = bincode::deserialize(&data).unwrap();
         Ok(game)
     }
 
     pub fn save(&self) -> Result<(), io::Error> {
         let data = bincode::serialize(&self).unwrap();
-        data::write(data)
+        datafile::write(data)
     }
 
     /// Remove the game data and reset this reference.
@@ -59,8 +59,7 @@ impl Game {
         let mut new_game = Self::new();
 
         if hard {
-            // remove the data files
-            data::remove();
+            datafile::remove();
         } else {
             // preserve tombstones across hero's lifes
             new_game.tombstones = self.tombstones.drain().collect();
