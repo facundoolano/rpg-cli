@@ -55,18 +55,19 @@ impl Game {
 
     /// Remove the game data and reset this reference.
     /// Tombstones are preserved across games.
-    pub fn reset(&mut self) {
-        // move the tombstones to the new game
+    pub fn reset(&mut self, hard: bool) {
         let mut new_game = Self::new();
-        new_game.tombstones = self.tombstones.drain().collect();
+
+        if hard {
+            // remove the data files
+            data::remove();
+        } else {
+            // preserve tombstones across hero's lifes
+            new_game.tombstones = self.tombstones.drain().collect();
+        }
 
         // replace the current, finished game with the new one
         *self = new_game;
-    }
-
-    pub fn reset_hard(&mut self) {
-        data::remove();
-        *self = Self::new();
     }
 
     /// Move the hero's location towards the given destination, one directory
