@@ -107,8 +107,8 @@ fn main() {
             exit_code = battle(&mut game, run, bribe);
         }
         Command::PrintWorkDir => println!("{}", game.location.path_string()),
-        Command::Reset{hard: false} => game.reset(),
-        Command::Reset{hard: true} => game.reset_hard(),
+        Command::Reset { hard: false } => game.reset(),
+        Command::Reset { hard: true } => game.reset_hard(),
         Command::Buy { item } => shop(&mut game, &item),
         Command::Use { item } => use_item(&mut game, &item),
     }

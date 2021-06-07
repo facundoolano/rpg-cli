@@ -8,10 +8,11 @@ use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::{fs, io, path};
+use std::io;
 use tombstone::Tombstone;
 
 pub mod battle;
+mod data;
 pub mod tombstone;
 
 #[derive(Debug)]
@@ -42,19 +43,14 @@ impl Game {
     }
 
     pub fn load() -> Result<Self, Error> {
-        let data = fs::read(data_file()).or(Err(Error::NoDataFile))?;
+        let data: Vec<u8> = data::read().or(Err(Error::NoDataFile))?;
         let game: Game = bincode::deserialize(&data).unwrap();
         Ok(game)
     }
 
     pub fn save(&self) -> Result<(), io::Error> {
-        let rpg_dir = rpg_dir();
-        if !rpg_dir.exists() {
-            fs::create_dir(&rpg_dir).unwrap();
-        }
-
         let data = bincode::serialize(&self).unwrap();
-        fs::write(data_file(), &data)
+        data::write(data)
     }
 
     /// Remove the game data and reset this reference.
@@ -69,11 +65,7 @@ impl Game {
     }
 
     pub fn reset_hard(&mut self) {
-        let rpg_dir = rpg_dir();
-        if !rpg_dir.exists() {
-            fs::remove_dir_all(&rpg_dir).unwrap();
-        }
-
+        data::remove();
         *self = Self::new();
     }
 
@@ -226,14 +218,6 @@ impl Default for Game {
     fn default() -> Self {
         Self::new()
     }
-}
-
-fn rpg_dir() -> path::PathBuf {
-    dirs::home_dir().unwrap().join(".rpg")
-}
-
-fn data_file() -> path::PathBuf {
-    rpg_dir().join("data")
 }
 
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
