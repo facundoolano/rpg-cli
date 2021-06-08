@@ -157,7 +157,7 @@ mod tests {
         assert_eq!(1, game.quests.done.len());
 
         game.gold = 10;
-        game.reset(false);
+        game.reset();
         // verify that the reset did something
         assert_eq!(0, game.gold);
 
