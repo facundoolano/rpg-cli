@@ -69,7 +69,7 @@ fn attack(
         // Randomly get condition for now. It may later be consequence of the
         // attacker's feasiblity ratio to produce a certain condition and receiver's to get it
         let condition = random.condition(attacker.produces_condition(receiver));
-        if !condition.is_none() {
+        if condition.is_some() {
             receiver.receive_condition(condition);
         }
 

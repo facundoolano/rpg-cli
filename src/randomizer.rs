@@ -171,10 +171,7 @@ impl Randomizer for TestRandomizer {
         increase
     }
 
-    fn condition(
-        &self,
-        _produce_condition: bool,
-    ) -> Option<character::Condition> {
+    fn condition(&self, _produce_condition: bool) -> Option<character::Condition> {
         None
     }
 }
