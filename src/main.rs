@@ -9,6 +9,7 @@ mod randomizer;
 
 use crate::location::Location;
 use clap::{crate_version, AppSettings, Clap};
+use character::subclass::SubclassType;
 
 /// Your filesystem as a dungeon!
 #[derive(Clap)]
@@ -84,6 +85,10 @@ enum Command {
         #[clap(long)]
         bribe: bool,
     },
+
+    /// Add a new class to the hero
+    #[clap(alias = "nc", display_order = 4)]
+    NewClass { subclass: Option<String> },
 }
 
 fn main() {
@@ -110,6 +115,7 @@ fn main() {
         Command::Reset { hard } => game.reset(hard),
         Command::Buy { item } => shop(&mut game, &item),
         Command::Use { item } => use_item(&mut game, &item),
+        Command::NewClass { subclass } => add_new_class(&mut game, &subclass),
     }
 
     game.save().unwrap();
@@ -192,4 +198,11 @@ fn sanitize(name: &str) -> String {
         n => n,
     };
     name.to_string()
+}
+
+/// Attempt to add a new sub class
+fn add_new_class(game: &mut Game, subclass: &Option<String>) {
+    if let Some(subclass) = subclass {
+        let subclass = sanitize(subclass);
+    }
 }

@@ -5,8 +5,11 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
+pub mod subclass;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
+use subclass::Subclass;
+use subclass::SubclassType;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
@@ -21,8 +24,13 @@ pub struct Character {
     pub max_hp: i32,
     pub current_hp: i32,
 
+    pub max_mp: i32,
+    pub current_mp: i32,
+
     pub strength: i32,
     pub speed: i32,
+
+    pub subclasses: Vec<Subclass>,
 }
 
 // Always attach the static hero class to deserialized characters
@@ -57,8 +65,11 @@ impl Character {
             xp: 0,
             max_hp: class.hp.base(),
             current_hp: class.hp.base(),
+            max_mp: class.mp.base(),
+            current_mp: class.mp.base(),
             strength: class.strength.base(),
             speed: class.speed.base(),
+            subclasses: Vec::new(),
         };
 
         for _ in 1..level {
@@ -75,7 +86,7 @@ impl Character {
         self.strength += random().stat_increase(self.class.strength.increase());
         self.speed += random().stat_increase(self.class.speed.increase());
 
-        // the current should increase proportionally but not
+        // the current hp should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
         self.max_hp += random().stat_increase(self.class.hp.increase());
@@ -150,6 +161,13 @@ impl Character {
             damage * (1 + receiver.level - self.level)
         } else {
             damage / (1 + self.level - receiver.level)
+        }
+    }
+
+    pub fn add_subclass(&self, subclass: SubclassType) {
+        match subclass {
+            SubclassType::Warrior => self.subclasses.push(Subclass::new_warrior()),
+            SubclassType::Apprentice => self.subclasses.push(Subclass::new_apprentice()),
         }
     }
 }
