@@ -33,7 +33,6 @@ impl Quest for WinBattle {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BuySword {
     done: bool,
@@ -60,7 +59,7 @@ impl Quest for BuySword {
     }
 
     fn handle(&mut self, event: &Event) {
-        if let Event::ItemBought{ item } = event {
+        if let Event::ItemBought { item } = event {
             if item == "sword" {
                 self.done = true;
             }
@@ -94,7 +93,7 @@ impl Quest for UsePotion {
     }
 
     fn handle(&mut self, event: &Event) {
-        if let Event::ItemUsed{ item } = event {
+        if let Event::ItemUsed { item } = event {
             if item == "potion" {
                 self.done = true;
             }
@@ -102,21 +101,23 @@ impl Quest for UsePotion {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReachLevel {
     target: i32,
-    current: i32
+    current: i32,
 }
 
 impl ReachLevel {
     pub fn new(level: i32) -> Self {
-        Self { target: level, current: 1 }
+        Self {
+            target: level,
+            current: 1,
+        }
     }
 }
 
 #[typetag::serde]
-impl Quest for ReachLevel{
+impl Quest for ReachLevel {
     fn description(&self) -> String {
         format!("reach level {}", self.target)
     }
@@ -130,7 +131,7 @@ impl Quest for ReachLevel{
     }
 
     fn handle(&mut self, event: &Event) {
-        if let Event::BattleWon{ levels_up, .. } = event {
+        if let Event::BattleWon { levels_up, .. } = event {
             self.current += levels_up
         }
     }
