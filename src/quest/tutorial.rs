@@ -22,7 +22,7 @@ impl Quest for WinBattle {
         self.done
     }
 
-    fn reward(&self) -> i32 {
+    fn reward(&self) -> i32  {
         100
     }
 

@@ -139,7 +139,8 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(2, game.player.level);
         assert_eq!(10, game.player.xp);
-        assert_eq!(200, game.gold);
+        // extra 100g for level up quest
+        assert_eq!(300, game.gold);
     }
 
     #[test]
