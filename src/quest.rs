@@ -1,5 +1,6 @@
 use core::fmt;
 use crate::game;
+use crate::log;
 use crate::character::Character;
 use serde::{Deserialize, Serialize};
 
@@ -75,7 +76,7 @@ fn handle(game: &mut game::Game, handler: &dyn Fn(QuestRef)) {
         if quest.is_done() {
             let reward = quest.reward();
             game.gold += reward;
-            // TODO log::quest_done(reward);
+            log::quest_done(reward);
         }
     }
 }

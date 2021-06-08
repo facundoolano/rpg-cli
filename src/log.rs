@@ -186,6 +186,12 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
     println!("\n    funds: {}", format_gold(game.gold));
 }
 
+pub fn quest_done(reward: i32) {
+    if !quiet() {
+        println!("    {} quest completed!", format_gold_plus(reward));
+    }
+}
+
 // HELPERS
 
 /// Generic log function. At the moment all output of the game is structured as
