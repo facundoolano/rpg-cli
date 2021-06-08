@@ -4,6 +4,8 @@ use crate::log;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 
+mod tutorial;
+
 /// Events that can trigger quest updates.
 enum Event {
     BattleWon { enemy: String, levels_up: i32 },
@@ -32,7 +34,7 @@ impl QuestList {
 
     /// Load the quests for a new game
     fn setup(&mut self) {
-        self.todo.push(Box::new(WinBattle { done: false }));
+        self.todo.push(Box::new(tutorial::WinBattle::new()));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
@@ -134,35 +136,6 @@ pub fn handle_tombstone(game: &mut game::Game) {
 
 fn handle(game: &mut game::Game, event: Event) {
     game.gold += game.quests.handle(event);
-}
-
-// QUEST DEFINITIONS
-// TODO consider moving these to other files
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct WinBattle {
-    done: bool,
-}
-
-#[typetag::serde]
-impl Quest for WinBattle {
-    fn description(&self) -> &str {
-        "Win a battle"
-    }
-
-    fn is_done(&self) -> bool {
-        self.done
-    }
-
-    fn reward(&self) -> i32 {
-        100
-    }
-
-    fn handle(&mut self, event: &Event) {
-        if let Event::BattleWon { .. } = event {
-            self.done = true;
-        }
-    }
 }
 
 #[cfg(test)]
