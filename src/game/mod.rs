@@ -9,7 +9,7 @@ use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::io;
 use tombstone::Tombstone;
 
@@ -67,6 +67,7 @@ impl Game {
         // preserve tombstones and quests across hero's lifes
         std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
         std::mem::swap(&mut new_game.quests, &mut self.quests);
+        // TBD shouldn't chests be preserved?
 
         // replace the current, finished game with the new one
         *self = new_game;
@@ -96,17 +97,16 @@ impl Game {
         if !self.inspected.contains(&self.location) {
             self.inspected.insert(self.location.clone());
 
-            match random().range(10) {
+            match random().range(6) {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
                     log::chest_gold(&self.location, gold);
-                },
+                }
                 1 => {
-
                     let potion = Potion::new(self.player.level);
-                    log::chest_item(&self.location, &potion.to_string());
+                    log::chest_item(&self.location, "potion");
                     self.add_item("potion", Box::new(potion));
-                },
+                }
                 _ => {}
             }
         }
