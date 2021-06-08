@@ -60,18 +60,20 @@ impl QuestList {
         total_reward
     }
 
-    // FIXME this should return the string lists instead of calling log directly
-    pub fn list(&self, game: &game::Game) {
-        let todo: Vec<&str> = self
+    pub fn list(&self, game: &game::Game) -> (Vec<String>, Vec<String>) {
+        let todo = self
             .todo
             .iter()
             .filter(|q| q.is_visible(&game))
-            .map(|q| q.description())
+            .map(|q| q.description().to_string())
             .collect();
-        log::quest_list(&todo, self.done.as_slice());
+
+        (todo, self.done.clone())
     }
 }
 
+/// A task that is assigned to the player when certain conditions are met.
+/// New quests should implement this trait and be added to QuestList.setup method.
 #[typetag::serde(tag = "type")]
 trait Quest {
     /// What to show in the TODO quests list
