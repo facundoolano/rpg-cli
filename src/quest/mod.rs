@@ -35,6 +35,9 @@ impl QuestList {
     /// Load the quests for a new game
     fn setup(&mut self) {
         self.todo.push(Box::new(tutorial::WinBattle::new()));
+        self.todo.push(Box::new(tutorial::BuySword::new()));
+        self.todo.push(Box::new(tutorial::UsePotion::new()));
+        self.todo.push(Box::new(tutorial::ReachLevel::new(2)));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
@@ -67,7 +70,7 @@ impl QuestList {
             .todo
             .iter()
             .filter(|q| q.is_visible(&game))
-            .map(|q| q.description().to_string())
+            .map(|q| q.description())
             .collect();
 
         (todo, self.done.clone())
@@ -79,7 +82,7 @@ impl QuestList {
 #[typetag::serde(tag = "type")]
 trait Quest {
     /// What to show in the TODO quests list
-    fn description(&self) -> &str;
+    fn description(&self) -> String;
 
     /// Whether this quest should appear in the quest list
     fn is_visible(&self, _game: &game::Game) -> bool {
