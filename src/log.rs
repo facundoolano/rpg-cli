@@ -95,9 +95,12 @@ pub fn player_attack(enemy: &Character, attack: Attack) {
     }
 }
 
-pub fn enemy_attack(player: &Character, attack: Attack, _condition: Option<Condition>) {
+pub fn enemy_attack(player: &Character, attack: Attack, condition: Option<Condition>) {
     if !quiet() {
         battle_log(player, &format_attack(attack, "bright red"));
+        if condition.is_some() {
+            battle_log(player, &format_condition(condition));
+        }
     }
 }
 
@@ -249,6 +252,21 @@ fn format_attack(attack: Attack, color: &str) -> String {
         Attack::Regular(damage) => format!("-{}hp", damage).color(color).to_string(),
         Attack::Critical(damage) => format!("-{}hp critical!", damage).color(color).to_string(),
         Attack::Miss => " dodged!".to_string(),
+    }
+}
+
+fn format_condition(condition: Option<Condition>) -> String {
+    match condition {
+        Some(Condition::Burned) => String::from("got burned \u{1F525}")
+            .color("bright red")
+            .to_string(),
+        Some(Condition::Poisoned) => String::from("got poisoned \u{1F9EA}")
+            .color("green")
+            .to_string(),
+        Some(Condition::Dizzy) => String::from("got dizzy \u{1F300}")
+            .color("blue")
+            .to_string(),
+        None => String::new(),
     }
 }
 
