@@ -4,6 +4,8 @@ use crate::character::Character;
 use crate::item::Item;
 use crate::location::Location;
 use crate::log;
+use crate::quest;
+use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
@@ -29,16 +31,19 @@ pub struct Game {
     pub gold: i32,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
     tombstones: HashMap<Location, Tombstone>,
+    pub quests: QuestList,
 }
 
 impl Game {
     pub fn new() -> Self {
+        let quests = QuestList::new();
         Self {
             location: Location::home(),
             player: Character::player(),
             gold: 0,
             inventory: HashMap::new(),
             tombstones: HashMap::new(),
+            quests,
         }
     }
 
@@ -54,19 +59,20 @@ impl Game {
     }
 
     /// Remove the game data and reset this reference.
-    /// Tombstones are preserved across games.
-    pub fn reset(&mut self, hard: bool) {
+    /// Progress is preserved across games.
+    pub fn reset(&mut self) {
         let mut new_game = Self::new();
-
-        if hard {
-            datafile::remove();
-        } else {
-            // preserve tombstones across hero's lifes
-            new_game.tombstones = self.tombstones.drain().collect();
-        }
+        // preserve tombstones and quests across hero's lifes
+        std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
+        std::mem::swap(&mut new_game.quests, &mut self.quests);
 
         // replace the current, finished game with the new one
         *self = new_game;
+    }
+
+    /// Recreate the game data, losing all progress.
+    pub fn restet_hard() {
+        datafile::remove();
     }
 
     /// Move the hero's location towards the given destination, one directory
@@ -114,6 +120,7 @@ impl Game {
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(item) = items.pop() {
                 item.apply(self);
+                quest::handle_item_used(self, &name);
             }
 
             if !items.is_empty() {
@@ -202,6 +209,7 @@ impl Game {
             let level_up = self.player.add_experience(xp);
 
             log::battle_won(self, xp, level_up, gold);
+            quest::handle_battle_won(self, &enemy, level_up);
             Ok(())
         } else {
             // leave hero items in the location

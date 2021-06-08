@@ -4,6 +4,7 @@ use super::equipment::{Equipment, Shield, Sword};
 use crate::character::Character;
 use crate::game::Game;
 use crate::log;
+use crate::quest;
 
 pub enum Error {
     NotEnoughGold,
@@ -72,6 +73,7 @@ pub trait Shoppable: Display {
         }
         game.gold -= self.cost();
         self.add_to(game);
+        quest::handle_item_bought(game, &self.to_string());
         Ok(())
     }
     fn add_to(&self, game: &mut Game);

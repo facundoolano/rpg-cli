@@ -2,6 +2,7 @@ use crate::game;
 use crate::item::equipment::{Shield, Sword};
 use crate::item::{equipment::Equipment, Item};
 use crate::log;
+use crate::quest;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -64,6 +65,7 @@ impl Tombstone {
         game.gold += self.gold;
 
         log::tombstone(&game.location, &to_log, self.gold);
+        quest::handle_tombstone(game);
     }
 }
 
