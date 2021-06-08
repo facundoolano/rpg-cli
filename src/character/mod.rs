@@ -168,6 +168,8 @@ impl Character {
         match subclass {
             SubclassType::Warrior => self.subclasses.push(Subclass::new_warrior()),
             SubclassType::Apprentice => self.subclasses.push(Subclass::new_apprentice()),
+            SubclassType::Rogue => self.subclasses.push(Subclass::new_apprentice()),
+            SubclassType::Cleric => self.subclasses.push(Subclass::new_apprentice()),
         }
     }
 }
@@ -182,6 +184,7 @@ mod tests {
         hp: Stat(25, 7),
         strength: Stat(10, 3),
         speed: Stat(10, 2),
+        mp: Stat(10, 2),
     };
 
     fn new_char() -> Character {
@@ -199,6 +202,7 @@ mod tests {
         assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
         assert_eq!(TEST_CLASS.strength.base(), hero.strength);
         assert_eq!(TEST_CLASS.speed.base(), hero.speed);
+        assert_eq!(TEST_CLASS.mp.base(), hero.mp);
     }
 
     #[test]
@@ -214,6 +218,7 @@ mod tests {
         hero.current_hp = 20;
         hero.strength = 10;
         hero.speed = 5;
+        hero.mp = 10;
 
         hero.increase_level();
         assert_eq!(2, hero.level);

@@ -230,10 +230,10 @@ fn map_string_to_subclass(subclass: &str) -> Option<SubclassType> {
 /// Attempt to add a new sub class
 fn add_new_class(game: &mut Game, subclass: &Option<String>) {
     if let Some(subclass) = subclass {
-        let subclass = map_string_to_subclass(sanitize(subclass));
+        let subclass = map_string_to_subclass(&sanitize(subclass));
         match subclass {
-            Some(n) => game.player.add_subclass(subclass),
-            None => println("Invalid subclass")
+            Some(n) => game.player.add_subclass(n),
+            None => println!("Invalid subclass")
         }
     } else {
         println!("Please select one of the following classes to add");

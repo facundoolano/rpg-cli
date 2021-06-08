@@ -7,7 +7,7 @@ use crate::character::class::Stat;
 /// TODO
 /// - implement talents and skills for subclasses to further increase play diversity
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum SubclassType {
     Warrior,
     Apprentice,
@@ -16,7 +16,7 @@ pub enum SubclassType {
 }
 
 impl SubclassType {
-    pub fn get_subclass_name(subclass_type: SubclassType) -> &str {
+    pub fn get_subclass_name(subclass_type: SubclassType) -> &'static str {
         match subclass_type {
             SubclassType::Apprentice    => "Apprentice",
             SubclassType::Cleric        => "Cleric",
@@ -25,7 +25,7 @@ impl SubclassType {
         }
     }
 
-    pub fn get_subclass_names() -> Vec<String> {
+    pub fn get_subclass_names() -> Vec<&'static str> {
         let mut vec = Vec::new();
         vec.push(SubclassType::get_subclass_name(SubclassType::Warrior));
         vec.push(SubclassType::get_subclass_name(SubclassType::Apprentice));
@@ -35,7 +35,7 @@ impl SubclassType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Subclass {
     pub subclass_type: SubclassType,
 
@@ -54,7 +54,7 @@ pub struct Subclass {
 impl Subclass {
 
     fn new(subclass_type: SubclassType, bonus_hp: Stat, bonus_strength: Stat,
-           bonus_speed: Stat, bonus_mp: Stat, special_stat_name: &str,
+           bonus_speed: Stat, bonus_mp: Stat, special_stat_name: &'static str,
            special_stat: Stat) -> Self {
         let mut subclass = Self {
             subclass_type,
@@ -102,8 +102,8 @@ impl Subclass {
     }
 
     /// Class options
-    pub fn new_warrior() -> Self {
-        let mut warrior = Self::new {
+    pub fn new_warrior() -> Subclass {
+        let mut warrior = Subclass::new {
             subclass_type: SubclassType::Warrior,
             bonus_hp: Stat(0, 5),
             bonus_strength: Stat(0, 3),
@@ -117,8 +117,8 @@ impl Subclass {
         warrior
     }
 
-    pub fn new_apprentice() -> Self {
-        let mut apprentice = Self::new {
+    pub fn new_apprentice() -> Subclass {
+        let mut apprentice = Subclass::new {
             subclass_type: SubclassType::Apprentice,
             bonus_hp: Stat(0, 1),
             bonus_strength: Stat(0, 0),
