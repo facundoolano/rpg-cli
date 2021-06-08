@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// Events that can trigger quest updates.
 enum Event {
-    EnemyBeat { enemy: String, levels_up: i32 },
+    BattleWon { enemy: String, levels_up: i32 },
     ItemBought { item: String },
     ItemUsed { item: String },
     TombstoneFound,
@@ -75,7 +75,7 @@ impl fmt::Display for dyn Quest {
 pub fn handle_battle_won(game: &mut game::Game, enemy: &Character, levels_up: i32) {
     handle(
         game,
-        Event::EnemyBeat {
+        Event::BattleWon {
             enemy: enemy.name(),
             levels_up,
         },
@@ -146,7 +146,7 @@ impl Quest for WinBattle {
     }
 
     fn handle(&mut self, event: &Event) {
-        if let Event::EnemyBeat { .. } = event {
+        if let Event::BattleWon { .. } = event {
             self.done = true;
         }
     }
