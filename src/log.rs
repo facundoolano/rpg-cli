@@ -186,6 +186,17 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
     println!("\n    funds: {}", format_gold(game.gold));
 }
 
+pub fn quest_list(todo: &[&str], done: &[&str]) {
+    println!("TODO:");
+    for quest in todo {
+        println!("    {}", quest);
+    }
+    println!("\nDONE:");
+    for quest in done {
+        println!("    {}", quest);
+    }
+}
+
 pub fn quest_done(reward: i32) {
     if !quiet() {
         println!("    {} quest completed!", format_gold_plus(reward));

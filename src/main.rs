@@ -55,13 +55,6 @@ enum Command {
         force: bool,
     },
 
-    /// Resets the current game.
-    Reset {
-        /// Reset data files, losing cross-hero progress.
-        #[clap(long)]
-        hard: bool,
-    },
-
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
     #[clap(alias = "b", display_order = 2)]
@@ -70,6 +63,17 @@ enum Command {
     /// Uses an item from the inventory.
     #[clap(alias = "u", display_order = 3)]
     Use { item: Option<String> },
+
+    /// Prints the quest todo list.
+    #[clap(alias = "t", display_order = 4)]
+    Todo,
+
+    /// Resets the current game.
+    Reset {
+        /// Reset data files, losing cross-hero progress.
+        #[clap(long)]
+        hard: bool,
+    },
 
     /// Prints the hero's current location
     #[clap(name = "pwd")]
@@ -111,6 +115,7 @@ fn main() {
         Command::Reset { hard } => game.reset(hard),
         Command::Buy { item } => shop(&mut game, &item),
         Command::Use { item } => use_item(&mut game, &item),
+        Command::Todo => quest::list(&game)
     }
 
     game.save().unwrap();

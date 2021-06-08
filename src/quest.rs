@@ -40,8 +40,21 @@ pub fn setup (game: &mut game::Game) {
 }
 
 /// TODO
-pub fn list() {
-    todo!();
+pub fn list(game: &game::Game) {
+    let mut todo = Vec::new();
+    let mut done = Vec::new();
+
+    for quest in &game.quests {
+        if quest.is_visible(game) {
+            if quest.is_done() {
+                done.push(quest.description());
+            } else {
+                todo.insert(0, quest.description());
+            }
+        }
+    }
+
+    log::quest_list(&todo, &done);
 }
 
 // EVENT HANDLING
@@ -72,11 +85,14 @@ pub fn handle_tombstone(game: &mut game::Game) {
 
 fn handle(game: &mut game::Game, handler: &dyn Fn(QuestRef)) {
     for quest in game.quests.iter_mut() {
-        handler(quest);
-        if quest.is_done() {
-            let reward = quest.reward();
-            game.gold += reward;
-            log::quest_done(reward);
+        // TODO could just keep the description of done in a separate list
+        if !quest.is_done() {
+            handler(quest);
+            if quest.is_done() {
+                let reward = quest.reward();
+                game.gold += reward;
+                log::quest_done(reward);
+            }
         }
     }
 }
