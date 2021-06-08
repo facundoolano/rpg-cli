@@ -187,14 +187,26 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
 }
 
 pub fn quest_list(todo: &[String], done: &[String]) {
-    println!("TODO:");
-    for quest in todo {
-        println!("    {}", quest);
+    // TODO test with a single list with [ ] and [x], maybe emoji
+
+    if !todo.is_empty() {
+        println!("TODO:");
+        for quest in todo {
+            println!("  - {}", quest);
+        }
     }
-    println!("\nDONE:");
-    for quest in done {
-        println!("    {}", quest);
+
+    if !todo.is_empty() && !done.is_empty() {
+        println!();
     }
+
+    if !done.is_empty() {
+        println!("DONE:");
+        for quest in done {
+            println!("  - {}", quest);
+        }
+    }
+
 }
 
 pub fn quest_done(reward: i32) {
