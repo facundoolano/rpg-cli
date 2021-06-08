@@ -206,7 +206,6 @@ pub fn quest_list(todo: &[String], done: &[String]) {
             println!("  - {}", quest);
         }
     }
-
 }
 
 pub fn quest_done(reward: i32) {

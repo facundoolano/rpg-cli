@@ -100,7 +100,7 @@ fn main() {
     // reset --hard is a special case, it needs to work when we
     // fail to deserialize the game data -- e.g. on backward
     // incompatible changes
-    if let Some(Command::Reset{hard: true}) = opts.cmd {
+    if let Some(Command::Reset { hard: true }) = opts.cmd {
         Game::restet_hard();
     }
 
