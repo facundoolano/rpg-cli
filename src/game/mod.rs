@@ -2,6 +2,7 @@ extern crate dirs;
 
 use crate::character::Character;
 use crate::item::Item;
+use crate::quest;
 use crate::quest::Quest;
 use crate::location::Location;
 use crate::log;
@@ -35,14 +36,16 @@ pub struct Game {
 
 impl Game {
     pub fn new() -> Self {
-        Self {
+        let mut game = Self {
             location: Location::home(),
             player: Character::player(),
             gold: 0,
             inventory: HashMap::new(),
             tombstones: HashMap::new(),
             quests: Vec::new(),
-        }
+        };
+        quest::setup(&mut game);
+        game
     }
 
     pub fn load() -> Result<Self, Error> {
@@ -117,6 +120,7 @@ impl Game {
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(item) = items.pop() {
                 item.apply(self);
+                quest::handle_item_used(self, &name);
             }
 
             if !items.is_empty() {
@@ -205,6 +209,7 @@ impl Game {
             let level_up = self.player.add_experience(xp);
 
             log::battle_won(self, xp, level_up, gold);
+            quest::handle_battle_won(self, &enemy, level_up);
             Ok(())
         } else {
             // leave hero items in the location

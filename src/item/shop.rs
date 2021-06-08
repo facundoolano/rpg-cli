@@ -3,6 +3,7 @@ use std::{collections::HashMap, fmt::Display};
 use super::equipment::{Equipment, Shield, Sword};
 use crate::character::Character;
 use crate::game::Game;
+use crate::quest;
 use crate::log;
 
 pub enum Error {
@@ -72,6 +73,7 @@ pub trait Shoppable: Display {
         }
         game.gold -= self.cost();
         self.add_to(game);
+        quest::handle_item_bought(game, &self.to_string());
         Ok(())
     }
     fn add_to(&self, game: &mut Game);
