@@ -26,6 +26,8 @@ pub trait Randomizer {
     fn gold_gained(&self, base: i32) -> i32;
 
     fn stat_increase(&self, increase: i32) -> i32;
+
+    fn range(&self, max: i32) -> i32;
 }
 
 #[cfg(not(test))]
@@ -111,6 +113,11 @@ impl Randomizer for DefaultRandomizer {
         let mut rng = rand::thread_rng();
         rng.gen_range(min_value..=max_value)
     }
+
+    fn range(&self, max: i32) -> i32 {
+        let mut rng = rand::thread_rng();
+        rng.gen_range(0..max)
+    }
 }
 
 /// The test randomizer just exposes the same functions as the default one
@@ -152,6 +159,10 @@ impl Randomizer for TestRandomizer {
 
     fn stat_increase(&self, increase: i32) -> i32 {
         increase
+    }
+
+    fn range(&self, max: i32) -> i32 {
+        max
     }
 }
 

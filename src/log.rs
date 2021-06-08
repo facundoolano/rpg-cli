@@ -214,6 +214,19 @@ pub fn quest_done(reward: i32) {
     }
 }
 
+pub fn chest_item(location: &Location, item: &str) {
+    format_chest(location, &format!("+{}", item));
+}
+
+pub fn chest_gold(location: &Location, gold: i32) {
+    format_chest(location, &format_gold_plus(gold));
+}
+
+fn format_chest(location: &Location, suffix: &str) {
+    let package = format!("{:>8}", "\u{1F4E6}");
+    println!("\n{}[\u{1F4E6} ]@{} +{}", package, location, suffix);
+}
+
 // HELPERS
 
 /// Generic log function. At the moment all output of the game is structured as
