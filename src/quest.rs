@@ -135,3 +135,33 @@ impl Quest for WinBattle {
         self.done = true;
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_quest_completed () {
+        let mut game = game::Game::new();
+        let fake_enemy = Character::player();
+
+        let initial_quests = game.quests.todo.len();
+        assert!(initial_quests > 0);
+        assert_eq!(0, game.quests.done.len());
+
+        // first quest is to win a battle
+        handle_battle_won(&mut game, &fake_enemy, 0);
+        assert_eq!(initial_quests - 1, game.quests.todo.len());
+        assert_eq!(1, game.quests.done.len());
+
+        game.gold = 10;
+        game.reset(false);
+        // verify that the reset did something
+        assert_eq!(0, game.gold);
+
+        // verify that quests are preserved
+        assert_eq!(initial_quests - 1, game.quests.todo.len());
+        assert_eq!(1, game.quests.done.len());
+    }
+}
