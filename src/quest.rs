@@ -36,25 +36,13 @@ impl fmt::Display for dyn Quest {
 
 /// TODO
 pub fn setup (game: &mut game::Game) {
-    game.quests.push(Box::new(WinBattle{done:false}));
+    game.quests_todo.push(Box::new(WinBattle{done:false}));
 }
 
 /// TODO
 pub fn list(game: &game::Game) {
-    let mut todo = Vec::new();
-    let mut done = Vec::new();
-
-    for quest in &game.quests {
-        if quest.is_visible(game) {
-            if quest.is_done() {
-                done.push(quest.description());
-            } else {
-                todo.insert(0, quest.description());
-            }
-        }
-    }
-
-    log::quest_list(&todo, &done);
+    let todo: Vec<&str> = game.quests_todo.iter().filter(|q| q.is_visible(&game)).map(|q| q.description()).collect();
+    log::quest_list(&todo, game.quests_done.as_slice());
 }
 
 // EVENT HANDLING
@@ -84,17 +72,22 @@ pub fn handle_tombstone(game: &mut game::Game) {
 }
 
 fn handle(game: &mut game::Game, handler: &dyn Fn(QuestRef)) {
-    for quest in game.quests.iter_mut() {
-        // TODO could just keep the description of done in a separate list
-        if !quest.is_done() {
-            handler(quest);
-            if quest.is_done() {
-                let reward = quest.reward();
-                game.gold += reward;
-                log::quest_done(reward);
-            }
+    let mut still_todo = Vec::new();
+    for mut quest in game.quests_todo.drain(..) {
+        handler(&mut quest);
+
+        if quest.is_done() {
+            let reward = quest.reward();
+            game.gold += reward;
+            log::quest_done(reward);
+
+            // the done is stored from newer to older
+            game.quests_done.insert(0, quest.description().to_string());
+        } else {
+            still_todo.push(quest);
         }
     }
+    game.quests_todo = still_todo;
 }
 
 // QUEST DEFINITIONS

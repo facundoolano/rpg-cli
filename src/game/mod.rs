@@ -31,7 +31,11 @@ pub struct Game {
     pub gold: i32,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
     tombstones: HashMap<Location, Tombstone>,
-    pub quests: Vec<Box<dyn Quest>>,
+
+    // TODO would it be better to just have a QuestList here?
+    // and handle details in the quest mod
+    pub quests_todo: Vec<Box<dyn Quest>>,
+    pub quests_done: Vec<String>,
 }
 
 impl Game {
@@ -42,7 +46,8 @@ impl Game {
             gold: 0,
             inventory: HashMap::new(),
             tombstones: HashMap::new(),
-            quests: Vec::new(),
+            quests_todo: Vec::new(),
+            quests_done: Vec::new(),
         };
         quest::setup(&mut game);
         game

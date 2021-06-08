@@ -186,7 +186,7 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
     println!("\n    funds: {}", format_gold(game.gold));
 }
 
-pub fn quest_list(todo: &[&str], done: &[&str]) {
+pub fn quest_list(todo: &[&str], done: &[String]) {
     println!("TODO:");
     for quest in todo {
         println!("    {}", quest);
