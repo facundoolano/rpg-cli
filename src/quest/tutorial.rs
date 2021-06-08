@@ -15,7 +15,7 @@ impl WinBattle {
 #[typetag::serde]
 impl Quest for WinBattle {
     fn description(&self) -> String {
-        "Win a battle".to_string()
+        "win a battle".to_string()
     }
 
     fn is_done(&self) -> bool {
@@ -48,7 +48,7 @@ impl BuySword {
 #[typetag::serde]
 impl Quest for BuySword {
     fn description(&self) -> String {
-        "Buy a sword".to_string()
+        "buy a sword".to_string()
     }
 
     fn is_done(&self) -> bool {
@@ -82,7 +82,7 @@ impl UsePotion {
 #[typetag::serde]
 impl Quest for UsePotion {
     fn description(&self) -> String {
-        "Use a potion".to_string()
+        "use a potion".to_string()
     }
 
     fn is_done(&self) -> bool {
@@ -118,7 +118,7 @@ impl ReachLevel {
 #[typetag::serde]
 impl Quest for ReachLevel{
     fn description(&self) -> String {
-        format!("Reach level {}", self.target)
+        format!("reach level {}", self.target)
     }
 
     fn is_done(&self) -> bool {
