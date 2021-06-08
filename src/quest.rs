@@ -35,6 +35,31 @@ impl QuestList {
         self.todo.push(Box::new(WinBattle { done: false }));
     }
 
+    /// Pass the event to each of the quests, moving the completed ones to DONE.
+    /// The total gold reward is returned.
+    fn handle(&mut self, event: Event) -> i32 {
+        let mut still_todo = Vec::new();
+        let mut total_reward = 0;
+
+        for mut quest in self.todo.drain(..) {
+            quest.handle(&event);
+
+            if quest.is_done() {
+                let reward = quest.reward();
+                total_reward += reward;
+                log::quest_done(reward);
+
+                // the done is stored from newer to older
+                self.done.insert(0, quest.description().to_string());
+            } else {
+                still_todo.push(quest);
+            }
+        }
+
+        self.todo = still_todo;
+        total_reward
+    }
+
     // FIXME this should return the string lists instead of calling log directly
     pub fn list(&self, game: &game::Game) {
         let todo: Vec<&str> = self
@@ -61,6 +86,7 @@ trait Quest {
     fn is_done(&self) -> bool;
 
     /// The gold rewarded upon quest completion
+    // NOTE: we could consider more sophisticated rewards than just gold
     fn reward(&self) -> i32;
 
     fn handle(&mut self, event: &Event);
@@ -105,22 +131,7 @@ pub fn handle_tombstone(game: &mut game::Game) {
 }
 
 fn handle(game: &mut game::Game, event: Event) {
-    let mut still_todo = Vec::new();
-    for mut quest in game.quests.todo.drain(..) {
-        quest.handle(&event);
-
-        if quest.is_done() {
-            let reward = quest.reward();
-            game.gold += reward;
-            log::quest_done(reward);
-
-            // the done is stored from newer to older
-            game.quests.done.insert(0, quest.description().to_string());
-        } else {
-            still_todo.push(quest);
-        }
-    }
-    game.quests.todo = still_todo;
+    game.gold += game.quests.handle(event);
 }
 
 // QUEST DEFINITIONS
