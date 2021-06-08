@@ -34,19 +34,6 @@ pub struct Class {
     pub mp: Stat,
 }
 
-impl Default for Class {
-    fn default() -> Class {
-        Class {
-            name: "default",
-            hp: Stat(1, 0),
-            strength: Stat(1, 0),
-            speed: Stat(1, 0),
-            mp: Stat(0, 0),
-        }
-
-    }
-}
-
 impl Class {
     pub const HERO: Self = Self {
         name: "hero",
@@ -58,6 +45,19 @@ impl Class {
 
     pub fn random_enemy(distance: location::Distance) -> &'static Self {
         weighted_choice(distance)
+    }
+}
+
+impl Default for Class {
+    fn default() -> Class {
+        Class {
+            name: "default",
+            hp: Stat(1, 0),
+            strength: Stat(1, 0),
+            speed: Stat(1, 0),
+            mp: Stat(0, 0),
+        }
+
     }
 }
 

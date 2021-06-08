@@ -1,11 +1,13 @@
+use crate::character::class::Stat;
 
 /// XP can be earned for one subclass at a time whichever one is selected as the default
 /// Bonuses for each subclass can be applied together, for example you can be a level 10 hero with
-/// a level 5 subclass warrior, level 2 wizard and level cleric
+/// a level 5 subclass warrior, level 2 wizard
 ///
 /// TODO
 /// - implement talents and skills for subclasses to further increase play diversity
 
+#[derive(Debug)]
 pub enum SubclassType {
     Warrior,
     Apprentice,
@@ -13,6 +15,7 @@ pub enum SubclassType {
     Rogue,
 }
 
+#[derive(Debug)]
 pub struct Subclass {
     pub subclass_type: SubclassType,
 
@@ -83,6 +86,7 @@ impl Subclass {
         (base_xp * (self.level as f64).powf(exp)) as i32
     }
 
+    /// Class options
     pub fn new_warrior() -> Self {
         let mut warrior = Self::new {
             subclass_type: SubclassType::Warrior,
@@ -113,6 +117,4 @@ impl Subclass {
         apprentice
     }
 }
-
-/// Class options
 
