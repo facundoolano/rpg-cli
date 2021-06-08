@@ -2,10 +2,10 @@ extern crate dirs;
 
 use crate::character::Character;
 use crate::item::Item;
-use crate::quest;
-use crate::quest::QuestList;
 use crate::location::Location;
 use crate::log;
+use crate::quest;
+use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};

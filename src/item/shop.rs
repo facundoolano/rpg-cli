@@ -3,8 +3,8 @@ use std::{collections::HashMap, fmt::Display};
 use super::equipment::{Equipment, Shield, Sword};
 use crate::character::Character;
 use crate::game::Game;
-use crate::quest;
 use crate::log;
+use crate::quest;
 
 pub enum Error {
     NotEnoughGold,

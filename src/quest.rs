@@ -1,14 +1,14 @@
-use core::fmt;
+use crate::character::Character;
 use crate::game;
 use crate::log;
-use crate::character::Character;
+use core::fmt;
 use serde::{Deserialize, Serialize};
 
 /// Events that can trigger quest updates.
 enum Event {
-    EnemyBeat{enemy: String, levels_up: i32},
-    ItemBought{item: String},
-    ItemUsed{item: String},
+    EnemyBeat { enemy: String, levels_up: i32 },
+    ItemBought { item: String },
+    ItemUsed { item: String },
     TombstoneFound,
 }
 
@@ -31,13 +31,18 @@ impl QuestList {
     }
 
     /// Load the quests for a new game
-    fn setup (&mut self) {
-        self.todo.push(Box::new(WinBattle{done:false}));
+    fn setup(&mut self) {
+        self.todo.push(Box::new(WinBattle { done: false }));
     }
 
     // FIXME this should return the string lists instead of calling log directly
     pub fn list(&self, game: &game::Game) {
-        let todo: Vec<&str> = self.todo.iter().filter(|q| q.is_visible(&game)).map(|q| q.description()).collect();
+        let todo: Vec<&str> = self
+            .todo
+            .iter()
+            .filter(|q| q.is_visible(&game))
+            .map(|q| q.description())
+            .collect();
         log::quest_list(&todo, self.done.as_slice());
     }
 }
@@ -45,7 +50,7 @@ impl QuestList {
 #[typetag::serde(tag = "type")]
 trait Quest {
     /// What to show in the TODO quests list
-    fn description (&self) -> &str;
+    fn description(&self) -> &str;
 
     /// Whether this quest should appear in the quest list
     fn is_visible(&self, _game: &game::Game) -> bool {
@@ -68,15 +73,31 @@ impl fmt::Display for dyn Quest {
 }
 
 pub fn handle_battle_won(game: &mut game::Game, enemy: &Character, levels_up: i32) {
-    handle(game, Event::EnemyBeat{enemy: enemy.name(), levels_up});
+    handle(
+        game,
+        Event::EnemyBeat {
+            enemy: enemy.name(),
+            levels_up,
+        },
+    );
 }
 
 pub fn handle_item_bought(game: &mut game::Game, item: &str) {
-    handle(game, Event::ItemBought{item: item.to_string()});
+    handle(
+        game,
+        Event::ItemBought {
+            item: item.to_string(),
+        },
+    );
 }
 
 pub fn handle_item_used(game: &mut game::Game, item: &str) {
-    handle(game, Event::ItemUsed{item: item.to_string()});
+    handle(
+        game,
+        Event::ItemUsed {
+            item: item.to_string(),
+        },
+    );
 }
 
 pub fn handle_tombstone(game: &mut game::Game) {
@@ -107,12 +128,12 @@ fn handle(game: &mut game::Game, event: Event) {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct WinBattle {
-    done: bool
+    done: bool,
 }
 
 #[typetag::serde]
 impl Quest for WinBattle {
-    fn description (&self) -> &str {
+    fn description(&self) -> &str {
         "Win a battle"
     }
 
@@ -125,19 +146,18 @@ impl Quest for WinBattle {
     }
 
     fn handle(&mut self, event: &Event) {
-        if let Event::EnemyBeat{..} = event {
+        if let Event::EnemyBeat { .. } = event {
             self.done = true;
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_quest_completed () {
+    fn test_quest_completed() {
         let mut game = game::Game::new();
         let fake_enemy = Character::player();
 

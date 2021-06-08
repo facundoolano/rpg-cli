@@ -5,8 +5,8 @@ mod game;
 mod item;
 mod location;
 mod log;
-mod randomizer;
 mod quest;
+mod randomizer;
 
 use crate::location::Location;
 use clap::{crate_version, AppSettings, Clap};
@@ -115,7 +115,7 @@ fn main() {
         Command::Reset { hard } => game.reset(hard),
         Command::Buy { item } => shop(&mut game, &item),
         Command::Use { item } => use_item(&mut game, &item),
-        Command::Todo => game.quests.list(&game)
+        Command::Todo => game.quests.list(&game),
     }
 
     game.save().unwrap();
