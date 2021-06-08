@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::character::class::Stat;
 
 /// XP can be earned for one subclass at a time whichever one is selected as the default
