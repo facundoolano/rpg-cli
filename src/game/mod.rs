@@ -61,14 +61,14 @@ impl Game {
     /// Remove the game data and reset this reference.
     /// Tombstones are preserved across games.
     pub fn reset(&mut self, hard: bool) {
-        // FIXME quests should be preserved across soft resets
         let mut new_game = Self::new();
 
         if hard {
             datafile::remove();
         } else {
-            // preserve tombstones across hero's lifes
-            new_game.tombstones = self.tombstones.drain().collect();
+            // preserve tombstones and quests across hero's lifes
+            std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
+            std::mem::swap(&mut new_game.quests, &mut self.quests);
         }
 
         // replace the current, finished game with the new one
