@@ -1,4 +1,4 @@
-use crate::character::Character;
+use crate::character::{Character, Condition};
 use crate::game::battle::Attack;
 use crate::game::Game;
 use crate::item::shop;
@@ -95,7 +95,7 @@ pub fn player_attack(enemy: &Character, attack: Attack) {
     }
 }
 
-pub fn enemy_attack(player: &Character, attack: Attack) {
+pub fn enemy_attack(player: &Character, attack: Attack, _condition: Option<Condition>) {
     if !quiet() {
         battle_log(player, &format_attack(attack, "bright red"));
     }

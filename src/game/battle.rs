@@ -1,5 +1,5 @@
 use super::Game;
-use crate::character::Character;
+use crate::character::{Character, Condition};
 use crate::log;
 use crate::randomizer::Randomizer;
 
@@ -44,14 +44,14 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 }
 
 fn player_attack(game: &Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (damage, new_xp) = attack(&game.player, enemy, random);
+    let (damage, new_xp, _) = attack(&game.player, enemy, random);
     log::player_attack(enemy, damage);
     new_xp
 }
 
 fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
-    let (damage, _) = attack(enemy, &mut game.player, random);
-    log::enemy_attack(&game.player, damage);
+    let (damage, _, condition) = attack(enemy, &mut game.player, random);
+    log::enemy_attack(&game.player, damage, condition);
 }
 
 /// Inflict damage from attacker to receiver, return the inflicted
@@ -60,25 +60,26 @@ fn attack(
     attacker: &Character,
     receiver: &mut Character,
     random: &dyn Randomizer,
-) -> (Attack, i32) {
+) -> (Attack, i32, Option<Condition>) {
     if random.is_miss(attacker.speed, receiver.speed) {
-        (Attack::Miss, 0)
+        (Attack::Miss, 0, None)
     } else {
         let damage = random.damage(attacker.damage(receiver));
         let xp = attacker.xp_gained(receiver, damage);
-
-        if receiver.condition.is_none() {
-            let condition = random.produces_condition();
+        // Randomly get condition for now. It may later be consequence of the
+        // attacker's feasiblity ratio to produce a certain condition and receiver's to get it
+        let condition = random.condition(attacker.produces_condition(receiver));
+        if !condition.is_none() {
             receiver.receive_condition(condition);
         }
 
         if random.is_critical() {
             let damage = damage * 2;
             receiver.receive_damage(damage);
-            (Attack::Critical(damage), xp)
+            (Attack::Critical(damage), xp, condition)
         } else {
             receiver.receive_damage(damage);
-            (Attack::Regular(damage), xp)
+            (Attack::Regular(damage), xp, condition)
         }
     }
 }

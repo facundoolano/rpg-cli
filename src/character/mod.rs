@@ -8,8 +8,7 @@ pub mod class;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 
-
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 pub enum Condition {
     Burned,
     Poisoned,
@@ -161,6 +160,10 @@ impl Character {
         } else {
             damage / (1 + self.level - receiver.level)
         }
+    }
+
+    pub fn produces_condition(&self, receiver: &Self) -> bool {
+        receiver.condition.is_none()
     }
 
     pub fn receive_condition(&mut self, condition: Option<Condition>) {
