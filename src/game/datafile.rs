@@ -14,7 +14,7 @@ pub fn write(data: Vec<u8>) -> Result<(), io::Error> {
 
 pub fn remove() {
     let rpg_dir = rpg_dir();
-    if !rpg_dir.exists() {
+    if rpg_dir.exists() {
         fs::remove_dir_all(&rpg_dir).unwrap();
     }
 }

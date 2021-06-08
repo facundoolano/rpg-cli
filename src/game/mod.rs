@@ -59,20 +59,20 @@ impl Game {
     }
 
     /// Remove the game data and reset this reference.
-    /// Tombstones are preserved across games.
-    pub fn reset(&mut self, hard: bool) {
+    /// Progress is preserved across games.
+    pub fn reset(&mut self) {
         let mut new_game = Self::new();
-
-        if hard {
-            datafile::remove();
-        } else {
-            // preserve tombstones and quests across hero's lifes
-            std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
-            std::mem::swap(&mut new_game.quests, &mut self.quests);
-        }
+        // preserve tombstones and quests across hero's lifes
+        std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
+        std::mem::swap(&mut new_game.quests, &mut self.quests);
 
         // replace the current, finished game with the new one
         *self = new_game;
+    }
+
+    /// Recreate the game data, losing all progress.
+    pub fn restet_hard() {
+        datafile::remove();
     }
 
     /// Move the hero's location towards the given destination, one directory

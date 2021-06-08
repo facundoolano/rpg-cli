@@ -93,10 +93,18 @@ enum Command {
 
 fn main() {
     let mut exit_code = 0;
-    let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
     let opts: Opts = Opts::parse();
     log::init(opts.quiet, opts.plain);
+
+    // reset --hard is a special case, it needs to work when we
+    // fail to deserialize the game data -- e.g. on backward
+    // incompatible changes
+    if let Some(Command::Reset{hard: true}) = opts.cmd {
+        Game::restet_hard();
+    }
+
+    let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
     match opts.cmd.unwrap_or(Command::Stat) {
         Command::Stat => log::status(&game),
@@ -112,7 +120,7 @@ fn main() {
             exit_code = battle(&mut game, run, bribe);
         }
         Command::PrintWorkDir => println!("{}", game.location.path_string()),
-        Command::Reset { hard } => game.reset(hard),
+        Command::Reset { .. } => game.reset(),
         Command::Buy { item } => shop(&mut game, &item),
         Command::Use { item } => use_item(&mut game, &item),
         Command::Todo => {
@@ -132,7 +140,7 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
         if force {
             game.visit(dest);
         } else if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
-            game.reset(false);
+            game.reset();
             return 1;
         }
     } else {
@@ -148,7 +156,7 @@ fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
     let mut exit_code = 0;
     if let Some(mut enemy) = game.maybe_spawn_enemy() {
         if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
-            game.reset(false);
+            game.reset();
             exit_code = 1;
         }
     }
