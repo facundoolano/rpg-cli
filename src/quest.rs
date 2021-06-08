@@ -4,8 +4,37 @@ use crate::log;
 use crate::character::Character;
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Default)]
+pub struct QuestList {
+    todo: Vec<Box<dyn Quest>>,
+    done: Vec<String>,
+}
+
+impl QuestList {
+    pub fn new() -> Self {
+        let mut quests = Self {
+            todo: Vec::new(),
+            done: Vec::new(),
+        };
+
+        quests.setup();
+        quests
+    }
+
+    /// Load the quests for a new game
+    fn setup (&mut self) {
+        self.todo.push(Box::new(WinBattle{done:false}));
+    }
+
+    /// TODO
+    pub fn list(&self, game: &game::Game) {
+        let todo: Vec<&str> = self.todo.iter().filter(|q| q.is_visible(&game)).map(|q| q.description()).collect();
+        log::quest_list(&todo, self.done.as_slice());
+    }
+}
+
 #[typetag::serde(tag = "type")]
-pub trait Quest {
+trait Quest {
     /// What to show in the TODO quests list
     fn description (&self) -> &str;
 
@@ -34,19 +63,9 @@ impl fmt::Display for dyn Quest {
     }
 }
 
-/// TODO
-pub fn setup (game: &mut game::Game) {
-    game.quests_todo.push(Box::new(WinBattle{done:false}));
-}
-
-/// TODO
-pub fn list(game: &game::Game) {
-    let todo: Vec<&str> = game.quests_todo.iter().filter(|q| q.is_visible(&game)).map(|q| q.description()).collect();
-    log::quest_list(&todo, game.quests_done.as_slice());
-}
-
 // EVENT HANDLING
 // TODO this could be simplified by having each quest registering to individual events
+// TODO try introducing a Event enum and collapsing these handlers
 
 // alias for quests passed dynamically
 type QuestRef<'a> = &'a mut Box<dyn Quest>;
@@ -73,7 +92,7 @@ pub fn handle_tombstone(game: &mut game::Game) {
 
 fn handle(game: &mut game::Game, handler: &dyn Fn(QuestRef)) {
     let mut still_todo = Vec::new();
-    for mut quest in game.quests_todo.drain(..) {
+    for mut quest in game.quests.todo.drain(..) {
         handler(&mut quest);
 
         if quest.is_done() {
@@ -82,12 +101,12 @@ fn handle(game: &mut game::Game, handler: &dyn Fn(QuestRef)) {
             log::quest_done(reward);
 
             // the done is stored from newer to older
-            game.quests_done.insert(0, quest.description().to_string());
+            game.quests.done.insert(0, quest.description().to_string());
         } else {
             still_todo.push(quest);
         }
     }
-    game.quests_todo = still_todo;
+    game.quests.todo = still_todo;
 }
 
 // QUEST DEFINITIONS

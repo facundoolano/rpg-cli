@@ -115,7 +115,7 @@ fn main() {
         Command::Reset { hard } => game.reset(hard),
         Command::Buy { item } => shop(&mut game, &item),
         Command::Use { item } => use_item(&mut game, &item),
-        Command::Todo => quest::list(&game)
+        Command::Todo => game.quests.list(&game)
     }
 
     game.save().unwrap();

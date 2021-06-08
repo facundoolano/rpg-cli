@@ -3,7 +3,7 @@ extern crate dirs;
 use crate::character::Character;
 use crate::item::Item;
 use crate::quest;
-use crate::quest::Quest;
+use crate::quest::QuestList;
 use crate::location::Location;
 use crate::log;
 use crate::randomizer::random;
@@ -31,26 +31,20 @@ pub struct Game {
     pub gold: i32,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
     tombstones: HashMap<Location, Tombstone>,
-
-    // TODO would it be better to just have a QuestList here?
-    // and handle details in the quest mod
-    pub quests_todo: Vec<Box<dyn Quest>>,
-    pub quests_done: Vec<String>,
+    pub quests: QuestList,
 }
 
 impl Game {
     pub fn new() -> Self {
-        let mut game = Self {
+        let quests = QuestList::new();
+        Self {
             location: Location::home(),
             player: Character::player(),
             gold: 0,
             inventory: HashMap::new(),
             tombstones: HashMap::new(),
-            quests_todo: Vec::new(),
-            quests_done: Vec::new(),
-        };
-        quest::setup(&mut game);
-        game
+            quests,
+        }
     }
 
     pub fn load() -> Result<Self, Error> {
@@ -67,6 +61,7 @@ impl Game {
     /// Remove the game data and reset this reference.
     /// Tombstones are preserved across games.
     pub fn reset(&mut self, hard: bool) {
+        // FIXME quests should be preserved across soft resets
         let mut new_game = Self::new();
 
         if hard {
