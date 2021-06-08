@@ -93,10 +93,15 @@ impl Game {
         Ok(())
     }
 
+    /// Look for chests at the current location.
+    /// Remembers previous checks for consistency.
     pub fn inspect(&mut self) {
         if !self.inspected.contains(&self.location) {
             self.inspected.insert(self.location.clone());
 
+            // this could be extended to find better items, with a non uniform
+            // probability, and to change according to the distance from home
+            // it's likely better to extract to an item generator module at that point
             match random().range(6) {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
