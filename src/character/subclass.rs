@@ -15,6 +15,26 @@ pub enum SubclassType {
     Rogue,
 }
 
+impl SubclassType {
+    pub fn get_subclass_name(subclass_type: SubclassType) -> &str {
+        match subclass_type {
+            SubclassType::Apprentice    => "Apprentice",
+            SubclassType::Cleric        => "Cleric",
+            SubclassType::Rogue         => "Rogue",
+            SubclassType::Warrior       => "Warrior",
+        }
+    }
+
+    pub fn get_subclass_names() -> Vec<String> {
+        let mut vec = Vec::new();
+        vec.push(SubclassType::get_subclass_name(SubclassType::Warrior));
+        vec.push(SubclassType::get_subclass_name(SubclassType::Apprentice));
+        vec.push(SubclassType::get_subclass_name(SubclassType::Rogue));
+        vec.push(SubclassType::get_subclass_name(SubclassType::Cleric));
+        vec
+    }
+}
+
 #[derive(Debug)]
 pub struct Subclass {
     pub subclass_type: SubclassType,
@@ -50,13 +70,8 @@ impl Subclass {
         subclass
     }
 
-    pub fn subclass_name(&self) -> &str {
-        match self.subclass_type {
-            SubclassType::Apprentice    => "Apprentice",
-            SubclassType::Cleric        => "Cleric",
-            SubclassType::Rogue         => "Rogue",
-            SubclassType::Warrior       => "Warrior",
-        }
+    pub fn get_subclass_name(&self) -> &str {
+        SubclassType::get_subclass_name(self.subclass_type)
     }
 
     /// Raise the level and all the character stats.

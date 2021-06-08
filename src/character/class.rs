@@ -24,7 +24,7 @@ impl Stat {
 /// Classes are archetypes for characters.
 /// The struct contains a specific stat configuration such that all instances of
 /// the class have a similar combat behavior.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Class {
     pub name: &'static str,
 
@@ -45,19 +45,6 @@ impl Class {
 
     pub fn random_enemy(distance: location::Distance) -> &'static Self {
         weighted_choice(distance)
-    }
-}
-
-impl Default for Class {
-    fn default() -> Class {
-        Class {
-            name: "default",
-            hp: Stat(1, 0),
-            strength: Stat(1, 0),
-            speed: Stat(1, 0),
-            mp: Stat(0, 0),
-        }
-
     }
 }
 
@@ -103,7 +90,7 @@ const RAT: Class = Class {
     hp: Stat(10, 3),
     strength: Stat(5, 2),
     speed: Stat(16, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const WOLF: Class = Class {
@@ -111,7 +98,7 @@ const WOLF: Class = Class {
     hp: Stat(15, 3),
     strength: Stat(8, 2),
     speed: Stat(12, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const SNAKE: Class = Class {
@@ -119,7 +106,7 @@ const SNAKE: Class = Class {
     hp: Stat(13, 3),
     strength: Stat(7, 2),
     speed: Stat(6, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const SLIME: Class = Class {
@@ -127,7 +114,7 @@ const SLIME: Class = Class {
     hp: Stat(80, 3),
     strength: Stat(3, 2),
     speed: Stat(4, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const SPIDER: Class = Class {
@@ -135,7 +122,7 @@ const SPIDER: Class = Class {
     hp: Stat(10, 3),
     strength: Stat(9, 2),
     speed: Stat(12, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const ZOMBIE: Class = Class {
@@ -143,7 +130,7 @@ const ZOMBIE: Class = Class {
     hp: Stat(50, 3),
     strength: Stat(8, 2),
     speed: Stat(6, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const ORC: Class = Class {
@@ -151,7 +138,7 @@ const ORC: Class = Class {
     hp: Stat(35, 3),
     strength: Stat(13, 2),
     speed: Stat(12, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const SKELETON: Class = Class {
@@ -159,7 +146,7 @@ const SKELETON: Class = Class {
     hp: Stat(30, 3),
     strength: Stat(10, 2),
     speed: Stat(10, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const DEMON: Class = Class {
@@ -167,7 +154,7 @@ const DEMON: Class = Class {
     hp: Stat(50, 3),
     strength: Stat(10, 2),
     speed: Stat(18, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const VAMPIRE: Class = Class {
@@ -175,7 +162,7 @@ const VAMPIRE: Class = Class {
     hp: Stat(50, 3),
     strength: Stat(13, 2),
     speed: Stat(10, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const DRAGON: Class = Class {
@@ -183,7 +170,7 @@ const DRAGON: Class = Class {
     hp: Stat(100, 3),
     strength: Stat(25, 2),
     speed: Stat(8, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const GOLEM: Class = Class {
@@ -191,7 +178,7 @@ const GOLEM: Class = Class {
     hp: Stat(50, 3),
     strength: Stat(45, 2),
     speed: Stat(2, 1),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const CHIMERA: Class = Class {
@@ -199,7 +186,7 @@ const CHIMERA: Class = Class {
     hp: Stat(200, 2),
     strength: Stat(90, 2),
     speed: Stat(16, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const BASILISK: Class = Class {
@@ -207,7 +194,7 @@ const BASILISK: Class = Class {
     hp: Stat(150, 3),
     strength: Stat(100, 2),
     speed: Stat(18, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const MINOTAUR: Class = Class {
@@ -215,7 +202,7 @@ const MINOTAUR: Class = Class {
     hp: Stat(100, 3),
     strength: Stat(60, 2),
     speed: Stat(40, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const BALROG: Class = Class {
@@ -223,7 +210,7 @@ const BALROG: Class = Class {
     hp: Stat(200, 3),
     strength: Stat(200, 2),
     speed: Stat(14, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };
 
 const PHOENIX: Class = Class {
@@ -231,5 +218,5 @@ const PHOENIX: Class = Class {
     hp: Stat(350, 3),
     strength: Stat(180, 2),
     speed: Stat(28, 2),
-    ..Default::default()
+    mp: Stat(0, 0),
 };

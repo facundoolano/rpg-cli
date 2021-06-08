@@ -217,9 +217,29 @@ fn sanitize(name: &str) -> String {
     name.to_string()
 }
 
+fn map_string_to_subclass(subclass: &str) -> Option<SubclassType> {
+    match subclass {
+        "warrior" => Some(SubclassType::Warrior),
+        "apprentice" => Some(SubclassType::Apprentice),
+        "rogue" => Some(SubclassType::Rogue),
+        "cleric" => Some(SubclassType::Cleric),
+        _ => None
+    }
+}
+
 /// Attempt to add a new sub class
 fn add_new_class(game: &mut Game, subclass: &Option<String>) {
     if let Some(subclass) = subclass {
-        let subclass = sanitize(subclass);
+        let subclass = map_string_to_subclass(sanitize(subclass));
+        match subclass {
+            Some(n) => game.player.add_subclass(subclass),
+            None => println("Invalid subclass")
+        }
+    } else {
+        println!("Please select one of the following classes to add");
+        let subclass_options = SubclassType::get_subclass_names();
+        for subclass_name in subclass_options.iter() {
+            println!(" - {}", subclass_name)
+        }
     }
 }
