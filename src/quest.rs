@@ -4,6 +4,15 @@ use crate::log;
 use crate::character::Character;
 use serde::{Deserialize, Serialize};
 
+/// Events that can trigger quest updates.
+enum Event {
+    EnemyBeat{enemy: String, levels_up: i32},
+    ItemBought{item: String},
+    ItemUsed{item: String},
+    TombstoneFound,
+}
+
+/// Keeps a TODO list of quests for the game.
 #[derive(Serialize, Deserialize, Default)]
 pub struct QuestList {
     todo: Vec<Box<dyn Quest>>,
@@ -26,7 +35,7 @@ impl QuestList {
         self.todo.push(Box::new(WinBattle{done:false}));
     }
 
-    /// TODO
+    // FIXME this should return the string lists instead of calling log directly
     pub fn list(&self, game: &game::Game) {
         let todo: Vec<&str> = self.todo.iter().filter(|q| q.is_visible(&game)).map(|q| q.description()).collect();
         log::quest_list(&todo, self.done.as_slice());
@@ -49,12 +58,7 @@ trait Quest {
     /// The gold rewarded upon quest completion
     fn reward(&self) -> i32;
 
-    // Event handlers.
-    // By default do nothing since most will only need to override one.
-    fn battle_won(&mut self, _enemy: &Character, _levels_up: i32) {}
-    fn item_bought(&mut self, _name: &str) {}
-    fn item_used(&mut self, _name: &str) {}
-    fn tombstone(&mut self) {}
+    fn handle(&mut self, event: &Event);
 }
 
 impl fmt::Display for dyn Quest {
@@ -63,37 +67,26 @@ impl fmt::Display for dyn Quest {
     }
 }
 
-// EVENT HANDLING
-// TODO this could be simplified by having each quest registering to individual events
-// TODO try introducing a Event enum and collapsing these handlers
-
-// alias for quests passed dynamically
-type QuestRef<'a> = &'a mut Box<dyn Quest>;
-
 pub fn handle_battle_won(game: &mut game::Game, enemy: &Character, levels_up: i32) {
-    let handler = |q: QuestRef| q.battle_won(&enemy, levels_up);
-    handle(game, &handler);
+    handle(game, Event::EnemyBeat{enemy: enemy.name(), levels_up});
 }
 
-pub fn handle_item_bought(game: &mut game::Game, name: &str) {
-    let handler = |q: QuestRef| q.item_bought(name);
-    handle(game, &handler);
+pub fn handle_item_bought(game: &mut game::Game, item: &str) {
+    handle(game, Event::ItemBought{item: item.to_string()});
 }
 
-pub fn handle_item_used(game: &mut game::Game, name: &str) {
-    let handler = |q: QuestRef| q.item_used(name);
-    handle(game, &handler);
+pub fn handle_item_used(game: &mut game::Game, item: &str) {
+    handle(game, Event::ItemUsed{item: item.to_string()});
 }
 
 pub fn handle_tombstone(game: &mut game::Game) {
-    let handler = |q: QuestRef| q.tombstone();
-    handle(game, &handler);
+    handle(game, Event::TombstoneFound);
 }
 
-fn handle(game: &mut game::Game, handler: &dyn Fn(QuestRef)) {
+fn handle(game: &mut game::Game, event: Event) {
     let mut still_todo = Vec::new();
     for mut quest in game.quests.todo.drain(..) {
-        handler(&mut quest);
+        quest.handle(&event);
 
         if quest.is_done() {
             let reward = quest.reward();
@@ -131,8 +124,10 @@ impl Quest for WinBattle {
         100
     }
 
-    fn battle_won(&mut self, _enemy: &Character, _levels_up: i32) {
-        self.done = true;
+    fn handle(&mut self, event: &Event) {
+        if let Event::EnemyBeat{..} = event {
+            self.done = true;
+        }
     }
 }
 
