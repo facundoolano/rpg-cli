@@ -17,6 +17,12 @@ pub enum StatusEffect {
     Confused,
 }
 
+impl StatusEffect {
+    pub fn is_normal(&self) -> bool {
+        self != &StatusEffect::Normal
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
     #[serde(skip, default = "default_class")]
@@ -164,18 +170,14 @@ impl Character {
         }
     }
 
-    pub fn has_status_effect(&self) -> bool {
-        self.status_effect != StatusEffect::Normal
-    }
-
     pub fn receive_status_effect(&mut self, status_effect: StatusEffect) {
         self.status_effect = status_effect;
     }
 
     pub fn maybe_receive_status_effect(&mut self) -> bool {
-        if !self.is_dead() {
-            let status_effect = random().status_effect(self.has_status_effect());
-            if status_effect != StatusEffect::Normal {
+        if !self.is_dead() && self.status_effect.is_normal() {
+            let status_effect = random().status_effect();
+            if !status_effect.is_normal() {
                 self.receive_status_effect(status_effect);
                 return true;
             }
