@@ -7,6 +7,9 @@
 * Tutorial quests #49
 * `rpg ls` command to look for chests at the current location #51
 
+### Changed
+* Tombstones are found with `rpg ls` instead of automatically #52
+
 ## [0.4.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.4.0) - 2021-06-05
 ### Added
 * This Changelog
