@@ -107,11 +107,11 @@ impl Game {
             match random().range(6) {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
-                    log::chest_gold(&self.location, gold);
+                    log::chest_gold(gold);
                 }
                 1 => {
                     let potion = Potion::new(self.player.level);
-                    log::chest_item(&self.location, "potion");
+                    log::chest_item("potion");
                     self.add_item("potion", Box::new(potion));
                 }
                 _ => {}
@@ -172,7 +172,7 @@ impl Game {
     fn pick_up_tombstone(&mut self) {
         if let Some(mut tombstone) = self.tombstones.remove(&self.location) {
             let (items, gold) = tombstone.pick_up(self);
-            log::tombstone(&self.location, &items, gold);
+            log::tombstone(&items, gold);
             quest::handle_tombstone(self);
         }
     }
