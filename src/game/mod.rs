@@ -93,9 +93,11 @@ impl Game {
         Ok(())
     }
 
-    /// Look for chests at the current location.
+    /// Look for chests and tombstones at the current location.
     /// Remembers previous checks for consistency.
     pub fn inspect(&mut self) {
+        self.pick_up_tombstone();
+
         if !self.inspected.contains(&self.location) {
             self.inspected.insert(self.location.clone());
 
@@ -124,7 +126,6 @@ impl Game {
             let recovered = self.player.heal_full();
             log::heal(&self.player, &self.location, recovered);
         }
-        self.pick_up_tombstone();
     }
 
     /// Set the current location to home, and apply related side-effects
@@ -168,12 +169,11 @@ impl Game {
     }
 
     /// If there's a tombstone laying in the current location, pick up its items
-    fn pick_up_tombstone(&mut self) -> bool {
+    fn pick_up_tombstone(&mut self) {
         if let Some(mut tombstone) = self.tombstones.remove(&self.location) {
-            tombstone.pick_up(self);
-            true
-        } else {
-            false
+            let (items, gold) = tombstone.pick_up(self);
+            log::tombstone(&self.location, &items, gold);
+            quest::handle_tombstone(self);
         }
     }
 

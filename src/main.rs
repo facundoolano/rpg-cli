@@ -55,7 +55,7 @@ enum Command {
         force: bool,
     },
 
-    /// Inspect the directory contents, possibly finding treasure chests.
+    /// Inspect the directory contents, possibly finding treasure chests and hero tombstones.
     #[clap(name = "ls", display_order = 1)]
     Inspect,
 
