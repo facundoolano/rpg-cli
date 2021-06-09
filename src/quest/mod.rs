@@ -8,7 +8,8 @@ mod tutorial;
 
 /// Events that can trigger quest updates.
 enum Event {
-    BattleWon { enemy: String, levels_up: i32 },
+    EnemyBeat { enemy: String },
+    LevelUp { current: i32},
     ItemBought { item: String },
     ItemUsed { item: String },
     TombstoneFound,
@@ -108,11 +109,18 @@ impl fmt::Display for dyn Quest {
 pub fn handle_battle_won(game: &mut game::Game, enemy: &Character, levels_up: i32) {
     handle(
         game,
-        Event::BattleWon {
+        Event::EnemyBeat {
             enemy: enemy.name(),
-            levels_up,
-        },
+        }
     );
+    if levels_up > 0 {
+        handle(
+            game,
+            Event::LevelUp {
+                current: game.player.level
+            }
+        );
+    }
 }
 
 pub fn handle_item_bought(game: &mut game::Game, item: &str) {

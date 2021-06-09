@@ -27,7 +27,7 @@ impl Quest for WinBattle {
     }
 
     fn handle(&mut self, event: &Event) {
-        if let Event::BattleWon { .. } = event {
+        if let Event::EnemyBeat { .. } = event {
             self.done = true;
         }
     }
@@ -131,8 +131,8 @@ impl Quest for ReachLevel {
     }
 
     fn handle(&mut self, event: &Event) {
-        if let Event::BattleWon { levels_up, .. } = event {
-            self.current += levels_up
+        if let Event::LevelUp { current, .. } = event {
+            self.current = *current
         }
     }
 }
