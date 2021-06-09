@@ -176,10 +176,10 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
 
 pub fn quest_list(todo: &[String], done: &[String]) {
     for quest in todo {
-        println!(" {} {}", "□".dimmed(), quest);
+        println!("  {} {}", "□".dimmed(), quest);
     }
     for quest in done {
-        println!(" {} {}", "✔".green(), quest.dimmed());
+        println!("  {} {}", "✔".green(), quest.dimmed());
     }
 }
 
