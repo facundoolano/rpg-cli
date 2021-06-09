@@ -29,6 +29,8 @@ pub trait Randomizer {
     fn stat_increase(&self, increase: i32) -> i32;
 
     fn status_effect(&self, produce_status_effect: bool) -> StatusEffect;
+
+    fn range(&self, max: i32) -> i32;
 }
 
 #[cfg(not(test))]
@@ -129,6 +131,11 @@ impl Randomizer for DefaultRandomizer {
             StatusEffect::Normal
         }
     }
+
+    fn range(&self, max: i32) -> i32 {
+        let mut rng = rand::thread_rng();
+        rng.gen_range(0..max)
+    }
 }
 
 /// The test randomizer just exposes the same functions as the default one
@@ -174,6 +181,10 @@ impl Randomizer for TestRandomizer {
 
     fn status_effect(&self, _produce_status_effect: bool) -> StatusEffect {
         StatusEffect::Normal
+    }
+
+    fn range(&self, max: i32) -> i32 {
+        max
     }
 }
 

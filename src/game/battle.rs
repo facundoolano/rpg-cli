@@ -151,7 +151,9 @@ mod tests {
         assert_eq!(15, game.player.current_hp);
         assert_eq!(1, game.player.level);
         assert_eq!(20, game.player.xp);
-        assert_eq!(50, game.gold);
+
+        // extra 100g for the completed quest
+        assert_eq!(150, game.gold);
 
         let mut enemy = Character::enemy(1, Distance::Near(1));
         enemy.speed = 1;
@@ -164,7 +166,8 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(2, game.player.level);
         assert_eq!(10, game.player.xp);
-        assert_eq!(100, game.gold);
+        // extra 100g for level up quest
+        assert_eq!(300, game.gold);
     }
 
     #[test]

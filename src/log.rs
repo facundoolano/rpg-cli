@@ -58,18 +58,6 @@ pub fn run_away_failure(player: &Character) {
     battle_log(player, "can't run!");
 }
 
-pub fn tombstone(location: &Location, items: &[String], gold: i32) {
-    let name = format!("{:>8}", "hero");
-    print!("{}[\u{1FAA6} ]@{}", name, location);
-    if gold > 0 {
-        print!(" {}", format_gold_plus(gold));
-    }
-    for item in items {
-        print!(" +{}", item);
-    }
-    println!();
-}
-
 pub fn heal(player: &Character, location: &Location, recovered: i32) {
     if recovered > 0 {
         log(
@@ -190,6 +178,57 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
     }
 
     println!("\n    funds: {}", format_gold(game.gold));
+}
+
+pub fn quest_list(todo: &[String], done: &[String]) {
+    // TODO test with a single list with [ ] and [x], maybe emoji
+
+    if !todo.is_empty() {
+        println!("TODO:");
+        for quest in todo {
+            println!("  - {}", quest);
+        }
+    }
+
+    if !todo.is_empty() && !done.is_empty() {
+        println!();
+    }
+
+    if !done.is_empty() {
+        println!("DONE:");
+        for quest in done {
+            println!("  - {}", quest);
+        }
+    }
+}
+
+pub fn quest_done(reward: i32) {
+    if !quiet() {
+        println!("    {} quest completed!", format_gold_plus(reward));
+    }
+}
+
+pub fn chest_item(item: &str) {
+    format_ls("\u{1F4E6}", &[item.to_string()], 0);
+}
+
+pub fn chest_gold(gold: i32) {
+    format_ls("\u{1F4E6}", &[], gold);
+}
+
+pub fn tombstone(items: &[String], gold: i32) {
+    format_ls("\u{1FAA6}", items, gold);
+}
+
+fn format_ls(emoji: &str, items: &[String], gold: i32) {
+    print!("{} ", emoji);
+    if gold > 0 {
+        print!(" {}", format_gold_plus(gold));
+    }
+    for item in items {
+        print!(" +{}", item);
+    }
+    println!();
 }
 
 // HELPERS
