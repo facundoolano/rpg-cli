@@ -1,10 +1,13 @@
+use crate::character;
 use crate::character::Character;
 use crate::game;
 use crate::log;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 
+mod beat_enemy;
 mod tutorial;
+use beat_enemy::BeatEnemies;
 
 /// Events that can trigger quest updates.
 enum Event {
@@ -36,14 +39,39 @@ impl QuestList {
 
     /// Load the quests for a new game
     fn setup(&mut self) {
+        // FIXME if effectively all quests are unlocked by level it's better to
+        // keep the is visible logic here instead of passing it down to the quests
+
+        // level 1
         self.todo.push(Box::new(tutorial::WinBattle::new()));
         self.todo.push(Box::new(tutorial::BuySword::new()));
         self.todo.push(Box::new(tutorial::UsePotion::new()));
         self.todo.push(Box::new(tutorial::ReachLevel::new(2, 1)));
+
+        // level 2
         self.todo.push(Box::new(tutorial::FindChest::new()));
-        self.todo.push(Box::new(tutorial::VisitTomb::new()));
         self.todo.push(Box::new(tutorial::ReachLevel::new(5, 2)));
+        self.todo.push(Box::new(BeatEnemies::of_class(
+            &character::class::COMMON,
+            "beat all common creatures",
+            2,
+        )));
+
+        // level 5
+        self.todo.push(Box::new(tutorial::VisitTomb::new()));
         self.todo.push(Box::new(tutorial::ReachLevel::new(10, 5)));
+        self.todo.push(Box::new(BeatEnemies::of_class(
+            &character::class::RARE,
+            "beat all rare creatures",
+            5,
+        )));
+
+        // level 10
+        self.todo.push(Box::new(BeatEnemies::of_class(
+            &character::class::LEGENDARY,
+            "beat all common creatures",
+            10,
+        )));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
