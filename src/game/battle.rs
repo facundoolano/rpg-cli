@@ -13,6 +13,12 @@ pub enum Attack {
     Miss,
 }
 
+impl Attack {
+    pub fn is_hit(&self) -> bool {
+        *self != Attack::Miss
+    }
+}
+
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
 pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> Result<i32, ()> {
@@ -51,7 +57,7 @@ fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer
 
     // take an enemy hit from status_effect
     let damage = game.player.apply_status_effect();
-    if damage != Attack::Miss {
+    if damage.is_hit() {
         log::enemy_attack(&game.player, &damage);
     }
     new_xp
@@ -62,7 +68,7 @@ fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
     log::enemy_attack(&game.player, &damage);
 
     // if player took a hit, maybe_receive_status_effect
-    if damage != Attack::Miss && game.player.maybe_receive_status_effect() {
+    if damage.is_hit() && game.player.maybe_receive_status_effect() {
         log::received_status_effect(&game.player);
     }
 }
