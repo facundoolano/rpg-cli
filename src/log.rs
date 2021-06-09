@@ -321,7 +321,12 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
             String::from("blue"),
             0,
         ),
-        StatusEffect::Normal => (String::new(), String::new(), String::new(), 0),
+        StatusEffect::Normal => (
+            String::from("cured"),
+            String::from("\u{1F9EC}"),
+            String::from("white"),
+            0,
+        ),
     }
 }
 
