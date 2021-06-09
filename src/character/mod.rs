@@ -1,12 +1,13 @@
+use crate::game::battle::Attack;
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
 use crate::location;
+use crate::randomizer::{random, Randomizer};
+use class::Class;
 use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
-use crate::randomizer::{random, Randomizer};
-use class::Class;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 pub enum StatusEffect {
@@ -163,12 +164,24 @@ impl Character {
         }
     }
 
-    pub fn produces_status_effect(&self, receiver: &Self) -> bool {
-        receiver.status_effect == StatusEffect::Normal
+    pub fn maybe_receive_status_effect(&mut self) -> bool {
+        let status_effect = random().status_effect(self.status_effect == StatusEffect::Normal);
+        if status_effect != StatusEffect::Normal {
+            self.status_effect = status_effect;
+            return true;
+        };
+
+        false
     }
 
-    pub fn receive_status_effect(&mut self, status_effect: StatusEffect) {
-        self.status_effect = status_effect;
+    pub fn apply_status_effect(&mut self) -> Attack {
+        match self.status_effect {
+            StatusEffect::Burned(damage) | StatusEffect::Poisoned(damage) => {
+                self.receive_damage(damage);
+                Attack::Effect(self.status_effect)
+            }
+            StatusEffect::Normal | StatusEffect::Confused => Attack::Miss,
+        }
     }
 }
 
@@ -382,7 +395,7 @@ mod tests {
     fn test_receive_status_effect() {
         let mut hero = Character::player();
 
-        hero.receive_status_effect(StatusEffect::Burned(2));
-        assert_eq!(StatusEffect::Burned(2), hero.status_effect);
+        hero.maybe_receive_status_effect();
+        assert_eq!(StatusEffect::Normal, hero.status_effect);
     }
 }

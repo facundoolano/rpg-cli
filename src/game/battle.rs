@@ -48,15 +48,23 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
     let (damage, new_xp) = attack(&game.player, enemy, random);
     log::player_attack(enemy, &damage);
-    apply_status_effect(&mut game.player);
+
+    // take an enemy hit from status_effect
+    let damage = game.player.apply_status_effect();
+    if damage != Attack::Miss {
+        log::enemy_attack(&game.player, &damage);
+    }
     new_xp
 }
 
 fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
     let (damage, _) = attack(enemy, &mut game.player, random);
     log::enemy_attack(&game.player, &damage);
-    if damage != Attack::Miss && !game.player.is_dead() {
-        receive_status_effect(enemy, &mut game.player, random);
+
+    // if player took a hit, maybe_receive_status_effect
+    if damage != Attack::Miss && !game.player.is_dead() && game.player.maybe_receive_status_effect()
+    {
+        log::received_status_effect(&game.player);
     }
 }
 
@@ -83,26 +91,6 @@ fn attack(
             (Attack::Regular(damage), xp)
         }
     }
-}
-
-fn receive_status_effect(attacker: &Character, receiver: &mut Character, random: &dyn Randomizer) {
-    // Randomly get status_effect for now. It may later be consequence of the
-    // attacker's feasiblity ratio to produce a certain status_effect and receiver's to get it
-    let status_effect = random.status_effect(attacker.produces_status_effect(receiver));
-    if status_effect != StatusEffect::Normal {
-        receiver.receive_status_effect(status_effect);
-        log::received_status_effect(receiver, status_effect);
-    };
-}
-
-fn apply_status_effect(receiver: &mut Character) {
-    match receiver.status_effect {
-        StatusEffect::Burned(damage) | StatusEffect::Poisoned(damage) => {
-            receiver.receive_damage(damage);
-            log::enemy_attack(receiver, &Attack::Effect(receiver.status_effect));
-        }
-        StatusEffect::Normal | StatusEffect::Confused => (),
-    };
 }
 
 /// If the player is low on hp and has a potion available use it

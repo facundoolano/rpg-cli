@@ -89,9 +89,9 @@ pub fn enemy_attack(player: &Character, attack: &Attack) {
     }
 }
 
-pub fn received_status_effect(player: &Character, status_effect: StatusEffect) {
+pub fn received_status_effect(player: &Character) {
     if !quiet() {
-        battle_log(player, &format_status_effect_received(status_effect));
+        battle_log(player, &format_status_effect_received(player.status_effect));
     }
 }
 
