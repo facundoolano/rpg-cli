@@ -89,13 +89,13 @@ pub fn potion(player: &Character, recovered: i32) {
     }
 }
 
-pub fn player_attack(enemy: &Character, attack: Attack) {
+pub fn player_attack(enemy: &Character, attack: &Attack) {
     if !quiet() {
         battle_log(enemy, &format_attack(attack, "white"));
     }
 }
 
-pub fn enemy_attack(player: &Character, attack: Attack) {
+pub fn enemy_attack(player: &Character, attack: &Attack) {
     if !quiet() {
         battle_log(player, &format_attack(attack, "bright red"));
     }
@@ -250,12 +250,12 @@ pub fn format_inventory(game: &Game) -> String {
     format!("item:{{{}}}", items.join(","))
 }
 
-fn format_attack(attack: Attack, color: &str) -> String {
+fn format_attack(attack: &Attack, color: &str) -> String {
     match attack {
         Attack::Regular(damage) => format!("-{}hp", damage).color(color).to_string(),
         Attack::Critical(damage) => format!("-{}hp critical!", damage).color(color).to_string(),
         Attack::Effect(status_effect) => {
-            let (_, emoji, color, damage) = status_effect_details(status_effect);
+            let (_, emoji, color, damage) = status_effect_details(*status_effect);
             format!("-{}hp {}", damage, emoji).color(color).to_string()
         }
         Attack::Miss => " dodged!".to_string(),

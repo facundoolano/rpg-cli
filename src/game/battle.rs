@@ -5,6 +5,7 @@ use crate::randomizer::Randomizer;
 
 /// Outcome of an attack attempt.
 /// This affects primarily how the attack is displayed.
+#[derive(PartialEq)]
 pub enum Attack {
     Regular(i32),
     Critical(i32),
@@ -27,17 +28,12 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                apply_status_effect(&mut game.player);
-                // if game.player.is_dead() {
-                //     return Err(());
-                // }
                 let new_xp = player_attack(game, enemy, random);
                 xp += new_xp;
             }
             pl_accum = -1;
         } else {
             enemy_attack(game, enemy, random);
-            receive_status_effect(enemy, &mut game.player, random);
             en_accum = -1;
         }
 
@@ -49,15 +45,19 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     Ok(xp)
 }
 
-fn player_attack(game: &Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
+fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
     let (damage, new_xp) = attack(&game.player, enemy, random);
-    log::player_attack(enemy, damage);
+    log::player_attack(enemy, &damage);
+    apply_status_effect(&mut game.player);
     new_xp
 }
 
 fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
     let (damage, _) = attack(enemy, &mut game.player, random);
-    log::enemy_attack(&game.player, damage);
+    log::enemy_attack(&game.player, &damage);
+    if damage != Attack::Miss && !game.player.is_dead() {
+        receive_status_effect(enemy, &mut game.player, random);
+    }
 }
 
 /// Inflict damage from attacker to receiver, return the inflicted
@@ -99,7 +99,7 @@ fn apply_status_effect(receiver: &mut Character) {
     match receiver.status_effect {
         StatusEffect::Burned(damage) | StatusEffect::Poisoned(damage) => {
             receiver.receive_damage(damage);
-            log::enemy_attack(receiver, Attack::Effect(receiver.status_effect));
+            log::enemy_attack(receiver, &Attack::Effect(receiver.status_effect));
         }
         StatusEffect::Normal | StatusEffect::Confused => (),
     };
