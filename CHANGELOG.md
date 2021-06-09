@@ -6,6 +6,7 @@
 * Quest system #47
 * Tutorial quests #49
 * `rpg ls` command to look for chests at the current location #51
+* Example sh file #54
 
 ### Changed
 * Tombstones are found with `rpg ls` instead of automatically #52
