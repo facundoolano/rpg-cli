@@ -1,7 +1,7 @@
 extern crate dirs;
 
 use crate::character::Character;
-use crate::item::Item;
+use crate::item::{Item, Potion};
 use crate::location::Location;
 use crate::log;
 use crate::quest;
@@ -9,7 +9,7 @@ use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io;
 use tombstone::Tombstone;
 
@@ -29,9 +29,10 @@ pub struct Game {
     pub player: Character,
     pub location: Location,
     pub gold: i32,
+    pub quests: QuestList,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
     tombstones: HashMap<Location, Tombstone>,
-    pub quests: QuestList,
+    inspected: HashSet<Location>,
 }
 
 impl Game {
@@ -43,6 +44,7 @@ impl Game {
             gold: 0,
             inventory: HashMap::new(),
             tombstones: HashMap::new(),
+            inspected: HashSet::new(),
             quests,
         }
     }
@@ -65,6 +67,7 @@ impl Game {
         // preserve tombstones and quests across hero's lifes
         std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
         std::mem::swap(&mut new_game.quests, &mut self.quests);
+        // TBD shouldn't chests be preserved?
 
         // replace the current, finished game with the new one
         *self = new_game;
@@ -88,6 +91,30 @@ impl Game {
             }
         }
         Ok(())
+    }
+
+    /// Look for chests at the current location.
+    /// Remembers previous checks for consistency.
+    pub fn inspect(&mut self) {
+        if !self.inspected.contains(&self.location) {
+            self.inspected.insert(self.location.clone());
+
+            // this could be extended to find better items, with a non uniform
+            // probability, and to change according to the distance from home
+            // it's likely better to extract to an item generator module at that point
+            match random().range(6) {
+                0 => {
+                    let gold = random().gold_gained(self.player.level * 200);
+                    log::chest_gold(&self.location, gold);
+                }
+                1 => {
+                    let potion = Potion::new(self.player.level);
+                    log::chest_item(&self.location, "potion");
+                    self.add_item("potion", Box::new(potion));
+                }
+                _ => {}
+            }
+        }
     }
 
     /// Set the hero's location to the one given, and apply related side effects.

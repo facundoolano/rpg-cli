@@ -55,6 +55,10 @@ enum Command {
         force: bool,
     },
 
+    /// Inspect the directory contents, possibly finding treasure chests.
+    #[clap(name = "ls", display_order = 1)]
+    Inspect,
+
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
     #[clap(alias = "b", display_order = 2)]
@@ -115,6 +119,9 @@ fn main() {
             force,
         } => {
             exit_code = change_dir(&mut game, &destination, run, bribe, force);
+        }
+        Command::Inspect => {
+            game.inspect();
         }
         Command::Battle { run, bribe } => {
             exit_code = battle(&mut game, run, bribe);

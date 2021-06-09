@@ -83,3 +83,18 @@ alias cp="rpg-battle && cp"
 alias chown="rpg-battle && chown"
 alias chmod="rpg-battle && chmod"
 ```
+
+## ls `cd` override
+
+The `rpg-cli ls` command looks for chests at the current location.
+It can be integrated to the regular ls like this:
+
+``` sh
+ls () {
+    /bin/ls "$@"
+    if [ $# -eq 0 ] ; then
+        rpg cd -f .
+        rpg ls
+    fi
+}
+```

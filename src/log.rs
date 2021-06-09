@@ -214,6 +214,14 @@ pub fn quest_done(reward: i32) {
     }
 }
 
+pub fn chest_item(_location: &Location, item: &str) {
+    println!("\u{1F4E6}  +{}", item);
+}
+
+pub fn chest_gold(_location: &Location, gold: i32) {
+    println!("\u{1F4E6}  {}", format_gold_plus(gold));
+}
+
 // HELPERS
 
 /// Generic log function. At the moment all output of the game is structured as
