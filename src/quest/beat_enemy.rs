@@ -41,7 +41,7 @@ impl Quest for BeatEnemies {
     }
 
     fn reward(&self) -> i32 {
-        self.unlock_at * 5000
+        self.unlock_at * 1000
     }
 
     fn handle(&mut self, event: &Event) {

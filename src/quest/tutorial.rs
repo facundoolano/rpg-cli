@@ -63,7 +63,7 @@ impl Quest for BuySword {
 
     fn handle(&mut self, event: &Event) {
         if let Event::ItemBought { item } = event {
-            if item == "sword" {
+            if item.contains("sword") {
                 self.done = true;
             }
         }
