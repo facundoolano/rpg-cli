@@ -69,7 +69,6 @@ fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
 
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
-/// receiver could also get a status_effect as part of the attack
 fn attack(
     attacker: &Character,
     receiver: &mut Character,
