@@ -19,7 +19,7 @@ pub enum StatusEffect {
 
 impl StatusEffect {
     pub fn is_normal(&self) -> bool {
-        self != &StatusEffect::Normal
+        self == &StatusEffect::Normal
     }
 }
 
