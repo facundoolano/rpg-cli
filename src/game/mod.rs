@@ -1,6 +1,6 @@
 extern crate dirs;
 
-use crate::character::{Character, StatusEffect};
+use crate::character::Character;
 use crate::item::{Item, Potion};
 use crate::location::Location;
 use crate::log;
@@ -124,12 +124,8 @@ impl Game {
         self.location = location;
         if self.location.is_home() {
             let recovered = self.player.heal_full();
-            log::heal(&self.player, &self.location, recovered);
-
-            if !self.player.status_effect.is_normal() {
-                self.player.receive_status_effect(StatusEffect::Normal);
-                log::received_status_effect(&self.player);
-            }
+            let cured = self.player.maybe_remove_status_effect();
+            log::heal(&self.player, &self.location, recovered, cured);
         }
     }
 

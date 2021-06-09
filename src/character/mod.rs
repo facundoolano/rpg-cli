@@ -174,6 +174,15 @@ impl Character {
         self.status_effect = status_effect;
     }
 
+    pub fn maybe_remove_status_effect(&mut self) -> bool {
+        if !self.status_effect.is_normal() {
+            self.receive_status_effect(StatusEffect::Normal);
+            return true;
+        }
+
+        false
+    }
+
     pub fn maybe_receive_status_effect(&mut self) -> bool {
         if !self.is_dead() && self.status_effect.is_normal() {
             let status_effect = random().status_effect();
