@@ -9,9 +9,10 @@ mod tutorial;
 /// Events that can trigger quest updates.
 enum Event {
     EnemyBeat { enemy: String },
-    LevelUp { current: i32},
+    LevelUp { current: i32 },
     ItemBought { item: String },
     ItemUsed { item: String },
+    ChestFound,
     TombstoneFound,
 }
 
@@ -39,6 +40,8 @@ impl QuestList {
         self.todo.push(Box::new(tutorial::BuySword::new()));
         self.todo.push(Box::new(tutorial::UsePotion::new()));
         self.todo.push(Box::new(tutorial::ReachLevel::new(2, 1)));
+        self.todo.push(Box::new(tutorial::FindChest::new()));
+        self.todo.push(Box::new(tutorial::VisitTomb::new()));
         self.todo.push(Box::new(tutorial::ReachLevel::new(5, 2)));
         self.todo.push(Box::new(tutorial::ReachLevel::new(10, 5)));
     }
@@ -113,14 +116,14 @@ pub fn handle_battle_won(game: &mut game::Game, enemy: &Character, levels_up: i3
         game,
         Event::EnemyBeat {
             enemy: enemy.name(),
-        }
+        },
     );
     if levels_up > 0 {
         handle(
             game,
             Event::LevelUp {
-                current: game.player.level
-            }
+                current: game.player.level,
+            },
         );
     }
 }
@@ -145,6 +148,10 @@ pub fn handle_item_used(game: &mut game::Game, item: &str) {
 
 pub fn handle_tombstone(game: &mut game::Game) {
     handle(game, Event::TombstoneFound);
+}
+
+pub fn handle_chest(game: &mut game::Game) {
+    handle(game, Event::ChestFound);
 }
 
 fn handle(game: &mut game::Game, event: Event) {

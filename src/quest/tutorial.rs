@@ -1,6 +1,8 @@
-use crate::game;
 use super::{Event, Quest};
+use crate::game;
 use serde::{Deserialize, Serialize};
+
+// TODO consider using a macro to reduce duplication across these structs
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WinBattle {
@@ -140,6 +142,78 @@ impl Quest for ReachLevel {
     fn handle(&mut self, event: &Event) {
         if let Event::LevelUp { current, .. } = event {
             self.current = *current
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FindChest {
+    done: bool,
+}
+
+impl FindChest {
+    pub fn new() -> Self {
+        Self { done: false }
+    }
+}
+
+#[typetag::serde]
+impl Quest for FindChest {
+    fn description(&self) -> String {
+        "find a chest".to_string()
+    }
+
+    fn is_done(&self) -> bool {
+        self.done
+    }
+
+    fn is_visible(&self, game: &game::Game) -> bool {
+        game.player.level >= 2
+    }
+
+    fn reward(&self) -> i32 {
+        100
+    }
+
+    fn handle(&mut self, event: &Event) {
+        if let Event::ChestFound = event {
+            self.done = true;
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct VisitTomb {
+    done: bool,
+}
+
+impl VisitTomb {
+    pub fn new() -> Self {
+        Self { done: false }
+    }
+}
+
+#[typetag::serde]
+impl Quest for VisitTomb {
+    fn description(&self) -> String {
+        "visit the tomb of a fallen hero".to_string()
+    }
+
+    fn is_done(&self) -> bool {
+        self.done
+    }
+
+    fn is_visible(&self, game: &game::Game) -> bool {
+        game.player.level >= 5
+    }
+
+    fn reward(&self) -> i32 {
+        100
+    }
+
+    fn handle(&mut self, event: &Event) {
+        if let Event::TombstoneFound = event {
+            self.done = true;
         }
     }
 }
