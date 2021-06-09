@@ -107,12 +107,6 @@ pub fn received_status_effect(player: &Character, status_effect: StatusEffect) {
     }
 }
 
-pub fn applied_status_effect(player: &Character, status_effect: StatusEffect) {
-    if !quiet() {
-        battle_log(player, &format_status_effect_applied(status_effect));
-    }
-}
-
 pub fn battle_lost(player: &Character) {
     battle_log(player, "\u{1F480}");
 }
@@ -260,6 +254,10 @@ fn format_attack(attack: Attack, color: &str) -> String {
     match attack {
         Attack::Regular(damage) => format!("-{}hp", damage).color(color).to_string(),
         Attack::Critical(damage) => format!("-{}hp critical!", damage).color(color).to_string(),
+        Attack::Effect(status_effect) => {
+            let (_, emoji, color, damage) = status_effect_details(status_effect);
+            format!("-{}hp {}", damage, emoji).color(color).to_string()
+        }
         Attack::Miss => " dodged!".to_string(),
     }
 }
@@ -275,7 +273,7 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
         StatusEffect::Poisoned(damage) => (
             String::from("poisoned"),
             String::from("\u{1F9EA}"),
-            String::from("bright red"),
+            String::from("green"),
             damage,
         ),
         StatusEffect::Confused => (
@@ -290,12 +288,7 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
 
 fn format_status_effect_received(status_effect: StatusEffect) -> String {
     let (name, emoji, color, _) = status_effect_details(status_effect);
-    format!("got {} {}", name, emoji).color(color).to_string()
-}
-
-fn format_status_effect_applied(status_effect: StatusEffect) -> String {
-    let (_, emoji, color, damage) = status_effect_details(status_effect);
-    format!("-{}hp {}", damage, emoji).color(color).to_string()
+    format!(" got {} {}", name, emoji).color(color).to_string()
 }
 
 fn hp_display(character: &Character, slots: i32) -> String {

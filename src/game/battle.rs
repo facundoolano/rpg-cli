@@ -8,6 +8,7 @@ use crate::randomizer::Randomizer;
 pub enum Attack {
     Regular(i32),
     Critical(i32),
+    Effect(StatusEffect),
     Miss,
 }
 
@@ -98,7 +99,7 @@ fn apply_status_effect(receiver: &mut Character) {
     match receiver.status_effect {
         StatusEffect::Burned(damage) | StatusEffect::Poisoned(damage) => {
             receiver.receive_damage(damage);
-            log::applied_status_effect(receiver, receiver.status_effect);
+            log::enemy_attack(receiver, Attack::Effect(receiver.status_effect));
         }
         StatusEffect::Normal | StatusEffect::Confused => (),
     };
