@@ -1,8 +1,6 @@
 use crate::game;
 use crate::item::equipment::{Shield, Sword};
 use crate::item::{equipment::Equipment, Item};
-use crate::log;
-use crate::quest;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -34,7 +32,7 @@ impl Tombstone {
     }
 
     /// Add the items of the tombstone to the current game
-    pub fn pick_up(&mut self, game: &mut game::Game) {
+    pub fn pick_up(&mut self, game: &mut game::Game) -> (Vec<String>, i32) {
         let mut to_log = Vec::new();
 
         // the equipment is picked up only if it's better than the current one
@@ -63,9 +61,7 @@ impl Tombstone {
         }
 
         game.gold += self.gold;
-
-        log::tombstone(&game.location, &to_log, self.gold);
-        quest::handle_tombstone(game);
+        (to_log, self.gold)
     }
 }
 

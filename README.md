@@ -10,6 +10,7 @@ Features:
 * Automatic turn-based combat.
 * Item and equipment support.
 * 15+ enemy classes.
+* Chests hidden in directories.
 * Permadeath with item recovering.
 * Run and bribe to escape battles.
 
@@ -137,8 +138,8 @@ The further from home you move the hero, the tougher the enemies will get. If yo
 Death is permanent: you can't save your progress and reload after dying, but if you take your new hero to the location of the previous one's death,
 you can recover gold, items and equipment:
 
-    ~ $ rpg cd -
-       hero[🪦]@~/dev/facundoolano/rpg-cli/ +potionx1 +75g
+    ~ $ rpg cd - && rpg ls
+    🪦 +potionx1 +75g
 
 
 Try `rpg --help` for more options and check the [shell integration guide](shell/README.md) for ideas to adapt the game to your preferences.

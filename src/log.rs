@@ -58,18 +58,6 @@ pub fn run_away_failure(player: &Character) {
     battle_log(player, "can't run!");
 }
 
-pub fn tombstone(location: &Location, items: &[String], gold: i32) {
-    let name = format!("{:>8}", "hero");
-    print!("{}[\u{1FAA6} ]@{}", name, location);
-    if gold > 0 {
-        print!(" {}", format_gold_plus(gold));
-    }
-    for item in items {
-        print!(" +{}", item);
-    }
-    println!();
-}
-
 pub fn heal(player: &Character, location: &Location, recovered: i32) {
     if recovered > 0 {
         log(
@@ -214,12 +202,27 @@ pub fn quest_done(reward: i32) {
     }
 }
 
-pub fn chest_item(_location: &Location, item: &str) {
-    println!("\u{1F4E6}  +{}", item);
+pub fn chest_item(item: &str) {
+    format_ls("\u{1F4E6}", &[item.to_string()], 0);
 }
 
-pub fn chest_gold(_location: &Location, gold: i32) {
-    println!("\u{1F4E6}  {}", format_gold_plus(gold));
+pub fn chest_gold(gold: i32) {
+    format_ls("\u{1F4E6}", &[], gold);
+}
+
+pub fn tombstone(items: &[String], gold: i32) {
+    format_ls("\u{1FAA6}", items, gold);
+}
+
+fn format_ls(emoji: &str, items: &[String], gold: i32) {
+    print!("{} ", emoji);
+    if gold > 0 {
+        print!(" {}", format_gold_plus(gold));
+    }
+    for item in items {
+        print!(" +{}", item);
+    }
+    println!();
 }
 
 // HELPERS
