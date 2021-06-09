@@ -164,12 +164,18 @@ impl Character {
         }
     }
 
+    pub fn receive_status_effect(&mut self, status_effect: StatusEffect) {
+        self.status_effect = status_effect;
+    }
+
     pub fn maybe_receive_status_effect(&mut self) -> bool {
-        let status_effect = random().status_effect(self.status_effect == StatusEffect::Normal);
-        if status_effect != StatusEffect::Normal {
-            self.status_effect = status_effect;
-            return true;
-        };
+        if !self.is_dead() {
+            let status_effect = random().status_effect(self.status_effect == StatusEffect::Normal);
+            if status_effect != StatusEffect::Normal {
+                self.receive_status_effect(status_effect);
+                return true;
+            }
+        }
 
         false
     }

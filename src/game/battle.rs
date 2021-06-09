@@ -62,8 +62,7 @@ fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
     log::enemy_attack(&game.player, &damage);
 
     // if player took a hit, maybe_receive_status_effect
-    if damage != Attack::Miss && !game.player.is_dead() && game.player.maybe_receive_status_effect()
-    {
+    if damage != Attack::Miss && game.player.maybe_receive_status_effect() {
         log::received_status_effect(&game.player);
     }
 }
