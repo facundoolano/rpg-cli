@@ -1,5 +1,5 @@
 use super::Game;
-use crate::character::{Character, Condition};
+use crate::character::{Character, StatusEffect};
 use crate::log;
 use crate::randomizer::Randomizer;
 
@@ -26,12 +26,17 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
+                apply_status_effect(&mut game.player);
+                // if game.player.is_dead() {
+                //     return Err(());
+                // }
                 let new_xp = player_attack(game, enemy, random);
                 xp += new_xp;
             }
             pl_accum = -1;
         } else {
             enemy_attack(game, enemy, random);
+            receive_status_effect(enemy, &mut game.player, random);
             en_accum = -1;
         }
 
@@ -44,44 +49,59 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 }
 
 fn player_attack(game: &Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (damage, new_xp, _) = attack(&game.player, enemy, random);
+    let (damage, new_xp) = attack(&game.player, enemy, random);
     log::player_attack(enemy, damage);
     new_xp
 }
 
 fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
-    let (damage, _, condition) = attack(enemy, &mut game.player, random);
-    log::enemy_attack(&game.player, damage, condition);
+    let (damage, _) = attack(enemy, &mut game.player, random);
+    log::enemy_attack(&game.player, damage);
 }
 
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
+/// receiver could also get a status_effect as part of the attack
 fn attack(
     attacker: &Character,
     receiver: &mut Character,
     random: &dyn Randomizer,
-) -> (Attack, i32, Option<Condition>) {
+) -> (Attack, i32) {
     if random.is_miss(attacker.speed, receiver.speed) {
-        (Attack::Miss, 0, None)
+        (Attack::Miss, 0)
     } else {
         let damage = random.damage(attacker.damage(receiver));
         let xp = attacker.xp_gained(receiver, damage);
-        // Randomly get condition for now. It may later be consequence of the
-        // attacker's feasiblity ratio to produce a certain condition and receiver's to get it
-        let condition = random.condition(attacker.produces_condition(receiver));
-        if condition.is_some() {
-            receiver.receive_condition(condition);
-        }
 
         if random.is_critical() {
             let damage = damage * 2;
             receiver.receive_damage(damage);
-            (Attack::Critical(damage), xp, condition)
+            (Attack::Critical(damage), xp)
         } else {
             receiver.receive_damage(damage);
-            (Attack::Regular(damage), xp, condition)
+            (Attack::Regular(damage), xp)
         }
     }
+}
+
+fn receive_status_effect(attacker: &Character, receiver: &mut Character, random: &dyn Randomizer) {
+    // Randomly get status_effect for now. It may later be consequence of the
+    // attacker's feasiblity ratio to produce a certain status_effect and receiver's to get it
+    let status_effect = random.status_effect(attacker.produces_status_effect(receiver));
+    if status_effect != StatusEffect::Normal {
+        receiver.receive_status_effect(status_effect);
+        log::received_status_effect(receiver, status_effect);
+    };
+}
+
+fn apply_status_effect(receiver: &mut Character) {
+    match receiver.status_effect {
+        StatusEffect::Burned(damage) | StatusEffect::Poisoned(damage) => {
+            receiver.receive_damage(damage);
+            log::applied_status_effect(receiver, receiver.status_effect);
+        }
+        StatusEffect::Normal | StatusEffect::Confused => (),
+    };
 }
 
 /// If the player is low on hp and has a potion available use it

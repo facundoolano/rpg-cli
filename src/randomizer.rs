@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::character::Condition;
+use crate::character::StatusEffect;
 use crate::location;
 use rand::Rng;
 use std::cmp::max;
@@ -28,7 +28,7 @@ pub trait Randomizer {
 
     fn stat_increase(&self, increase: i32) -> i32;
 
-    fn condition(&self, produce_condition: bool) -> Option<Condition>;
+    fn status_effect(&self, produce_status_effect: bool) -> StatusEffect;
 }
 
 #[cfg(not(test))]
@@ -115,17 +115,18 @@ impl Randomizer for DefaultRandomizer {
         rng.gen_range(min_value..=max_value)
     }
 
-    fn condition(&self, produce_condition: bool) -> Option<Condition> {
-        if produce_condition {
+    fn status_effect(&self, produce_status_effect: bool) -> StatusEffect {
+        if produce_status_effect {
             let mut rng = rand::thread_rng();
+            let damage = rng.gen_range(1..=3);
             match rng.gen_range(0..20) {
-                0 => Some(Condition::Burned),
-                1 => Some(Condition::Dizzy),
-                2 => Some(Condition::Poisoned),
-                _ => None,
+                0 => StatusEffect::Burned(damage),
+                1 => StatusEffect::Confused,
+                2 => StatusEffect::Poisoned(damage),
+                _ => StatusEffect::Normal,
             }
         } else {
-            None
+            StatusEffect::Normal
         }
     }
 }
@@ -171,8 +172,8 @@ impl Randomizer for TestRandomizer {
         increase
     }
 
-    fn condition(&self, _produce_condition: bool) -> Option<Condition> {
-        None
+    fn status_effect(&self, _produce_status_effect: bool) -> StatusEffect {
+        StatusEffect::Normal
     }
 }
 

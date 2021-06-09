@@ -1,4 +1,4 @@
-use crate::character::{Character, Condition};
+use crate::character::{Character, StatusEffect};
 use crate::game::battle::Attack;
 use crate::game::Game;
 use crate::item::shop;
@@ -95,12 +95,21 @@ pub fn player_attack(enemy: &Character, attack: Attack) {
     }
 }
 
-pub fn enemy_attack(player: &Character, attack: Attack, condition: Option<Condition>) {
+pub fn enemy_attack(player: &Character, attack: Attack) {
     if !quiet() {
         battle_log(player, &format_attack(attack, "bright red"));
-        if condition.is_some() {
-            battle_log(player, &format_condition(condition));
-        }
+    }
+}
+
+pub fn received_status_effect(player: &Character, status_effect: StatusEffect) {
+    if !quiet() {
+        battle_log(player, &format_status_effect_received(status_effect));
+    }
+}
+
+pub fn applied_status_effect(player: &Character, status_effect: StatusEffect) {
+    if !quiet() {
+        battle_log(player, &format_status_effect_applied(status_effect));
     }
 }
 
@@ -255,19 +264,38 @@ fn format_attack(attack: Attack, color: &str) -> String {
     }
 }
 
-fn format_condition(condition: Option<Condition>) -> String {
-    match condition {
-        Some(Condition::Burned) => String::from("got burned \u{1F525}")
-            .color("bright red")
-            .to_string(),
-        Some(Condition::Poisoned) => String::from("got poisoned \u{1F9EA}")
-            .color("green")
-            .to_string(),
-        Some(Condition::Dizzy) => String::from("got dizzy \u{1F300}")
-            .color("blue")
-            .to_string(),
-        None => String::new(),
+fn status_effect_details(status_effect: StatusEffect) -> (String, String, String, i32) {
+    match status_effect {
+        StatusEffect::Burned(damage) => (
+            String::from("burned"),
+            String::from("\u{1F525}"),
+            String::from("bright red"),
+            damage,
+        ),
+        StatusEffect::Poisoned(damage) => (
+            String::from("poisoned"),
+            String::from("\u{1F9EA}"),
+            String::from("bright red"),
+            damage,
+        ),
+        StatusEffect::Confused => (
+            String::from("confused"),
+            String::from("\u{1F300}"),
+            String::from("blue"),
+            0,
+        ),
+        StatusEffect::Normal => (String::new(), String::new(), String::new(), 0),
     }
+}
+
+fn format_status_effect_received(status_effect: StatusEffect) -> String {
+    let (name, emoji, color, _) = status_effect_details(status_effect);
+    format!("got {} {}", name, emoji).color(color).to_string()
+}
+
+fn format_status_effect_applied(status_effect: StatusEffect) -> String {
+    let (_, emoji, color, damage) = status_effect_details(status_effect);
+    format!("-{}hp {}", damage, emoji).color(color).to_string()
 }
 
 fn hp_display(character: &Character, slots: i32) -> String {

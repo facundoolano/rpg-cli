@@ -9,10 +9,11 @@ use crate::randomizer::{random, Randomizer};
 use class::Class;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
-pub enum Condition {
-    Burned,
-    Poisoned,
-    Dizzy,
+pub enum StatusEffect {
+    Normal,
+    Burned(i32),
+    Poisoned(i32),
+    Confused,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -30,7 +31,7 @@ pub struct Character {
 
     pub strength: i32,
     pub speed: i32,
-    pub condition: Option<Condition>,
+    pub status_effect: StatusEffect,
 }
 
 // Always attach the static hero class to deserialized characters
@@ -67,7 +68,7 @@ impl Character {
             current_hp: class.hp.base(),
             strength: class.strength.base(),
             speed: class.speed.base(),
-            condition: None,
+            status_effect: StatusEffect::Normal,
         };
 
         for _ in 1..level {
@@ -162,12 +163,12 @@ impl Character {
         }
     }
 
-    pub fn produces_condition(&self, receiver: &Self) -> bool {
-        receiver.condition.is_none()
+    pub fn produces_status_effect(&self, receiver: &Self) -> bool {
+        receiver.status_effect == StatusEffect::Normal
     }
 
-    pub fn receive_condition(&mut self, condition: Option<Condition>) {
-        self.condition = condition;
+    pub fn receive_status_effect(&mut self, status_effect: StatusEffect) {
+        self.status_effect = status_effect;
     }
 }
 
@@ -198,7 +199,7 @@ mod tests {
         assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
         assert_eq!(TEST_CLASS.strength.base(), hero.strength);
         assert_eq!(TEST_CLASS.speed.base(), hero.speed);
-        assert_eq!(None, hero.condition);
+        assert_eq!(StatusEffect::Normal, hero.status_effect);
     }
 
     #[test]
@@ -378,10 +379,10 @@ mod tests {
     }
 
     #[test]
-    fn test_receive_condition() {
+    fn test_receive_status_effect() {
         let mut hero = Character::player();
 
-        hero.receive_condition(Some(Condition::Burned));
-        assert_eq!(Condition::Burned, hero.condition.unwrap());
+        hero.receive_status_effect(StatusEffect::Burned(2));
+        assert_eq!(StatusEffect::Burned(2), hero.status_effect);
     }
 }
