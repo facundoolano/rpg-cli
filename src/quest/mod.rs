@@ -38,7 +38,9 @@ impl QuestList {
         self.todo.push(Box::new(tutorial::WinBattle::new()));
         self.todo.push(Box::new(tutorial::BuySword::new()));
         self.todo.push(Box::new(tutorial::UsePotion::new()));
-        self.todo.push(Box::new(tutorial::ReachLevel::new(2)));
+        self.todo.push(Box::new(tutorial::ReachLevel::new(2, 1)));
+        self.todo.push(Box::new(tutorial::ReachLevel::new(5, 2)));
+        self.todo.push(Box::new(tutorial::ReachLevel::new(10, 5)));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.

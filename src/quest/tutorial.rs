@@ -1,3 +1,4 @@
+use crate::game;
 use super::{Event, Quest};
 use serde::{Deserialize, Serialize};
 
@@ -104,13 +105,15 @@ impl Quest for UsePotion {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReachLevel {
     target: i32,
+    unlock_at: i32,
     current: i32,
 }
 
 impl ReachLevel {
-    pub fn new(level: i32) -> Self {
+    pub fn new(target: i32, unlock_at: i32) -> Self {
         Self {
-            target: level,
+            target,
+            unlock_at,
             current: 1,
         }
     }
@@ -124,6 +127,10 @@ impl Quest for ReachLevel {
 
     fn is_done(&self) -> bool {
         self.target <= self.current
+    }
+
+    fn is_visible(&self, game: &game::Game) -> bool {
+        game.player.level >= self.unlock_at
     }
 
     fn reward(&self) -> i32 {
