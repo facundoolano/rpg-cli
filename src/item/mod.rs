@@ -63,3 +63,26 @@ impl fmt::Display for Escape {
         write!(f, "escape")
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Remedy {}
+
+impl Remedy {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+#[typetag::serde]
+impl Item for Remedy {
+    fn apply(&self, game: &mut game::Game) {
+        let healed = game.player.maybe_remove_status_effect();
+        log::remedy(&game.player, healed);
+    }
+}
+
+impl fmt::Display for Remedy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "remedy")
+    }
+}

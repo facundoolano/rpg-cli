@@ -52,6 +52,9 @@ fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
     let potion = super::Potion::new(level);
     items.push(("potion".to_string(), Box::new(potion)));
 
+    let remedy = super::Remedy::new();
+    items.push(("remedy".to_string(), Box::new(remedy)));
+
     let escape = super::Escape::new();
     items.push(("escape".to_string(), Box::new(escape)));
 
@@ -116,5 +119,15 @@ impl Shoppable for super::Escape {
 
     fn add_to(&self, game: &mut Game) {
         game.add_item("escape", Box::new(self.clone()));
+    }
+}
+
+impl Shoppable for super::Remedy {
+    fn cost(&self) -> i32 {
+        400
+    }
+
+    fn add_to(&self, game: &mut Game) {
+        game.add_item("remedy", Box::new(self.clone()));
     }
 }
