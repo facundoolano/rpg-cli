@@ -9,7 +9,7 @@ use std::cmp::{max, min};
 
 pub mod class;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum StatusEffect {
     Normal,
     Burned(i32),
@@ -19,7 +19,7 @@ pub enum StatusEffect {
 
 impl StatusEffect {
     pub fn is_normal(&self) -> bool {
-        self == &StatusEffect::Normal
+        matches!(self, StatusEffect::Normal)
     }
 }
 
@@ -233,7 +233,7 @@ mod tests {
         assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
         assert_eq!(TEST_CLASS.strength.base(), hero.strength);
         assert_eq!(TEST_CLASS.speed.base(), hero.speed);
-        assert_eq!(StatusEffect::Normal, hero.status_effect);
+        assert!(matches!(hero.status_effect, StatusEffect::Normal));
     }
 
     #[test]
@@ -417,6 +417,6 @@ mod tests {
         let mut hero = Character::player();
 
         hero.maybe_receive_status_effect();
-        assert_eq!(StatusEffect::Normal, hero.status_effect);
+        assert!(matches!(hero.status_effect, StatusEffect::Normal));
     }
 }

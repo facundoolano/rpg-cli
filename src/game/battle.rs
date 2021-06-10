@@ -5,7 +5,6 @@ use crate::randomizer::Randomizer;
 
 /// Outcome of an attack attempt.
 /// This affects primarily how the attack is displayed.
-#[derive(PartialEq)]
 pub enum Attack {
     Regular(i32),
     Critical(i32),
@@ -15,7 +14,7 @@ pub enum Attack {
 
 impl Attack {
     pub fn is_hit(&self) -> bool {
-        *self != Attack::Miss
+        !matches!(*self, Attack::Miss)
     }
 }
 
