@@ -65,7 +65,6 @@ impl QuestList {
         ));
         self.todo.push((5, 1000, beat_enemy::at_distance(10)));
 
-        // level 10
         self.todo.push((
             10,
             10000,

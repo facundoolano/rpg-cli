@@ -1,8 +1,6 @@
 use super::{Event, Quest};
 use serde::{Deserialize, Serialize};
 
-// TODO consider using a macro to reduce duplication across these structs
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WinBattle;
 
