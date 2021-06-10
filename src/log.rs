@@ -331,7 +331,7 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
         StatusEffect::Burned(damage) => (
             String::from("burned"),
             String::from("\u{1F525}"),
-            String::from("red"),
+            String::from("bright red"),
             damage,
         ),
         StatusEffect::Poisoned(damage) => (
