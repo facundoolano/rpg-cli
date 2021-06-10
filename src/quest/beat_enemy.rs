@@ -14,10 +14,7 @@ pub fn of_class(classes: &[Class], description: &str) -> Box<dyn Quest> {
 }
 
 pub fn at_distance(distance: i32) -> Box<dyn Quest> {
-    Box::new(BeatEnemyDistance {
-        distance,
-        done: false,
-    })
+    Box::new(BeatEnemyDistance { distance })
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -34,25 +31,21 @@ impl Quest for BeatEnemyClass {
         format!("{} {}/{}", self.description, already_beat, self.total)
     }
 
-    fn is_done(&self) -> bool {
-        self.to_beat.is_empty()
-    }
-
     fn reward(&self) -> i32 {
         2000
     }
 
-    fn handle(&mut self, event: &Event) {
+    fn handle(&mut self, event: &Event) -> bool {
         if let Event::EnemyBeat { enemy, .. } = event {
             self.to_beat.remove(enemy);
         }
+        self.to_beat.is_empty()
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BeatEnemyDistance {
     distance: i32,
-    done: bool,
 }
 
 #[typetag::serde]
@@ -61,19 +54,16 @@ impl Quest for BeatEnemyDistance {
         format!("Defeat an enemy {} steps away from home", self.distance)
     }
 
-    fn is_done(&self) -> bool {
-        self.done
-    }
-
     fn reward(&self) -> i32 {
         2000
     }
 
-    fn handle(&mut self, event: &Event) {
+    fn handle(&mut self, event: &Event) -> bool {
         if let Event::EnemyBeat { location, .. } = event {
             if location.distance_from_home().len() >= self.distance {
-                self.done = true;
+                return true;
             }
         }
+        false
     }
 }

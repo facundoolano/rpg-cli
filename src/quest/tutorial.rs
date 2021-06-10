@@ -4,15 +4,7 @@ use serde::{Deserialize, Serialize};
 // TODO consider using a macro to reduce duplication across these structs
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct WinBattle {
-    done: bool,
-}
-
-impl WinBattle {
-    pub fn new() -> Self {
-        Self { done: false }
-    }
-}
+pub struct WinBattle;
 
 #[typetag::serde]
 impl Quest for WinBattle {
@@ -20,31 +12,17 @@ impl Quest for WinBattle {
         "win a battle".to_string()
     }
 
-    fn is_done(&self) -> bool {
-        self.done
-    }
-
     fn reward(&self) -> i32 {
         100
     }
 
-    fn handle(&mut self, event: &Event) {
-        if let Event::EnemyBeat { .. } = event {
-            self.done = true;
-        }
+    fn handle(&mut self, event: &Event) -> bool {
+        matches!(event, Event::EnemyBeat { .. })
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct BuySword {
-    done: bool,
-}
-
-impl BuySword {
-    pub fn new() -> Self {
-        Self { done: false }
-    }
-}
+pub struct BuySword;
 
 #[typetag::serde]
 impl Quest for BuySword {
@@ -52,33 +30,22 @@ impl Quest for BuySword {
         "buy a sword".to_string()
     }
 
-    fn is_done(&self) -> bool {
-        self.done
-    }
-
     fn reward(&self) -> i32 {
         100
     }
 
-    fn handle(&mut self, event: &Event) {
+    fn handle(&mut self, event: &Event) -> bool {
         if let Event::ItemBought { item } = event {
             if item.contains("sword") {
-                self.done = true;
+                return true;
             }
         }
+        false
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct UsePotion {
-    done: bool,
-}
-
-impl UsePotion {
-    pub fn new() -> Self {
-        Self { done: false }
-    }
-}
+pub struct UsePotion;
 
 #[typetag::serde]
 impl Quest for UsePotion {
@@ -86,32 +53,28 @@ impl Quest for UsePotion {
         "use a potion".to_string()
     }
 
-    fn is_done(&self) -> bool {
-        self.done
-    }
-
     fn reward(&self) -> i32 {
         100
     }
 
-    fn handle(&mut self, event: &Event) {
+    fn handle(&mut self, event: &Event) -> bool {
         if let Event::ItemUsed { item } = event {
             if item == "potion" {
-                self.done = true;
+                return true;
             }
         }
+        false
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReachLevel {
     target: i32,
-    current: i32,
 }
 
 impl ReachLevel {
     pub fn new(target: i32) -> Self {
-        Self { target, current: 1 }
+        Self { target }
     }
 }
 
@@ -121,31 +84,20 @@ impl Quest for ReachLevel {
         format!("reach level {}", self.target)
     }
 
-    fn is_done(&self) -> bool {
-        self.target <= self.current
-    }
-
     fn reward(&self) -> i32 {
         100
     }
 
-    fn handle(&mut self, event: &Event) {
+    fn handle(&mut self, event: &Event) -> bool {
         if let Event::LevelUp { current, .. } = event {
-            self.current = *current
+            return *current == self.target;
         }
+        false
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FindChest {
-    done: bool,
-}
-
-impl FindChest {
-    pub fn new() -> Self {
-        Self { done: false }
-    }
-}
+pub struct FindChest;
 
 #[typetag::serde]
 impl Quest for FindChest {
@@ -153,31 +105,17 @@ impl Quest for FindChest {
         "find a chest".to_string()
     }
 
-    fn is_done(&self) -> bool {
-        self.done
-    }
-
     fn reward(&self) -> i32 {
         100
     }
 
-    fn handle(&mut self, event: &Event) {
-        if let Event::ChestFound = event {
-            self.done = true;
-        }
+    fn handle(&mut self, event: &Event) -> bool {
+        matches!(event, Event::ChestFound)
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct VisitTomb {
-    done: bool,
-}
-
-impl VisitTomb {
-    pub fn new() -> Self {
-        Self { done: false }
-    }
-}
+pub struct VisitTomb;
 
 #[typetag::serde]
 impl Quest for VisitTomb {
@@ -185,17 +123,11 @@ impl Quest for VisitTomb {
         "visit the tomb of a fallen hero".to_string()
     }
 
-    fn is_done(&self) -> bool {
-        self.done
-    }
-
     fn reward(&self) -> i32 {
         100
     }
 
-    fn handle(&mut self, event: &Event) {
-        if let Event::TombstoneFound = event {
-            self.done = true;
-        }
+    fn handle(&mut self, event: &Event) -> bool {
+        matches!(event, Event::TombstoneFound)
     }
 }

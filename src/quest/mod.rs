@@ -41,19 +41,19 @@ impl QuestList {
     fn setup(&mut self) {
         // FIXME should reward be handled here as well?
 
-        self.todo.push((1, Box::new(tutorial::WinBattle::new())));
-        self.todo.push((1, Box::new(tutorial::BuySword::new())));
-        self.todo.push((1, Box::new(tutorial::UsePotion::new())));
+        self.todo.push((1, Box::new(tutorial::WinBattle)));
+        self.todo.push((1, Box::new(tutorial::BuySword)));
+        self.todo.push((1, Box::new(tutorial::UsePotion)));
         self.todo.push((1, Box::new(tutorial::ReachLevel::new(2))));
 
-        self.todo.push((2, Box::new(tutorial::FindChest::new())));
+        self.todo.push((2, Box::new(tutorial::FindChest)));
         self.todo.push((2, Box::new(tutorial::ReachLevel::new(5))));
         self.todo.push((
             2,
             beat_enemy::of_class(&character::class::COMMON, "beat all common creatures"),
         ));
 
-        self.todo.push((5, Box::new(tutorial::VisitTomb::new())));
+        self.todo.push((5, Box::new(tutorial::VisitTomb)));
         self.todo.push((5, Box::new(tutorial::ReachLevel::new(10))));
         self.todo.push((
             5,
@@ -75,9 +75,9 @@ impl QuestList {
         let mut total_reward = 0;
 
         for (unlock_at, mut quest) in self.todo.drain(..) {
-            quest.handle(&event);
+            let is_done = quest.handle(&event);
 
-            if quest.is_done() {
+            if is_done {
                 let reward = quest.reward();
                 total_reward += reward;
                 log::quest_done(reward);
@@ -112,14 +112,13 @@ pub trait Quest {
     /// What to show in the TODO quests list
     fn description(&self) -> String;
 
-    /// Whether this quest should be listed as TODO or DONE
-    fn is_done(&self) -> bool;
-
     /// The gold rewarded upon quest completion
     // NOTE: we could consider more sophisticated rewards than just gold
     fn reward(&self) -> i32;
 
-    fn handle(&mut self, event: &Event);
+    /// Update the quest progress based on the given event and
+    /// return whether the quest was finished.
+    fn handle(&mut self, event: &Event) -> bool;
 }
 
 impl fmt::Display for dyn Quest {
