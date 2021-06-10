@@ -12,10 +12,6 @@ impl Quest for WinBattle {
         "win a battle".to_string()
     }
 
-    fn reward(&self) -> i32 {
-        100
-    }
-
     fn handle(&mut self, event: &Event) -> bool {
         matches!(event, Event::EnemyBeat { .. })
     }
@@ -28,10 +24,6 @@ pub struct BuySword;
 impl Quest for BuySword {
     fn description(&self) -> String {
         "buy a sword".to_string()
-    }
-
-    fn reward(&self) -> i32 {
-        100
     }
 
     fn handle(&mut self, event: &Event) -> bool {
@@ -51,10 +43,6 @@ pub struct UsePotion;
 impl Quest for UsePotion {
     fn description(&self) -> String {
         "use a potion".to_string()
-    }
-
-    fn reward(&self) -> i32 {
-        100
     }
 
     fn handle(&mut self, event: &Event) -> bool {
@@ -84,10 +72,6 @@ impl Quest for ReachLevel {
         format!("reach level {}", self.target)
     }
 
-    fn reward(&self) -> i32 {
-        100
-    }
-
     fn handle(&mut self, event: &Event) -> bool {
         if let Event::LevelUp { current, .. } = event {
             return *current == self.target;
@@ -105,10 +89,6 @@ impl Quest for FindChest {
         "find a chest".to_string()
     }
 
-    fn reward(&self) -> i32 {
-        100
-    }
-
     fn handle(&mut self, event: &Event) -> bool {
         matches!(event, Event::ChestFound)
     }
@@ -121,10 +101,6 @@ pub struct VisitTomb;
 impl Quest for VisitTomb {
     fn description(&self) -> String {
         "visit the tomb of a fallen hero".to_string()
-    }
-
-    fn reward(&self) -> i32 {
-        100
     }
 
     fn handle(&mut self, event: &Event) -> bool {

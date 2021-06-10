@@ -31,10 +31,6 @@ impl Quest for BeatEnemyClass {
         format!("{} {}/{}", self.description, already_beat, self.total)
     }
 
-    fn reward(&self) -> i32 {
-        2000
-    }
-
     fn handle(&mut self, event: &Event) -> bool {
         if let Event::EnemyBeat { enemy, .. } = event {
             self.to_beat.remove(enemy);
@@ -52,10 +48,6 @@ pub struct BeatEnemyDistance {
 impl Quest for BeatEnemyDistance {
     fn description(&self) -> String {
         format!("Defeat an enemy {} steps away from home", self.distance)
-    }
-
-    fn reward(&self) -> i32 {
-        2000
     }
 
     fn handle(&mut self, event: &Event) -> bool {
