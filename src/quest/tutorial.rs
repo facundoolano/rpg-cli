@@ -1,5 +1,4 @@
 use super::{Event, Quest};
-use crate::game;
 use serde::{Deserialize, Serialize};
 
 // TODO consider using a macro to reduce duplication across these structs
@@ -107,17 +106,12 @@ impl Quest for UsePotion {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReachLevel {
     target: i32,
-    unlock_at: i32,
     current: i32,
 }
 
 impl ReachLevel {
-    pub fn new(target: i32, unlock_at: i32) -> Self {
-        Self {
-            target,
-            unlock_at,
-            current: 1,
-        }
+    pub fn new(target: i32) -> Self {
+        Self { target, current: 1 }
     }
 }
 
@@ -129,10 +123,6 @@ impl Quest for ReachLevel {
 
     fn is_done(&self) -> bool {
         self.target <= self.current
-    }
-
-    fn is_visible(&self, game: &game::Game) -> bool {
-        game.player.level >= self.unlock_at
     }
 
     fn reward(&self) -> i32 {
@@ -167,10 +157,6 @@ impl Quest for FindChest {
         self.done
     }
 
-    fn is_visible(&self, game: &game::Game) -> bool {
-        game.player.level >= 2
-    }
-
     fn reward(&self) -> i32 {
         100
     }
@@ -201,10 +187,6 @@ impl Quest for VisitTomb {
 
     fn is_done(&self) -> bool {
         self.done
-    }
-
-    fn is_visible(&self, game: &game::Game) -> bool {
-        game.player.level >= 5
     }
 
     fn reward(&self) -> i32 {

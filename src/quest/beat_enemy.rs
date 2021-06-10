@@ -2,16 +2,14 @@ use std::collections::HashSet;
 
 use super::{Event, Quest};
 use crate::character::class::Class;
-use crate::game;
 use serde::{Deserialize, Serialize};
 
-pub fn of_class(classes: &[Class], description: &str, unlock_at: i32) -> Box<dyn Quest> {
+pub fn of_class(classes: &[Class], description: &str) -> Box<dyn Quest> {
     let to_beat = classes.iter().map(|c| c.name.to_string()).collect();
     Box::new(BeatEnemyClass {
         to_beat,
         total: classes.len(),
         description: description.to_string(),
-        unlock_at,
     })
 }
 
@@ -26,7 +24,6 @@ pub fn at_distance(distance: i32) -> Box<dyn Quest> {
 pub struct BeatEnemyClass {
     to_beat: HashSet<String>,
     total: usize,
-    unlock_at: i32,
     description: String,
 }
 
@@ -41,12 +38,8 @@ impl Quest for BeatEnemyClass {
         self.to_beat.is_empty()
     }
 
-    fn is_visible(&self, game: &game::Game) -> bool {
-        game.player.level >= self.unlock_at
-    }
-
     fn reward(&self) -> i32 {
-        self.unlock_at * 1000
+        2000
     }
 
     fn handle(&mut self, event: &Event) {
@@ -74,10 +67,6 @@ impl Quest for BeatEnemyDistance {
 
     fn reward(&self) -> i32 {
         2000
-    }
-
-    fn is_visible(&self, game: &game::Game) -> bool {
-        game.player.level >= 5
     }
 
     fn handle(&mut self, event: &Event) {

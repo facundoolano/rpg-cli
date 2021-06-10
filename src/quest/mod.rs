@@ -22,7 +22,7 @@ pub enum Event {
 /// Keeps a TODO list of quests for the game.
 #[derive(Serialize, Deserialize, Default)]
 pub struct QuestList {
-    todo: Vec<Box<dyn Quest>>,
+    todo: Vec<(i32, Box<dyn Quest>)>,
     done: Vec<String>,
 }
 
@@ -39,39 +39,32 @@ impl QuestList {
 
     /// Load the quests for a new game
     fn setup(&mut self) {
-        // FIXME if effectively all quests are unlocked by level it's better to
-        // keep the is visible logic here instead of passing it down to the quests
+        // FIXME should reward be handled here as well?
 
-        // level 1
-        self.todo.push(Box::new(tutorial::WinBattle::new()));
-        self.todo.push(Box::new(tutorial::BuySword::new()));
-        self.todo.push(Box::new(tutorial::UsePotion::new()));
-        self.todo.push(Box::new(tutorial::ReachLevel::new(2, 1)));
+        self.todo.push((1, Box::new(tutorial::WinBattle::new())));
+        self.todo.push((1, Box::new(tutorial::BuySword::new())));
+        self.todo.push((1, Box::new(tutorial::UsePotion::new())));
+        self.todo.push((1, Box::new(tutorial::ReachLevel::new(2))));
 
-        // level 2
-        self.todo.push(Box::new(tutorial::FindChest::new()));
-        self.todo.push(Box::new(tutorial::ReachLevel::new(5, 2)));
-        self.todo.push(beat_enemy::of_class(
-            &character::class::COMMON,
-            "beat all common creatures",
+        self.todo.push((2, Box::new(tutorial::FindChest::new())));
+        self.todo.push((2, Box::new(tutorial::ReachLevel::new(5))));
+        self.todo.push((
             2,
+            beat_enemy::of_class(&character::class::COMMON, "beat all common creatures"),
         ));
 
-        // level 5
-        self.todo.push(Box::new(tutorial::VisitTomb::new()));
-        self.todo.push(Box::new(tutorial::ReachLevel::new(10, 5)));
-        self.todo.push(beat_enemy::of_class(
-            &character::class::RARE,
-            "beat all rare creatures",
+        self.todo.push((5, Box::new(tutorial::VisitTomb::new())));
+        self.todo.push((5, Box::new(tutorial::ReachLevel::new(10))));
+        self.todo.push((
             5,
+            beat_enemy::of_class(&character::class::RARE, "beat all rare creatures"),
         ));
-        self.todo.push(beat_enemy::at_distance(10));
+        self.todo.push((5, beat_enemy::at_distance(10)));
 
         // level 10
-        self.todo.push(beat_enemy::of_class(
-            &character::class::LEGENDARY,
-            "beat all common creatures",
+        self.todo.push((
             10,
+            beat_enemy::of_class(&character::class::LEGENDARY, "beat all common creatures"),
         ));
     }
 
@@ -81,7 +74,7 @@ impl QuestList {
         let mut still_todo = Vec::new();
         let mut total_reward = 0;
 
-        for mut quest in self.todo.drain(..) {
+        for (unlock_at, mut quest) in self.todo.drain(..) {
             quest.handle(&event);
 
             if quest.is_done() {
@@ -92,7 +85,7 @@ impl QuestList {
                 // the done is stored from newer to older
                 self.done.insert(0, quest.description().to_string());
             } else {
-                still_todo.push(quest);
+                still_todo.push((unlock_at, quest));
             }
         }
 
@@ -104,8 +97,8 @@ impl QuestList {
         let todo = self
             .todo
             .iter()
-            .filter(|q| q.is_visible(&game))
-            .map(|q| q.description())
+            .filter(|(level, _)| level >= &game.player.level)
+            .map(|(_, q)| q.description())
             .collect();
 
         (todo, self.done.clone())
@@ -118,11 +111,6 @@ impl QuestList {
 pub trait Quest {
     /// What to show in the TODO quests list
     fn description(&self) -> String;
-
-    /// Whether this quest should appear in the quest list
-    fn is_visible(&self, _game: &game::Game) -> bool {
-        true
-    }
 
     /// Whether this quest should be listed as TODO or DONE
     fn is_done(&self) -> bool;
