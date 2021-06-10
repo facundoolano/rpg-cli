@@ -47,7 +47,7 @@ pub struct BeatEnemyDistance {
 #[typetag::serde]
 impl Quest for BeatEnemyDistance {
     fn description(&self) -> String {
-        format!("Defeat an enemy {} steps away from home", self.distance)
+        format!("defeat an enemy {} steps away from home", self.distance)
     }
 
     fn handle(&mut self, event: &Event) -> bool {

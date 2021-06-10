@@ -100,7 +100,7 @@ impl QuestList {
         let todo = self
             .todo
             .iter()
-            .filter(|(level, _, _)| level >= &game.player.level)
+            .filter(|(level, _, _)| &game.player.level >= level)
             .map(|(_, _, q)| q.description())
             .collect();
 
