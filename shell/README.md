@@ -98,3 +98,12 @@ ls () {
     fi
 }
 ```
+
+## Show rpg status at prompt
+
+A simple of showing the hero status at the bash prompt is:
+
+    $ PS1='`rpg -q | xargs` '
+    hero[4][xxxx][x---]@home
+
+`rpg --plain` can be used as a building block for more sophisticated display.
