@@ -152,19 +152,38 @@ fn long_status(game: &Game) {
         player.deffense(),
         player.speed
     );
+    if !player.status_effect.is_normal() {
+        println!("    {}", format_status_effect(player));
+    }
     println!("    {}", format_equipment(player));
     println!("    {}", format_inventory(game));
     println!("    {}", format_gold(game.gold));
 }
 
 fn short_status(game: &Game) {
-    log(&game.player, &game.location, "");
+    let player = &game.player;
+
+    let suffix = if !player.status_effect.is_normal() {
+        let (_, emoji, _, _) = status_effect_details(game.player.status_effect);
+        emoji
+    } else {
+        String::new()
+    };
+    log(&game.player, &game.location, &suffix);
 }
 
 fn plain_status(game: &Game) {
     let player = &game.player;
+
+    let status_effect = if !player.status_effect.is_normal() {
+        let (name, _, _, _) = status_effect_details(player.status_effect);
+        format!("status:{}\t", name)
+    } else {
+        String::new()
+    };
+
     println!(
-        "{}[{}]\t@{}\thp:{}/{}\txp:{}/{}\tatt:{}\tdef:{}\tspd:{}\t{}\t{}\tg:{}",
+        "{}[{}]\t@{}\thp:{}/{}\txp:{}/{}\tatt:{}\tdef:{}\tspd:{}\t{}{}\t{}\tg:{}",
         player.name(),
         player.level,
         game.location,
@@ -175,6 +194,7 @@ fn plain_status(game: &Game) {
         player.attack(),
         player.deffense(),
         player.speed,
+        status_effect,
         format_equipment(player),
         format_inventory(game),
         game.gold
@@ -316,7 +336,7 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
         StatusEffect::Burned(damage) => (
             String::from("burned"),
             String::from("\u{1F525}"),
-            String::from("bright red"),
+            String::from("red"),
             damage,
         ),
         StatusEffect::Poisoned(damage) => (
@@ -332,8 +352,8 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
             0,
         ),
         StatusEffect::Normal => (
-            String::from("cured"),
-            String::from("\u{1F9EC}"),
+            String::from("normal"),
+            String::new(),
             String::from("white"),
             0,
         ),
@@ -343,6 +363,11 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
 fn format_status_effect_received(status_effect: StatusEffect) -> String {
     let (name, emoji, color, _) = status_effect_details(status_effect);
     format!(" got {} {}", name, emoji).color(color).to_string()
+}
+
+fn format_status_effect(character: &Character) -> String {
+    let (name, emoji, color, _) = status_effect_details(character.status_effect);
+    format!("status: {} {}", name, emoji).color(color).to_string()
 }
 
 fn hp_display(character: &Character, slots: i32) -> String {
