@@ -52,7 +52,7 @@ cd () {
 }
 ```
 
-Other commands like `rm`, `mkdir`, `touch`, etc. can also be aliased. Check the [shell integration guide](shell/README.md) for more sophisticated examples, as well as their fish shell equivalents.
+Other commands like `rm`, `mkdir`, `touch`, etc. can also be aliased. Check [this example](shell/example.sh) and the [shell integration guide](shell/README.md) for more sophisticated examples, as well as their fish shell equivalents.
 
 ### Troubleshooting
 

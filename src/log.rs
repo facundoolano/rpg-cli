@@ -210,24 +210,11 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
 }
 
 pub fn quest_list(todo: &[String], done: &[String]) {
-    // TODO test with a single list with [ ] and [x], maybe emoji
-
-    if !todo.is_empty() {
-        println!("TODO:");
-        for quest in todo {
-            println!("  - {}", quest);
-        }
+    for quest in todo {
+        println!("  {} {}", "□".dimmed(), quest);
     }
-
-    if !todo.is_empty() && !done.is_empty() {
-        println!();
-    }
-
-    if !done.is_empty() {
-        println!("DONE:");
-        for quest in done {
-            println!("  - {}", quest);
-        }
+    for quest in done {
+        println!("  {} {}", "✔".green(), quest.dimmed());
     }
 }
 
@@ -252,10 +239,10 @@ pub fn tombstone(items: &[String], gold: i32) {
 fn format_ls(emoji: &str, items: &[String], gold: i32) {
     print!("{} ", emoji);
     if gold > 0 {
-        print!(" {}", format_gold_plus(gold));
+        print!("  {}", format_gold_plus(gold));
     }
     for item in items {
-        print!(" +{}", item);
+        print!("  +{}", item);
     }
     println!();
 }

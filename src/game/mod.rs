@@ -108,10 +108,12 @@ impl Game {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
                     log::chest_gold(gold);
+                    quest::handle_chest(self);
                 }
                 1 => {
                     let potion = Potion::new(self.player.level);
                     log::chest_item("potion");
+                    quest::handle_chest(self);
                     self.add_item("potion", Box::new(potion));
                 }
                 _ => {}

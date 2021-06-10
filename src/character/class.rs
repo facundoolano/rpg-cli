@@ -46,10 +46,9 @@ impl Class {
     }
 }
 
-// Enemy classes are grouped into near/mid/far groups
-const NEAR_ENEMIES: &[Class] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
-const MEDIUM_ENEMIES: &[Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
-const FAR_ENEMIES: &[Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
+pub const COMMON: &[Class] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
+pub const RARE: &[Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
+pub const LEGENDARY: &[Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
 fn weighted_choice(distance: location::Distance) -> &'static Class {
@@ -62,9 +61,9 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
     };
 
     // assign weights to each group
-    let near = NEAR_ENEMIES.iter().map(|c| (c, w_near));
-    let mid = MEDIUM_ENEMIES.iter().map(|c| (c, w_mid));
-    let far = FAR_ENEMIES.iter().map(|c| (c, w_far));
+    let near = COMMON.iter().map(|c| (c, w_near));
+    let mid = RARE.iter().map(|c| (c, w_mid));
+    let far = LEGENDARY.iter().map(|c| (c, w_far));
 
     // make a weighted random choice
     let mut rng = rand::thread_rng();

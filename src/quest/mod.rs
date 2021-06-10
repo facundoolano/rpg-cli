@@ -1,23 +1,29 @@
+use crate::character;
 use crate::character::Character;
 use crate::game;
+use crate::location::Location;
 use crate::log;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 
+mod beat_enemy;
 mod tutorial;
 
 /// Events that can trigger quest updates.
-enum Event {
-    BattleWon { enemy: String, levels_up: i32 },
+pub enum Event {
+    EnemyBeat { enemy: String, location: Location },
+    LevelUp { current: i32 },
     ItemBought { item: String },
     ItemUsed { item: String },
+    ChestFound,
     TombstoneFound,
 }
 
 /// Keeps a TODO list of quests for the game.
+/// Each quest is unlocked at a certain level and has completion reward.
 #[derive(Serialize, Deserialize, Default)]
 pub struct QuestList {
-    todo: Vec<Box<dyn Quest>>,
+    todo: Vec<(i32, i32, Box<dyn Quest>)>,
     done: Vec<String>,
 }
 
@@ -34,10 +40,36 @@ impl QuestList {
 
     /// Load the quests for a new game
     fn setup(&mut self) {
-        self.todo.push(Box::new(tutorial::WinBattle::new()));
-        self.todo.push(Box::new(tutorial::BuySword::new()));
-        self.todo.push(Box::new(tutorial::UsePotion::new()));
-        self.todo.push(Box::new(tutorial::ReachLevel::new(2)));
+        self.todo.push((1, 100, Box::new(tutorial::WinBattle)));
+        self.todo.push((1, 100, Box::new(tutorial::BuySword)));
+        self.todo.push((1, 100, Box::new(tutorial::UsePotion)));
+        self.todo
+            .push((1, 100, Box::new(tutorial::ReachLevel::new(2))));
+
+        self.todo.push((2, 200, Box::new(tutorial::FindChest)));
+        self.todo
+            .push((2, 500, Box::new(tutorial::ReachLevel::new(5))));
+        self.todo.push((
+            2,
+            1000,
+            beat_enemy::of_class(&character::class::COMMON, "beat all common creatures"),
+        ));
+
+        self.todo.push((5, 200, Box::new(tutorial::VisitTomb)));
+        self.todo
+            .push((5, 1000, Box::new(tutorial::ReachLevel::new(10))));
+        self.todo.push((
+            5,
+            5000,
+            beat_enemy::of_class(&character::class::RARE, "beat all rare creatures"),
+        ));
+        self.todo.push((5, 1000, beat_enemy::at_distance(10)));
+
+        self.todo.push((
+            10,
+            10000,
+            beat_enemy::of_class(&character::class::LEGENDARY, "beat all common creatures"),
+        ));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
@@ -46,18 +78,17 @@ impl QuestList {
         let mut still_todo = Vec::new();
         let mut total_reward = 0;
 
-        for mut quest in self.todo.drain(..) {
-            quest.handle(&event);
+        for (unlock_at, reward, mut quest) in self.todo.drain(..) {
+            let is_done = quest.handle(&event);
 
-            if quest.is_done() {
-                let reward = quest.reward();
+            if is_done {
                 total_reward += reward;
                 log::quest_done(reward);
 
                 // the done is stored from newer to older
                 self.done.insert(0, quest.description().to_string());
             } else {
-                still_todo.push(quest);
+                still_todo.push((unlock_at, reward, quest));
             }
         }
 
@@ -69,8 +100,8 @@ impl QuestList {
         let todo = self
             .todo
             .iter()
-            .filter(|q| q.is_visible(&game))
-            .map(|q| q.description())
+            .filter(|(level, _, _)| &game.player.level >= level)
+            .map(|(_, _, q)| q.description())
             .collect();
 
         (todo, self.done.clone())
@@ -80,23 +111,13 @@ impl QuestList {
 /// A task that is assigned to the player when certain conditions are met.
 /// New quests should implement this trait and be added to QuestList.setup method.
 #[typetag::serde(tag = "type")]
-trait Quest {
+pub trait Quest {
     /// What to show in the TODO quests list
     fn description(&self) -> String;
 
-    /// Whether this quest should appear in the quest list
-    fn is_visible(&self, _game: &game::Game) -> bool {
-        true
-    }
-
-    /// Whether this quest should be listed as TODO or DONE
-    fn is_done(&self) -> bool;
-
-    /// The gold rewarded upon quest completion
-    // NOTE: we could consider more sophisticated rewards than just gold
-    fn reward(&self) -> i32;
-
-    fn handle(&mut self, event: &Event);
+    /// Update the quest progress based on the given event and
+    /// return whether the quest was finished.
+    fn handle(&mut self, event: &Event) -> bool;
 }
 
 impl fmt::Display for dyn Quest {
@@ -108,11 +129,19 @@ impl fmt::Display for dyn Quest {
 pub fn handle_battle_won(game: &mut game::Game, enemy: &Character, levels_up: i32) {
     handle(
         game,
-        Event::BattleWon {
+        Event::EnemyBeat {
             enemy: enemy.name(),
-            levels_up,
+            location: game.location.clone(),
         },
     );
+    if levels_up > 0 {
+        handle(
+            game,
+            Event::LevelUp {
+                current: game.player.level,
+            },
+        );
+    }
 }
 
 pub fn handle_item_bought(game: &mut game::Game, item: &str) {
@@ -135,6 +164,10 @@ pub fn handle_item_used(game: &mut game::Game, item: &str) {
 
 pub fn handle_tombstone(game: &mut game::Game) {
     handle(game, Event::TombstoneFound);
+}
+
+pub fn handle_chest(game: &mut game::Game) {
+    handle(game, Event::ChestFound);
 }
 
 fn handle(game: &mut game::Game, event: Event) {
