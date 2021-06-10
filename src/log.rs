@@ -90,7 +90,7 @@ pub fn remedy(player: &Character, healed: bool) {
     if healed {
         battle_log(
             player,
-            &String::from("+healed with remedy").green().to_string(),
+            &"+healed with remedy".green().to_string(),
         );
     }
 }
