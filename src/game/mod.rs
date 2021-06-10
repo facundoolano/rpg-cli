@@ -128,6 +128,12 @@ impl Game {
             let recovered = self.player.heal_full();
             let healed = self.player.maybe_remove_status_effect();
             log::heal(&self.player, &self.location, recovered, healed);
+        } else {
+            // take an attack hit from status_effects
+            let damage = self.player.apply_status_effect();
+            if damage.is_hit() {
+                log::enemy_attack(&self.player, &damage);
+            }
         }
     }
 
