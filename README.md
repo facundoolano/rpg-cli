@@ -97,12 +97,13 @@ and both characters will engage in battle:
         hero[1][xxxx][xxxx]@~/dev/facundoolano
 
 Each character attacks in turn (the frequency being determined by their `speed` stat).
+After taking an enemies hit, there's a chance to get a status effect, which will affect subsequent actions: hero attacks and moves.
 Whenever you win a fight, your hero gains experience points and eventually raises its level, along with their other stats.
 
-When you return to the home directory, the hero's health points are restored:
+When you return to the home directory, the hero's health points are restored and status effects are removed:
 
     ~/dev/facundoolano/rpg-cli $ rpg cd ~
-        hero[1][xxxx][xxxx]@home +20hp
+        hero[1][xxxx][xxxx]@home +20hp +healed
 
 Also at the home directory, you can buy items and equipment:
 
@@ -110,6 +111,7 @@ Also at the home directory, you can buy items and equipment:
         sword[1]    500g
         shield[1]   500g
         potion[1]   200g
+        remedy      400g
         escape      1000g
 
         funds: 275g
@@ -131,7 +133,9 @@ The further from home you move the hero, the tougher the enemies will get. If yo
     ~ $ rpg cd ~/dev/facundoolano/rpg-cli/target/debug/examples/
          orc[1][xxxx]@~/dev/facundoolano/rpg-cli
         hero[1][x---] -20hp critical!
+        hero[1][x---]  got burned 🔥
          orc[1][xxx-] -9hp
+        hero[1][x---] -1hp 🔥
         hero[1][----] -16hp
         hero[1][----] 💀
 
