@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use crate::character::StatusEffect;
 use crate::location;
 use rand::Rng;
 use std::cmp::max;
@@ -26,6 +27,8 @@ pub trait Randomizer {
     fn gold_gained(&self, base: i32) -> i32;
 
     fn stat_increase(&self, increase: i32) -> i32;
+
+    fn status_effect(&self) -> StatusEffect;
 
     fn range(&self, max: i32) -> i32;
 }
@@ -114,6 +117,17 @@ impl Randomizer for DefaultRandomizer {
         rng.gen_range(min_value..=max_value)
     }
 
+    fn status_effect(&self) -> StatusEffect {
+        let mut rng = rand::thread_rng();
+        let damage = rng.gen_range(1..=3);
+        match rng.gen_range(0..20) {
+            0 => StatusEffect::Burned(damage),
+            1 => StatusEffect::Confused,
+            2 => StatusEffect::Poisoned(damage),
+            _ => StatusEffect::Normal,
+        }
+    }
+
     fn range(&self, max: i32) -> i32 {
         let mut rng = rand::thread_rng();
         rng.gen_range(0..max)
@@ -159,6 +173,10 @@ impl Randomizer for TestRandomizer {
 
     fn stat_increase(&self, increase: i32) -> i32 {
         increase
+    }
+
+    fn status_effect(&self) -> StatusEffect {
+        StatusEffect::Normal
     }
 
     fn range(&self, max: i32) -> i32 {

@@ -1,5 +1,5 @@
 use super::Game;
-use crate::character::Character;
+use crate::character::{Character, StatusEffect};
 use crate::log;
 use crate::randomizer::Randomizer;
 
@@ -8,7 +8,14 @@ use crate::randomizer::Randomizer;
 pub enum Attack {
     Regular(i32),
     Critical(i32),
+    Effect(StatusEffect),
     Miss,
+}
+
+impl Attack {
+    pub fn is_hit(&self) -> bool {
+        !matches!(*self, Attack::Miss)
+    }
 }
 
 /// Run a turn-based combat between the game's player and the given enemy.
@@ -43,15 +50,26 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     Ok(xp)
 }
 
-fn player_attack(game: &Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
+fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
     let (damage, new_xp) = attack(&game.player, enemy, random);
-    log::player_attack(enemy, damage);
+    log::player_attack(enemy, &damage);
+
+    // take an enemy hit from status_effect
+    let damage = game.player.apply_status_effect();
+    if damage.is_hit() {
+        log::enemy_attack(&game.player, &damage);
+    }
     new_xp
 }
 
 fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
     let (damage, _) = attack(enemy, &mut game.player, random);
-    log::enemy_attack(&game.player, damage);
+    log::enemy_attack(&game.player, &damage);
+
+    // if player took a hit, maybe_receive_status_effect
+    if damage.is_hit() && game.player.maybe_receive_status_effect() {
+        log::received_status_effect(&game.player);
+    }
 }
 
 /// Inflict damage from attacker to receiver, return the inflicted
