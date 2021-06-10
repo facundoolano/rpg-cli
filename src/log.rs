@@ -172,12 +172,12 @@ fn short_status(game: &Game) {
     let player = &game.player;
 
     let suffix = if !player.status_effect.is_normal() {
-        let (_, emoji, _, _) = status_effect_details(game.player.status_effect);
+        let (_, emoji, _, _) = status_effect_details(player.status_effect);
         emoji
     } else {
         String::new()
     };
-    log(&game.player, &game.location, &suffix);
+    log(player, &game.location, &suffix);
 }
 
 fn plain_status(game: &Game) {
