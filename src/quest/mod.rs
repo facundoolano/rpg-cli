@@ -1,17 +1,17 @@
 use crate::character;
 use crate::character::Character;
 use crate::game;
+use crate::location::Location;
 use crate::log;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 
 mod beat_enemy;
 mod tutorial;
-use beat_enemy::BeatEnemies;
 
 /// Events that can trigger quest updates.
-enum Event {
-    EnemyBeat { enemy: String },
+pub enum Event {
+    EnemyBeat { enemy: String, location: Location },
     LevelUp { current: i32 },
     ItemBought { item: String },
     ItemUsed { item: String },
@@ -51,27 +51,28 @@ impl QuestList {
         // level 2
         self.todo.push(Box::new(tutorial::FindChest::new()));
         self.todo.push(Box::new(tutorial::ReachLevel::new(5, 2)));
-        self.todo.push(Box::new(BeatEnemies::of_class(
+        self.todo.push(beat_enemy::of_class(
             &character::class::COMMON,
             "beat all common creatures",
             2,
-        )));
+        ));
 
         // level 5
         self.todo.push(Box::new(tutorial::VisitTomb::new()));
         self.todo.push(Box::new(tutorial::ReachLevel::new(10, 5)));
-        self.todo.push(Box::new(BeatEnemies::of_class(
+        self.todo.push(beat_enemy::of_class(
             &character::class::RARE,
             "beat all rare creatures",
             5,
-        )));
+        ));
+        self.todo.push(beat_enemy::at_distance(10));
 
         // level 10
-        self.todo.push(Box::new(BeatEnemies::of_class(
+        self.todo.push(beat_enemy::of_class(
             &character::class::LEGENDARY,
             "beat all common creatures",
             10,
-        )));
+        ));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
@@ -114,7 +115,7 @@ impl QuestList {
 /// A task that is assigned to the player when certain conditions are met.
 /// New quests should implement this trait and be added to QuestList.setup method.
 #[typetag::serde(tag = "type")]
-trait Quest {
+pub trait Quest {
     /// What to show in the TODO quests list
     fn description(&self) -> String;
 
@@ -144,6 +145,7 @@ pub fn handle_battle_won(game: &mut game::Game, enemy: &Character, levels_up: i3
         game,
         Event::EnemyBeat {
             enemy: enemy.name(),
+            location: game.location.clone(),
         },
     );
     if levels_up > 0 {
