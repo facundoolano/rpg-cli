@@ -124,8 +124,8 @@ impl Game {
         self.location = location;
         if self.location.is_home() {
             let recovered = self.player.heal_full();
-            let cured = self.player.maybe_remove_status_effect();
-            log::heal(&self.player, &self.location, recovered, cured);
+            let healed = self.player.maybe_remove_status_effect();
+            log::heal(&self.player, &self.location, recovered, healed);
         }
     }
 

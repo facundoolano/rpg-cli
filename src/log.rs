@@ -58,22 +58,21 @@ pub fn run_away_failure(player: &Character) {
     battle_log(player, "can't run!");
 }
 
-pub fn heal(player: &Character, location: &Location, recovered: i32, cured: bool) {
+pub fn heal(player: &Character, location: &Location, recovered: i32, healed: bool) {
     let mut recovered_text = String::new();
-    let mut cured_text = String::new();
+    let mut healed_text = String::new();
 
     if recovered > 0 {
         recovered_text = format!("+{}hp ", recovered).green().to_string();
     }
-    if cured {
-        let (name, emoji, color, _) = status_effect_details(StatusEffect::Normal);
-        cured_text = format!("+got {} {}", name, emoji).color(color).to_string();
+    if healed {
+        healed_text = String::from("+healed");
     }
-    if recovered > 0 || cured {
+    if recovered > 0 || healed {
         log(
             player,
             location,
-            &(recovered_text + &cured_text)
+            &(recovered_text + &healed_text)
         );
     }
 }
