@@ -58,7 +58,7 @@ impl Character {
     }
 
     pub fn ascend(&mut self, class: &'static Class) {
-        self.class = class,
+        self.class = class;
         self.class_name = class.name
     }
 
