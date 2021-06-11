@@ -24,11 +24,11 @@ impl StatusEffect {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Character {
+pub struct Character<'a> {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
 
-    pub class_name: &'static str,
+    pub class_name: &'a str,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
 
