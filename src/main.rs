@@ -236,15 +236,11 @@ fn perform_ascension(class: &Option<String>, game: &mut Game) {
             let class_name = sanitize(class);
             match class_name.as_str() {
                 "warrior"   => {
-                    game.player = Character::ascend(&Class::WARRIOR, game.player.level,
-                                                    game.player.sword.take(),
-                                                    game.player.shield.take());
+                    game.player.ascend(&Class::WARRIOR);
                     println!("You have ascended to the Warrior class")
                 },
                 "rogue"     => {
-                    game.player = Character::ascend(&Class::ROGUE, game.player.level,
-                                                    game.player.sword.take(),
-                                                    game.player.shield.take());
+                    game.player.ascend(&Class::ROGUE);
                     println!("You have ascended to the Rogue class")
                 },
                 _ => println!("Please select a valid class")

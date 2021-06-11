@@ -25,8 +25,7 @@ impl StatusEffect {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Character {
-
-    #[serde(default = "default_class")]
+    #[serde(skip, default = "default_class")]
     class: &'static Class,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
@@ -56,9 +55,8 @@ impl Character {
         Self::new(Class::random_enemy(distance), level, None, None)
     }
 
-    pub fn ascend(class: &'static Class, level: i32, sword: Option<equipment::Sword>,
-                   shield: Option<equipment::Shield>) -> Self {
-        Self::new(class, level, sword, shield)
+    pub fn ascend(&mut self, class: &'static Class) {
+        self.class = class
     }
 
     pub fn name(&self) -> String {
