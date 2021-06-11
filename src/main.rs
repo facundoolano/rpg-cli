@@ -230,8 +230,8 @@ fn sanitize(name: &str) -> String {
 /// Ascend your character class to a new one
 fn perform_ascension(class: &Option<String>, game: &mut Game) {
     if let Some(class) = class {
-        let class_name = &sanitize(class);
-        match class_name {
+        let class_name = sanitize(class);
+        match class_name.as_str() {
             "warrior"   => game.player = Character::ascend(&Class::WARRIOR, game.player.level, game.player.sword, game.player.shield),
             "rogue"     => game.player = Character::ascend(&Class::ROGUE, game.player.level, game.player.sword, game.player.shield),
             n => println!("Please select a valid class")
