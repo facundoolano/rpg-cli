@@ -4,7 +4,7 @@ use crate::item::equipment::Equipment;
 use crate::location;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Deserializer};
 use std::cmp::{max, min};
 
 pub mod class;
@@ -28,7 +28,7 @@ pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
 
-    #[serde(default = "default_class_name")]
+    #[serde(deserialize_with = "deserialize_null_default", default = "default_class_name")]
     pub class_name: String,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
@@ -42,6 +42,15 @@ pub struct Character {
     pub strength: i32,
     pub speed: i32,
     pub status_effect: StatusEffect,
+}
+
+fn deserialize_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+    where
+        T: Default + Deserialize<'de>,
+        D: Deserializer<'de>,
+{
+    let opt = Option::deserialize(deserializer)?;
+    Ok(opt.unwrap_or_default())
 }
 
 // Always attach the static hero class to deserialized characters
