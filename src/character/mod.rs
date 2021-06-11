@@ -75,7 +75,7 @@ impl Character {
            shield: Option<equipment::Shield>) -> Self {
         let mut character = Self {
             class,
-            class_name: class.name,
+            class_name: class.name.to_string(),
             sword: sword,
             shield: shield,
             level: 1,
