@@ -235,11 +235,11 @@ fn perform_ascension(class: &Option<String>, game: &mut Game) {
         let class_name = sanitize(class);
         match class_name.as_str() {
             "warrior"   => game.player = Character::ascend(&Class::WARRIOR, game.player.level,
-                                                           Sword::new(game.player.sword.level),
-                                                           Shield::new(game.player.shield.level)),
+                                                           Some(Sword::new(Some(game.player.sword).level())),
+                                                           Some(Shield::new(Some(game.player.shield).level()))),
             "rogue"     => game.player = Character::ascend(&Class::ROGUE, game.player.level,
-                                                           Sword::new(game.player.sword.level),
-                                                           Shield::new(game.player.shield.level)),
+                                                           Some(Sword::new(Some(game.player.sword).level())),
+                                                           Some(Shield::new(Some(game.player.shield).level()))),
             _ => println!("Please select a valid class")
         };
     } else {
