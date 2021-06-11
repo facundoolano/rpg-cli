@@ -1,0 +1,36 @@
+hero:
+  name: hero
+  hp:
+    base: 30
+    increase: 7
+  strength:
+    base: 12
+    increase: 3
+  speed:
+    base: 11
+    increase: 2
+enemies:
+  - name: rat
+    hp:
+      base: 10
+      increase: 3
+    strength:
+      base: 5
+      increase: 2
+    speed:
+      base: 16
+      increase: 2
+    distance:
+      Near: 12
+  - name: wolf
+    hp:
+      base: 15
+      increase: 3
+    strength:
+      base: 8
+      increase: 2
+    speed:
+      base: 12
+      increase: 2
+    distance:
+      Near: 9
