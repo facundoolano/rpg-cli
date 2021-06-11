@@ -5,13 +5,15 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
+pub mod config;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
+pub use config::CharacterConfig;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Character {
     #[serde(skip, default = "default_class")]
-    class: &'static Class,
+    class: Class,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
 
@@ -26,13 +28,13 @@ pub struct Character {
 }
 
 // Always attach the static hero class to deserialized characters
-fn default_class() -> &'static Class {
-    &Class::HERO
+fn default_class() -> Class {
+    Class::default_hero()
 }
 
 impl Character {
     pub fn player() -> Self {
-        Self::new(&Class::HERO, 1)
+        Self::new(Class::default_hero(), 1)
     }
 
     pub fn enemy(level: i32, distance: location::Distance) -> Self {
@@ -48,9 +50,9 @@ impl Character {
         self.class.name == "hero"
     }
 
-    fn new(class: &'static Class, level: i32) -> Self {
+    fn new(class: Class, level: i32) -> Self {
         let mut character = Self {
-            class,
+            class: class.clone(),
             sword: None,
             shield: None,
             level: 1,
@@ -159,15 +161,18 @@ mod tests {
     use super::*;
     use class::Stat;
 
-    const TEST_CLASS: Class = Class {
-        name: "test",
-        hp: Stat(25, 7),
-        strength: Stat(10, 3),
-        speed: Stat(10, 2),
-    };
+    fn test_class() -> Class {
+        Class {
+            name: "test".to_string(),
+            hp: Stat::new(25, 7),
+            strength: Stat::new(10, 3),
+            speed: Stat::new(10, 2),
+            distance: None,
+        }
+    }
 
     fn new_char() -> Character {
-        Character::new(&TEST_CLASS, 1)
+        Character::new(test_class(), 1)
     }
 
     #[test]
@@ -177,10 +182,10 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        assert_eq!(TEST_CLASS.hp.base(), hero.current_hp);
-        assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
-        assert_eq!(TEST_CLASS.strength.base(), hero.strength);
-        assert_eq!(TEST_CLASS.speed.base(), hero.speed);
+        assert_eq!(test_class().hp.base(), hero.current_hp);
+        assert_eq!(test_class().hp.base(), hero.max_hp);
+        assert_eq!(test_class().strength.base(), hero.strength);
+        assert_eq!(test_class().speed.base(), hero.speed);
     }
 
     #[test]
@@ -188,9 +193,9 @@ mod tests {
         let mut hero = new_char();
 
         // assert what we're assuming are the params in the rest of the test
-        assert_eq!(7, TEST_CLASS.hp.increase());
-        assert_eq!(3, TEST_CLASS.strength.increase());
-        assert_eq!(2, TEST_CLASS.speed.increase());
+        assert_eq!(7, test_class().hp.increase());
+        assert_eq!(3, test_class().strength.increase());
+        assert_eq!(2, test_class().speed.increase());
 
         hero.max_hp = 20;
         hero.current_hp = 20;

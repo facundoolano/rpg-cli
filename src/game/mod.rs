@@ -1,5 +1,6 @@
 extern crate dirs;
 
+use crate::character;
 use crate::character::Character;
 use crate::item::Item;
 use crate::location::Location;
@@ -44,6 +45,7 @@ impl Game {
     pub fn load() -> Result<Self, Error> {
         let data = fs::read(data_file()).or(Err(Error::NoDataFile))?;
         let game: Game = bincode::deserialize(&data).unwrap();
+        let _config = character::CharacterConfig::load(config_file());
         Ok(game)
     }
 
@@ -225,6 +227,10 @@ fn rpg_dir() -> path::PathBuf {
 
 fn data_file() -> path::PathBuf {
     rpg_dir().join("data")
+}
+
+fn config_file() -> path::PathBuf {
+    rpg_dir().join("config.yaml")
 }
 
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {

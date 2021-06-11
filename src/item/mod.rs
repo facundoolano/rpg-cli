@@ -33,7 +33,7 @@ impl fmt::Display for Potion {
 #[typetag::serde]
 impl Item for Potion {
     fn apply(&self, game: &mut game::Game) {
-        let to_restore = character::Class::HERO.hp.at(self.level) / 2;
+        let to_restore = character::Class::default_hero().hp.at(self.level) / 2;
         let restored = game.player.heal(to_restore);
 
         // we prefer the battle here since its less ugly to show battle-like

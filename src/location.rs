@@ -109,6 +109,7 @@ impl std::fmt::Display for Location {
 
 /// Some decisions are made branching on whether the distance from the home dir
 /// is small, medium or large. This enum encapsulate the definition of those.
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Distance {
     Near(i32),
     Mid(i32),
