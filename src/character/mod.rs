@@ -28,6 +28,7 @@ pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
 
+    #[serde(default = "default_class_name")]
     pub class_name: String,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
@@ -46,6 +47,10 @@ pub struct Character {
 // Always attach the static hero class to deserialized characters
 fn default_class() -> &'static Class {
     &Class::HERO
+}
+
+fn default_class_name() -> String {
+    "hero".to_string()
 }
 
 impl Character {
