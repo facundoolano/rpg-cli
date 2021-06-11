@@ -4,7 +4,7 @@ use crate::item::equipment::Equipment;
 use crate::location;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
-use serde::{Deserialize, Serialize, Deserializer};
+use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
