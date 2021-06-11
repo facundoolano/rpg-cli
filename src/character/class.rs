@@ -1,12 +1,12 @@
 use crate::location;
 use once_cell::sync::OnceCell;
 use rand::prelude::SliceRandom;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// A stat represents an attribute of a character, such as strength or speed.
 /// This struct contains a stat starting value and the amount that should be
 /// applied when the level increases.
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Stat {
     pub base: i32,
     pub increase: i32,
@@ -27,6 +27,30 @@ impl Stat {
 
     pub fn at(&self, level: i32) -> i32 {
         self.base() + level * self.increase()
+    }
+}
+
+impl<'de> Deserialize<'de> for Stat {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize, Serialize)]
+        pub struct Array(i32, i32);
+
+        Deserialize::deserialize(deserializer).map(|Array(base, increase)| Self { base, increase })
+    }
+}
+
+impl Serialize for Stat {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Deserialize, Serialize)]
+        pub struct Array(i32, i32);
+
+        (Array(self.base, self.increase)).serialize(serializer)
     }
 }
 
@@ -83,10 +107,7 @@ fn weighted_choice(distance: location::Distance) -> Class {
         .get_or_init(Vec::new)
         .iter()
         .map(|c| (c, w_mid));
-    let far = FAR_ENEMIES
-        .get_or_init(Vec::new)
-        .iter()
-        .map(|c| (c, w_far));
+    let far = FAR_ENEMIES.get_or_init(Vec::new).iter().map(|c| (c, w_far));
 
     // make a weighted random choice
     let mut rng = rand::thread_rng();

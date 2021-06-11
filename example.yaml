@@ -1,216 +1,108 @@
 hero:
   name: hero
-  hp:
-    base: 30
-    increase: 7
-  strength:
-    base: 12
-    increase: 3
-  speed:
-    base: 11
-    increase: 2
+  hp: [30, 7]
+  strength: [12, 3]
+  speed: [11, 2]
 enemies:
   - name: rat
-    hp:
-      base: 10
-      increase: 3
-    strength:
-      base: 5
-      increase: 2
-    speed:
-      base: 16
-      increase: 2
+    hp: [10, 3]
+    strength: [5, 2]
+    speed: [16, 2]
     distance:
       Near: 12
   - name: wolf
-    hp:
-      base: 15
-      increase: 3
-    strength:
-      base: 8
-      increase: 2
-    speed:
-      base: 12
-      increase: 2
+    hp: [15, 3]
+    strength: [8, 2]
+    speed: [12, 2]
     distance:
       Near: 9
   - name: snake
-    hp:
-      base: 13
-      increase: 3
-    strength:
-      base: 7
-      increase: 2
-    speed:
-      base: 6
-      increase: 2
+    hp: [13, 3]
+    strength: [7, 2]
+    speed: [6, 2]
     distance:
       Near: 14
   - name: slime
-    hp:
-      base: 80
-      increase: 3
-    strength:
-      base: 3
-      increase: 2
-    speed:
-      base: 4
-      increase: 2
+    hp: [80, 3]
+    strength: [3, 2]
+    speed: [4, 2]
     distance:
       Near: 15
   - name: spider
-    hp:
-      base: 10
-      increase: 3
-    strength:
-      base: 9
-      increase: 2
-    speed:
-      base: 12
-      increase: 2
+    hp: [10, 3]
+    strength: [9, 2]
+    speed: [12, 2]
     distance:
       Near: 16
   - name: zombie
-    hp:
-      base: 50
-      increase: 3
-    strength:
-      base: 8
-      increase: 2
-    speed:
-      base: 6
-      increase: 2
+    hp: [50, 3]
+    strength: [8, 2]
+    speed: [6, 2]
     distance:
       Mid: 20
   - name: orc
-    hp:
-      base: 35
-      increase: 3
-    strength:
-      base: 13
-      increase: 2
-    speed:
-      base: 12
-      increase: 2
+    hp: [35, 3]
+    strength: [13, 2]
+    speed: [12, 2]
     distance:
       Mid: 21
   - name: skeleton
-    hp:
-      base: 30
-      increase: 3
-    strength:
-      base: 10
-      increase: 2
-    speed:
-      base: 10
-      increase: 2
+    hp: [30, 3]
+    strength: [10, 2]
+    speed: [10, 2]
     distance:
       Mid: 22
   - name: demon
-    hp:
-      base: 50
-      increase: 3
-    strength:
-      base: 10
-      increase: 2
-    speed:
-      base: 18
-      increase: 2
+    hp: [50, 3]
+    strength: [10, 2]
+    speed: [18, 2]
     distance:
       Mid: 24
   - name: vampire
-    hp:
-      base: 50
-      increase: 3
-    strength:
-      base: 13
-      increase: 2
-    speed:
-      base: 10
-      increase: 2
+    hp: [50, 3]
+    strength: [13, 2]
+    speed: [10, 2]
     distance:
       Mid: 25
   - name: dragon
-    hp:
-      base: 100
-      increase: 3
-    strength:
-      base: 25
-      increase: 2
-    speed:
-      base: 8
-      increase: 2
+    hp: [100, 3]
+    strength: [25, 2]
+    speed: [8, 2]
     distance:
       Mid: 26
   - name: golem
-    hp:
-      base: 50
-      increase: 3
-    strength:
-      base: 45
-      increase: 2
-    speed:
-      base: 2
-      increase: 1
+    hp: [50, 3]
+    strength: [45, 2]
+    speed: [2, 1]
     distance:
       Mid: 28
   - name: chimera
-    hp:
-      base: 200
-      increase: 2
-    strength:
-      base: 90
-      increase: 2
-    speed:
-      base: 16
-      increase: 2
+    hp: [200, 2]
+    strength: [90, 2]
+    speed: [16, 2]
     distance:
       Mid: 30
   - name: basilisk
-    hp:
-      base: 150
-      increase: 3
-    strength:
-      base: 100
-      increase: 2
-    speed:
-      base: 18
-      increase: 2
+    hp: [150, 3]
+    strength: [100, 2]
+    speed: [18, 2]
     distance:
       Far: 31
   - name: minotaur
-    hp:
-      base: 100
-      increase: 3
-    strength:
-      base: 60
-      increase: 2
-    speed:
-      base: 40
-      increase: 2
+    hp: [100, 3]
+    strength: [60, 3]
+    speed: [40, 2]
     distance:
       Far: 33
   - name: balrog
-    hp:
-      base: 350
-      increase: 3
-    strength:
-      base: 180
-      increase: 2
-    speed:
-      base: 28
-      increase: 2
+    hp: [350, 3]
+    strength: [180, 2]
+    speed: [28, 2]
     distance:
       Far: 34
   - name: phoenix
-    hp:
-      base: 350
-      increase: 3
-    strength:
-      base: 180
-      increase: 2
-    speed:
-      base: 28
-      increase: 2
+    hp: [350, 3]
+    strength: [180, 2]
+    speed: [28, 2]
     distance:
       Far: 35
