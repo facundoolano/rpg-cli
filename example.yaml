@@ -34,3 +34,183 @@ enemies:
       increase: 2
     distance:
       Near: 9
+  - name: snake
+    hp:
+      base: 13
+      increase: 3
+    strength:
+      base: 7
+      increase: 2
+    speed:
+      base: 6
+      increase: 2
+    distance:
+      Near: 14
+  - name: slime
+    hp:
+      base: 80
+      increase: 3
+    strength:
+      base: 3
+      increase: 2
+    speed:
+      base: 4
+      increase: 2
+    distance:
+      Near: 15
+  - name: spider
+    hp:
+      base: 10
+      increase: 3
+    strength:
+      base: 9
+      increase: 2
+    speed:
+      base: 12
+      increase: 2
+    distance:
+      Near: 16
+  - name: zombie
+    hp:
+      base: 50
+      increase: 3
+    strength:
+      base: 8
+      increase: 2
+    speed:
+      base: 6
+      increase: 2
+    distance:
+      Mid: 20
+  - name: orc
+    hp:
+      base: 35
+      increase: 3
+    strength:
+      base: 13
+      increase: 2
+    speed:
+      base: 12
+      increase: 2
+    distance:
+      Mid: 21
+  - name: skeleton
+    hp:
+      base: 30
+      increase: 3
+    strength:
+      base: 10
+      increase: 2
+    speed:
+      base: 10
+      increase: 2
+    distance:
+      Mid: 22
+  - name: demon
+    hp:
+      base: 50
+      increase: 3
+    strength:
+      base: 10
+      increase: 2
+    speed:
+      base: 18
+      increase: 2
+    distance:
+      Mid: 24
+  - name: vampire
+    hp:
+      base: 50
+      increase: 3
+    strength:
+      base: 13
+      increase: 2
+    speed:
+      base: 10
+      increase: 2
+    distance:
+      Mid: 25
+  - name: dragon
+    hp:
+      base: 100
+      increase: 3
+    strength:
+      base: 25
+      increase: 2
+    speed:
+      base: 8
+      increase: 2
+    distance:
+      Mid: 26
+  - name: golem
+    hp:
+      base: 50
+      increase: 3
+    strength:
+      base: 45
+      increase: 2
+    speed:
+      base: 2
+      increase: 1
+    distance:
+      Mid: 28
+  - name: chimera
+    hp:
+      base: 200
+      increase: 2
+    strength:
+      base: 90
+      increase: 2
+    speed:
+      base: 16
+      increase: 2
+    distance:
+      Mid: 30
+  - name: basilisk
+    hp:
+      base: 150
+      increase: 3
+    strength:
+      base: 100
+      increase: 2
+    speed:
+      base: 18
+      increase: 2
+    distance:
+      Far: 31
+  - name: minotaur
+    hp:
+      base: 100
+      increase: 3
+    strength:
+      base: 60
+      increase: 2
+    speed:
+      base: 40
+      increase: 2
+    distance:
+      Far: 33
+  - name: balrog
+    hp:
+      base: 350
+      increase: 3
+    strength:
+      base: 180
+      increase: 2
+    speed:
+      base: 28
+      increase: 2
+    distance:
+      Far: 34
+  - name: phoenix
+    hp:
+      base: 350
+      increase: 3
+    strength:
+      base: 180
+      increase: 2
+    speed:
+      base: 28
+      increase: 2
+    distance:
+      Far: 35
