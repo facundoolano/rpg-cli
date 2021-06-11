@@ -10,10 +10,7 @@ mod randomizer;
 
 use crate::location::Location;
 use clap::{crate_version, AppSettings, Clap};
-use crate::character::Character;
 use crate::character::class::Class;
-use crate::item::equipment::{Shield, Sword};
-use crate::item::equipment::Equipment;
 
 /// Your filesystem as a dungeon!
 #[derive(Clap)]
@@ -250,6 +247,7 @@ fn perform_ascension(class: &Option<String>, game: &mut Game) {
         }
     } else {
         println!("You may ascend your class at level 5, the following options are available");
-        println!("")
+        println!(" - warrior");
+        println!(" - rogue");
     }
 }

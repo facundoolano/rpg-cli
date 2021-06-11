@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::io;
 use tombstone::Tombstone;
+use crate::character::class::Class;
 
 pub mod battle;
 mod datafile;
@@ -51,7 +52,14 @@ impl Game {
 
     pub fn load() -> Result<Self, Error> {
         let data: Vec<u8> = datafile::read().or(Err(Error::NoDataFile))?;
-        let game: Game = bincode::deserialize(&data).unwrap();
+        let mut game: Game = bincode::deserialize(&data).unwrap();
+        if game.player.class_name != "hero" {
+            match game.player.class_name {
+                "warrior" => game.player.ascend(&Class::WARRIOR),
+                "rogue" => game.player.ascend(&Class::ROGUE),
+                _ => game.player.ascend(&Class::HERO)
+            }
+        }
         Ok(game)
     }
 

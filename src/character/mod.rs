@@ -27,6 +27,8 @@ impl StatusEffect {
 pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
+
+    pub class_name: &'static str,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
 
@@ -56,7 +58,8 @@ impl Character {
     }
 
     pub fn ascend(&mut self, class: &'static Class) {
-        self.class = class
+        self.class = class,
+        self.class_name = class.name
     }
 
     pub fn name(&self) -> String {
@@ -72,6 +75,7 @@ impl Character {
            shield: Option<equipment::Shield>) -> Self {
         let mut character = Self {
             class,
+            class_name: class.name,
             sword: sword,
             shield: shield,
             level: 1,
