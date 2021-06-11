@@ -52,14 +52,7 @@ impl Game {
 
     pub fn load() -> Result<Self, Error> {
         let data: Vec<u8> = datafile::read().or(Err(Error::NoDataFile))?;
-        let mut game: Game = bincode::deserialize(&data).unwrap();
-        if game.player.class_name != "hero" {
-            match game.player.class_name {
-                "warrior" => game.player.ascend(&Class::WARRIOR),
-                "rogue" => game.player.ascend(&Class::ROGUE),
-                _ => game.player.ascend(&Class::HERO)
-            }
-        }
+        let game: Game = bincode::deserialize(&data).unwrap();
         Ok(game)
     }
 
