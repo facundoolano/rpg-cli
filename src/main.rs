@@ -232,16 +232,26 @@ fn sanitize(name: &str) -> String {
 /// Ascend your character class to a new one
 fn perform_ascension(class: &Option<String>, game: &mut Game) {
     if let Some(class) = class {
-        let class_name = sanitize(class);
-        match class_name.as_str() {
-            "warrior"   => game.player = Character::ascend(&Class::WARRIOR, game.player.level,
-                                                           game.player.sword.take(),
-                                                           game.player.shield.take()),
-            "rogue"     => game.player = Character::ascend(&Class::ROGUE, game.player.level,
-                                                           game.player.sword.take(),
-                                                           game.player.shield.take()),
-            _ => println!("Please select a valid class")
-        };
+        if game.player.level >= 5 {
+            let class_name = sanitize(class);
+            match class_name.as_str() {
+                "warrior"   => {
+                    game.player = Character::ascend(&Class::WARRIOR, game.player.level,
+                                                    game.player.sword.take(),
+                                                    game.player.shield.take())
+                    println!("You have ascended to the Warrior class")
+                },
+                "rogue"     => {
+                    game.player = Character::ascend(&Class::ROGUE, game.player.level,
+                                                    game.player.sword.take(),
+                                                    game.player.shield.take())
+                    println!("You have ascended to the Rogue class")
+                },
+                _ => println!("Please select a valid class")
+            };
+        } else {
+            println!("You must be level 5 or higher to ascend your class")
+        }
     } else {
         println!("You may ascend your class at level 5, the following options are available");
         println!("")

@@ -66,7 +66,7 @@ impl Character {
 
     pub fn is_player(&self) -> bool {
         // kind of ugly but does the job
-        self.class.name == "hero"
+        self.class.name == "hero" || self.class.name == "warrior" || self.class.name == "rogue"
     }
 
     fn new(class: &'static Class, level: i32, sword: Option<equipment::Sword>,
