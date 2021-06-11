@@ -12,6 +12,8 @@ use crate::location::Location;
 use clap::{crate_version, AppSettings, Clap};
 use crate::character::Character;
 use crate::character::class::Class;
+use crate::item::equipment::{Shield, Sword};
+use crate::item::{equipment::Equipment, Item};
 
 /// Your filesystem as a dungeon!
 #[derive(Clap)]
@@ -232,8 +234,12 @@ fn perform_ascension(class: &Option<String>, game: &mut Game) {
     if let Some(class) = class {
         let class_name = sanitize(class);
         match class_name.as_str() {
-            "warrior"   => game.player = Character::ascend(&Class::WARRIOR, game.player.level, game.player.sword.as_ref(), game.player.shield.as_ref()),
-            "rogue"     => game.player = Character::ascend(&Class::ROGUE, game.player.level, game.player.sword.as_ref(), game.player.shield.as_ref()),
+            "warrior"   => game.player = Character::ascend(&Class::WARRIOR, game.player.level,
+                                                           Sword::new(game.player.sword.level),
+                                                           Shield::new(game.player.shield.level)),
+            "rogue"     => game.player = Character::ascend(&Class::ROGUE, game.player.level,
+                                                           Sword::new(game.player.sword.level),
+                                                           Shield::new(game.player.shield.level)),
             _ => println!("Please select a valid class")
         };
     } else {

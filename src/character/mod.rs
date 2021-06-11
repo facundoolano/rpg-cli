@@ -55,9 +55,9 @@ impl Character {
         Self::new(Class::random_enemy(distance), level, None, None)
     }
 
-    pub fn ascend(class: &'static Class, level: i32, sword: Option<&equipment::Sword>,
-                   shield: Option<&equipment::Shield>) -> Self {
-        Self::new(class, level, *sword, *shield)
+    pub fn ascend(class: &'static Class, level: i32, sword: Option<equipment::Sword>,
+                   shield: Option<equipment::Shield>) -> Self {
+        Self::new(class, level, sword, shield)
     }
 
     pub fn name(&self) -> String {
