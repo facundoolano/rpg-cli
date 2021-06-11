@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::io;
 use tombstone::Tombstone;
-use crate::character::class::Class;
 
 pub mod battle;
 mod datafile;
