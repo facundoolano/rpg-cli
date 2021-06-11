@@ -13,7 +13,7 @@ use clap::{crate_version, AppSettings, Clap};
 use crate::character::Character;
 use crate::character::class::Class;
 use crate::item::equipment::{Shield, Sword};
-use crate::item::{equipment::Equipment, Item};
+use crate::item::equipment::Equipment;
 
 /// Your filesystem as a dungeon!
 #[derive(Clap)]
@@ -238,8 +238,8 @@ fn perform_ascension(class: &Option<String>, game: &mut Game) {
                                                            game.player.sword.take(),
                                                            game.player.shield.take()),
             "rogue"     => game.player = Character::ascend(&Class::ROGUE, game.player.level,
-                                                           Some(Sword::new(Some(game.player.sword).level())),
-                                                           Some(Shield::new(Some(game.player.shield).level()))),
+                                                           game.player.sword.take(),
+                                                           game.player.shield.take()),
             _ => println!("Please select a valid class")
         };
     } else {
