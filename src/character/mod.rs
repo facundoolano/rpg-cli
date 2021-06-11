@@ -28,7 +28,6 @@ pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
 
-    #[serde(deserialize_with = "deserialize_null_default", default = "default_class_name")]
     pub class_name: String,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
@@ -44,22 +43,9 @@ pub struct Character {
     pub status_effect: StatusEffect,
 }
 
-fn deserialize_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
-    where
-        T: Default + Deserialize<'de>,
-        D: Deserializer<'de>,
-{
-    let opt = Option::deserialize(deserializer)?;
-    Ok(opt.unwrap_or_default())
-}
-
 // Always attach the static hero class to deserialized characters
 fn default_class() -> &'static Class {
     &Class::HERO
-}
-
-fn default_class_name() -> String {
-    "hero".to_string()
 }
 
 impl Character {
