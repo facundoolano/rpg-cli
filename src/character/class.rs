@@ -41,6 +41,20 @@ impl Class {
         speed: Stat(11, 2),
     };
 
+    pub const WARRIOR: Self = Self {
+        name: "warrior",
+        hp: Stat(30, 13),
+        strength: Stat(12, 6),
+        speed: Stat(11,3),
+    };
+
+    pub const ROGUE: Self = Self {
+        name: "rogue",
+        hp: Stat(30, 9),
+        strength: Stat(12, 4),
+        speed: Stat(11, 5),
+    };
+
     pub fn random_enemy(distance: location::Distance) -> &'static Self {
         weighted_choice(distance)
     }

@@ -10,6 +10,8 @@ mod randomizer;
 
 use crate::location::Location;
 use clap::{crate_version, AppSettings, Clap};
+use crate::character::Character;
+use crate::character::class::Class;
 
 /// Your filesystem as a dungeon!
 #[derive(Clap)]
@@ -93,6 +95,12 @@ enum Command {
         #[clap(long)]
         bribe: bool,
     },
+
+    /// Class ascension command
+    #[clap(alias = "a", display_order = 5)]
+    Ascend {
+        class: Option<String>
+    }
 }
 
 fn main() {
@@ -133,7 +141,8 @@ fn main() {
         Command::Todo => {
             let (todo, done) = game.quests.list(&game);
             log::quest_list(&todo, &done);
-        }
+        },
+        Command::Ascend { class } => perform_ascension(&class, &mut game),
     }
 
     game.save().unwrap();
@@ -216,4 +225,19 @@ fn sanitize(name: &str) -> String {
         n => n,
     };
     name.to_string()
+}
+
+/// Ascend your character class to a new one
+fn perform_ascension(class: &Option<String>, game: &mut Game) {
+    if let Some(class) = class {
+        let class_name = sanitize(class);
+        match class_name {
+            "warrior"   => game.player = Character::ascend(&Class::WARRIOR, game.player.level, game.player.sword, game.player.shield),
+            "rogue"     => game.player = Character::ascend(&Class::ROGUE, game.player.level, game.player.sword, game.player.shield),
+            n => println!("Please select a valid class")
+        };
+    } else {
+        println!("You may ascend your class at level 5, the following options are available");
+        println!("")
+    }
 }

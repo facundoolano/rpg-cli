@@ -48,11 +48,16 @@ fn default_class() -> &'static Class {
 
 impl Character {
     pub fn player() -> Self {
-        Self::new(&Class::HERO, 1)
+        Self::new(&Class::HERO, 1, None, None)
     }
 
     pub fn enemy(level: i32, distance: location::Distance) -> Self {
-        Self::new(Class::random_enemy(distance), level)
+        Self::new(Class::random_enemy(distance), level, None, None)
+    }
+
+    pub fn ascend(class: &'static Class, level: i32, sword: Option<equipment::Sword>,
+                   shield: Option<equipment::Shield>) -> Self {
+        Self::new(class, level, sword, shield)
     }
 
     pub fn name(&self) -> String {
@@ -64,11 +69,12 @@ impl Character {
         self.class.name == "hero"
     }
 
-    fn new(class: &'static Class, level: i32) -> Self {
+    fn new(class: &'static Class, level: i32, sword: Option<equipment::Sword>,
+           shield: Option<equipment::Shield>) -> Self {
         let mut character = Self {
             class,
-            sword: None,
-            shield: None,
+            sword: sword,
+            shield: shield,
             level: 1,
             xp: 0,
             max_hp: class.hp.base(),
@@ -219,7 +225,7 @@ mod tests {
     };
 
     fn new_char() -> Character {
-        Character::new(&TEST_CLASS, 1)
+        Character::new(&TEST_CLASS, 1, None, None)
     }
 
     #[test]
