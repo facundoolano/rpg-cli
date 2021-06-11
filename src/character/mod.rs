@@ -24,11 +24,11 @@ impl StatusEffect {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Character<'a> {
+pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
 
-    pub class_name: &'a str,
+    pub class_name: String,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
 
@@ -59,7 +59,7 @@ impl Character {
 
     pub fn ascend(&mut self, class: &'static Class) {
         self.class = class;
-        self.class_name = class.name
+        self.class_name = class.name.to_string()
     }
 
     pub fn name(&self) -> String {

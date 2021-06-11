@@ -116,8 +116,8 @@ fn main() {
     }
 
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
-    if game.player.class_name != "hero" {
-        match game.player.class_name {
+    if game.player.class_name.as_str() != "hero" {
+        match game.player.class_name.as_str() {
             "warrior" => game.player.ascend(&Class::WARRIOR),
             "rogue" => game.player.ascend(&Class::ROGUE),
             _ => game.player.ascend(&Class::HERO)
