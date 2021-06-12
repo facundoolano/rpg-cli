@@ -100,9 +100,9 @@ pub fn damage(character: &Character, attack: &Attack) {
     }
 }
 
-pub fn received_status_effect(player: &Character) {
+pub fn status_effect(player: &Character) {
     if !quiet() {
-        battle_log(player, &format_status_effect_received(player.status_effect));
+        battle_log(player, &format_status_effect(player.status_effect));
     }
 }
 
@@ -154,7 +154,7 @@ fn long_status(game: &Game) {
         player.speed
     );
     if !player.status_effect.is_normal() {
-        println!("    {}", format_status_effect(player));
+        println!("    status:{}", format_status_effect(player.status_effect));
     }
     println!("    {}", format_equipment(player));
     println!("    {}", format_inventory(game));
@@ -348,16 +348,9 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
     }
 }
 
-fn format_status_effect_received(status_effect: StatusEffect) -> String {
+fn format_status_effect(status_effect: StatusEffect) -> String {
     let (name, emoji, color, _) = status_effect_details(status_effect);
-    format!(" got {} {}", name, emoji).color(color).to_string()
-}
-
-fn format_status_effect(character: &Character) -> String {
-    let (name, emoji, color, _) = status_effect_details(character.status_effect);
-    format!("status: {} {}", name, emoji)
-        .color(color)
-        .to_string()
+    format!(" {} {}", name, emoji).color(color).to_string()
 }
 
 fn hp_display(character: &Character, slots: i32) -> String {

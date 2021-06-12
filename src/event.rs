@@ -110,6 +110,11 @@ pub fn damage(character: &Character, attack: &battle::Attack) {
     log::damage(character, attack);
 }
 
+pub fn status_effect(character: &Character) {
+    // FIXME merge this with the regular damage, handle status inside of log::damage
+    log::status_effect(character);
+}
+
 pub fn potion(game: &game::Game, restored: i32) {
     log::potion(&game.player, restored);
 }
