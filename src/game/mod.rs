@@ -12,8 +12,8 @@ use std::{fs, io, path};
 use tombstone::Tombstone;
 
 pub mod battle;
-pub mod tombstone;
 mod game040;
+pub mod tombstone;
 
 #[derive(Debug)]
 pub enum Error {
