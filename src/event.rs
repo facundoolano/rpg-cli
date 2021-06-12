@@ -1,5 +1,6 @@
 use crate::character::Character;
 use crate::game;
+use crate::game::battle;
 use crate::location::Location;
 use crate::log;
 use crate::quest;
@@ -103,6 +104,10 @@ pub fn run_away(game: &game::Game, success: bool) {
     } else {
         log::run_away_failure(&game.player);
     }
+}
+
+pub fn damage(character: &Character, attack: &battle::Attack) {
+    log::damage(character, attack);
 }
 
 pub fn potion(game: &game::Game, restored: i32) {

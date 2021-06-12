@@ -2,6 +2,7 @@ use super::Game;
 use crate::character::{Character, StatusEffect};
 // FIXME this should call the event module instead of log directly
 use crate::log;
+use crate::event;
 use crate::randomizer::Randomizer;
 
 /// Outcome of an attack attempt.
@@ -53,19 +54,19 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
 fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
     let (damage, new_xp) = attack(&game.player, enemy, random);
-    log::player_attack(enemy, &damage);
+    event::damage(enemy, &damage);
 
     // take an enemy hit from status_effect
     let damage = game.player.apply_status_effect();
     if damage.is_hit() {
-        log::enemy_attack(&game.player, &damage);
+        event::damage(&game.player, &damage);
     }
     new_xp
 }
 
 fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
     let (damage, _) = attack(enemy, &mut game.player, random);
-    log::enemy_attack(&game.player, &damage);
+    event::damage(&game.player, &damage);
 
     // if player took a hit, maybe_receive_status_effect
     if damage.is_hit() && game.player.maybe_receive_status_effect() {

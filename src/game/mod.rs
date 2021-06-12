@@ -138,9 +138,7 @@ impl Game {
             // take an attack hit from status_effects
             let damage = self.player.apply_status_effect();
             if damage.is_hit() {
-                // FIXME this should be either a player damage or status effect event
-                // instead of an enemy_attack log
-                log::enemy_attack(&self.player, &damage);
+                log::damage(&self.player, &damage);
             }
         }
     }

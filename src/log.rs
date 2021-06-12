@@ -89,15 +89,14 @@ pub fn remedy(player: &Character, healed: bool) {
     }
 }
 
-pub fn player_attack(enemy: &Character, attack: &Attack) {
+pub fn damage(character: &Character, attack: &Attack) {
     if !quiet() {
-        battle_log(enemy, &format_attack(attack, "white"));
-    }
-}
-
-pub fn enemy_attack(player: &Character, attack: &Attack) {
-    if !quiet() {
-        battle_log(player, &format_attack(attack, "bright red"));
+        let color = if character.is_player() {
+            "bright red"
+        } else {
+            "white"
+        };
+        battle_log(character, &format_damage(attack, color));
     }
 }
 
@@ -308,7 +307,7 @@ pub fn format_inventory(game: &Game) -> String {
     format!("item:{{{}}}", items.join(","))
 }
 
-fn format_attack(attack: &Attack, color: &str) -> String {
+fn format_damage(attack: &Attack, color: &str) -> String {
     match attack {
         Attack::Regular(damage) => format!("-{}hp", damage).color(color).to_string(),
         Attack::Critical(damage) => format!("-{}hp critical!", damage).color(color).to_string(),
