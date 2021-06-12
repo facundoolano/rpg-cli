@@ -1,5 +1,6 @@
 use super::Game;
 use crate::character::{Character, StatusEffect};
+// FIXME this should call the event module instead of log directly
 use crate::log;
 use crate::randomizer::Randomizer;
 

@@ -115,15 +115,11 @@ impl Game {
             match random().range(6) {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
-                    // FIXME
-                    log::chest_gold(gold);
-                    event::chest(self);
+                    event::chest(self, gold, &[]);
                 }
                 1 => {
                     let potion = Potion::new(self.player.level);
-                    // FIXME
-                    log::chest_item("potion");
-                    event::chest(self);
+                    event::chest(self, 0, &["potion".to_string()]);
                     self.add_item("potion", Box::new(potion));
                 }
                 _ => {}
@@ -137,9 +133,7 @@ impl Game {
         if self.location.is_home() {
             let recovered = self.player.heal_full();
             let healed = self.player.maybe_remove_status_effect();
-
-            // FIXME event
-            log::heal(&self.player, &self.location, recovered, healed);
+            event::heal(self, recovered, healed);
         } else {
             // take an attack hit from status_effects
             let damage = self.player.apply_status_effect();
@@ -206,8 +200,7 @@ impl Game {
             let level = random().enemy_level(level);
             let enemy = Character::enemy(level, distance);
 
-            // FIXME event
-            log::enemy_appears(&enemy, &self.location);
+            event::enemy_appears(self, &enemy);
             Some(enemy)
         } else {
             None
@@ -235,24 +228,19 @@ impl Game {
     fn bribe(&mut self, enemy: &Character) -> bool {
         let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
 
-        // FIXME event
         if self.gold >= bribe_cost && random().bribe_succeeds() {
             self.gold -= bribe_cost;
-            log::bribe_success(&self.player, bribe_cost);
+            event::bribe(self, bribe_cost);
             return true;
         };
-        log::bribe_failure(&self.player);
+        event::bribe(self, 0);
         false
     }
 
     fn run_away(&self, enemy: &Character) -> bool {
-        // FIXME event
-        if random().run_away_succeeds(self.player.level, enemy.level) {
-            log::run_away_success(&self.player);
-            return true;
-        };
-        log::run_away_failure(&self.player);
-        false
+        let success = random().run_away_succeeds(self.player.level, enemy.level);
+        event::run_away(self, success);
+        success
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {

@@ -1,14 +1,15 @@
+use crate::character::Character;
+use crate::game;
+use crate::location::Location;
 /// This module implements basic event management.
 /// It's static, the events are not subscribed at runtime, but
 /// it serves the purpose of decoupling logging and the quest system
 /// from the rest of the codebase.
-
 use crate::log;
-use crate::character::Character;
-use crate::game;
-use crate::location::Location;
 use crate::quest;
 
+// NOTE: for now not adding variants when the only action is log,
+// since there's no benefit on adding enum handling to the logging module
 pub enum Event {
     EnemyBeat { enemy: String, location: Location },
     LevelUp { current: i32 },
@@ -16,7 +17,10 @@ pub enum Event {
     ItemUsed { item: String },
     ChestFound,
     TombstoneFound,
-    QuestComplete{ reward:i32 },
+}
+
+pub fn enemy_appears(game: &game::Game, enemy: &Character) {
+    log::enemy_appears(&enemy, &game.location);
 }
 
 pub fn battle_won(game: &mut game::Game, enemy: &Character, xp: i32, levels_up: i32, gold: i32) {
@@ -61,15 +65,42 @@ pub fn item_used(game: &mut game::Game, item: &str) {
     );
 }
 
+pub fn heal(game: &game::Game, recovered: i32, healed: bool) {
+    log::heal(&game.player, &game.location, recovered, healed);
+}
+
 pub fn tombstone(game: &mut game::Game, items: &[String], gold: i32) {
     quest::handle(game, Event::TombstoneFound);
     log::tombstone(&items, gold);
 }
 
-pub fn chest(game: &mut game::Game) {
+pub fn chest(game: &mut game::Game, gold: i32, items: &[String]) {
     quest::handle(game, Event::ChestFound);
+
+    if gold > 0 {
+        log::chest_gold(gold);
+    }
+    if !items.is_empty() {
+        log::chest_item(items);
+    }
 }
 
 pub fn quest_complete(reward: i32) {
     log::quest_done(reward);
+}
+
+pub fn bribe(game: &game::Game, cost: i32) {
+    if cost > 0 {
+        log::bribe_success(&game.player, cost);
+    } else {
+        log::bribe_failure(&game.player);
+    }
+}
+
+pub fn run_away(game: &game::Game, success: bool) {
+    if success {
+        log::run_away_success(&game.player);
+    } else {
+        log::run_away_failure(&game.player);
+    }
 }

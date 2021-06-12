@@ -230,8 +230,8 @@ pub fn quest_done(reward: i32) {
     }
 }
 
-pub fn chest_item(item: &str) {
-    format_ls("\u{1F4E6}", &[item.to_string()], 0);
+pub fn chest_item(items: &[String]) {
+    format_ls("\u{1F4E6}", items, 0);
 }
 
 pub fn chest_gold(gold: i32) {
