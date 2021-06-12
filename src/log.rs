@@ -72,17 +72,14 @@ pub fn heal(player: &Character, location: &Location, recovered: i32, healed: boo
         log(
             player,
             location,
-            &format!("{} {}", recovered_text, healed_text).green()
+            &format!("{} {}", recovered_text, healed_text).green(),
         );
     }
 }
 
 pub fn potion(player: &Character, recovered: i32) {
     if recovered > 0 {
-        battle_log(
-            player,
-            &format!("+{}hp potion", recovered).green(),
-        );
+        battle_log(player, &format!("+{}hp potion", recovered).green());
     }
 }
 

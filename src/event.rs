@@ -1,13 +1,13 @@
 use crate::character::Character;
 use crate::game;
 use crate::location::Location;
+use crate::log;
+use crate::quest;
+
 /// This module implements basic event management.
 /// It's static, the events are not subscribed at runtime, but
 /// it serves the purpose of decoupling logging and the quest system
 /// from the rest of the codebase.
-use crate::log;
-use crate::quest;
-
 // NOTE: for now not adding variants when the only action is log,
 // since there's no benefit on adding enum handling to the logging module
 pub enum Event {

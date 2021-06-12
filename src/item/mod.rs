@@ -1,8 +1,8 @@
 use core::fmt;
 
 use crate::character::class as character;
-use crate::game;
 use crate::event;
+use crate::game;
 use serde::{Deserialize, Serialize};
 
 pub mod equipment;
