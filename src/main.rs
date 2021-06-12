@@ -1,6 +1,7 @@
 use game::Game;
 
 mod character;
+mod event;
 mod game;
 mod item;
 mod location;

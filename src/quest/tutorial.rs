@@ -1,4 +1,5 @@
-use super::{Event, Quest};
+use super::Quest;
+use crate::event::Event;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

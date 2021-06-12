@@ -1,10 +1,10 @@
 extern crate dirs;
 
 use crate::character::Character;
+use crate::event;
 use crate::item::{Item, Potion};
 use crate::location::Location;
 use crate::log;
-use crate::quest;
 use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
@@ -116,12 +116,12 @@ impl Game {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
                     log::chest_gold(gold);
-                    quest::handle_chest(self);
+                    event::chest(self);
                 }
                 1 => {
                     let potion = Potion::new(self.player.level);
                     log::chest_item("potion");
-                    quest::handle_chest(self);
+                    event::chest(self);
                     self.add_item("potion", Box::new(potion));
                 }
                 _ => {}
@@ -165,7 +165,7 @@ impl Game {
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(item) = items.pop() {
                 item.apply(self);
-                quest::handle_item_used(self, &name);
+                event::item_used(self, &name);
             }
 
             if !items.is_empty() {
@@ -190,7 +190,7 @@ impl Game {
         if let Some(mut tombstone) = self.tombstones.remove(&self.location.to_string()) {
             let (items, gold) = tombstone.pick_up(self);
             log::tombstone(&items, gold);
-            quest::handle_tombstone(self);
+            event::tombstone(self);
         }
     }
 
@@ -253,7 +253,7 @@ impl Game {
             let level_up = self.player.add_experience(xp);
 
             log::battle_won(self, xp, level_up, gold);
-            quest::handle_battle_won(self, &enemy, level_up);
+            event::battle_won(self, &enemy, level_up);
             Ok(())
         } else {
             // leave hero items in the location

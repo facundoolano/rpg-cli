@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 
-use super::{Event, Quest};
+use super::Quest;
 use crate::character::class::Class;
+use crate::event::Event;
 use serde::{Deserialize, Serialize};
 
 pub fn of_class(classes: &[Class], description: &str) -> Box<dyn Quest> {
