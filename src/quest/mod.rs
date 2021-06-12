@@ -1,7 +1,6 @@
 use crate::character;
 use crate::event;
 use crate::game;
-use crate::log;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 
@@ -76,7 +75,7 @@ impl QuestList {
 
             if is_done {
                 total_reward += reward;
-                log::quest_done(reward);
+                event::quest_complete(reward);
 
                 // the done is stored from newer to older
                 self.done.insert(0, quest.description().to_string());

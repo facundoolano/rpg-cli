@@ -115,11 +115,13 @@ impl Game {
             match random().range(6) {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
+                    // FIXME
                     log::chest_gold(gold);
                     event::chest(self);
                 }
                 1 => {
                     let potion = Potion::new(self.player.level);
+                    // FIXME
                     log::chest_item("potion");
                     event::chest(self);
                     self.add_item("potion", Box::new(potion));
@@ -135,11 +137,15 @@ impl Game {
         if self.location.is_home() {
             let recovered = self.player.heal_full();
             let healed = self.player.maybe_remove_status_effect();
+
+            // FIXME event
             log::heal(&self.player, &self.location, recovered, healed);
         } else {
             // take an attack hit from status_effects
             let damage = self.player.apply_status_effect();
             if damage.is_hit() {
+                // FIXME this should be either a player damage or status effect event
+                // instead of an enemy_attack log
                 log::enemy_attack(&self.player, &damage);
             }
         }
@@ -189,8 +195,7 @@ impl Game {
     fn pick_up_tombstone(&mut self) {
         if let Some(mut tombstone) = self.tombstones.remove(&self.location.to_string()) {
             let (items, gold) = tombstone.pick_up(self);
-            log::tombstone(&items, gold);
-            event::tombstone(self);
+            event::tombstone(self, &items, gold);
         }
     }
 
@@ -200,6 +205,8 @@ impl Game {
             let level = enemy_level(self.player.level, distance.len());
             let level = random().enemy_level(level);
             let enemy = Character::enemy(level, distance);
+
+            // FIXME event
             log::enemy_appears(&enemy, &self.location);
             Some(enemy)
         } else {
@@ -228,6 +235,7 @@ impl Game {
     fn bribe(&mut self, enemy: &Character) -> bool {
         let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
 
+        // FIXME event
         if self.gold >= bribe_cost && random().bribe_succeeds() {
             self.gold -= bribe_cost;
             log::bribe_success(&self.player, bribe_cost);
@@ -238,6 +246,7 @@ impl Game {
     }
 
     fn run_away(&self, enemy: &Character) -> bool {
+        // FIXME event
         if random().run_away_succeeds(self.player.level, enemy.level) {
             log::run_away_success(&self.player);
             return true;
@@ -252,15 +261,14 @@ impl Game {
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
 
-            log::battle_won(self, xp, level_up, gold);
-            event::battle_won(self, &enemy, level_up);
+            event::battle_won(self, &enemy, xp, level_up, gold);
             Ok(())
         } else {
             // leave hero items in the location
             let tombstone = Tombstone::drop(self);
             self.tombstones.insert(self.location.to_string(), tombstone);
 
-            log::battle_lost(&self.player);
+            event::battle_lost(self);
             Err(Error::GameOver)
         }
     }
