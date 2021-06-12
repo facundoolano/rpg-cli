@@ -15,6 +15,7 @@ use tombstone::Tombstone;
 
 pub mod battle;
 mod datafile;
+mod game040;
 pub mod tombstone;
 
 #[derive(Debug)]
@@ -25,13 +26,14 @@ pub enum Error {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(default)]
 pub struct Game {
     pub player: Character,
     pub location: Location,
     pub gold: i32,
     pub quests: QuestList,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
-    tombstones: HashMap<Location, Tombstone>,
+    tombstones: HashMap<String, Tombstone>,
     inspected: HashSet<Location>,
 }
 
@@ -51,12 +53,18 @@ impl Game {
 
     pub fn load() -> Result<Self, Error> {
         let data: Vec<u8> = datafile::read().or(Err(Error::NoDataFile))?;
-        let game: Game = bincode::deserialize(&data).unwrap();
+        let game: Game = if let Ok(game) = serde_json::from_slice(&data) {
+            game
+        } else {
+            // if json deserialization fails, attempt bincode assuming
+            // it may be a file from v0.4.0
+            game040::deserialize(&data).unwrap()
+        };
         Ok(game)
     }
 
     pub fn save(&self) -> Result<(), io::Error> {
-        let data = bincode::serialize(&self).unwrap();
+        let data = serde_json::to_vec(&self).unwrap();
         datafile::write(data)
     }
 
@@ -179,7 +187,7 @@ impl Game {
 
     /// If there's a tombstone laying in the current location, pick up its items
     fn pick_up_tombstone(&mut self) {
-        if let Some(mut tombstone) = self.tombstones.remove(&self.location) {
+        if let Some(mut tombstone) = self.tombstones.remove(&self.location.to_string()) {
             let (items, gold) = tombstone.pick_up(self);
             log::tombstone(&items, gold);
             quest::handle_tombstone(self);
@@ -250,7 +258,7 @@ impl Game {
         } else {
             // leave hero items in the location
             let tombstone = Tombstone::drop(self);
-            self.tombstones.insert(self.location.clone(), tombstone);
+            self.tombstones.insert(self.location.to_string(), tombstone);
 
             log::battle_lost(&self.player);
             Err(Error::GameOver)

@@ -24,6 +24,7 @@ impl StatusEffect {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(default)]
 pub struct Character {
     #[serde(skip, default = "default_class")]
     class: &'static Class,
@@ -39,6 +40,12 @@ pub struct Character {
     pub strength: i32,
     pub speed: i32,
     pub status_effect: StatusEffect,
+}
+
+impl Default for Character {
+    fn default() -> Self {
+        Character::player()
+    }
 }
 
 // Always attach the static hero class to deserialized characters

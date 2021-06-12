@@ -9,6 +9,7 @@
 * Example sh file #54
 * Status effects #48
 ### Changed
+* Game data is now serialized to JSON to allow extending it without breaking backwards compatibility.
 * Tombstones are found with `rpg ls` instead of automatically #52
 
 ## [0.4.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.4.0) - 2021-06-05
