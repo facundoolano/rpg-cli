@@ -22,12 +22,13 @@ pub enum Error {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(default)]
 pub struct Game {
     pub player: Character,
     pub location: Location,
     pub gold: i32,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
-    tombstones: HashMap<Location, Tombstone>,
+    tombstones: HashMap<String, Tombstone>,
 }
 
 impl Game {
@@ -43,7 +44,13 @@ impl Game {
 
     pub fn load() -> Result<Self, Error> {
         let data = fs::read(data_file()).or(Err(Error::NoDataFile))?;
-        let game: Game = bincode::deserialize(&data).unwrap();
+        let game: Game = if let Ok(game) = serde_json::from_slice(&data) {
+            game
+        } else {
+            // if json deserialization fails, attempt bincode assuming
+            // it may be a file from v0.4.0
+            Game040::deserialize(&data).unwrap()
+        };
         Ok(game)
     }
 
@@ -53,7 +60,7 @@ impl Game {
             fs::create_dir(&rpg_dir).unwrap();
         }
 
-        let data = bincode::serialize(&self).unwrap();
+        let data = serde_json::to_vec(&self).unwrap();
         fs::write(data_file(), &data)
     }
 
@@ -134,7 +141,7 @@ impl Game {
 
     /// If there's a tombstone laying in the current location, pick up its items
     fn pick_up_tombstone(&mut self) -> bool {
-        if let Some(mut tombstone) = self.tombstones.remove(&self.location) {
+        if let Some(mut tombstone) = self.tombstones.remove(&self.location.to_string()) {
             tombstone.pick_up(self);
             true
         } else {
@@ -205,7 +212,7 @@ impl Game {
         } else {
             // leave hero items in the location
             let tombstone = Tombstone::drop(self);
-            self.tombstones.insert(self.location.clone(), tombstone);
+            self.tombstones.insert(self.location.to_string(), tombstone);
 
             log::battle_lost(&self.player);
             Err(Error::GameOver)
@@ -216,6 +223,36 @@ impl Game {
 impl Default for Game {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// v0.4.0 of the game struct, kept for backwards compatibility when upgrading
+/// the game data file to the new version
+// FIXME remove on a subsequent version
+#[derive(Deserialize)]
+struct Game040 {
+    pub player: Character,
+    pub location: Location,
+    pub gold: i32,
+    inventory: HashMap<String, Vec<Box<dyn Item>>>,
+    tombstones: HashMap<Location, Tombstone>,
+}
+
+impl Game040 {
+    /// Get a new Game instance out of a v0.4.0 one
+    fn deserialize(data: &[u8]) -> Result<Game, bincode::Error> {
+        let mut v4game: Game040 = bincode::deserialize(&data)?;
+        let mut new_game = Game::new();
+        std::mem::swap(&mut new_game.player, &mut v4game.player);
+        std::mem::swap(&mut new_game.location, &mut v4game.location);
+        std::mem::swap(&mut new_game.inventory, &mut v4game.inventory);
+        new_game.tombstones = v4game
+            .tombstones
+            .drain()
+            .map(|(l, t)| (l.to_string(), t))
+            .collect();
+        new_game.gold = v4game.gold;
+        Ok(new_game)
     }
 }
 
