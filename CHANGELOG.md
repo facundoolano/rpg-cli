@@ -8,6 +8,7 @@
 * `rpg ls` command to look for chests at the current location #51
 * Example sh file #54
 * Status effects #48
+
 ### Changed
 * Game data is now serialized to JSON to allow extending it without breaking backwards compatibility.
 * Tombstones are found with `rpg ls` instead of automatically #52
