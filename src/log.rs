@@ -88,10 +88,7 @@ pub fn potion(player: &Character, recovered: i32) {
 
 pub fn remedy(player: &Character, healed: bool) {
     if healed {
-        battle_log(
-            player,
-            &"+healed with remedy".green().to_string(),
-        );
+        battle_log(player, &"+healed with remedy".green().to_string());
     }
 }
 
