@@ -72,7 +72,7 @@ pub fn heal(player: &Character, location: &Location, recovered: i32, healed: boo
         log(
             player,
             location,
-            &(recovered_text + &healed_text).green().to_string(),
+            &format!("{} {}", recovered_text, healed_text).green()
         );
     }
 }
@@ -81,14 +81,14 @@ pub fn potion(player: &Character, recovered: i32) {
     if recovered > 0 {
         battle_log(
             player,
-            &format!("+{}hp potion", recovered).green().to_string(),
+            &format!("+{}hp potion", recovered).green(),
         );
     }
 }
 
 pub fn remedy(player: &Character, healed: bool) {
     if healed {
-        battle_log(player, &"+healed with remedy".green().to_string());
+        battle_log(player, &"+healed remedy".green());
     }
 }
 

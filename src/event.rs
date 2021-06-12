@@ -104,3 +104,11 @@ pub fn run_away(game: &game::Game, success: bool) {
         log::run_away_failure(&game.player);
     }
 }
+
+pub fn potion(game: &game::Game, restored: i32) {
+    log::potion(&game.player, restored);
+}
+
+pub fn remedy(game: &game::Game, healed: bool) {
+    log::remedy(&game.player, healed);
+}

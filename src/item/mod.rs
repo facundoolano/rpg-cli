@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::character::class as character;
 use crate::game;
-use crate::log;
+use crate::event;
 use serde::{Deserialize, Serialize};
 
 pub mod equipment;
@@ -38,7 +38,7 @@ impl Item for Potion {
 
         // we prefer the battle here since its less ugly to show battle-like
         // output outside battle than the other way around
-        log::potion(&game.player, restored);
+        event::potion(game, restored);
     }
 }
 
@@ -77,7 +77,7 @@ impl Remedy {
 impl Item for Remedy {
     fn apply(&self, game: &mut game::Game) {
         let healed = game.player.maybe_remove_status_effect();
-        log::remedy(&game.player, healed);
+        event::remedy(game, healed);
     }
 }
 
