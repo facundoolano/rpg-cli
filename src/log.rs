@@ -63,7 +63,7 @@ pub fn heal(player: &Character, location: &Location, recovered: i32, healed: boo
     let mut healed_text = String::new();
 
     if recovered > 0 {
-        recovered_text = format!("+{}hp ", recovered);
+        recovered_text = format!("+{}hp", recovered);
     }
     if healed {
         healed_text = String::from("+healed");
@@ -95,18 +95,12 @@ pub fn remedy(player: &Character, healed: bool) {
 }
 
 pub fn attack(character: &Character, attack: &Attack) {
-    // TODO cleanup this code
     if !quiet() {
         let color = damage_color(character);
-        let message = match attack {
-            Attack::Regular(damage) => format_damage(*damage, &color, ""),
-            Attack::Critical(damage) => format_damage(*damage, &color, "critical!"),
-            Attack::Effect(status_effect, damage) => {
-                format_damage(*damage, &color, &format_status_effect(*status_effect))
-            }
-            Attack::Miss => " dodged!".to_string(),
-        };
-        println!("{}", message);
+        battle_log(
+            character,
+            &format_attack(&attack, &color),
+        );
     }
 }
 
@@ -317,6 +311,17 @@ pub fn format_inventory(game: &Game) -> String {
 
     items.sort();
     format!("item:{{{}}}", items.join(","))
+}
+
+fn format_attack(attack: &Attack, color: &str) -> String {
+    match attack {
+        Attack::Regular(damage) => format_damage(*damage, &color, ""),
+        Attack::Critical(damage) => format_damage(*damage, &color, "critical!"),
+        Attack::Effect(status_effect, damage) => {
+            format_damage(*damage, &color, &format_status_effect(*status_effect))
+        }
+        Attack::Miss => " dodged!".to_string(),
+    }
 }
 
 fn format_damage(amount: i32, color: &str, suffix: &str) -> String {
