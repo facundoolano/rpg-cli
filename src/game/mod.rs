@@ -1,10 +1,10 @@
 extern crate dirs;
 
 use crate::character::Character;
+use crate::event;
 use crate::item::{Item, Potion};
 use crate::location::Location;
 use crate::log;
-use crate::quest;
 use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
@@ -115,13 +115,11 @@ impl Game {
             match random().range(6) {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
-                    log::chest_gold(gold);
-                    quest::handle_chest(self);
+                    event::chest(self, gold, &[]);
                 }
                 1 => {
                     let potion = Potion::new(self.player.level);
-                    log::chest_item("potion");
-                    quest::handle_chest(self);
+                    event::chest(self, 0, &["potion".to_string()]);
                     self.add_item("potion", Box::new(potion));
                 }
                 _ => {}
@@ -135,12 +133,12 @@ impl Game {
         if self.location.is_home() {
             let recovered = self.player.heal_full();
             let healed = self.player.maybe_remove_status_effect();
-            log::heal(&self.player, &self.location, recovered, healed);
+            event::heal(self, recovered, healed);
         } else {
             // take an attack hit from status_effects
             let damage = self.player.apply_status_effect();
             if damage.is_hit() {
-                log::enemy_attack(&self.player, &damage);
+                log::damage(&self.player, &damage);
             }
         }
     }
@@ -165,7 +163,7 @@ impl Game {
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(item) = items.pop() {
                 item.apply(self);
-                quest::handle_item_used(self, &name);
+                event::item_used(self, &name);
             }
 
             if !items.is_empty() {
@@ -189,8 +187,7 @@ impl Game {
     fn pick_up_tombstone(&mut self) {
         if let Some(mut tombstone) = self.tombstones.remove(&self.location.to_string()) {
             let (items, gold) = tombstone.pick_up(self);
-            log::tombstone(&items, gold);
-            quest::handle_tombstone(self);
+            event::tombstone(self, &items, gold);
         }
     }
 
@@ -200,7 +197,8 @@ impl Game {
             let level = enemy_level(self.player.level, distance.len());
             let level = random().enemy_level(level);
             let enemy = Character::enemy(level, distance);
-            log::enemy_appears(&enemy, &self.location);
+
+            event::enemy_appears(self, &enemy);
             Some(enemy)
         } else {
             None
@@ -230,20 +228,17 @@ impl Game {
 
         if self.gold >= bribe_cost && random().bribe_succeeds() {
             self.gold -= bribe_cost;
-            log::bribe_success(&self.player, bribe_cost);
+            event::bribe(self, bribe_cost);
             return true;
         };
-        log::bribe_failure(&self.player);
+        event::bribe(self, 0);
         false
     }
 
     fn run_away(&self, enemy: &Character) -> bool {
-        if random().run_away_succeeds(self.player.level, enemy.level) {
-            log::run_away_success(&self.player);
-            return true;
-        };
-        log::run_away_failure(&self.player);
-        false
+        let success = random().run_away_succeeds(self.player.level, enemy.level);
+        event::run_away(self, success);
+        success
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
@@ -252,15 +247,14 @@ impl Game {
             self.gold += gold;
             let level_up = self.player.add_experience(xp);
 
-            log::battle_won(self, xp, level_up, gold);
-            quest::handle_battle_won(self, &enemy, level_up);
+            event::battle_won(self, &enemy, xp, level_up, gold);
             Ok(())
         } else {
             // leave hero items in the location
             let tombstone = Tombstone::drop(self);
             self.tombstones.insert(self.location.to_string(), tombstone);
 
-            log::battle_lost(&self.player);
+            event::battle_lost(self);
             Err(Error::GameOver)
         }
     }

@@ -1,22 +1,14 @@
 use crate::character;
-use crate::character::Character;
+use crate::event;
 use crate::game;
-use crate::location::Location;
-use crate::log;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 
 mod beat_enemy;
 mod tutorial;
 
-/// Events that can trigger quest updates.
-pub enum Event {
-    EnemyBeat { enemy: String, location: Location },
-    LevelUp { current: i32 },
-    ItemBought { item: String },
-    ItemUsed { item: String },
-    ChestFound,
-    TombstoneFound,
+pub fn handle(game: &mut game::Game, event: event::Event) {
+    game.gold += game.quests.handle(event);
 }
 
 /// Keeps a TODO list of quests for the game.
@@ -74,7 +66,7 @@ impl QuestList {
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
     /// The total gold reward is returned.
-    fn handle(&mut self, event: Event) -> i32 {
+    fn handle(&mut self, event: event::Event) -> i32 {
         let mut still_todo = Vec::new();
         let mut total_reward = 0;
 
@@ -83,7 +75,7 @@ impl QuestList {
 
             if is_done {
                 total_reward += reward;
-                log::quest_done(reward);
+                event::quest_complete(reward);
 
                 // the done is stored from newer to older
                 self.done.insert(0, quest.description().to_string());
@@ -117,61 +109,13 @@ pub trait Quest {
 
     /// Update the quest progress based on the given event and
     /// return whether the quest was finished.
-    fn handle(&mut self, event: &Event) -> bool;
+    fn handle(&mut self, event: &event::Event) -> bool;
 }
 
 impl fmt::Display for dyn Quest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description())
     }
-}
-
-pub fn handle_battle_won(game: &mut game::Game, enemy: &Character, levels_up: i32) {
-    handle(
-        game,
-        Event::EnemyBeat {
-            enemy: enemy.name(),
-            location: game.location.clone(),
-        },
-    );
-    if levels_up > 0 {
-        handle(
-            game,
-            Event::LevelUp {
-                current: game.player.level,
-            },
-        );
-    }
-}
-
-pub fn handle_item_bought(game: &mut game::Game, item: &str) {
-    handle(
-        game,
-        Event::ItemBought {
-            item: item.to_string(),
-        },
-    );
-}
-
-pub fn handle_item_used(game: &mut game::Game, item: &str) {
-    handle(
-        game,
-        Event::ItemUsed {
-            item: item.to_string(),
-        },
-    );
-}
-
-pub fn handle_tombstone(game: &mut game::Game) {
-    handle(game, Event::TombstoneFound);
-}
-
-pub fn handle_chest(game: &mut game::Game) {
-    handle(game, Event::ChestFound);
-}
-
-fn handle(game: &mut game::Game, event: Event) {
-    game.gold += game.quests.handle(event);
 }
 
 #[cfg(test)]
@@ -181,14 +125,14 @@ mod tests {
     #[test]
     fn test_quest_completed() {
         let mut game = game::Game::new();
-        let fake_enemy = Character::player();
+        let fake_enemy = character::Character::player();
 
         let initial_quests = game.quests.todo.len();
         assert!(initial_quests > 0);
         assert_eq!(0, game.quests.done.len());
 
         // first quest is to win a battle
-        handle_battle_won(&mut game, &fake_enemy, 0);
+        event::battle_won(&mut game, &fake_enemy, 100, 0, 100);
         assert_eq!(initial_quests - 1, game.quests.todo.len());
         assert_eq!(1, game.quests.done.len());
 
