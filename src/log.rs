@@ -110,10 +110,11 @@ pub fn attack(character: &Character, attack: &Attack) {
     }
 }
 
-pub fn damage(character: &Character, damage: i32) {
+pub fn status_effect_damage(character: &Character, damage: i32) {
+    let (_, emoji, _) = status_effect_details(character.status_effect);
     battle_log(
         character,
-        &format_damage(damage, &damage_color(character), ""),
+        &format_damage(damage, &damage_color(character), &emoji),
     );
 }
 

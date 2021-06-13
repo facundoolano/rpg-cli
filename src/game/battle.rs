@@ -49,8 +49,7 @@ fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer
     let (attack, new_xp) = attack(&game.player, enemy, random);
     event::attack(enemy, &attack);
 
-    // take a hit from status_effect if any
-    game.player.maybe_apply_status_effect();
+    game.player.receive_status_effect_damage();
     new_xp
 }
 

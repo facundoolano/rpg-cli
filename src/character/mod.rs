@@ -178,6 +178,7 @@ impl Character {
         }
     }
 
+    /// Return the status that this character's attack should inflict on the receiver.
     pub fn produce_status_effect(&self) -> StatusEffect {
         // at some point the player could generate it depending on the equipment
         if !self.is_player() {
@@ -195,28 +196,20 @@ impl Character {
         false
     }
 
-    /// TODO
-    pub fn maybe_apply_status_effect(&mut self) {
-        if let Some(damage) = self.status_effect_damage() {
-            let damage = random().damage(damage);
-            // FIXME handle dead
-            self.receive_damage(damage);
-            // not ideal to have event handling in this module
-            // FIXME the log should include the emoji
-            event::damage(self, damage);
-        }
-    }
-
-    /// If the character suffers from a damage-producing status effect,
-    /// return Some(damage).
-    fn status_effect_damage(&mut self) -> Option<i32> {
+    /// If the character suffers from a damage-producing status effect, apply it.
+    pub fn receive_status_effect_damage(&mut self) {
         // NOTE: in the future we could have a positive status that e.g. regen hp
         match self.status_effect {
             StatusEffect::Burned | StatusEffect::Poisoned => {
                 let damage = std::cmp::max(1, self.max_hp / 20);
-                Some(damage)
+                let damage = random().damage(damage);
+                // FIXME handle dead
+                self.receive_damage(damage);
+                // not ideal to have event handling in this module
+                // FIXME the log should include the emoji
+                event::status_effect_damage(self, damage);
             }
-            _ => None,
+            _ => (),
         }
     }
 }

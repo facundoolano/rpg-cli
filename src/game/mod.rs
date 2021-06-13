@@ -137,7 +137,7 @@ impl Game {
 
         // Take an attack hit from status_effects.
         // In location is home, already healed of negative status
-        self.player.maybe_apply_status_effect();
+        self.player.receive_status_effect_damage();
     }
 
     /// Set the current location to home, and apply related side-effects

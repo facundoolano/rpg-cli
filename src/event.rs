@@ -106,8 +106,8 @@ pub fn run_away(game: &game::Game, success: bool) {
     }
 }
 
-pub fn damage(character: &Character, damage: i32) {
-    log::damage(character, damage);
+pub fn status_effect_damage(character: &Character, damage: i32) {
+    log::status_effect_damage(character, damage);
 }
 
 pub fn attack(character: &Character, attack: &battle::Attack) {
