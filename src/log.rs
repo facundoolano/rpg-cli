@@ -338,7 +338,6 @@ fn status_effect_params(status_effect: StatusEffect) -> (&'static str, &'static 
     match status_effect {
         StatusEffect::Burned => ("burned", "\u{1F525}"),
         StatusEffect::Poisoned => ("poisoned", "\u{2620}\u{FE0F} "),
-        // StatusEffect::Confused => ("confused", "\u{1F300}"),
         StatusEffect::Normal => ("normal", ""),
     }
 }

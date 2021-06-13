@@ -121,8 +121,6 @@ impl Randomizer for DefaultRandomizer {
         let mut rng = rand::thread_rng();
         match rng.gen_range(0..20) {
             0 => StatusEffect::Burned,
-            // TODO uncomment when confused effect is implemented
-            // 1 => StatusEffect::Confused,
             2 => StatusEffect::Poisoned,
             _ => StatusEffect::Normal,
         }
