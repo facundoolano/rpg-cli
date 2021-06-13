@@ -336,7 +336,7 @@ fn format_status_effect(status_effect: StatusEffect) -> String {
 
 fn status_effect_params(status_effect: StatusEffect) -> (&'static str, &'static str) {
     match status_effect {
-        StatusEffect::Burned => ("burned", "\u{1F525}"),
+        StatusEffect::Burning => ("burning", "\u{1F525}"),
         StatusEffect::Poisoned => ("poisoned", "\u{2620}\u{FE0F} "),
         StatusEffect::Normal => ("normal", ""),
     }

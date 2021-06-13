@@ -13,7 +13,7 @@ pub mod class;
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum StatusEffect {
     Normal,
-    Burned,
+    Burning,
     Poisoned,
 }
 
@@ -199,7 +199,7 @@ impl Character {
     pub fn receive_status_effect_damage(&mut self) {
         // NOTE: in the future we could have a positive status that e.g. regen hp
         match self.status_effect {
-            StatusEffect::Burned | StatusEffect::Poisoned => {
+            StatusEffect::Burning | StatusEffect::Poisoned => {
                 let damage = std::cmp::max(1, self.max_hp / 20);
                 let damage = random().damage(damage);
                 // FIXME handle dead

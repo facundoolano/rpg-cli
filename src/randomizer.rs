@@ -120,7 +120,7 @@ impl Randomizer for DefaultRandomizer {
     fn status_effect(&self) -> StatusEffect {
         let mut rng = rand::thread_rng();
         match rng.gen_range(0..20) {
-            0 => StatusEffect::Burned,
+            0 => StatusEffect::Burning,
             2 => StatusEffect::Poisoned,
             _ => StatusEffect::Normal,
         }
