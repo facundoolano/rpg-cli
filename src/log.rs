@@ -96,17 +96,13 @@ pub fn remedy(player: &Character, healed: bool) {
 
 pub fn attack(character: &Character, attack: &Attack) {
     if !quiet() {
-        let color = damage_color(character);
-        battle_log(character, &format_attack(&attack, &color));
+        battle_log(character, &format_attack(character, &attack));
     }
 }
 
 pub fn status_effect_damage(character: &Character, damage: i32) {
     let (_, emoji) = status_effect_params(character.status_effect);
-    battle_log(
-        character,
-        &format_damage(damage, &damage_color(character), &emoji),
-    );
+    battle_log(character, &format_damage(character, damage, &emoji));
 }
 
 pub fn battle_lost(player: &Character) {
@@ -313,29 +309,24 @@ pub fn format_inventory(game: &Game) -> String {
     format!("item:{{{}}}", items.join(","))
 }
 
-fn format_attack(attack: &Attack, color: &str) -> String {
+fn format_attack(receiver: &Character, attack: &Attack) -> String {
     match attack {
-        Attack::Regular(damage) => format_damage(*damage, &color, ""),
-        Attack::Critical(damage) => format_damage(*damage, &color, "critical!"),
+        Attack::Regular(damage) => format_damage(receiver, *damage, ""),
+        Attack::Critical(damage) => format_damage(receiver, *damage, "critical!"),
         Attack::Effect(status_effect, damage) => {
-            format_damage(*damage, &color, &format_status_effect(*status_effect))
+            format_damage(receiver, *damage, &format_status_effect(*status_effect))
         }
         Attack::Miss => " dodged!".to_string(),
     }
 }
 
-fn format_damage(amount: i32, color: &str, suffix: &str) -> String {
-    format!("-{}hp {}", amount, suffix).color(color).to_string()
-}
-
-// FIXME maybe remove this
-// could be replaced by a is_player boolean
-fn damage_color(character: &Character) -> String {
-    if character.is_player() {
+fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
+    let color = if receiver.is_player() {
         "bright red".to_string()
     } else {
         "white".to_string()
-    }
+    };
+    format!("-{}hp {}", amount, suffix).color(color).to_string()
 }
 
 fn format_status_effect(status_effect: StatusEffect) -> String {
