@@ -110,8 +110,8 @@ pub fn status_effect_damage(character: &Character, damage: i32) {
     log::status_effect_damage(character, damage);
 }
 
-pub fn attack(character: &Character, attack: &battle::Attack) {
-    log::attack(character, attack);
+pub fn attack(character: &Character, attack: &battle::AttackType, damage: i32) {
+    log::attack(character, attack, damage);
 }
 
 pub fn potion(game: &game::Game, restored: i32) {

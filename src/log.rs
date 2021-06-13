@@ -1,5 +1,5 @@
 use crate::character::{Character, StatusEffect};
-use crate::game::battle::Attack;
+use crate::game::battle::AttackType;
 use crate::game::Game;
 use crate::item::shop;
 use crate::location::Location;
@@ -94,9 +94,9 @@ pub fn remedy(player: &Character, healed: bool) {
     }
 }
 
-pub fn attack(character: &Character, attack: &Attack) {
+pub fn attack(character: &Character, attack: &AttackType, damage: i32) {
     if !quiet() {
-        battle_log(character, &format_attack(character, &attack));
+        battle_log(character, &format_attack(character, &attack, damage));
     }
 }
 
@@ -309,14 +309,14 @@ pub fn format_inventory(game: &Game) -> String {
     format!("item:{{{}}}", items.join(","))
 }
 
-fn format_attack(receiver: &Character, attack: &Attack) -> String {
+fn format_attack(receiver: &Character, attack: &AttackType, damage: i32) -> String {
     match attack {
-        Attack::Regular(damage) => format_damage(receiver, *damage, ""),
-        Attack::Critical(damage) => format_damage(receiver, *damage, "critical!"),
-        Attack::Effect(status_effect, damage) => {
-            format_damage(receiver, *damage, &format_status_effect(*status_effect))
+        AttackType::Regular => format_damage(receiver, damage, ""),
+        AttackType::Critical => format_damage(receiver, damage, "critical!"),
+        AttackType::Effect(status_effect) => {
+            format_damage(receiver, damage, &format_status_effect(*status_effect))
         }
-        Attack::Miss => " dodged!".to_string(),
+        AttackType::Miss => " dodged!".to_string(),
     }
 }
 

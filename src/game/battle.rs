@@ -5,10 +5,10 @@ use crate::randomizer::Randomizer;
 
 /// Outcome of an attack attempt.
 /// This affects primarily how the attack is displayed.
-pub enum Attack {
-    Regular(i32),
-    Critical(i32),
-    Effect(StatusEffect, i32),
+pub enum AttackType {
+    Regular,
+    Critical,
+    Effect(StatusEffect),
     Miss,
 }
 
@@ -27,12 +27,12 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                let new_xp = player_attack(game, enemy, random);
+                let new_xp = attack(&mut game.player, enemy, random);
                 xp += new_xp;
             }
             pl_accum = -1;
         } else {
-            enemy_attack(game, enemy, random);
+            attack(enemy, &mut game.player, random);
             en_accum = -1;
         }
 
@@ -44,47 +44,39 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     Ok(xp)
 }
 
-// TODO consider merging both back?
-fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (attack, new_xp) = attack(&game.player, enemy, random);
-    event::attack(enemy, &attack);
+fn attack(attacker: &mut Character, receiver: &mut Character, random: &dyn Randomizer) -> i32 {
+    let (attack_type, damage, new_xp) = generate_attack(attacker, receiver, random);
+    receiver.receive_damage(damage);
+    event::attack(receiver, &attack_type, damage);
 
-    game.player.receive_status_effect_damage();
+    attacker.receive_status_effect_damage();
     new_xp
-}
-
-fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
-    let (attack, _) = attack(enemy, &mut game.player, random);
-    event::attack(&game.player, &attack);
 }
 
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
-fn attack(
+fn generate_attack(
     attacker: &Character,
     receiver: &mut Character,
     random: &dyn Randomizer,
-) -> (Attack, i32) {
+) -> (AttackType, i32, i32) {
     if random.is_miss(attacker.speed, receiver.speed) {
-        (Attack::Miss, 0)
+        (AttackType::Miss, 0, 0)
     } else {
         let damage = random.damage(attacker.damage(receiver));
         let xp = attacker.xp_gained(receiver, damage);
 
         if random.is_critical() {
             let damage = damage * 2;
-            receiver.receive_damage(damage);
-            (Attack::Critical(damage), xp)
+            (AttackType::Critical, damage, xp)
         } else {
             // TODO consider refactoring with options
             let status = attacker.produce_status_effect();
-            receiver.receive_damage(damage);
-
             if status.is_normal() || receiver.status_effect == status {
-                (Attack::Regular(damage), xp)
+                (AttackType::Regular, damage, xp)
             } else {
                 receiver.status_effect = status;
-                (Attack::Effect(status, damage), xp)
+                (AttackType::Effect(status), damage, xp)
             }
         }
     }
