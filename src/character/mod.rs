@@ -10,7 +10,7 @@ use std::cmp::{max, min};
 pub mod class;
 
 // TODO when the code is stable, revisit the decision to use Normal instead of Option
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum StatusEffect {
     Normal,
     Burned,
@@ -205,8 +205,6 @@ impl Character {
                 let damage = random().damage(damage);
                 // FIXME handle dead
                 self.receive_damage(damage);
-                // not ideal to have event handling in this module
-                // FIXME the log should include the emoji
                 event::status_effect_damage(self, damage);
             }
             _ => (),

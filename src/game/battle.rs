@@ -79,7 +79,8 @@ fn attack(
             // TODO consider refactoring with options
             let status = attacker.produce_status_effect();
             receiver.receive_damage(damage);
-            if status.is_normal() {
+
+            if status.is_normal() || receiver.status_effect == status {
                 (Attack::Regular(damage), xp)
             } else {
                 receiver.status_effect = status;
