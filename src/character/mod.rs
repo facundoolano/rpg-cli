@@ -1,4 +1,4 @@
-use crate::game::battle::Attack;
+use crate::event;
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
 use crate::location;
@@ -9,11 +9,12 @@ use std::cmp::{max, min};
 
 pub mod class;
 
+// TODO when the code is stable, revisit the decision to use Normal instead of Option
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum StatusEffect {
     Normal,
-    Burned(i32),
-    Poisoned(i32),
+    Burned,
+    Poisoned,
     Confused,
 }
 
@@ -177,38 +178,45 @@ impl Character {
         }
     }
 
-    pub fn receive_status_effect(&mut self, status_effect: StatusEffect) {
-        self.status_effect = status_effect;
+    pub fn produce_status_effect(&self) -> StatusEffect {
+        // at some point the player could generate it depending on the equipment
+        if !self.is_player() {
+            // TODO instead of random this should be inferred from the enemy class
+            return random().status_effect();
+        }
+        StatusEffect::Normal
     }
 
     pub fn maybe_remove_status_effect(&mut self) -> bool {
         if !self.status_effect.is_normal() {
-            self.receive_status_effect(StatusEffect::Normal);
+            self.status_effect = StatusEffect::Normal;
             return true;
         }
-
         false
     }
 
-    pub fn maybe_receive_status_effect(&mut self) -> bool {
-        if !self.is_dead() && self.status_effect.is_normal() {
-            let status_effect = random().status_effect();
-            if !status_effect.is_normal() {
-                self.receive_status_effect(status_effect);
-                return true;
-            }
+    /// TODO
+    pub fn maybe_apply_status_effect(&mut self) {
+        if let Some(damage) = self.status_effect_damage() {
+            let damage = random().damage(damage);
+            // FIXME handle dead
+            self.receive_damage(damage);
+            // not ideal to have event handling in this module
+            // FIXME the log should include the emoji
+            event::damage(self, damage);
         }
-
-        false
     }
 
-    pub fn apply_status_effect(&mut self) -> Attack {
+    /// If the character suffers from a damage-producing status effect,
+    /// return Some(damage).
+    fn status_effect_damage(&mut self) -> Option<i32> {
+        // NOTE: in the future we could have a positive status that e.g. regen hp
         match self.status_effect {
-            StatusEffect::Burned(damage) | StatusEffect::Poisoned(damage) => {
-                self.receive_damage(damage);
-                Attack::Effect(self.status_effect)
+            StatusEffect::Burned | StatusEffect::Poisoned => {
+                let damage = std::cmp::max(1, self.max_hp / 20);
+                Some(damage)
             }
-            StatusEffect::Normal | StatusEffect::Confused => Attack::Miss,
+            _ => None,
         }
     }
 }

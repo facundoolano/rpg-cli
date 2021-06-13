@@ -119,11 +119,11 @@ impl Randomizer for DefaultRandomizer {
 
     fn status_effect(&self) -> StatusEffect {
         let mut rng = rand::thread_rng();
-        let damage = rng.gen_range(1..=3);
         match rng.gen_range(0..20) {
-            0 => StatusEffect::Burned(damage),
-            1 => StatusEffect::Confused,
-            2 => StatusEffect::Poisoned(damage),
+            0 => StatusEffect::Burned,
+            // TODO uncomment when confused effect is implemented
+            // 1 => StatusEffect::Confused,
+            2 => StatusEffect::Poisoned,
             _ => StatusEffect::Normal,
         }
     }

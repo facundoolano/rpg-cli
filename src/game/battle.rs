@@ -8,14 +8,8 @@ use crate::randomizer::Randomizer;
 pub enum Attack {
     Regular(i32),
     Critical(i32),
-    Effect(StatusEffect),
+    Effect(StatusEffect, i32),
     Miss,
-}
-
-impl Attack {
-    pub fn is_hit(&self) -> bool {
-        !matches!(*self, Attack::Miss)
-    }
 }
 
 /// Run a turn-based combat between the game's player and the given enemy.
@@ -50,26 +44,19 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     Ok(xp)
 }
 
+// TODO consider merging both back?
 fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (damage, new_xp) = attack(&game.player, enemy, random);
-    event::damage(enemy, &damage);
+    let (attack, new_xp) = attack(&game.player, enemy, random);
+    event::attack(enemy, &attack);
 
-    // take an enemy hit from status_effect
-    let damage = game.player.apply_status_effect();
-    if damage.is_hit() {
-        event::damage(&game.player, &damage);
-    }
+    // take a hit from status_effect if any
+    game.player.maybe_apply_status_effect();
     new_xp
 }
 
 fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
-    let (damage, _) = attack(enemy, &mut game.player, random);
-    event::damage(&game.player, &damage);
-
-    // if player took a hit, maybe_receive_status_effect
-    if damage.is_hit() && game.player.maybe_receive_status_effect() {
-        event::status_effect(&game.player);
-    }
+    let (attack, _) = attack(enemy, &mut game.player, random);
+    event::attack(&game.player, &attack);
 }
 
 /// Inflict damage from attacker to receiver, return the inflicted
@@ -90,8 +77,15 @@ fn attack(
             receiver.receive_damage(damage);
             (Attack::Critical(damage), xp)
         } else {
+            // TODO consider refactoring with options
+            let status = attacker.produce_status_effect();
             receiver.receive_damage(damage);
-            (Attack::Regular(damage), xp)
+            if status.is_normal() {
+                (Attack::Regular(damage), xp)
+            } else {
+                receiver.status_effect = status;
+                (Attack::Effect(status, damage), xp)
+            }
         }
     }
 }
