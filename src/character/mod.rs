@@ -15,7 +15,7 @@ pub enum StatusEffect {
     Normal,
     Burned,
     Poisoned,
-    Confused,
+    // Confused,
 }
 
 impl StatusEffect {
