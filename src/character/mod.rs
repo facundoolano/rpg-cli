@@ -421,10 +421,7 @@ mod tests {
     }
 
     #[test]
-    fn test_receive_status_effect() {
-        let mut hero = Character::player();
-
-        hero.maybe_receive_status_effect();
-        assert!(matches!(hero.status_effect, StatusEffect::Normal));
+    fn test_receive_status_effect_damage() {
+        todo!();
     }
 }

@@ -333,6 +333,7 @@ fn damage_color(character: &Character) -> String {
     }
 }
 
+// TODO review how this is being used
 fn status_effect_details(status_effect: StatusEffect) -> (String, String, String) {
     match status_effect {
         StatusEffect::Burned => (
