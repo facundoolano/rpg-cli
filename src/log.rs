@@ -160,7 +160,7 @@ fn long_status(game: &Game) {
         player.speed
     );
     if !player.status_effect.is_normal() {
-        println!("    status:{}", format_status_effect(player.status_effect));
+        println!("    status: {}", format_status_effect(player.status_effect));
     }
     println!("    {}", format_equipment(player));
     println!("    {}", format_inventory(game));
@@ -316,7 +316,7 @@ pub fn format_inventory(game: &Game) -> String {
 fn format_attack(attack: &Attack, color: &str) -> String {
     match attack {
         Attack::Regular(damage) => format_damage(*damage, &color, ""),
-        Attack::Critical(damage) => format_damage(*damage, &color, "critical!"),
+        Attack::Critical(damage) => format_damage(*damage, &color, " critical!"),
         Attack::Effect(status_effect, damage) => {
             format_damage(*damage, &color, &format_status_effect(*status_effect))
         }
@@ -325,7 +325,7 @@ fn format_attack(attack: &Attack, color: &str) -> String {
 }
 
 fn format_damage(amount: i32, color: &str, suffix: &str) -> String {
-    format!("-{}hp {}", amount, suffix).color(color).to_string()
+    format!("-{}hp{}", amount, suffix).color(color).to_string()
 }
 
 // FIXME maybe remove this
@@ -348,7 +348,7 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
         ),
         StatusEffect::Poisoned => (
             String::from("poisoned"),
-            String::from("\u{1F9EA}"),
+            String::from("\u{2620}\u{FE0F} "),
             String::from("green"),
         ),
         StatusEffect::Confused => (
@@ -362,7 +362,7 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
 
 fn format_status_effect(status_effect: StatusEffect) -> String {
     let (name, emoji, color) = status_effect_details(status_effect);
-    format!(" {} {}!", emoji, name).color(color).to_string()
+    format!("{} {}!", emoji, name).color(color).to_string()
 }
 
 fn hp_display(character: &Character, slots: i32) -> String {
