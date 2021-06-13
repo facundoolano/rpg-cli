@@ -89,6 +89,9 @@ pub fn remedy(player: &Character, healed: bool) {
     }
 }
 
+// FIXME we should better differentiate damage from attack
+// attack -> receives an attack from an enemy. can add status effect
+// damage -> whenever player loses health points. can be produced by status without enemy attack
 pub fn damage(character: &Character, attack: &Attack) {
     if !quiet() {
         let color = if character.is_player() {
@@ -311,6 +314,7 @@ fn format_damage(attack: &Attack, color: &str) -> String {
     match attack {
         Attack::Regular(damage) => format!("-{}hp", damage).color(color).to_string(),
         Attack::Critical(damage) => format!("-{}hp critical!", damage).color(color).to_string(),
+        // FIXME using attack::effect as standalone damage here. should be used for handling the "status added instead"
         Attack::Effect(status_effect) => {
             let (_, emoji, color, damage) = status_effect_details(*status_effect);
             format!("-{}hp {}", damage, emoji).color(color).to_string()
