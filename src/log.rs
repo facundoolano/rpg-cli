@@ -72,14 +72,14 @@ pub fn heal(player: &Character, location: &Location, recovered: i32, healed: boo
         log(
             player,
             location,
-            &format!("{} {}", recovered_text, healed_text).green(),
+            &format!("{} {}", recovered_text, healed_text).green().to_string(),
         );
     }
 }
 
 pub fn potion(player: &Character, recovered: i32) {
     if recovered > 0 {
-        battle_log(player, &format!("+{}hp potion", recovered).green());
+        battle_log(player, &format!("+{}hp potion", recovered).green().to_string());
     }
 }
 
@@ -354,7 +354,7 @@ fn status_effect_details(status_effect: StatusEffect) -> (String, String, String
 
 fn format_status_effect(status_effect: StatusEffect) -> String {
     let (name, emoji, color, _) = status_effect_details(status_effect);
-    format!(" {} {}", name, emoji).color(color).to_string()
+    format!(" {} {}!", emoji, name).color(color).to_string()
 }
 
 fn hp_display(character: &Character, slots: i32) -> String {
