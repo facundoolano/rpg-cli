@@ -171,11 +171,14 @@ impl Character {
     }
 
     /// Return the status that this character's attack should inflict on the receiver.
-    pub fn produce_status_effect(&self) -> Option<StatusEffect> {
+    pub fn produced_status_effect(&self) -> Option<StatusEffect> {
         // at some point the player could generate it depending on the equipment
         if !self.is_player() {
-            // TODO instead of random this should be inferred from the enemy class
-            return random().status_effect();
+            // FIXME instead of random this should be inferred from the enemy class
+            return match random().range(2) {
+                0 => Some(StatusEffect::Burning),
+                _ => Some(StatusEffect::Poisoned),
+            };
         }
         None
     }
@@ -231,7 +234,7 @@ mod tests {
         assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
         assert_eq!(TEST_CLASS.strength.base(), hero.strength);
         assert_eq!(TEST_CLASS.speed.base(), hero.speed);
-        assert!(matches!(hero.status_effect, StatusEffect::Normal));
+        assert!(hero.status_effect.is_none());
     }
 
     #[test]
