@@ -60,26 +60,26 @@ fn generate_attack(
     receiver: &mut Character,
     random: &dyn Randomizer,
 ) -> (AttackType, i32, i32) {
-    if random.is_miss(attacker.speed, receiver.speed) {
-        (AttackType::Miss, 0, 0)
-    } else {
-        let damage = random.damage(attacker.damage(receiver));
-        let xp = attacker.xp_gained(receiver, damage);
+    let mut damage = random.damage(attacker.damage(receiver));
+    let mut xp = attacker.xp_gained(receiver, damage);
+    let mut attack_type = AttackType::Regular;
 
-        if random.is_critical() {
-            let damage = damage * 2;
-            (AttackType::Critical, damage, xp)
-        } else {
-            // TODO consider refactoring with options
-            let status = attacker.produce_status_effect();
-            if status.is_normal() || receiver.status_effect == status {
-                (AttackType::Regular, damage, xp)
-            } else {
-                receiver.status_effect = status;
-                (AttackType::Effect(status), damage, xp)
-            }
+    // FIXME we should have a random.attack_type instead and a match here
+    if random.is_miss(attacker.speed, receiver.speed) {
+        damage = 0;
+        xp = 0;
+        attack_type = AttackType::Miss;
+    } else if random.is_critical() {
+        damage *= 2;
+        attack_type = AttackType::Critical;
+    } else if let Some(status) = attacker.produce_status_effect() {
+        if receiver.status_effect != Some(status) {
+            receiver.status_effect = Some(status);
+            attack_type = AttackType::Effect(status);
         }
     }
+
+    (attack_type, damage, xp)
 }
 
 /// If the player is low on hp and has a potion available use it

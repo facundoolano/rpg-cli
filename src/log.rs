@@ -101,7 +101,7 @@ pub fn attack(character: &Character, attack: &AttackType, damage: i32) {
 }
 
 pub fn status_effect_damage(character: &Character, damage: i32) {
-    let (_, emoji) = status_effect_params(character.status_effect);
+    let (_, emoji) = status_effect_params(character.status_effect.unwrap());
     battle_log(character, &format_damage(character, damage, &emoji));
 }
 
@@ -146,11 +146,8 @@ fn long_status(game: &Game) {
         player.xp,
         player.xp_for_next()
     );
-    if !player.status_effect.is_normal() {
-        println!(
-            "    status: {}",
-            format_status_effect(player.status_effect).bright_red()
-        );
+    if let Some(status) = player.status_effect {
+        println!("    status: {}", format_status_effect(status).bright_red());
     }
     println!(
         "    att:{}   def:{}   spd:{}",
@@ -166,8 +163,8 @@ fn long_status(game: &Game) {
 fn short_status(game: &Game) {
     let player = &game.player;
 
-    let suffix = if !player.status_effect.is_normal() {
-        let (_, emoji) = status_effect_params(player.status_effect);
+    let suffix = if let Some(status) = player.status_effect {
+        let (_, emoji) = status_effect_params(status);
         emoji
     } else {
         ""
@@ -178,8 +175,8 @@ fn short_status(game: &Game) {
 fn plain_status(game: &Game) {
     let player = &game.player;
 
-    let status_effect = if !player.status_effect.is_normal() {
-        let (name, _) = status_effect_params(player.status_effect);
+    let status_effect = if let Some(status) = player.status_effect {
+        let (name, _) = status_effect_params(status);
         format!("status:{}\t", name)
     } else {
         String::new()
@@ -338,7 +335,6 @@ fn status_effect_params(status_effect: StatusEffect) -> (&'static str, &'static 
     match status_effect {
         StatusEffect::Burning => ("burning", "\u{1F525}"),
         StatusEffect::Poisoned => ("poisoned", "\u{2620}\u{FE0F} "),
-        StatusEffect::Normal => ("normal", ""),
     }
 }
 

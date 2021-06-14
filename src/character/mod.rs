@@ -12,15 +12,8 @@ pub mod class;
 // TODO when the code is stable, revisit the decision to use Normal instead of Option
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum StatusEffect {
-    Normal,
     Burning,
     Poisoned,
-}
-
-impl StatusEffect {
-    pub fn is_normal(&self) -> bool {
-        matches!(self, StatusEffect::Normal)
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -39,7 +32,7 @@ pub struct Character {
 
     pub strength: i32,
     pub speed: i32,
-    pub status_effect: StatusEffect,
+    pub status_effect: Option<StatusEffect>,
 }
 
 impl Default for Character {
@@ -82,7 +75,7 @@ impl Character {
             current_hp: class.hp.base(),
             strength: class.strength.base(),
             speed: class.speed.base(),
-            status_effect: StatusEffect::Normal,
+            status_effect: None,
         };
 
         for _ in 1..level {
@@ -178,18 +171,18 @@ impl Character {
     }
 
     /// Return the status that this character's attack should inflict on the receiver.
-    pub fn produce_status_effect(&self) -> StatusEffect {
+    pub fn produce_status_effect(&self) -> Option<StatusEffect> {
         // at some point the player could generate it depending on the equipment
         if !self.is_player() {
             // TODO instead of random this should be inferred from the enemy class
             return random().status_effect();
         }
-        StatusEffect::Normal
+        None
     }
 
     pub fn maybe_remove_status_effect(&mut self) -> bool {
-        if !self.status_effect.is_normal() {
-            self.status_effect = StatusEffect::Normal;
+        if self.status_effect.is_some() {
+            self.status_effect = None;
             return true;
         }
         false
@@ -199,7 +192,7 @@ impl Character {
     pub fn receive_status_effect_damage(&mut self) {
         // NOTE: in the future we could have a positive status that e.g. regen hp
         match self.status_effect {
-            StatusEffect::Burning | StatusEffect::Poisoned => {
+            Some(StatusEffect::Burning) | Some(StatusEffect::Poisoned) => {
                 let damage = std::cmp::max(1, self.max_hp / 20);
                 let damage = random().damage(damage);
                 // FIXME handle dead

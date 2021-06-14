@@ -28,7 +28,7 @@ pub trait Randomizer {
 
     fn stat_increase(&self, increase: i32) -> i32;
 
-    fn status_effect(&self) -> StatusEffect;
+    fn status_effect(&self) -> Option<StatusEffect>;
 
     fn range(&self, max: i32) -> i32;
 }
@@ -117,12 +117,13 @@ impl Randomizer for DefaultRandomizer {
         rng.gen_range(min_value..=max_value)
     }
 
-    fn status_effect(&self) -> StatusEffect {
+    fn status_effect(&self) -> Option<StatusEffect> {
         let mut rng = rand::thread_rng();
-        match rng.gen_range(0..20) {
-            0 => StatusEffect::Burning,
-            2 => StatusEffect::Poisoned,
-            _ => StatusEffect::Normal,
+        // FIXME change %
+        match rng.gen_range(0..3) {
+            0 => Some(StatusEffect::Burning),
+            2 => Some(StatusEffect::Poisoned),
+            _ => None,
         }
     }
 
@@ -173,8 +174,8 @@ impl Randomizer for TestRandomizer {
         increase
     }
 
-    fn status_effect(&self) -> StatusEffect {
-        StatusEffect::Normal
+    fn status_effect(&self) -> Option<StatusEffect> {
+        None
     }
 
     fn range(&self, max: i32) -> i32 {
