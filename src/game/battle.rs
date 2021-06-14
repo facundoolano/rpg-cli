@@ -44,6 +44,8 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     Ok(xp)
 }
 
+/// Inflict damage from attacker to receiver, return the inflicted
+/// damage and the experience that will be gain if the battle is won
 fn attack(attacker: &mut Character, receiver: &mut Character, random: &dyn Randomizer) -> i32 {
     let (attack_type, damage, new_xp) = generate_attack(attacker, receiver, random);
     receiver.receive_damage(damage);
@@ -53,8 +55,7 @@ fn attack(attacker: &mut Character, receiver: &mut Character, random: &dyn Rando
     new_xp
 }
 
-/// Inflict damage from attacker to receiver, return the inflicted
-/// damage and the experience that will be gain if the battle is won
+/// Return randomized attack parameters according to the character attributes.
 fn generate_attack(
     attacker: &Character,
     receiver: &mut Character,
