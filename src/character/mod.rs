@@ -9,7 +9,6 @@ use std::cmp::{max, min};
 
 pub mod class;
 
-// TODO when the code is stable, revisit the decision to use Normal instead of Option
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum StatusEffect {
     Burning,
