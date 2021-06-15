@@ -27,6 +27,11 @@ Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/get
 
 The binary should be available as `rpg-cli` (assuming you have `~/.cargo/bin` in your `$PATH`).
 
+### Installing with homebrew
+You can use homebrew to install the binary on macOS::
+
+    $ brew install rpg-cli
+
 ### Installing with nixpkgs
 If you use nix/nixos you can get rpg-cli from nixpkgs, either install it by adding it to your system config, installing it with `nix-env -i rpg-cli` or try it in a ephemeral shell with `nix-shell -p rpg-cli`.
 Note that at the current time of writing, the package hasn't hit any of the channels yet. When you try it, check that it's in your channel.
