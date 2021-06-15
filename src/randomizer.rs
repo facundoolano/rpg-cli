@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::character::StatusEffect;
+use crate::game::battle::AttackType;
 use crate::location;
 use rand::Rng;
 use std::cmp::max;
@@ -20,15 +21,16 @@ pub trait Randomizer {
 
     fn damage(&self, value: i32) -> i32;
 
-    fn is_critical(&self) -> bool;
-
-    fn is_miss(&self, attacker_speed: i32, receiver_speed: i32) -> bool;
+    fn attack_type(
+        &self,
+        produced_status: Option<StatusEffect>,
+        attacker_speed: i32,
+        receiver_speed: i32,
+    ) -> AttackType;
 
     fn gold_gained(&self, base: i32) -> i32;
 
     fn stat_increase(&self, increase: i32) -> i32;
-
-    fn status_effect(&self) -> StatusEffect;
 
     fn range(&self, max: i32) -> i32;
 }
@@ -87,19 +89,23 @@ impl Randomizer for DefaultRandomizer {
         max(1, rng.gen_range(min_val..=max_val))
     }
 
-    fn is_critical(&self) -> bool {
-        let mut rng = rand::thread_rng();
-        rng.gen_ratio(1, 20)
-    }
-
-    fn is_miss(&self, attacker_speed: i32, receiver_speed: i32) -> bool {
-        if receiver_speed > attacker_speed {
-            let ratio = receiver_speed / attacker_speed;
-            let ratio = max(1, 5 - ratio) as u32;
-            let mut rng = rand::thread_rng();
-            return rng.gen_ratio(1, ratio);
+    fn attack_type(
+        &self,
+        produced_status: Option<StatusEffect>,
+        attacker_speed: i32,
+        receiver_speed: i32,
+    ) -> AttackType {
+        // TODO this could maybe flattened to a single random call
+        // instead of trial and error
+        if is_miss(attacker_speed, receiver_speed) {
+            AttackType::Miss
+        } else if is_critical() {
+            AttackType::Critical
+        } else if let Some(status) = status_effect(produced_status) {
+            AttackType::Effect(status)
+        } else {
+            AttackType::Regular
         }
-        false
     }
 
     fn gold_gained(&self, base: i32) -> i32 {
@@ -117,20 +123,33 @@ impl Randomizer for DefaultRandomizer {
         rng.gen_range(min_value..=max_value)
     }
 
-    fn status_effect(&self) -> StatusEffect {
-        let mut rng = rand::thread_rng();
-        let damage = rng.gen_range(1..=3);
-        match rng.gen_range(0..20) {
-            0 => StatusEffect::Burned(damage),
-            1 => StatusEffect::Confused,
-            2 => StatusEffect::Poisoned(damage),
-            _ => StatusEffect::Normal,
-        }
-    }
-
     fn range(&self, max: i32) -> i32 {
         let mut rng = rand::thread_rng();
         rng.gen_range(0..max)
+    }
+}
+
+fn is_critical() -> bool {
+    let mut rng = rand::thread_rng();
+    rng.gen_ratio(1, 20)
+}
+
+fn is_miss(attacker_speed: i32, receiver_speed: i32) -> bool {
+    if receiver_speed > attacker_speed {
+        let ratio = receiver_speed / attacker_speed;
+        let ratio = max(1, 5 - ratio) as u32;
+        let mut rng = rand::thread_rng();
+        return rng.gen_ratio(1, ratio);
+    }
+    false
+}
+
+fn status_effect(produced_status: Option<StatusEffect>) -> Option<StatusEffect> {
+    let mut rng = rand::thread_rng();
+    if rng.gen_ratio(1, 20){
+        produced_status
+    } else {
+        None
     }
 }
 
@@ -159,12 +178,13 @@ impl Randomizer for TestRandomizer {
         value
     }
 
-    fn is_critical(&self) -> bool {
-        false
-    }
-
-    fn is_miss(&self, _attacker_speed: i32, _receiver_speed: i32) -> bool {
-        false
+    fn attack_type(
+        &self,
+        _produced_status: Option<StatusEffect>,
+        _attacker_speed: i32,
+        _receiver_speed: i32,
+    ) -> AttackType {
+        AttackType::Regular
     }
 
     fn gold_gained(&self, base: i32) -> i32 {
@@ -173,10 +193,6 @@ impl Randomizer for TestRandomizer {
 
     fn stat_increase(&self, increase: i32) -> i32 {
         increase
-    }
-
-    fn status_effect(&self) -> StatusEffect {
-        StatusEffect::Normal
     }
 
     fn range(&self, max: i32) -> i32 {

@@ -1,5 +1,5 @@
 use crate::character::{Character, StatusEffect};
-use crate::game::battle::Attack;
+use crate::game::battle::AttackType;
 use crate::game::Game;
 use crate::item::shop;
 use crate::location::Location;
@@ -63,7 +63,7 @@ pub fn heal(player: &Character, location: &Location, recovered: i32, healed: boo
     let mut healed_text = String::new();
 
     if recovered > 0 {
-        recovered_text = format!("+{}hp ", recovered);
+        recovered_text = format!("+{}hp", recovered);
     }
     if healed {
         healed_text = String::from("+healed");
@@ -72,14 +72,19 @@ pub fn heal(player: &Character, location: &Location, recovered: i32, healed: boo
         log(
             player,
             location,
-            &format!("{} {}", recovered_text, healed_text).green(),
+            &format!("{} {}", recovered_text, healed_text)
+                .green()
+                .to_string(),
         );
     }
 }
 
 pub fn potion(player: &Character, recovered: i32) {
     if recovered > 0 {
-        battle_log(player, &format!("+{}hp potion", recovered).green());
+        battle_log(
+            player,
+            &format!("+{}hp potion", recovered).green().to_string(),
+        );
     }
 }
 
@@ -89,24 +94,15 @@ pub fn remedy(player: &Character, healed: bool) {
     }
 }
 
-// FIXME we should better differentiate damage from attack
-// attack -> receives an attack from an enemy. can add status effect
-// damage -> whenever player loses health points. can be produced by status without enemy attack
-pub fn damage(character: &Character, attack: &Attack) {
+pub fn attack(character: &Character, attack: &AttackType, damage: i32) {
     if !quiet() {
-        let color = if character.is_player() {
-            "bright red"
-        } else {
-            "white"
-        };
-        battle_log(character, &format_damage(attack, color));
+        battle_log(character, &format_attack(character, &attack, damage));
     }
 }
 
-pub fn status_effect(player: &Character) {
-    if !quiet() {
-        battle_log(player, &format_status_effect(player.status_effect));
-    }
+pub fn status_effect_damage(character: &Character, damage: i32) {
+    let (_, emoji) = status_effect_params(character.status_effect.unwrap());
+    battle_log(character, &format_damage(character, damage, &emoji));
 }
 
 pub fn battle_lost(player: &Character) {
@@ -150,15 +146,15 @@ fn long_status(game: &Game) {
         player.xp,
         player.xp_for_next()
     );
+    if let Some(status) = player.status_effect {
+        println!("    status: {}", format_status_effect(status).bright_red());
+    }
     println!(
         "    att:{}   def:{}   spd:{}",
         player.attack(),
         player.deffense(),
         player.speed
     );
-    if !player.status_effect.is_normal() {
-        println!("    status:{}", format_status_effect(player.status_effect));
-    }
     println!("    {}", format_equipment(player));
     println!("    {}", format_inventory(game));
     println!("    {}", format_gold(game.gold));
@@ -167,11 +163,11 @@ fn long_status(game: &Game) {
 fn short_status(game: &Game) {
     let player = &game.player;
 
-    let suffix = if !player.status_effect.is_normal() {
-        let (_, emoji, _, _) = status_effect_details(player.status_effect);
+    let suffix = if let Some(status) = player.status_effect {
+        let (_, emoji) = status_effect_params(status);
         emoji
     } else {
-        String::new()
+        ""
     };
     log(player, &game.location, &suffix);
 }
@@ -179,8 +175,8 @@ fn short_status(game: &Game) {
 fn plain_status(game: &Game) {
     let player = &game.player;
 
-    let status_effect = if !player.status_effect.is_normal() {
-        let (name, _, _, _) = status_effect_details(player.status_effect);
+    let status_effect = if let Some(status) = player.status_effect {
+        let (name, _) = status_effect_params(status);
         format!("status:{}\t", name)
     } else {
         String::new()
@@ -310,51 +306,36 @@ pub fn format_inventory(game: &Game) -> String {
     format!("item:{{{}}}", items.join(","))
 }
 
-fn format_damage(attack: &Attack, color: &str) -> String {
+fn format_attack(receiver: &Character, attack: &AttackType, damage: i32) -> String {
     match attack {
-        Attack::Regular(damage) => format!("-{}hp", damage).color(color).to_string(),
-        Attack::Critical(damage) => format!("-{}hp critical!", damage).color(color).to_string(),
-        // FIXME using attack::effect as standalone damage here. should be used for handling the "status added instead"
-        Attack::Effect(status_effect) => {
-            let (_, emoji, color, damage) = status_effect_details(*status_effect);
-            format!("-{}hp {}", damage, emoji).color(color).to_string()
+        AttackType::Regular => format_damage(receiver, damage, ""),
+        AttackType::Critical => format_damage(receiver, damage, "critical!"),
+        AttackType::Effect(status_effect) => {
+            format_damage(receiver, damage, &format_status_effect(*status_effect))
         }
-        Attack::Miss => " dodged!".to_string(),
+        AttackType::Miss => " dodged!".to_string(),
     }
 }
 
-fn status_effect_details(status_effect: StatusEffect) -> (String, String, String, i32) {
-    match status_effect {
-        StatusEffect::Burned(damage) => (
-            String::from("burned"),
-            String::from("\u{1F525}"),
-            String::from("bright red"),
-            damage,
-        ),
-        StatusEffect::Poisoned(damage) => (
-            String::from("poisoned"),
-            String::from("\u{1F9EA}"),
-            String::from("green"),
-            damage,
-        ),
-        StatusEffect::Confused => (
-            String::from("confused"),
-            String::from("\u{1F300}"),
-            String::from("blue"),
-            0,
-        ),
-        StatusEffect::Normal => (
-            String::from("normal"),
-            String::new(),
-            String::from("white"),
-            0,
-        ),
-    }
+fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
+    let color = if receiver.is_player() {
+        "bright red".to_string()
+    } else {
+        "white".to_string()
+    };
+    format!("-{}hp {}", amount, suffix).color(color).to_string()
 }
 
 fn format_status_effect(status_effect: StatusEffect) -> String {
-    let (name, emoji, color, _) = status_effect_details(status_effect);
-    format!(" {} {}", name, emoji).color(color).to_string()
+    let (name, emoji) = status_effect_params(status_effect);
+    format!("{} {}!", emoji, name)
+}
+
+fn status_effect_params(status_effect: StatusEffect) -> (&'static str, &'static str) {
+    match status_effect {
+        StatusEffect::Burning => ("burning", "\u{1F525}"),
+        StatusEffect::Poisoned => ("poisoned", "\u{2620}\u{FE0F} "),
+    }
 }
 
 fn hp_display(character: &Character, slots: i32) -> String {

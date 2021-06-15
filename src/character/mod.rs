@@ -1,4 +1,4 @@
-use crate::game::battle::Attack;
+use crate::event;
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
 use crate::location;
@@ -8,20 +8,6 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-pub enum StatusEffect {
-    Normal,
-    Burned(i32),
-    Poisoned(i32),
-    Confused,
-}
-
-impl StatusEffect {
-    pub fn is_normal(&self) -> bool {
-        matches!(self, StatusEffect::Normal)
-    }
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
@@ -39,7 +25,13 @@ pub struct Character {
 
     pub strength: i32,
     pub speed: i32,
-    pub status_effect: StatusEffect,
+    pub status_effect: Option<StatusEffect>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+pub enum StatusEffect {
+    Burning,
+    Poisoned,
 }
 
 impl Default for Character {
@@ -82,7 +74,7 @@ impl Character {
             current_hp: class.hp.base(),
             strength: class.strength.base(),
             speed: class.speed.base(),
-            status_effect: StatusEffect::Normal,
+            status_effect: None,
         };
 
         for _ in 1..level {
@@ -177,38 +169,39 @@ impl Character {
         }
     }
 
-    pub fn receive_status_effect(&mut self, status_effect: StatusEffect) {
-        self.status_effect = status_effect;
+    /// Return the status that this character's attack should inflict on the receiver.
+    pub fn inflicted_status_effect(&self) -> Option<StatusEffect> {
+        // at some point the player could generate it depending on the equipment
+        if !self.is_player() {
+            // FIXME instead of random this should be inferred from the enemy class
+            return match random().range(2) {
+                0 => Some(StatusEffect::Burning),
+                _ => Some(StatusEffect::Poisoned),
+            };
+        }
+        None
     }
 
     pub fn maybe_remove_status_effect(&mut self) -> bool {
-        if !self.status_effect.is_normal() {
-            self.receive_status_effect(StatusEffect::Normal);
+        if self.status_effect.is_some() {
+            self.status_effect = None;
             return true;
         }
-
         false
     }
 
-    pub fn maybe_receive_status_effect(&mut self) -> bool {
-        if !self.is_dead() && self.status_effect.is_normal() {
-            let status_effect = random().status_effect();
-            if !status_effect.is_normal() {
-                self.receive_status_effect(status_effect);
-                return true;
-            }
-        }
-
-        false
-    }
-
-    pub fn apply_status_effect(&mut self) -> Attack {
+    /// If the character suffers from a damage-producing status effect, apply it.
+    pub fn receive_status_effect_damage(&mut self) {
+        // NOTE: in the future we could have a positive status that e.g. regen hp
         match self.status_effect {
-            StatusEffect::Burned(damage) | StatusEffect::Poisoned(damage) => {
+            Some(StatusEffect::Burning) | Some(StatusEffect::Poisoned) => {
+                let damage = std::cmp::max(1, self.max_hp / 20);
+                let damage = random().damage(damage);
+                // FIXME handle dead
                 self.receive_damage(damage);
-                Attack::Effect(self.status_effect)
+                event::status_effect_damage(self, damage);
             }
-            StatusEffect::Normal | StatusEffect::Confused => Attack::Miss,
+            _ => (),
         }
     }
 }
@@ -240,7 +233,7 @@ mod tests {
         assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
         assert_eq!(TEST_CLASS.strength.base(), hero.strength);
         assert_eq!(TEST_CLASS.speed.base(), hero.speed);
-        assert!(matches!(hero.status_effect, StatusEffect::Normal));
+        assert!(hero.status_effect.is_none());
     }
 
     #[test]
@@ -420,10 +413,23 @@ mod tests {
     }
 
     #[test]
-    fn test_receive_status_effect() {
-        let mut hero = Character::player();
+    fn test_receive_status_effect_damage() {
+        let mut hero = new_char();
+        assert_eq!(25, hero.current_hp);
 
-        hero.maybe_receive_status_effect();
-        assert!(matches!(hero.status_effect, StatusEffect::Normal));
+        hero.receive_status_effect_damage();
+        assert_eq!(25, hero.current_hp);
+
+        hero.status_effect = Some(StatusEffect::Burning);
+        hero.receive_status_effect_damage();
+        assert_eq!(24, hero.current_hp);
+
+        hero.status_effect = Some(StatusEffect::Poisoned);
+        hero.receive_status_effect_damage();
+        assert_eq!(23, hero.current_hp);
+
+        hero.maybe_remove_status_effect();
+        hero.receive_status_effect_damage();
+        assert_eq!(23, hero.current_hp);
     }
 }

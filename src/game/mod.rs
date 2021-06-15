@@ -4,7 +4,6 @@ use crate::character::Character;
 use crate::event;
 use crate::item::{Item, Potion};
 use crate::location::Location;
-use crate::log;
 use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
@@ -134,13 +133,11 @@ impl Game {
             let recovered = self.player.heal_full();
             let healed = self.player.maybe_remove_status_effect();
             event::heal(self, recovered, healed);
-        } else {
-            // take an attack hit from status_effects
-            let damage = self.player.apply_status_effect();
-            if damage.is_hit() {
-                log::damage(&self.player, &damage);
-            }
         }
+
+        // Take an attack hit from status_effects.
+        // In location is home, already healed of negative status
+        self.player.receive_status_effect_damage();
     }
 
     /// Set the current location to home, and apply related side-effects

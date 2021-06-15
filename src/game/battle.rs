@@ -5,17 +5,11 @@ use crate::randomizer::Randomizer;
 
 /// Outcome of an attack attempt.
 /// This affects primarily how the attack is displayed.
-pub enum Attack {
-    Regular(i32),
-    Critical(i32),
+pub enum AttackType {
+    Regular,
+    Critical,
     Effect(StatusEffect),
     Miss,
-}
-
-impl Attack {
-    pub fn is_hit(&self) -> bool {
-        !matches!(*self, Attack::Miss)
-    }
 }
 
 /// Run a turn-based combat between the game's player and the given enemy.
@@ -33,12 +27,12 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                let new_xp = player_attack(game, enemy, random);
+                let new_xp = attack(&mut game.player, enemy, random);
                 xp += new_xp;
             }
             pl_accum = -1;
         } else {
-            enemy_attack(game, enemy, random);
+            attack(enemy, &mut game.player, random);
             en_accum = -1;
         }
 
@@ -50,49 +44,36 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     Ok(xp)
 }
 
-fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (damage, new_xp) = attack(&game.player, enemy, random);
-    event::damage(enemy, &damage);
+/// Inflict damage from attacker to receiver, return the inflicted
+/// damage and the experience that will be gain if the battle is won
+fn attack(attacker: &mut Character, receiver: &mut Character, random: &dyn Randomizer) -> i32 {
+    let (attack_type, damage, new_xp) = generate_attack(attacker, receiver, random);
+    receiver.receive_damage(damage);
+    event::attack(receiver, &attack_type, damage);
 
-    // take an enemy hit from status_effect
-    let damage = game.player.apply_status_effect();
-    if damage.is_hit() {
-        event::damage(&game.player, &damage);
-    }
+    attacker.receive_status_effect_damage();
     new_xp
 }
 
-fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
-    let (damage, _) = attack(enemy, &mut game.player, random);
-    event::damage(&game.player, &damage);
-
-    // if player took a hit, maybe_receive_status_effect
-    if damage.is_hit() && game.player.maybe_receive_status_effect() {
-        event::status_effect(&game.player);
-    }
-}
-
-/// Inflict damage from attacker to receiver, return the inflicted
-/// damage and the experience that will be gain if the battle is won
-fn attack(
+/// Return randomized attack parameters according to the character attributes.
+fn generate_attack(
     attacker: &Character,
     receiver: &mut Character,
     random: &dyn Randomizer,
-) -> (Attack, i32) {
-    if random.is_miss(attacker.speed, receiver.speed) {
-        (Attack::Miss, 0)
-    } else {
-        let damage = random.damage(attacker.damage(receiver));
-        let xp = attacker.xp_gained(receiver, damage);
+) -> (AttackType, i32, i32) {
+    let damage = random.damage(attacker.damage(receiver));
+    let xp = attacker.xp_gained(receiver, damage);
+    let attack_type = random.attack_type(
+        attacker.inflicted_status_effect(),
+        attacker.speed,
+        receiver.speed,
+    );
 
-        if random.is_critical() {
-            let damage = damage * 2;
-            receiver.receive_damage(damage);
-            (Attack::Critical(damage), xp)
-        } else {
-            receiver.receive_damage(damage);
-            (Attack::Regular(damage), xp)
-        }
+    match attack_type {
+        AttackType::Miss => (attack_type, 0, 0),
+        AttackType::Regular => (attack_type, damage, xp),
+        AttackType::Critical => (attack_type, damage * 2, xp),
+        AttackType::Effect(_) => (attack_type, damage, xp),
     }
 }
 
