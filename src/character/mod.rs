@@ -9,12 +9,6 @@ use std::cmp::{max, min};
 
 pub mod class;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
-pub enum StatusEffect {
-    Burning,
-    Poisoned,
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Character {
@@ -32,6 +26,12 @@ pub struct Character {
     pub strength: i32,
     pub speed: i32,
     pub status_effect: Option<StatusEffect>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+pub enum StatusEffect {
+    Burning,
+    Poisoned,
 }
 
 impl Default for Character {
@@ -170,7 +170,7 @@ impl Character {
     }
 
     /// Return the status that this character's attack should inflict on the receiver.
-    pub fn produced_status_effect(&self) -> Option<StatusEffect> {
+    pub fn inflicted_status_effect(&self) -> Option<StatusEffect> {
         // at some point the player could generate it depending on the equipment
         if !self.is_player() {
             // FIXME instead of random this should be inferred from the enemy class
@@ -414,6 +414,22 @@ mod tests {
 
     #[test]
     fn test_receive_status_effect_damage() {
-        todo!();
+        let mut hero = new_char();
+        assert_eq!(25, hero.current_hp);
+
+        hero.receive_status_effect_damage();
+        assert_eq!(25, hero.current_hp);
+
+        hero.status_effect = Some(StatusEffect::Burning);
+        hero.receive_status_effect_damage();
+        assert_eq!(24, hero.current_hp);
+
+        hero.status_effect = Some(StatusEffect::Poisoned);
+        hero.receive_status_effect_damage();
+        assert_eq!(23, hero.current_hp);
+
+        hero.maybe_remove_status_effect();
+        hero.receive_status_effect_damage();
+        assert_eq!(23, hero.current_hp);
     }
 }

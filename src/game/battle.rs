@@ -64,7 +64,7 @@ fn generate_attack(
     let damage = random.damage(attacker.damage(receiver));
     let xp = attacker.xp_gained(receiver, damage);
     let attack_type = random.attack_type(
-        attacker.produced_status_effect(),
+        attacker.inflicted_status_effect(),
         attacker.speed,
         receiver.speed,
     );
