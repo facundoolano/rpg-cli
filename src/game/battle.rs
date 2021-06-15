@@ -1,5 +1,5 @@
 use super::Game;
-use crate::character::{Character, StatusEffect};
+use crate::character::{Character, Dead, StatusEffect};
 use crate::event;
 use crate::randomizer::Randomizer;
 
@@ -14,7 +14,7 @@ pub enum AttackType {
 
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
-pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> Result<i32, ()> {
+pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> Result<i32, Dead> {
     // These accumulators get increased based on the characters speed:
     // the faster will get more frequent turns.
     // This could be generalized to player vs enemy parties
@@ -27,17 +27,13 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                let new_xp = attack(&mut game.player, enemy, random);
+                let new_xp = attack(&mut game.player, enemy, random)?;
                 xp += new_xp;
             }
             pl_accum = -1;
         } else {
-            attack(enemy, &mut game.player, random);
+            attack(enemy, &mut game.player, random).unwrap_or_default();
             en_accum = -1;
-        }
-
-        if game.player.is_dead() {
-            return Err(());
         }
     }
 
@@ -46,13 +42,17 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
 /// Inflict damage from attacker to receiver, return the inflicted
 /// damage and the experience that will be gain if the battle is won
-fn attack(attacker: &mut Character, receiver: &mut Character, random: &dyn Randomizer) -> i32 {
+fn attack(
+    attacker: &mut Character,
+    receiver: &mut Character,
+    random: &dyn Randomizer,
+) -> Result<i32, Dead> {
     let (attack_type, damage, new_xp) = generate_attack(attacker, receiver, random);
-    receiver.receive_damage(damage);
     event::attack(receiver, &attack_type, damage);
+    receiver.receive_damage(damage)?;
 
-    attacker.receive_status_effect_damage();
-    new_xp
+    attacker.receive_status_effect_damage()?;
+    Ok(new_xp)
 }
 
 /// Return randomized attack parameters according to the character attributes.

@@ -1,5 +1,6 @@
 extern crate dirs;
 
+use crate::character;
 use crate::character::Character;
 use crate::event;
 use crate::item::{Item, Potion};
@@ -89,7 +90,9 @@ impl Game {
     /// at a time, with some chance of enemies appearing on each one.
     pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), Error> {
         while self.location != *dest {
-            self.visit(self.location.go_to(dest));
+            // FIXME better to just return character::Dead
+            self.visit(self.location.go_to(dest))
+                .map_err(|_| Error::GameOver)?;
 
             if !self.location.is_home() {
                 if let Some(mut enemy) = self.maybe_spawn_enemy() {
@@ -127,7 +130,7 @@ impl Game {
     }
 
     /// Set the hero's location to the one given, and apply related side effects.
-    pub fn visit(&mut self, location: Location) {
+    pub fn visit(&mut self, location: Location) -> Result<(), character::Dead> {
         self.location = location;
         if self.location.is_home() {
             let recovered = self.player.heal_full();
@@ -137,12 +140,12 @@ impl Game {
 
         // Take an attack hit from status_effects.
         // In location is home, already healed of negative status
-        self.player.receive_status_effect_damage();
+        self.player.receive_status_effect_damage()
     }
 
     /// Set the current location to home, and apply related side-effects
     pub fn visit_home(&mut self) {
-        self.visit(Location::home());
+        self.visit(Location::home()).unwrap_or_default();
     }
 
     pub fn add_item(&mut self, name: &str, item: Box<dyn Item>) {

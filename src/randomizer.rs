@@ -146,7 +146,7 @@ fn is_miss(attacker_speed: i32, receiver_speed: i32) -> bool {
 
 fn status_effect(produced_status: Option<StatusEffect>) -> Option<StatusEffect> {
     let mut rng = rand::thread_rng();
-    if rng.gen_ratio(1, 20){
+    if rng.gen_ratio(1, 20) {
         produced_status
     } else {
         None
