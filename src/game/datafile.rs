@@ -1,7 +1,9 @@
 use std::{fs, io, path};
 
-pub fn read() -> io::Result<Vec<u8>> {
-    fs::read(file())
+pub struct NotFound;
+
+pub fn read() -> Result<Vec<u8>, NotFound> {
+    fs::read(file()).map_err(|_| NotFound)
 }
 
 pub fn write(data: Vec<u8>) -> Result<(), io::Error> {

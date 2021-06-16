@@ -34,6 +34,8 @@ pub enum StatusEffect {
     Poisoned,
 }
 
+pub struct Dead;
+
 impl Default for Character {
     fn default() -> Self {
         Character::player()
@@ -113,8 +115,14 @@ impl Character {
         increased_levels
     }
 
-    pub fn receive_damage(&mut self, damage: i32) {
-        self.current_hp = max(0, self.current_hp - damage);
+    pub fn receive_damage(&mut self, damage: i32) -> Result<(), Dead> {
+        if damage >= self.current_hp {
+            self.current_hp = 0;
+            Err(Dead)
+        } else {
+            self.current_hp -= damage;
+            Ok(())
+        }
     }
 
     pub fn is_dead(&self) -> bool {
@@ -191,17 +199,17 @@ impl Character {
     }
 
     /// If the character suffers from a damage-producing status effect, apply it.
-    pub fn receive_status_effect_damage(&mut self) {
+    pub fn receive_status_effect_damage(&mut self) -> Result<(), Dead> {
         // NOTE: in the future we could have a positive status that e.g. regen hp
         match self.status_effect {
             Some(StatusEffect::Burning) | Some(StatusEffect::Poisoned) => {
                 let damage = std::cmp::max(1, self.max_hp / 20);
                 let damage = random().damage(damage);
-                // FIXME handle dead
-                self.receive_damage(damage);
                 event::status_effect_damage(self, damage);
+                self.receive_damage(damage)?;
+                Ok(())
             }
-            _ => (),
+            _ => Ok(()),
         }
     }
 }
@@ -417,19 +425,24 @@ mod tests {
         let mut hero = new_char();
         assert_eq!(25, hero.current_hp);
 
-        hero.receive_status_effect_damage();
+        hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(25, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Burning);
-        hero.receive_status_effect_damage();
+        hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(24, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Poisoned);
-        hero.receive_status_effect_damage();
+        hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 
         hero.maybe_remove_status_effect();
-        hero.receive_status_effect_damage();
+        hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
+
+        hero.status_effect = Some(StatusEffect::Burning);
+        hero.current_hp = 1;
+        assert!(hero.receive_status_effect_damage().is_err());
+        assert!(hero.is_dead());
     }
 }

@@ -1,5 +1,6 @@
 extern crate dirs;
 
+use crate::character;
 use crate::character::Character;
 use crate::event;
 use crate::item::{Item, Potion};
@@ -17,13 +18,6 @@ mod datafile;
 mod game040;
 pub mod tombstone;
 
-#[derive(Debug)]
-pub enum Error {
-    GameOver,
-    NoDataFile,
-    ItemNotFound,
-}
-
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct Game {
@@ -35,6 +29,8 @@ pub struct Game {
     tombstones: HashMap<String, Tombstone>,
     inspected: HashSet<Location>,
 }
+
+pub struct ItemNotFound;
 
 impl Game {
     pub fn new() -> Self {
@@ -50,8 +46,8 @@ impl Game {
         }
     }
 
-    pub fn load() -> Result<Self, Error> {
-        let data: Vec<u8> = datafile::read().or(Err(Error::NoDataFile))?;
+    pub fn load() -> Result<Self, datafile::NotFound> {
+        let data: Vec<u8> = datafile::read()?;
         let game: Game = if let Ok(game) = serde_json::from_slice(&data) {
             game
         } else {
@@ -87,9 +83,14 @@ impl Game {
 
     /// Move the hero's location towards the given destination, one directory
     /// at a time, with some chance of enemies appearing on each one.
-    pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), Error> {
+    pub fn go_to(
+        &mut self,
+        dest: &Location,
+        run: bool,
+        bribe: bool,
+    ) -> Result<(), character::Dead> {
         while self.location != *dest {
-            self.visit(self.location.go_to(dest));
+            self.visit(self.location.go_to(dest))?;
 
             if !self.location.is_home() {
                 if let Some(mut enemy) = self.maybe_spawn_enemy() {
@@ -127,7 +128,7 @@ impl Game {
     }
 
     /// Set the hero's location to the one given, and apply related side effects.
-    pub fn visit(&mut self, location: Location) {
+    pub fn visit(&mut self, location: Location) -> Result<(), character::Dead> {
         self.location = location;
         if self.location.is_home() {
             let recovered = self.player.heal_full();
@@ -137,12 +138,12 @@ impl Game {
 
         // Take an attack hit from status_effects.
         // In location is home, already healed of negative status
-        self.player.receive_status_effect_damage();
+        self.player.receive_status_effect_damage()
     }
 
     /// Set the current location to home, and apply related side-effects
     pub fn visit_home(&mut self) {
-        self.visit(Location::home());
+        self.visit(Location::home()).unwrap_or_default();
     }
 
     pub fn add_item(&mut self, name: &str, item: Box<dyn Item>) {
@@ -153,7 +154,7 @@ impl Game {
         entry.push(item);
     }
 
-    pub fn use_item(&mut self, name: &str) -> Result<(), Error> {
+    pub fn use_item(&mut self, name: &str) -> Result<(), ItemNotFound> {
         let name = name.to_string();
         // get all items of that type and use one
         // if there are no remaining, drop the type from the inventory
@@ -169,7 +170,7 @@ impl Game {
 
             Ok(())
         } else {
-            Err(Error::ItemNotFound)
+            Err(ItemNotFound)
         }
     }
 
@@ -207,7 +208,7 @@ impl Game {
         enemy: &mut Character,
         run: bool,
         bribe: bool,
-    ) -> Result<(), Error> {
+    ) -> Result<(), character::Dead> {
         // don't attempt bribe and run in the same turn
         if bribe {
             if self.bribe(enemy) {
@@ -238,21 +239,24 @@ impl Game {
         success
     }
 
-    fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        if let Ok(xp) = battle::run(self, enemy, &random()) {
-            let gold = gold_gained(self.player.level, enemy.level);
-            self.gold += gold;
-            let level_up = self.player.add_experience(xp);
+    fn battle(&mut self, enemy: &mut Character) -> Result<(), character::Dead> {
+        match battle::run(self, enemy, &random()) {
+            Ok(xp) => {
+                let gold = gold_gained(self.player.level, enemy.level);
+                self.gold += gold;
+                let level_up = self.player.add_experience(xp);
 
-            event::battle_won(self, &enemy, xp, level_up, gold);
-            Ok(())
-        } else {
-            // leave hero items in the location
-            let tombstone = Tombstone::drop(self);
-            self.tombstones.insert(self.location.to_string(), tombstone);
+                event::battle_won(self, &enemy, xp, level_up, gold);
+                Ok(())
+            }
+            Err(character::Dead) => {
+                // leave hero items in the location
+                let tombstone = Tombstone::drop(self);
+                self.tombstones.insert(self.location.to_string(), tombstone);
 
-            event::battle_lost(self);
-            Err(Error::GameOver)
+                event::battle_lost(self);
+                Err(character::Dead)
+            }
         }
     }
 }

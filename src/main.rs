@@ -147,7 +147,7 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
     if let Ok(dest) = Location::from(&dest) {
         if force {
             game.location = dest;
-        } else if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
+        } else if let Err(character::Dead) = game.go_to(&dest, run, bribe) {
             game.reset();
             return 1;
         }
@@ -163,7 +163,7 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
 fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
     let mut exit_code = 0;
     if let Some(mut enemy) = game.maybe_spawn_enemy() {
-        if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
+        if let Err(character::Dead) = game.maybe_battle(&mut enemy, run, bribe) {
             game.reset();
             exit_code = 1;
         }
@@ -198,7 +198,7 @@ fn shop(game: &mut Game, item_name: &Option<String>) {
 fn use_item(game: &mut Game, item_name: &Option<String>) {
     if let Some(item_name) = item_name {
         let item_name = sanitize(item_name);
-        if let Err(game::Error::ItemNotFound) = game.use_item(&item_name) {
+        if let Err(game::ItemNotFound) = game.use_item(&item_name) {
             println!("Item not found.");
         }
     } else {

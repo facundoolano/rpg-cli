@@ -1,5 +1,5 @@
 use super::Game;
-use crate::character::{Character, StatusEffect};
+use crate::character::{Character, Dead, StatusEffect};
 use crate::event;
 use crate::randomizer::Randomizer;
 
@@ -14,7 +14,7 @@ pub enum AttackType {
 
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
-pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> Result<i32, ()> {
+pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> Result<i32, Dead> {
     // These accumulators get increased based on the characters speed:
     // the faster will get more frequent turns.
     // This could be generalized to player vs enemy parties
@@ -27,32 +27,40 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                let new_xp = attack(&mut game.player, enemy, random);
+                let new_xp = player_attack(&mut game.player, enemy, random);
                 xp += new_xp;
             }
+
+            game.player.receive_status_effect_damage()?;
             pl_accum = -1;
         } else {
-            attack(enemy, &mut game.player, random);
-            en_accum = -1;
-        }
+            enemy_attack(enemy, &mut game.player, random)?;
 
-        if game.player.is_dead() {
-            return Err(());
+            enemy.receive_status_effect_damage().unwrap_or_default();
+            en_accum = -1;
         }
     }
 
     Ok(xp)
 }
 
-/// Inflict damage from attacker to receiver, return the inflicted
-/// damage and the experience that will be gain if the battle is won
-fn attack(attacker: &mut Character, receiver: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (attack_type, damage, new_xp) = generate_attack(attacker, receiver, random);
-    receiver.receive_damage(damage);
-    event::attack(receiver, &attack_type, damage);
-
-    attacker.receive_status_effect_damage();
+/// Attack enemy, returning the gained experience
+fn player_attack(player: &mut Character, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
+    let (attack_type, damage, new_xp) = generate_attack(player, enemy, random);
+    event::attack(enemy, &attack_type, damage);
+    enemy.receive_damage(damage).unwrap_or_default();
     new_xp
+}
+
+/// Attack player, returning Err(Dead) if the player dies.
+fn enemy_attack(
+    enemy: &mut Character,
+    player: &mut Character,
+    random: &dyn Randomizer,
+) -> Result<(), Dead> {
+    let (attack_type, damage, _xp) = generate_attack(enemy, player, random);
+    event::attack(player, &attack_type, damage);
+    player.receive_damage(damage)
 }
 
 /// Return randomized attack parameters according to the character attributes.
