@@ -20,7 +20,6 @@ pub mod tombstone;
 
 #[derive(Debug)]
 pub enum Error {
-    GameOver,
     NoDataFile,
     ItemNotFound,
 }
@@ -88,11 +87,9 @@ impl Game {
 
     /// Move the hero's location towards the given destination, one directory
     /// at a time, with some chance of enemies appearing on each one.
-    pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), Error> {
+    pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), character::Dead> {
         while self.location != *dest {
-            // FIXME better to just return character::Dead
-            self.visit(self.location.go_to(dest))
-                .map_err(|_| Error::GameOver)?;
+            self.visit(self.location.go_to(dest))?;
 
             if !self.location.is_home() {
                 if let Some(mut enemy) = self.maybe_spawn_enemy() {
@@ -210,7 +207,7 @@ impl Game {
         enemy: &mut Character,
         run: bool,
         bribe: bool,
-    ) -> Result<(), Error> {
+    ) -> Result<(), character::Dead> {
         // don't attempt bribe and run in the same turn
         if bribe {
             if self.bribe(enemy) {
@@ -241,21 +238,24 @@ impl Game {
         success
     }
 
-    fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        if let Ok(xp) = battle::run(self, enemy, &random()) {
-            let gold = gold_gained(self.player.level, enemy.level);
-            self.gold += gold;
-            let level_up = self.player.add_experience(xp);
+    fn battle(&mut self, enemy: &mut Character) -> Result<(), character::Dead> {
+        match battle::run(self, enemy, &random()) {
+            Ok(xp) => {
+                let gold = gold_gained(self.player.level, enemy.level);
+                self.gold += gold;
+                let level_up = self.player.add_experience(xp);
 
-            event::battle_won(self, &enemy, xp, level_up, gold);
-            Ok(())
-        } else {
-            // leave hero items in the location
-            let tombstone = Tombstone::drop(self);
-            self.tombstones.insert(self.location.to_string(), tombstone);
+                event::battle_won(self, &enemy, xp, level_up, gold);
+                Ok(())
+            },
+            Err(character::Dead) => {
+                // leave hero items in the location
+                let tombstone = Tombstone::drop(self);
+                self.tombstones.insert(self.location.to_string(), tombstone);
 
-            event::battle_lost(self);
-            Err(Error::GameOver)
+                event::battle_lost(self);
+                Err(character::Dead)
+            }
         }
     }
 }
