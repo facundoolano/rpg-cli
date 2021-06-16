@@ -224,6 +224,7 @@ mod tests {
         hp: Stat(25, 7),
         strength: Stat(10, 3),
         speed: Stat(10, 2),
+        inflicts: None,
     };
 
     fn new_char() -> Character {
