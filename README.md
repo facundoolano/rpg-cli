@@ -35,6 +35,11 @@ You can use homebrew to install the binary on macOS::
 If you use nix/nixos you can get rpg-cli from nixpkgs, either install it by adding it to your system config, installing it with `nix-env -i rpg-cli` or try it in a ephemeral shell with `nix-shell -p rpg-cli`.
 Note that at the current time of writing, the package hasn't hit any of the channels yet. When you try it, check that it's in your channel.
 
+### Installing with portage (Gentoo)
+If you use Gentoo, you can get rpg-cli from portage:
+
+    # emerge -av games-rpg/rpg-cli
+
 ### Shell integration (recommended)
 
 The game is designed to integrate with common file system operations, such as changing directories or deleting files.
