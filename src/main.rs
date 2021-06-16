@@ -198,7 +198,7 @@ fn shop(game: &mut Game, item_name: &Option<String>) {
 fn use_item(game: &mut Game, item_name: &Option<String>) {
     if let Some(item_name) = item_name {
         let item_name = sanitize(item_name);
-        if let Err(game::Error::ItemNotFound) = game.use_item(&item_name) {
+        if let Err(game::ItemNotFound) = game.use_item(&item_name) {
             println!("Item not found.");
         }
     } else {

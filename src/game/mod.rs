@@ -18,12 +18,6 @@ mod datafile;
 mod game040;
 pub mod tombstone;
 
-#[derive(Debug)]
-pub enum Error {
-    NoDataFile,
-    ItemNotFound,
-}
-
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct Game {
@@ -35,6 +29,8 @@ pub struct Game {
     tombstones: HashMap<String, Tombstone>,
     inspected: HashSet<Location>,
 }
+
+pub struct ItemNotFound;
 
 impl Game {
     pub fn new() -> Self {
@@ -50,8 +46,8 @@ impl Game {
         }
     }
 
-    pub fn load() -> Result<Self, Error> {
-        let data: Vec<u8> = datafile::read().or(Err(Error::NoDataFile))?;
+    pub fn load() -> Result<Self, datafile::NotFound> {
+        let data: Vec<u8> = datafile::read()?;
         let game: Game = if let Ok(game) = serde_json::from_slice(&data) {
             game
         } else {
@@ -87,7 +83,12 @@ impl Game {
 
     /// Move the hero's location towards the given destination, one directory
     /// at a time, with some chance of enemies appearing on each one.
-    pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), character::Dead> {
+    pub fn go_to(
+        &mut self,
+        dest: &Location,
+        run: bool,
+        bribe: bool,
+    ) -> Result<(), character::Dead> {
         while self.location != *dest {
             self.visit(self.location.go_to(dest))?;
 
@@ -153,7 +154,7 @@ impl Game {
         entry.push(item);
     }
 
-    pub fn use_item(&mut self, name: &str) -> Result<(), Error> {
+    pub fn use_item(&mut self, name: &str) -> Result<(), ItemNotFound> {
         let name = name.to_string();
         // get all items of that type and use one
         // if there are no remaining, drop the type from the inventory
@@ -169,7 +170,7 @@ impl Game {
 
             Ok(())
         } else {
-            Err(Error::ItemNotFound)
+            Err(ItemNotFound)
         }
     }
 
@@ -247,7 +248,7 @@ impl Game {
 
                 event::battle_won(self, &enemy, xp, level_up, gold);
                 Ok(())
-            },
+            }
             Err(character::Dead) => {
                 // leave hero items in the location
                 let tombstone = Tombstone::drop(self);
