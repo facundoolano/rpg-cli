@@ -27,12 +27,16 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                let new_xp = attack(&mut game.player, enemy, random)?;
+                let new_xp = player_attack(&mut game.player, enemy, random);
                 xp += new_xp;
             }
+
+            game.player.receive_status_effect_damage()?;
             pl_accum = -1;
         } else {
-            attack(enemy, &mut game.player, random).unwrap_or_default();
+            enemy_attack(enemy, &mut game.player, random)?;
+
+            enemy.receive_status_effect_damage().unwrap_or_default();
             en_accum = -1;
         }
     }
@@ -40,19 +44,23 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     Ok(xp)
 }
 
-/// Inflict damage from attacker to receiver, return the inflicted
-/// damage and the experience that will be gain if the battle is won
-fn attack(
-    attacker: &mut Character,
-    receiver: &mut Character,
-    random: &dyn Randomizer,
-) -> Result<i32, Dead> {
-    let (attack_type, damage, new_xp) = generate_attack(attacker, receiver, random);
-    event::attack(receiver, &attack_type, damage);
-    receiver.receive_damage(damage)?;
+/// Attack enemy, returning the gained experience
+fn player_attack(player: &mut Character, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
+    let (attack_type, damage, new_xp) = generate_attack(player, enemy, random);
+    event::attack(enemy, &attack_type, damage);
+    enemy.receive_damage(damage).unwrap_or_default();
+    new_xp
+}
 
-    attacker.receive_status_effect_damage()?;
-    Ok(new_xp)
+/// Attack player, returning Err(Dead) if the player dies.
+fn enemy_attack(
+    enemy: &mut Character,
+    player: &mut Character,
+    random: &dyn Randomizer,
+) -> Result<(), Dead> {
+    let (attack_type, damage, _xp) = generate_attack(enemy, player, random);
+    event::attack(player, &attack_type, damage);
+    player.receive_damage(damage)
 }
 
 /// Return randomized attack parameters according to the character attributes.

@@ -116,8 +116,7 @@ impl Character {
     }
 
     pub fn receive_damage(&mut self, damage: i32) -> Result<(), Dead> {
-        self.current_hp = max(0, self.current_hp - damage);
-        if damage > self.current_hp {
+        if damage >= self.current_hp {
             self.current_hp = 0;
             Err(Dead)
         } else {
@@ -426,19 +425,24 @@ mod tests {
         let mut hero = new_char();
         assert_eq!(25, hero.current_hp);
 
-        hero.receive_status_effect_damage();
+        hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(25, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Burning);
-        hero.receive_status_effect_damage();
+        hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(24, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Poisoned);
-        hero.receive_status_effect_damage();
+        hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 
         hero.maybe_remove_status_effect();
-        hero.receive_status_effect_damage();
+        hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
+
+        hero.status_effect = Some(StatusEffect::Burning);
+        hero.current_hp = 1;
+        assert!(hero.receive_status_effect_damage().is_err());
+        assert!(hero.is_dead());
     }
 }
