@@ -1,8 +1,8 @@
 use core::fmt;
 
 use crate::character::class as character;
+use crate::event;
 use crate::game;
-use crate::log;
 use serde::{Deserialize, Serialize};
 
 pub mod equipment;
@@ -38,7 +38,7 @@ impl Item for Potion {
 
         // we prefer the battle here since its less ugly to show battle-like
         // output outside battle than the other way around
-        log::potion(&game.player, restored);
+        event::potion(game, restored);
     }
 }
 
@@ -61,5 +61,28 @@ impl Item for Escape {
 impl fmt::Display for Escape {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "escape")
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Remedy {}
+
+impl Remedy {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+#[typetag::serde]
+impl Item for Remedy {
+    fn apply(&self, game: &mut game::Game) {
+        let healed = game.player.maybe_remove_status_effect();
+        event::remedy(game, healed);
+    }
+}
+
+impl fmt::Display for Remedy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "remedy")
     }
 }

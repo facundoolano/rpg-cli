@@ -83,3 +83,27 @@ alias cp="rpg-battle && cp"
 alias chown="rpg-battle && chown"
 alias chmod="rpg-battle && chmod"
 ```
+
+## ls `cd` override
+
+The `rpg-cli ls` command looks for chests at the current location.
+It can be integrated to the regular ls like this:
+
+``` sh
+ls () {
+    command ls "$@"
+    if [ $# -eq 0 ] ; then
+        rpg cd -f .
+        rpg ls
+    fi
+}
+```
+
+## Show rpg status at prompt
+
+A simple of showing the hero status at the bash prompt is:
+
+    $ PS1='`rpg -q | xargs` '
+    hero[4][xxxx][x---]@home
+
+`rpg --plain` can be used as a building block for more sophisticated display.

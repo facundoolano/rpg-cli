@@ -1,26 +1,22 @@
 extern crate dirs;
 
+use crate::character;
 use crate::character::Character;
-use crate::item::Item;
+use crate::event;
+use crate::item::{Item, Potion};
 use crate::location::Location;
-use crate::log;
+use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::{fs, io, path};
+use std::collections::{HashMap, HashSet};
+use std::io;
 use tombstone::Tombstone;
 
 pub mod battle;
+mod datafile;
 mod game040;
 pub mod tombstone;
-
-#[derive(Debug)]
-pub enum Error {
-    GameOver,
-    NoDataFile,
-    ItemNotFound,
-}
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
@@ -28,23 +24,30 @@ pub struct Game {
     pub player: Character,
     pub location: Location,
     pub gold: i32,
+    pub quests: QuestList,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
     tombstones: HashMap<String, Tombstone>,
+    inspected: HashSet<Location>,
 }
+
+pub struct ItemNotFound;
 
 impl Game {
     pub fn new() -> Self {
+        let quests = QuestList::new();
         Self {
             location: Location::home(),
             player: Character::player(),
             gold: 0,
             inventory: HashMap::new(),
             tombstones: HashMap::new(),
+            inspected: HashSet::new(),
+            quests,
         }
     }
 
-    pub fn load() -> Result<Self, Error> {
-        let data = fs::read(data_file()).or(Err(Error::NoDataFile))?;
+    pub fn load() -> Result<Self, datafile::NotFound> {
+        let data: Vec<u8> = datafile::read()?;
         let game: Game = if let Ok(game) = serde_json::from_slice(&data) {
             game
         } else {
@@ -56,31 +59,38 @@ impl Game {
     }
 
     pub fn save(&self) -> Result<(), io::Error> {
-        let rpg_dir = rpg_dir();
-        if !rpg_dir.exists() {
-            fs::create_dir(&rpg_dir).unwrap();
-        }
-
         let data = serde_json::to_vec(&self).unwrap();
-        fs::write(data_file(), &data)
+        datafile::write(data)
     }
 
     /// Remove the game data and reset this reference.
-    /// Tombstones are preserved across games.
+    /// Progress is preserved across games.
     pub fn reset(&mut self) {
-        // move the tombstones to the new game
         let mut new_game = Self::new();
-        new_game.tombstones = self.tombstones.drain().collect();
+        // preserve tombstones and quests across hero's lifes
+        std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
+        std::mem::swap(&mut new_game.quests, &mut self.quests);
+        // TBD shouldn't chests be preserved?
 
         // replace the current, finished game with the new one
         *self = new_game;
     }
 
+    /// Recreate the game data, losing all progress.
+    pub fn restet_hard() {
+        datafile::remove();
+    }
+
     /// Move the hero's location towards the given destination, one directory
     /// at a time, with some chance of enemies appearing on each one.
-    pub fn go_to(&mut self, dest: &Location, run: bool, bribe: bool) -> Result<(), Error> {
+    pub fn go_to(
+        &mut self,
+        dest: &Location,
+        run: bool,
+        bribe: bool,
+    ) -> Result<(), character::Dead> {
         while self.location != *dest {
-            self.visit(self.location.go_to(dest));
+            self.visit(self.location.go_to(dest))?;
 
             if !self.location.is_home() {
                 if let Some(mut enemy) = self.maybe_spawn_enemy() {
@@ -91,19 +101,49 @@ impl Game {
         Ok(())
     }
 
+    /// Look for chests and tombstones at the current location.
+    /// Remembers previous checks for consistency.
+    pub fn inspect(&mut self) {
+        self.pick_up_tombstone();
+
+        if !self.inspected.contains(&self.location) {
+            self.inspected.insert(self.location.clone());
+
+            // this could be extended to find better items, with a non uniform
+            // probability, and to change according to the distance from home
+            // it's likely better to extract to an item generator module at that point
+            match random().range(6) {
+                0 => {
+                    let gold = random().gold_gained(self.player.level * 200);
+                    event::chest(self, gold, &[]);
+                }
+                1 => {
+                    let potion = Potion::new(self.player.level);
+                    event::chest(self, 0, &["potion".to_string()]);
+                    self.add_item("potion", Box::new(potion));
+                }
+                _ => {}
+            }
+        }
+    }
+
     /// Set the hero's location to the one given, and apply related side effects.
-    pub fn visit(&mut self, location: Location) {
+    pub fn visit(&mut self, location: Location) -> Result<(), character::Dead> {
         self.location = location;
         if self.location.is_home() {
             let recovered = self.player.heal_full();
-            log::heal(&self.player, &self.location, recovered);
+            let healed = self.player.maybe_remove_status_effect();
+            event::heal(self, recovered, healed);
         }
-        self.pick_up_tombstone();
+
+        // Take an attack hit from status_effects.
+        // In location is home, already healed of negative status
+        self.player.receive_status_effect_damage()
     }
 
     /// Set the current location to home, and apply related side-effects
     pub fn visit_home(&mut self) {
-        self.visit(Location::home());
+        self.visit(Location::home()).unwrap_or_default();
     }
 
     pub fn add_item(&mut self, name: &str, item: Box<dyn Item>) {
@@ -114,13 +154,14 @@ impl Game {
         entry.push(item);
     }
 
-    pub fn use_item(&mut self, name: &str) -> Result<(), Error> {
+    pub fn use_item(&mut self, name: &str) -> Result<(), ItemNotFound> {
         let name = name.to_string();
         // get all items of that type and use one
         // if there are no remaining, drop the type from the inventory
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(item) = items.pop() {
                 item.apply(self);
+                event::item_used(self, &name);
             }
 
             if !items.is_empty() {
@@ -129,7 +170,7 @@ impl Game {
 
             Ok(())
         } else {
-            Err(Error::ItemNotFound)
+            Err(ItemNotFound)
         }
     }
 
@@ -141,12 +182,10 @@ impl Game {
     }
 
     /// If there's a tombstone laying in the current location, pick up its items
-    fn pick_up_tombstone(&mut self) -> bool {
+    fn pick_up_tombstone(&mut self) {
         if let Some(mut tombstone) = self.tombstones.remove(&self.location.to_string()) {
-            tombstone.pick_up(self);
-            true
-        } else {
-            false
+            let (items, gold) = tombstone.pick_up(self);
+            event::tombstone(self, &items, gold);
         }
     }
 
@@ -156,7 +195,8 @@ impl Game {
             let level = enemy_level(self.player.level, distance.len());
             let level = random().enemy_level(level);
             let enemy = Character::enemy(level, distance);
-            log::enemy_appears(&enemy, &self.location);
+
+            event::enemy_appears(self, &enemy);
             Some(enemy)
         } else {
             None
@@ -168,7 +208,7 @@ impl Game {
         enemy: &mut Character,
         run: bool,
         bribe: bool,
-    ) -> Result<(), Error> {
+    ) -> Result<(), character::Dead> {
         // don't attempt bribe and run in the same turn
         if bribe {
             if self.bribe(enemy) {
@@ -186,37 +226,37 @@ impl Game {
 
         if self.gold >= bribe_cost && random().bribe_succeeds() {
             self.gold -= bribe_cost;
-            log::bribe_success(&self.player, bribe_cost);
+            event::bribe(self, bribe_cost);
             return true;
         };
-        log::bribe_failure(&self.player);
+        event::bribe(self, 0);
         false
     }
 
     fn run_away(&self, enemy: &Character) -> bool {
-        if random().run_away_succeeds(self.player.level, enemy.level) {
-            log::run_away_success(&self.player);
-            return true;
-        };
-        log::run_away_failure(&self.player);
-        false
+        let success = random().run_away_succeeds(self.player.level, enemy.level);
+        event::run_away(self, success);
+        success
     }
 
-    fn battle(&mut self, enemy: &mut Character) -> Result<(), Error> {
-        if let Ok(xp) = battle::run(self, enemy, &random()) {
-            let gold = gold_gained(self.player.level, enemy.level);
-            self.gold += gold;
-            let level_up = self.player.add_experience(xp);
+    fn battle(&mut self, enemy: &mut Character) -> Result<(), character::Dead> {
+        match battle::run(self, enemy, &random()) {
+            Ok(xp) => {
+                let gold = gold_gained(self.player.level, enemy.level);
+                self.gold += gold;
+                let level_up = self.player.add_experience(xp);
 
-            log::battle_won(self, xp, level_up, gold);
-            Ok(())
-        } else {
-            // leave hero items in the location
-            let tombstone = Tombstone::drop(self);
-            self.tombstones.insert(self.location.to_string(), tombstone);
+                event::battle_won(self, &enemy, xp, level_up, gold);
+                Ok(())
+            }
+            Err(character::Dead) => {
+                // leave hero items in the location
+                let tombstone = Tombstone::drop(self);
+                self.tombstones.insert(self.location.to_string(), tombstone);
 
-            log::battle_lost(&self.player);
-            Err(Error::GameOver)
+                event::battle_lost(self);
+                Err(character::Dead)
+            }
         }
     }
 }
@@ -225,14 +265,6 @@ impl Default for Game {
     fn default() -> Self {
         Self::new()
     }
-}
-
-fn rpg_dir() -> path::PathBuf {
-    dirs::home_dir().unwrap().join(".rpg")
-}
-
-fn data_file() -> path::PathBuf {
-    rpg_dir().join("data")
 }
 
 fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {

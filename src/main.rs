@@ -1,10 +1,12 @@
 use game::Game;
 
 mod character;
+mod event;
 mod game;
 mod item;
 mod location;
 mod log;
+mod quest;
 mod randomizer;
 
 use crate::location::Location;
@@ -54,8 +56,9 @@ enum Command {
         force: bool,
     },
 
-    /// Resets the current game.
-    Reset,
+    /// Inspect the directory contents, possibly finding treasure chests and hero tombstones.
+    #[clap(name = "ls", display_order = 1)]
+    Inspect,
 
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
@@ -65,6 +68,17 @@ enum Command {
     /// Uses an item from the inventory.
     #[clap(alias = "u", display_order = 3)]
     Use { item: Option<String> },
+
+    /// Prints the quest todo list.
+    #[clap(alias = "t", display_order = 4)]
+    Todo,
+
+    /// Resets the current game.
+    Reset {
+        /// Reset data files, losing cross-hero progress.
+        #[clap(long)]
+        hard: bool,
+    },
 
     /// Prints the hero's current location
     #[clap(name = "pwd")]
@@ -84,10 +98,18 @@ enum Command {
 
 fn main() {
     let mut exit_code = 0;
-    let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
     let opts: Opts = Opts::parse();
     log::init(opts.quiet, opts.plain);
+
+    // reset --hard is a special case, it needs to work when we
+    // fail to deserialize the game data -- e.g. on backward
+    // incompatible changes
+    if let Some(Command::Reset { hard: true }) = opts.cmd {
+        Game::restet_hard();
+    }
+
+    let mut game = Game::load().unwrap_or_else(|_| Game::new());
 
     match opts.cmd.unwrap_or(Command::Stat) {
         Command::Stat => log::status(&game),
@@ -99,13 +121,20 @@ fn main() {
         } => {
             exit_code = change_dir(&mut game, &destination, run, bribe, force);
         }
+        Command::Inspect => {
+            game.inspect();
+        }
         Command::Battle { run, bribe } => {
             exit_code = battle(&mut game, run, bribe);
         }
         Command::PrintWorkDir => println!("{}", game.location.path_string()),
-        Command::Reset => game.reset(),
+        Command::Reset { .. } => game.reset(),
         Command::Buy { item } => shop(&mut game, &item),
         Command::Use { item } => use_item(&mut game, &item),
+        Command::Todo => {
+            let (todo, done) = game.quests.list(&game);
+            log::quest_list(&todo, &done);
+        }
     }
 
     game.save().unwrap();
@@ -117,8 +146,8 @@ fn main() {
 fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) -> i32 {
     if let Ok(dest) = Location::from(&dest) {
         if force {
-            game.visit(dest);
-        } else if let Err(game::Error::GameOver) = game.go_to(&dest, run, bribe) {
+            game.location = dest;
+        } else if let Err(character::Dead) = game.go_to(&dest, run, bribe) {
             game.reset();
             return 1;
         }
@@ -134,7 +163,7 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
 fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
     let mut exit_code = 0;
     if let Some(mut enemy) = game.maybe_spawn_enemy() {
-        if let Err(game::Error::GameOver) = game.maybe_battle(&mut enemy, run, bribe) {
+        if let Err(character::Dead) = game.maybe_battle(&mut enemy, run, bribe) {
             game.reset();
             exit_code = 1;
         }
@@ -169,7 +198,7 @@ fn shop(game: &mut Game, item_name: &Option<String>) {
 fn use_item(game: &mut Game, item_name: &Option<String>) {
     if let Some(item_name) = item_name {
         let item_name = sanitize(item_name);
-        if let Err(game::Error::ItemNotFound) = game.use_item(&item_name) {
+        if let Err(game::ItemNotFound) = game.use_item(&item_name) {
             println!("Item not found.");
         }
     } else {

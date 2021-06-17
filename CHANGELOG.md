@@ -1,6 +1,16 @@
 # Changelog
 
 ## Unreleased
+### Added
+* a `rpg reset --hard` flag to remove data files and forget information from previous plays #46
+* Quest system #47
+* Tutorial quests #49
+* `rpg ls` command to look for chests at the current location #51
+* Example sh file #54
+* Poisoned and burning status effects #48
+
+### Changed
+* Tombstones are found with `rpg ls` instead of automatically #52
 
 ## [0.4.1](https://github.com/facundoolano/rpg-cli/releases/tag/0.4.1) - 2021-06-14
 ### Changed

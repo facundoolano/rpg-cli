@@ -1,5 +1,5 @@
-use crate::character::Character;
-use crate::game::battle::Attack;
+use crate::character::{Character, StatusEffect};
+use crate::game::battle::AttackType;
 use crate::game::Game;
 use crate::item::shop;
 use crate::location::Location;
@@ -58,24 +58,23 @@ pub fn run_away_failure(player: &Character) {
     battle_log(player, "can't run!");
 }
 
-pub fn tombstone(location: &Location, items: &[String], gold: i32) {
-    let name = format!("{:>8}", "hero");
-    print!("{}[\u{1FAA6} ]@{}", name, location);
-    if gold > 0 {
-        print!(" {}", format_gold_plus(gold));
-    }
-    for item in items {
-        print!(" +{}", item);
-    }
-    println!();
-}
+pub fn heal(player: &Character, location: &Location, recovered: i32, healed: bool) {
+    let mut recovered_text = String::new();
+    let mut healed_text = String::new();
 
-pub fn heal(player: &Character, location: &Location, recovered: i32) {
     if recovered > 0 {
+        recovered_text = format!("+{}hp", recovered);
+    }
+    if healed {
+        healed_text = String::from("+healed");
+    }
+    if recovered > 0 || healed {
         log(
             player,
             location,
-            &format!("+{}hp", recovered).green().to_string(),
+            &format!("{} {}", recovered_text, healed_text)
+                .green()
+                .to_string(),
         );
     }
 }
@@ -89,16 +88,21 @@ pub fn potion(player: &Character, recovered: i32) {
     }
 }
 
-pub fn player_attack(enemy: &Character, attack: Attack) {
-    if !quiet() {
-        battle_log(enemy, &format_attack(attack, "white"));
+pub fn remedy(player: &Character, healed: bool) {
+    if healed {
+        battle_log(player, &"+healed remedy".green());
     }
 }
 
-pub fn enemy_attack(player: &Character, attack: Attack) {
+pub fn attack(character: &Character, attack: &AttackType, damage: i32) {
     if !quiet() {
-        battle_log(player, &format_attack(attack, "bright red"));
+        battle_log(character, &format_attack(character, &attack, damage));
     }
+}
+
+pub fn status_effect_damage(character: &Character, damage: i32) {
+    let (_, emoji) = status_effect_params(character.status_effect.unwrap());
+    battle_log(character, &format_damage(character, damage, &emoji));
 }
 
 pub fn battle_lost(player: &Character) {
@@ -142,6 +146,9 @@ fn long_status(game: &Game) {
         player.xp,
         player.xp_for_next()
     );
+    if let Some(status) = player.status_effect {
+        println!("    status: {}", format_status_effect(status).bright_red());
+    }
     println!(
         "    att:{}   def:{}   spd:{}",
         player.attack(),
@@ -154,13 +161,29 @@ fn long_status(game: &Game) {
 }
 
 fn short_status(game: &Game) {
-    log(&game.player, &game.location, "");
+    let player = &game.player;
+
+    let suffix = if let Some(status) = player.status_effect {
+        let (_, emoji) = status_effect_params(status);
+        emoji
+    } else {
+        ""
+    };
+    log(player, &game.location, &suffix);
 }
 
 fn plain_status(game: &Game) {
     let player = &game.player;
+
+    let status_effect = if let Some(status) = player.status_effect {
+        let (name, _) = status_effect_params(status);
+        format!("status:{}\t", name)
+    } else {
+        String::new()
+    };
+
     println!(
-        "{}[{}]\t@{}\thp:{}/{}\txp:{}/{}\tatt:{}\tdef:{}\tspd:{}\t{}\t{}\tg:{}",
+        "{}[{}]\t@{}\thp:{}/{}\txp:{}/{}\tatt:{}\tdef:{}\tspd:{}\t{}{}\t{}\tg:{}",
         player.name(),
         player.level,
         game.location,
@@ -171,6 +194,7 @@ fn plain_status(game: &Game) {
         player.attack(),
         player.deffense(),
         player.speed,
+        status_effect,
         format_equipment(player),
         format_inventory(game),
         game.gold
@@ -184,6 +208,44 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
     }
 
     println!("\n    funds: {}", format_gold(game.gold));
+}
+
+pub fn quest_list(todo: &[String], done: &[String]) {
+    for quest in todo {
+        println!("  {} {}", "□".dimmed(), quest);
+    }
+    for quest in done {
+        println!("  {} {}", "✔".green(), quest.dimmed());
+    }
+}
+
+pub fn quest_done(reward: i32) {
+    if !quiet() {
+        println!("    {} quest completed!", format_gold_plus(reward));
+    }
+}
+
+pub fn chest_item(items: &[String]) {
+    format_ls("\u{1F4E6}", items, 0);
+}
+
+pub fn chest_gold(gold: i32) {
+    format_ls("\u{1F4E6}", &[], gold);
+}
+
+pub fn tombstone(items: &[String], gold: i32) {
+    format_ls("\u{1FAA6}", items, gold);
+}
+
+fn format_ls(emoji: &str, items: &[String], gold: i32) {
+    print!("{} ", emoji);
+    if gold > 0 {
+        print!("  {}", format_gold_plus(gold));
+    }
+    for item in items {
+        print!("  +{}", item);
+    }
+    println!();
 }
 
 // HELPERS
@@ -244,11 +306,35 @@ pub fn format_inventory(game: &Game) -> String {
     format!("item:{{{}}}", items.join(","))
 }
 
-fn format_attack(attack: Attack, color: &str) -> String {
+fn format_attack(receiver: &Character, attack: &AttackType, damage: i32) -> String {
     match attack {
-        Attack::Regular(damage) => format!("-{}hp", damage).color(color).to_string(),
-        Attack::Critical(damage) => format!("-{}hp critical!", damage).color(color).to_string(),
-        Attack::Miss => " dodged!".to_string(),
+        AttackType::Regular => format_damage(receiver, damage, ""),
+        AttackType::Critical => format_damage(receiver, damage, "critical!"),
+        AttackType::Effect(status_effect) => {
+            format_damage(receiver, damage, &format_status_effect(*status_effect))
+        }
+        AttackType::Miss => " dodged!".to_string(),
+    }
+}
+
+fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
+    let color = if receiver.is_player() {
+        "bright red".to_string()
+    } else {
+        "white".to_string()
+    };
+    format!("-{}hp {}", amount, suffix).color(color).to_string()
+}
+
+fn format_status_effect(status_effect: StatusEffect) -> String {
+    let (name, emoji) = status_effect_params(status_effect);
+    format!("{} {}!", emoji, name)
+}
+
+fn status_effect_params(status_effect: StatusEffect) -> (&'static str, &'static str) {
+    match status_effect {
+        StatusEffect::Burning => ("burning", "\u{1F525}"),
+        StatusEffect::Poisoned => ("poisoned", "\u{2620}\u{FE0F} "),
     }
 }
 

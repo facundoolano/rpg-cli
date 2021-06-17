@@ -1,19 +1,20 @@
 use super::Game;
-use crate::character::Character;
-use crate::log;
+use crate::character::{Character, Dead, StatusEffect};
+use crate::event;
 use crate::randomizer::Randomizer;
 
 /// Outcome of an attack attempt.
 /// This affects primarily how the attack is displayed.
-pub enum Attack {
-    Regular(i32),
-    Critical(i32),
+pub enum AttackType {
+    Regular,
+    Critical,
+    Effect(StatusEffect),
     Miss,
 }
 
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
-pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> Result<i32, ()> {
+pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> Result<i32, Dead> {
     // These accumulators get increased based on the characters speed:
     // the faster will get more frequent turns.
     // This could be generalized to player vs enemy parties
@@ -26,55 +27,61 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                let new_xp = player_attack(game, enemy, random);
+                let new_xp = player_attack(&mut game.player, enemy, random);
                 xp += new_xp;
             }
+
+            game.player.receive_status_effect_damage()?;
             pl_accum = -1;
         } else {
-            enemy_attack(game, enemy, random);
-            en_accum = -1;
-        }
+            enemy_attack(enemy, &mut game.player, random)?;
 
-        if game.player.is_dead() {
-            return Err(());
+            enemy.receive_status_effect_damage().unwrap_or_default();
+            en_accum = -1;
         }
     }
 
     Ok(xp)
 }
 
-fn player_attack(game: &Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (damage, new_xp) = attack(&game.player, enemy, random);
-    log::player_attack(enemy, damage);
+/// Attack enemy, returning the gained experience
+fn player_attack(player: &mut Character, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
+    let (attack_type, damage, new_xp) = generate_attack(player, enemy, random);
+    event::attack(enemy, &attack_type, damage);
+    enemy.receive_damage(damage).unwrap_or_default();
     new_xp
 }
 
-fn enemy_attack(game: &mut Game, enemy: &Character, random: &dyn Randomizer) {
-    let (damage, _) = attack(enemy, &mut game.player, random);
-    log::enemy_attack(&game.player, damage);
+/// Attack player, returning Err(Dead) if the player dies.
+fn enemy_attack(
+    enemy: &mut Character,
+    player: &mut Character,
+    random: &dyn Randomizer,
+) -> Result<(), Dead> {
+    let (attack_type, damage, _xp) = generate_attack(enemy, player, random);
+    event::attack(player, &attack_type, damage);
+    player.receive_damage(damage)
 }
 
-/// Inflict damage from attacker to receiver, return the inflicted
-/// damage and the experience that will be gain if the battle is won
-fn attack(
+/// Return randomized attack parameters according to the character attributes.
+fn generate_attack(
     attacker: &Character,
     receiver: &mut Character,
     random: &dyn Randomizer,
-) -> (Attack, i32) {
-    if random.is_miss(attacker.speed, receiver.speed) {
-        (Attack::Miss, 0)
-    } else {
-        let damage = random.damage(attacker.damage(receiver));
-        let xp = attacker.xp_gained(receiver, damage);
+) -> (AttackType, i32, i32) {
+    let damage = random.damage(attacker.damage(receiver));
+    let xp = attacker.xp_gained(receiver, damage);
+    let attack_type = random.attack_type(
+        attacker.inflicted_status_effect(),
+        attacker.speed,
+        receiver.speed,
+    );
 
-        if random.is_critical() {
-            let damage = damage * 2;
-            receiver.receive_damage(damage);
-            (Attack::Critical(damage), xp)
-        } else {
-            receiver.receive_damage(damage);
-            (Attack::Regular(damage), xp)
-        }
+    match attack_type {
+        AttackType::Miss => (attack_type, 0, 0),
+        AttackType::Regular => (attack_type, damage, xp),
+        AttackType::Critical => (attack_type, damage * 2, xp),
+        AttackType::Effect(_) => (attack_type, damage, xp),
     }
 }
 
@@ -124,7 +131,9 @@ mod tests {
         assert_eq!(15, game.player.current_hp);
         assert_eq!(1, game.player.level);
         assert_eq!(20, game.player.xp);
-        assert_eq!(50, game.gold);
+
+        // extra 100g for the completed quest
+        assert_eq!(150, game.gold);
 
         let mut enemy = Character::enemy(1, Distance::Near(1));
         enemy.speed = 1;
@@ -137,7 +146,8 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(2, game.player.level);
         assert_eq!(10, game.player.xp);
-        assert_eq!(100, game.gold);
+        // extra 100g for level up quest
+        assert_eq!(300, game.gold);
     }
 
     #[test]

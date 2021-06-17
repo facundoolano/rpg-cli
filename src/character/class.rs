@@ -31,6 +31,8 @@ pub struct Class {
     pub hp: Stat,
     pub strength: Stat,
     pub speed: Stat,
+
+    pub inflicts: Option<(super::StatusEffect, u32)>,
 }
 
 impl Class {
@@ -39,6 +41,7 @@ impl Class {
         hp: Stat(30, 7),
         strength: Stat(12, 3),
         speed: Stat(11, 2),
+        inflicts: None,
     };
 
     pub fn random_enemy(distance: location::Distance) -> &'static Self {
@@ -46,10 +49,9 @@ impl Class {
     }
 }
 
-// Enemy classes are grouped into near/mid/far groups
-const NEAR_ENEMIES: &[Class] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
-const MEDIUM_ENEMIES: &[Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
-const FAR_ENEMIES: &[Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
+pub const COMMON: &[Class] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
+pub const RARE: &[Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
+pub const LEGENDARY: &[Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
 fn weighted_choice(distance: location::Distance) -> &'static Class {
@@ -62,9 +64,9 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
     };
 
     // assign weights to each group
-    let near = NEAR_ENEMIES.iter().map(|c| (c, w_near));
-    let mid = MEDIUM_ENEMIES.iter().map(|c| (c, w_mid));
-    let far = FAR_ENEMIES.iter().map(|c| (c, w_far));
+    let near = COMMON.iter().map(|c| (c, w_near));
+    let mid = RARE.iter().map(|c| (c, w_mid));
+    let far = LEGENDARY.iter().map(|c| (c, w_far));
 
     // make a weighted random choice
     let mut rng = rand::thread_rng();
@@ -88,6 +90,7 @@ const RAT: Class = Class {
     hp: Stat(10, 3),
     strength: Stat(5, 2),
     speed: Stat(16, 2),
+    inflicts: None,
 };
 
 const WOLF: Class = Class {
@@ -95,6 +98,7 @@ const WOLF: Class = Class {
     hp: Stat(15, 3),
     strength: Stat(8, 2),
     speed: Stat(12, 2),
+    inflicts: None,
 };
 
 const SNAKE: Class = Class {
@@ -102,6 +106,7 @@ const SNAKE: Class = Class {
     hp: Stat(13, 3),
     strength: Stat(7, 2),
     speed: Stat(6, 2),
+    inflicts: Some((super::StatusEffect::Poisoned, 5)),
 };
 
 const SLIME: Class = Class {
@@ -109,6 +114,7 @@ const SLIME: Class = Class {
     hp: Stat(80, 3),
     strength: Stat(3, 2),
     speed: Stat(4, 2),
+    inflicts: Some((super::StatusEffect::Poisoned, 10)),
 };
 
 const SPIDER: Class = Class {
@@ -116,6 +122,7 @@ const SPIDER: Class = Class {
     hp: Stat(10, 3),
     strength: Stat(9, 2),
     speed: Stat(12, 2),
+    inflicts: Some((super::StatusEffect::Poisoned, 20)),
 };
 
 const ZOMBIE: Class = Class {
@@ -123,6 +130,7 @@ const ZOMBIE: Class = Class {
     hp: Stat(50, 3),
     strength: Stat(8, 2),
     speed: Stat(6, 2),
+    inflicts: None,
 };
 
 const ORC: Class = Class {
@@ -130,6 +138,7 @@ const ORC: Class = Class {
     hp: Stat(35, 3),
     strength: Stat(13, 2),
     speed: Stat(12, 2),
+    inflicts: None,
 };
 
 const SKELETON: Class = Class {
@@ -137,6 +146,7 @@ const SKELETON: Class = Class {
     hp: Stat(30, 3),
     strength: Stat(10, 2),
     speed: Stat(10, 2),
+    inflicts: None,
 };
 
 const DEMON: Class = Class {
@@ -144,6 +154,7 @@ const DEMON: Class = Class {
     hp: Stat(50, 3),
     strength: Stat(10, 2),
     speed: Stat(18, 2),
+    inflicts: Some((super::StatusEffect::Burning, 10)),
 };
 
 const VAMPIRE: Class = Class {
@@ -151,6 +162,7 @@ const VAMPIRE: Class = Class {
     hp: Stat(50, 3),
     strength: Stat(13, 2),
     speed: Stat(10, 2),
+    inflicts: None,
 };
 
 const DRAGON: Class = Class {
@@ -158,6 +170,7 @@ const DRAGON: Class = Class {
     hp: Stat(100, 3),
     strength: Stat(25, 2),
     speed: Stat(8, 2),
+    inflicts: Some((super::StatusEffect::Burning, 2)),
 };
 
 const GOLEM: Class = Class {
@@ -165,6 +178,7 @@ const GOLEM: Class = Class {
     hp: Stat(50, 3),
     strength: Stat(45, 2),
     speed: Stat(2, 1),
+    inflicts: None,
 };
 
 const CHIMERA: Class = Class {
@@ -172,6 +186,7 @@ const CHIMERA: Class = Class {
     hp: Stat(200, 2),
     strength: Stat(90, 2),
     speed: Stat(16, 2),
+    inflicts: Some((super::StatusEffect::Poisoned, 3)),
 };
 
 const BASILISK: Class = Class {
@@ -179,6 +194,7 @@ const BASILISK: Class = Class {
     hp: Stat(150, 3),
     strength: Stat(100, 2),
     speed: Stat(18, 2),
+    inflicts: Some((super::StatusEffect::Poisoned, 2)),
 };
 
 const MINOTAUR: Class = Class {
@@ -186,6 +202,7 @@ const MINOTAUR: Class = Class {
     hp: Stat(100, 3),
     strength: Stat(60, 2),
     speed: Stat(40, 2),
+    inflicts: None,
 };
 
 const BALROG: Class = Class {
@@ -193,6 +210,7 @@ const BALROG: Class = Class {
     hp: Stat(200, 3),
     strength: Stat(200, 2),
     speed: Stat(14, 2),
+    inflicts: Some((super::StatusEffect::Burning, 3)),
 };
 
 const PHOENIX: Class = Class {
@@ -200,4 +218,5 @@ const PHOENIX: Class = Class {
     hp: Stat(350, 3),
     strength: Stat(180, 2),
     speed: Stat(28, 2),
+    inflicts: Some((super::StatusEffect::Burning, 2)),
 };

@@ -1,12 +1,13 @@
+use crate::event;
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
 use crate::location;
+use crate::randomizer::{random, Randomizer};
+use class::Class;
 use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
-use crate::randomizer::{random, Randomizer};
-use class::Class;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
@@ -24,7 +25,16 @@ pub struct Character {
 
     pub strength: i32,
     pub speed: i32,
+    pub status_effect: Option<StatusEffect>,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+pub enum StatusEffect {
+    Burning,
+    Poisoned,
+}
+
+pub struct Dead;
 
 impl Default for Character {
     fn default() -> Self {
@@ -66,6 +76,7 @@ impl Character {
             current_hp: class.hp.base(),
             strength: class.strength.base(),
             speed: class.speed.base(),
+            status_effect: None,
         };
 
         for _ in 1..level {
@@ -104,8 +115,14 @@ impl Character {
         increased_levels
     }
 
-    pub fn receive_damage(&mut self, damage: i32) {
-        self.current_hp = max(0, self.current_hp - damage);
+    pub fn receive_damage(&mut self, damage: i32) -> Result<(), Dead> {
+        if damage >= self.current_hp {
+            self.current_hp = 0;
+            Err(Dead)
+        } else {
+            self.current_hp -= damage;
+            Ok(())
+        }
     }
 
     pub fn is_dead(&self) -> bool {
@@ -159,6 +176,35 @@ impl Character {
             damage / (1 + self.level - receiver.level)
         }
     }
+
+    /// Return the status that this character's attack should inflict on the receiver.
+    pub fn inflicted_status_effect(&self) -> Option<(StatusEffect, u32)> {
+        // at some point the player could generate it depending on the equipment
+        self.class.inflicts
+    }
+
+    pub fn maybe_remove_status_effect(&mut self) -> bool {
+        if self.status_effect.is_some() {
+            self.status_effect = None;
+            return true;
+        }
+        false
+    }
+
+    /// If the character suffers from a damage-producing status effect, apply it.
+    pub fn receive_status_effect_damage(&mut self) -> Result<(), Dead> {
+        // NOTE: in the future we could have a positive status that e.g. regen hp
+        match self.status_effect {
+            Some(StatusEffect::Burning) | Some(StatusEffect::Poisoned) => {
+                let damage = std::cmp::max(1, self.max_hp / 20);
+                let damage = random().damage(damage);
+                event::status_effect_damage(self, damage);
+                self.receive_damage(damage)?;
+                Ok(())
+            }
+            _ => Ok(()),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -171,6 +217,7 @@ mod tests {
         hp: Stat(25, 7),
         strength: Stat(10, 3),
         speed: Stat(10, 2),
+        inflicts: None,
     };
 
     fn new_char() -> Character {
@@ -188,6 +235,7 @@ mod tests {
         assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
         assert_eq!(TEST_CLASS.strength.base(), hero.strength);
         assert_eq!(TEST_CLASS.speed.base(), hero.speed);
+        assert!(hero.status_effect.is_none());
     }
 
     #[test]
@@ -364,5 +412,31 @@ mod tests {
             assert!(turns_armed < 20);
         }
         // assert!(false);
+    }
+
+    #[test]
+    fn test_receive_status_effect_damage() {
+        let mut hero = new_char();
+        assert_eq!(25, hero.current_hp);
+
+        hero.receive_status_effect_damage().unwrap_or_default();
+        assert_eq!(25, hero.current_hp);
+
+        hero.status_effect = Some(StatusEffect::Burning);
+        hero.receive_status_effect_damage().unwrap_or_default();
+        assert_eq!(24, hero.current_hp);
+
+        hero.status_effect = Some(StatusEffect::Poisoned);
+        hero.receive_status_effect_damage().unwrap_or_default();
+        assert_eq!(23, hero.current_hp);
+
+        hero.maybe_remove_status_effect();
+        hero.receive_status_effect_damage().unwrap_or_default();
+        assert_eq!(23, hero.current_hp);
+
+        hero.status_effect = Some(StatusEffect::Burning);
+        hero.current_hp = 1;
+        assert!(hero.receive_status_effect_damage().is_err());
+        assert!(hero.is_dead());
     }
 }

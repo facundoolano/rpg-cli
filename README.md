@@ -10,6 +10,7 @@ Features:
 * Automatic turn-based combat.
 * Item and equipment support.
 * 15+ enemy classes.
+* Chests hidden in directories.
 * Permadeath with item recovering.
 * Run and bribe to escape battles.
 
@@ -61,7 +62,7 @@ cd () {
 }
 ```
 
-Other commands like `rm`, `mkdir`, `touch`, etc. can also be aliased. Check the [shell integration guide](shell/README.md) for more sophisticated examples, as well as their fish shell equivalents.
+Other commands like `rm`, `mkdir`, `touch`, etc. can also be aliased. Check [this example](shell/example.sh) and the [shell integration guide](shell/README.md) for more sophisticated examples, as well as their fish shell equivalents.
 
 ### Troubleshooting
 
@@ -106,12 +107,13 @@ and both characters will engage in battle:
         hero[1][xxxx][xxxx]@~/dev/facundoolano
 
 Each character attacks in turn (the frequency being determined by their `speed` stat).
+After taking an enemies hit, there's a chance to get a status effect, which will affect subsequent actions: hero attacks and moves.
 Whenever you win a fight, your hero gains experience points and eventually raises its level, along with their other stats.
 
-When you return to the home directory, the hero's health points are restored:
+When you return to the home directory, the hero's health points are restored and status effects are removed:
 
     ~/dev/facundoolano/rpg-cli $ rpg cd ~
-        hero[1][xxxx][xxxx]@home +20hp
+        hero[1][xxxx][xxxx]@home +20hp +healed
 
 Also at the home directory, you can buy items and equipment:
 
@@ -119,6 +121,7 @@ Also at the home directory, you can buy items and equipment:
         sword[1]    500g
         shield[1]   500g
         potion[1]   200g
+        remedy      400g
         escape      1000g
 
         funds: 275g
@@ -140,15 +143,17 @@ The further from home you move the hero, the tougher the enemies will get. If yo
     ~ $ rpg cd ~/dev/facundoolano/rpg-cli/target/debug/examples/
          orc[1][xxxx]@~/dev/facundoolano/rpg-cli
         hero[1][x---] -20hp critical!
+        hero[1][x---]  got burned 🔥
          orc[1][xxx-] -9hp
+        hero[1][x---] -1hp 🔥
         hero[1][----] -16hp
         hero[1][----] 💀
 
 Death is permanent: you can't save your progress and reload after dying, but if you take your new hero to the location of the previous one's death,
 you can recover gold, items and equipment:
 
-    ~ $ rpg cd -
-       hero[🪦]@~/dev/facundoolano/rpg-cli/ +potionx1 +75g
+    ~ $ rpg cd - && rpg ls
+    🪦 +potionx1 +75g
 
 
 Try `rpg --help` for more options and check the [shell integration guide](shell/README.md) for ideas to adapt the game to your preferences.

@@ -70,7 +70,7 @@ mod tests {
         assert!(new_game.player.shield.is_some());
         assert_eq!(1 as usize, *new_game.inventory().get("potion").unwrap());
         // pick up tombstone @ home
-        new_game.visit_home();
+        new_game.inspect();
         assert_eq!(2 as usize, *new_game.inventory().get("potion").unwrap());
     }
 }
