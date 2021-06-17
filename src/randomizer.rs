@@ -102,11 +102,7 @@ impl Randomizer for DefaultRandomizer {
         } else if is_critical() {
             AttackType::Critical
         } else if let Some((status, ratio)) = produced_status {
-            if let Some(status) = status_effect(status, ratio) {
-                AttackType::Effect(status)
-            } else {
-                AttackType::Regular
-            }
+            status_attack(status, ratio)
         } else {
             AttackType::Regular
         }
@@ -148,12 +144,13 @@ fn is_miss(attacker_speed: i32, receiver_speed: i32) -> bool {
     false
 }
 
-fn status_effect(status: StatusEffect, ratio: u32) -> Option<StatusEffect> {
+fn status_attack(status: StatusEffect, ratio: u32) -> AttackType {
     let mut rng = rand::thread_rng();
     if rng.gen_ratio(1, ratio) {
-        return Some(status);
+        AttackType::Effect(status)
+    } else {
+        AttackType::Regular
     }
-    None
 }
 
 /// The test randomizer just exposes the same functions as the default one
