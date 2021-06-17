@@ -178,16 +178,9 @@ impl Character {
     }
 
     /// Return the status that this character's attack should inflict on the receiver.
-    pub fn inflicted_status_effect(&self) -> Option<StatusEffect> {
+    pub fn inflicted_status_effect(&self) -> Option<(StatusEffect, u32)> {
         // at some point the player could generate it depending on the equipment
-        if !self.is_player() {
-            // FIXME instead of random this should be inferred from the enemy class
-            return match random().range(2) {
-                0 => Some(StatusEffect::Burning),
-                _ => Some(StatusEffect::Poisoned),
-            };
-        }
-        None
+        self.class.inflicts
     }
 
     pub fn maybe_remove_status_effect(&mut self) -> bool {

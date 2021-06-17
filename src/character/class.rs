@@ -32,7 +32,7 @@ pub struct Class {
     pub strength: Stat,
     pub speed: Stat,
 
-    pub inflicts: Option<(super::StatusEffect, f64)>,
+    pub inflicts: Option<(super::StatusEffect, u32)>,
 }
 
 impl Class {
@@ -106,7 +106,7 @@ const SNAKE: Class = Class {
     hp: Stat(13, 3),
     strength: Stat(7, 2),
     speed: Stat(6, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 0.2)),
+    inflicts: Some((super::StatusEffect::Poisoned, 5)),
 };
 
 const SLIME: Class = Class {
@@ -114,7 +114,7 @@ const SLIME: Class = Class {
     hp: Stat(80, 3),
     strength: Stat(3, 2),
     speed: Stat(4, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 0.1)),
+    inflicts: Some((super::StatusEffect::Poisoned, 10)),
 };
 
 const SPIDER: Class = Class {
@@ -122,7 +122,7 @@ const SPIDER: Class = Class {
     hp: Stat(10, 3),
     strength: Stat(9, 2),
     speed: Stat(12, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 0.05)),
+    inflicts: Some((super::StatusEffect::Poisoned, 20)),
 };
 
 const ZOMBIE: Class = Class {
@@ -154,7 +154,7 @@ const DEMON: Class = Class {
     hp: Stat(50, 3),
     strength: Stat(10, 2),
     speed: Stat(18, 2),
-    inflicts: Some((super::StatusEffect::Burning, 0.1)),
+    inflicts: Some((super::StatusEffect::Burning, 10)),
 };
 
 const VAMPIRE: Class = Class {
@@ -170,7 +170,7 @@ const DRAGON: Class = Class {
     hp: Stat(100, 3),
     strength: Stat(25, 2),
     speed: Stat(8, 2),
-    inflicts: Some((super::StatusEffect::Burning, 0.5)),
+    inflicts: Some((super::StatusEffect::Burning, 2)),
 };
 
 const GOLEM: Class = Class {
@@ -186,7 +186,7 @@ const CHIMERA: Class = Class {
     hp: Stat(200, 2),
     strength: Stat(90, 2),
     speed: Stat(16, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 0.4)),
+    inflicts: Some((super::StatusEffect::Poisoned, 3)),
 };
 
 const BASILISK: Class = Class {
@@ -194,7 +194,7 @@ const BASILISK: Class = Class {
     hp: Stat(150, 3),
     strength: Stat(100, 2),
     speed: Stat(18, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 0.5)),
+    inflicts: Some((super::StatusEffect::Poisoned, 2)),
 };
 
 const MINOTAUR: Class = Class {
@@ -210,7 +210,7 @@ const BALROG: Class = Class {
     hp: Stat(200, 3),
     strength: Stat(200, 2),
     speed: Stat(14, 2),
-    inflicts: Some((super::StatusEffect::Burning, 0.3)),
+    inflicts: Some((super::StatusEffect::Burning, 3)),
 };
 
 const PHOENIX: Class = Class {
@@ -218,5 +218,5 @@ const PHOENIX: Class = Class {
     hp: Stat(350, 3),
     strength: Stat(180, 2),
     speed: Stat(28, 2),
-    inflicts: Some((super::StatusEffect::Burning, 0.7)),
+    inflicts: Some((super::StatusEffect::Burning, 2)),
 };
