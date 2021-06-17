@@ -1,5 +1,6 @@
 extern crate dirs;
 
+use crate::datafile;
 use crate::character;
 use crate::character::Character;
 use crate::event;
@@ -14,7 +15,6 @@ use std::io;
 use tombstone::Tombstone;
 
 pub mod battle;
-mod datafile;
 mod game040;
 pub mod tombstone;
 
