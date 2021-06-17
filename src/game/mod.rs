@@ -76,11 +76,6 @@ impl Game {
         *self = new_game;
     }
 
-    /// Recreate the game data, losing all progress.
-    pub fn restet_hard() {
-        datafile::remove();
-    }
-
     /// Move the hero's location towards the given destination, one directory
     /// at a time, with some chance of enemies appearing on each one.
     pub fn go_to(

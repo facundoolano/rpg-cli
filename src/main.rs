@@ -107,7 +107,7 @@ fn main() {
     // fail to deserialize the game data -- e.g. on backward
     // incompatible changes
     if let Some(Command::Reset { hard: true }) = opts.cmd {
-        Game::restet_hard();
+        datafile::remove();
     }
 
     let mut game = Game::load().unwrap_or_else(|_| Game::new());
