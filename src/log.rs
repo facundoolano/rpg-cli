@@ -33,20 +33,16 @@ pub fn handle(game: &Game, event: &Event) {
             enemy_appears(enemy, &game.location);
         }
         Event::BattleWon {
-            enemy,
-            location,
             xp,
             levels_up,
             gold,
+            ..
         } => {
             battle_won(&game, *xp, *levels_up, *gold);
         }
         Event::BattleLost => {
             battle_lost(&game.player);
         }
-        Event::LevelUp { current } => {}
-        Event::ItemBought { item } => {}
-        Event::ItemUsed { item } => {}
         Event::ChestFound { items, gold } => {
             chest(items, *gold);
         }
@@ -73,6 +69,9 @@ pub fn handle(game: &Game, event: &Event) {
         } => {
             heal(&game.player, &game.location, *recovered, *healed);
         }
+        Event::LevelUp { .. } => {}
+        Event::ItemBought { .. } => {}
+        Event::ItemUsed { .. } => {}
     }
 }
 

@@ -250,6 +250,16 @@ impl Game {
                         gold,
                     },
                 );
+
+                if levels_up > 0 {
+                    Event::emit(
+                        self,
+                        Event::LevelUp {
+                            current: self.player.level,
+                        },
+                    )
+                }
+
                 Ok(())
             }
             Err(character::Dead) => {
