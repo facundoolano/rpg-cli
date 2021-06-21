@@ -133,7 +133,17 @@ mod tests {
         assert_eq!(0, game.quests.done.len());
 
         // first quest is to win a battle
-        event::battle_won(&mut game, &fake_enemy, 100, 0, 100);
+        let location = game.location.clone();
+        event::Event::emit(
+            &mut game,
+            event::Event::BattleWon {
+                enemy: &fake_enemy,
+                location,
+                xp: 100,
+                levels_up: 0,
+                gold: 100,
+            },
+        );
         assert_eq!(initial_quests - 1, game.quests.todo.len());
         assert_eq!(1, game.quests.done.len());
 
