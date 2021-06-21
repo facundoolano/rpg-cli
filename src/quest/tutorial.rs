@@ -46,7 +46,7 @@ impl Quest for UsePotion {
 
     fn handle(&mut self, event: &Event) -> bool {
         if let Event::ItemUsed { item } = event {
-            if item == "potion" {
+            if *item == "potion" {
                 return true;
             }
         }
@@ -89,7 +89,7 @@ impl Quest for FindChest {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        matches!(event, Event::ChestFound)
+        matches!(event, Event::ChestFound { .. })
     }
 }
 
@@ -103,6 +103,6 @@ impl Quest for VisitTomb {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        matches!(event, Event::TombstoneFound)
+        matches!(event, Event::TombstoneFound { .. })
     }
 }

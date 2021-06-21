@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 mod beat_enemy;
 mod tutorial;
 
-pub fn handle(game: &mut game::Game, event: event::Event) {
+pub fn handle(game: &mut game::Game, event: &event::Event) {
     game.gold += game.quests.handle(event);
 }
 
@@ -66,16 +66,15 @@ impl QuestList {
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
     /// The total gold reward is returned.
-    fn handle(&mut self, event: event::Event) -> i32 {
+    fn handle(&mut self, event: &event::Event) -> i32 {
         let mut still_todo = Vec::new();
         let mut total_reward = 0;
 
         for (unlock_at, reward, mut quest) in self.todo.drain(..) {
-            let is_done = quest.handle(&event);
+            let is_done = quest.handle(event);
 
             if is_done {
                 total_reward += reward;
-                event::quest_complete(reward);
 
                 // the done is stored from newer to older
                 self.done.insert(0, quest.description().to_string());
