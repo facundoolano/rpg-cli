@@ -9,8 +9,8 @@ use crate::quest;
 /// It's static, the events are not subscribed at runtime, but
 /// it serves the purpose of decoupling logging and the quest system
 /// from the rest of the codebase.
-// NOTE: for now not adding variants when the only action is log,
-// since there's no benefit on adding enum handling to the logging module
+// NOTE these kind of abuse the fact that we already get a game instance in the
+// handler, so current location and player are omitted
 pub enum Event<'a> {
     EnemyAppears {
         enemy: &'a Character,
@@ -30,8 +30,12 @@ pub enum Event<'a> {
         kind: battle::AttackType,
         damage: i32,
     },
+    StatusEffectDamage {
+        damage: i32,
+    },
     BattleWon {
         enemy: &'a Character,
+        // FIXME shouldn't be necessary, keeping because quests don't get game reference
         location: Location,
         xp: i32,
         levels_up: i32,
@@ -67,10 +71,4 @@ impl Event<'_> {
         log::handle(game, &event);
         quest::handle(game, &event);
     }
-}
-
-// FIXME remove these
-
-pub fn status_effect_damage(character: &Character, damage: i32) {
-    log::status_effect_damage(character, damage);
 }

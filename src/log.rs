@@ -42,6 +42,9 @@ pub fn handle(game: &Game, event: &Event) {
         Event::EnemyAttack { kind, damage } => {
             attack(&game.player, kind, *damage);
         }
+        Event::StatusEffectDamage { damage } => {
+            status_effect_damage(&game.player, *damage);
+        }
         Event::BattleWon {
             xp,
             levels_up,

@@ -1,4 +1,3 @@
-use crate::event;
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
 use crate::location;
@@ -192,17 +191,16 @@ impl Character {
     }
 
     /// If the character suffers from a damage-producing status effect, apply it.
-    pub fn receive_status_effect_damage(&mut self) -> Result<(), Dead> {
+    pub fn receive_status_effect_damage(&mut self) -> Result<Option<i32>, Dead> {
         // NOTE: in the future we could have a positive status that e.g. regen hp
         match self.status_effect {
             Some(StatusEffect::Burning) | Some(StatusEffect::Poisoned) => {
                 let damage = std::cmp::max(1, self.max_hp / 20);
                 let damage = random().damage(damage);
-                event::status_effect_damage(self, damage);
                 self.receive_damage(damage)?;
-                Ok(())
+                Ok(Some(damage))
             }
-            _ => Ok(()),
+            _ => Ok(None),
         }
     }
 }

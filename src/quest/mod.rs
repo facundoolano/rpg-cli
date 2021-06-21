@@ -9,6 +9,7 @@ mod beat_enemy;
 mod tutorial;
 
 pub fn handle(game: &mut game::Game, event: &event::Event) {
+    // TODO separate quest list from game and pass as parameter
     game.gold += game.quests.handle(event);
 }
 

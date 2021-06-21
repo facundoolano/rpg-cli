@@ -31,12 +31,11 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
                 xp += new_xp;
             }
 
-            game.player.receive_status_effect_damage()?;
+            game.maybe_receive_status_damage()?;
             pl_accum = -1;
         } else {
             enemy_attack(game, enemy, random)?;
-
-            enemy.receive_status_effect_damage().unwrap_or_default();
+            // TODO enemy receive status effect
             en_accum = -1;
         }
     }
