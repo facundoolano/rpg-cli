@@ -22,7 +22,7 @@ pub enum Event<'a> {
         success: bool,
     },
     Heal {
-        item: Option<String>,
+        item: Option<&'static str>,
         recovered: i32,
         healed: bool,
     },
@@ -68,12 +68,4 @@ pub fn status_effect_damage(character: &Character, damage: i32) {
 
 pub fn attack(character: &Character, attack: &battle::AttackType, damage: i32) {
     log::attack(character, attack, damage);
-}
-
-pub fn potion(game: &game::Game, restored: i32) {
-    log::heal_item(&game.player, "potion", restored, false);
-}
-
-pub fn remedy(game: &game::Game, healed: bool) {
-    log::heal_item(&game.player, "remedy", 0, healed);
 }
