@@ -12,7 +12,7 @@ impl Quest for WinBattle {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        matches!(event, Event::EnemyBeat { .. })
+        matches!(event, Event::BattleWon { .. })
     }
 }
 

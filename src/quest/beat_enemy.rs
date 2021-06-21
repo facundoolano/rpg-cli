@@ -33,8 +33,8 @@ impl Quest for BeatEnemyClass {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        if let Event::EnemyBeat { enemy, .. } = event {
-            self.to_beat.remove(enemy);
+        if let Event::BattleWon { enemy, .. } = event {
+            self.to_beat.remove(&enemy.name());
         }
         self.to_beat.is_empty()
     }
@@ -52,7 +52,7 @@ impl Quest for BeatEnemyDistance {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        if let Event::EnemyBeat { location, .. } = event {
+        if let Event::BattleWon { location, .. } = event {
             if location.distance_from_home().len() >= self.distance {
                 return true;
             }

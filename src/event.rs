@@ -11,8 +11,8 @@ use crate::quest;
 /// from the rest of the codebase.
 // NOTE: for now not adding variants when the only action is log,
 // since there's no benefit on adding enum handling to the logging module
-pub enum Event {
-    EnemyBeat { enemy: String, location: Location },
+pub enum Event<'a> {
+    BattleWon { enemy: &'a Character, location: Location },
     LevelUp { current: i32 },
     ItemBought { item: String },
     ItemUsed { item: String },
@@ -29,8 +29,8 @@ pub fn battle_won(game: &mut game::Game, enemy: &Character, xp: i32, levels_up: 
 
     quest::handle(
         game,
-        Event::EnemyBeat {
-            enemy: enemy.name(),
+        Event::BattleWon {
+            enemy,
             location: game.location.clone(),
         },
     );
