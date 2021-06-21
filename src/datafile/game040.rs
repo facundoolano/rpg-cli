@@ -1,5 +1,6 @@
-use super::tombstone::Tombstone;
 use crate::character::Character;
+use crate::game;
+use crate::game::tombstone::Tombstone;
 use crate::item::Item;
 use crate::location::Location;
 use serde::{Deserialize, Serialize};
@@ -18,9 +19,9 @@ struct Game040 {
 }
 
 /// Get a new Game instance out of a v0.4.0 one
-pub fn deserialize(data: &[u8]) -> Result<super::Game, bincode::Error> {
+pub fn deserialize(data: &[u8]) -> Result<game::Game, bincode::Error> {
     let mut v4game: Game040 = bincode::deserialize(&data)?;
-    let mut new_game = super::Game::new();
+    let mut new_game = game::Game::new();
     std::mem::swap(&mut new_game.player, &mut v4game.player);
     std::mem::swap(&mut new_game.location, &mut v4game.location);
     std::mem::swap(&mut new_game.inventory, &mut v4game.inventory);
@@ -55,7 +56,7 @@ mod tests {
             .inventory
             .insert("potion".to_string(), vec![Box::new(item::Potion::new(1))]);
 
-        let mut tombstone_game = super::super::Game::new();
+        let mut tombstone_game = super::game::Game::new();
         tombstone_game.add_item("potion", Box::new(item::Potion::new(1)));
         game_v4
             .tombstones

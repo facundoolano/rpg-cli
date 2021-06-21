@@ -10,12 +10,9 @@ use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::io;
 use tombstone::Tombstone;
 
 pub mod battle;
-mod datafile;
-mod game040;
 pub mod tombstone;
 
 #[derive(Serialize, Deserialize)]
@@ -25,8 +22,8 @@ pub struct Game {
     pub location: Location,
     pub gold: i32,
     pub quests: QuestList,
-    inventory: HashMap<String, Vec<Box<dyn Item>>>,
-    tombstones: HashMap<String, Tombstone>,
+    pub inventory: HashMap<String, Vec<Box<dyn Item>>>,
+    pub tombstones: HashMap<String, Tombstone>,
     inspected: HashSet<Location>,
 }
 
@@ -46,23 +43,6 @@ impl Game {
         }
     }
 
-    pub fn load() -> Result<Self, datafile::NotFound> {
-        let data: Vec<u8> = datafile::read()?;
-        let game: Game = if let Ok(game) = serde_json::from_slice(&data) {
-            game
-        } else {
-            // if json deserialization fails, attempt bincode assuming
-            // it may be a file from v0.4.0
-            game040::deserialize(&data).unwrap()
-        };
-        Ok(game)
-    }
-
-    pub fn save(&self) -> Result<(), io::Error> {
-        let data = serde_json::to_vec(&self).unwrap();
-        datafile::write(data)
-    }
-
     /// Remove the game data and reset this reference.
     /// Progress is preserved across games.
     pub fn reset(&mut self) {
@@ -74,11 +54,6 @@ impl Game {
 
         // replace the current, finished game with the new one
         *self = new_game;
-    }
-
-    /// Recreate the game data, losing all progress.
-    pub fn restet_hard() {
-        datafile::remove();
     }
 
     /// Move the hero's location towards the given destination, one directory

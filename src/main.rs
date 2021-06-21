@@ -1,6 +1,7 @@
 use game::Game;
 
 mod character;
+mod datafile;
 mod event;
 mod game;
 mod item;
@@ -106,10 +107,10 @@ fn main() {
     // fail to deserialize the game data -- e.g. on backward
     // incompatible changes
     if let Some(Command::Reset { hard: true }) = opts.cmd {
-        Game::restet_hard();
+        datafile::remove();
     }
 
-    let mut game = Game::load().unwrap_or_else(|_| Game::new());
+    let mut game = datafile::load().unwrap_or_else(|_| Game::new());
 
     match opts.cmd.unwrap_or(Command::Stat) {
         Command::Stat => log::status(&game),
@@ -137,7 +138,7 @@ fn main() {
         }
     }
 
-    game.save().unwrap();
+    datafile::save(&game).unwrap();
     std::process::exit(exit_code);
 }
 
