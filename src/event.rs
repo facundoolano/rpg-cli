@@ -21,10 +21,14 @@ pub enum Event<'a> {
     RunAway {
         success: bool,
     },
-    Heal {
-        item: Option<&'static str>,
-        recovered: i32,
-        healed: bool,
+    PlayerAttack {
+        enemy: &'a Character,
+        kind: battle::AttackType,
+        damage: i32,
+    },
+    EnemyAttack {
+        kind: battle::AttackType,
+        damage: i32,
     },
     BattleWon {
         enemy: &'a Character,
@@ -36,6 +40,11 @@ pub enum Event<'a> {
     BattleLost,
     LevelUp {
         current: i32,
+    },
+    Heal {
+        item: Option<&'static str>,
+        recovered: i32,
+        healed: bool,
     },
     ItemBought {
         item: String,
@@ -64,8 +73,4 @@ impl Event<'_> {
 
 pub fn status_effect_damage(character: &Character, damage: i32) {
     log::status_effect_damage(character, damage);
-}
-
-pub fn attack(character: &Character, attack: &battle::AttackType, damage: i32) {
-    log::attack(character, attack, damage);
 }

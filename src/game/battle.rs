@@ -1,6 +1,6 @@
 use super::Game;
 use crate::character::{Character, Dead, StatusEffect};
-use crate::event;
+use crate::event::Event;
 use crate::randomizer::Randomizer;
 
 /// Outcome of an attack attempt.
@@ -27,14 +27,14 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) {
-                let new_xp = player_attack(&mut game.player, enemy, random);
+                let new_xp = player_attack(game, enemy, random);
                 xp += new_xp;
             }
 
             game.player.receive_status_effect_damage()?;
             pl_accum = -1;
         } else {
-            enemy_attack(enemy, &mut game.player, random)?;
+            enemy_attack(game, enemy, random)?;
 
             enemy.receive_status_effect_damage().unwrap_or_default();
             en_accum = -1;
@@ -45,22 +45,38 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 }
 
 /// Attack enemy, returning the gained experience
-fn player_attack(player: &mut Character, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (attack_type, damage, new_xp) = generate_attack(player, enemy, random);
-    event::attack(enemy, &attack_type, damage);
+fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
+    let (attack_type, damage, new_xp) = generate_attack(&game.player, enemy, random);
     enemy.receive_damage(damage).unwrap_or_default();
+
+    Event::emit(
+        game,
+        Event::PlayerAttack {
+            enemy,
+            kind: attack_type,
+            damage,
+        },
+    );
     new_xp
 }
 
 /// Attack player, returning Err(Dead) if the player dies.
 fn enemy_attack(
+    game: &mut Game,
     enemy: &mut Character,
-    player: &mut Character,
     random: &dyn Randomizer,
 ) -> Result<(), Dead> {
-    let (attack_type, damage, _xp) = generate_attack(enemy, player, random);
-    event::attack(player, &attack_type, damage);
-    player.receive_damage(damage)
+    let (attack_type, damage, _xp) = generate_attack(enemy, &mut game.player, random);
+    let result = game.player.receive_damage(damage);
+
+    Event::emit(
+        game,
+        Event::EnemyAttack {
+            kind: attack_type,
+            damage,
+        },
+    );
+    result
 }
 
 /// Return randomized attack parameters according to the character attributes.

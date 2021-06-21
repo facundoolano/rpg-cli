@@ -32,6 +32,16 @@ pub fn handle(game: &Game, event: &Event) {
         Event::EnemyAppears { enemy } => {
             enemy_appears(enemy, &game.location);
         }
+        Event::PlayerAttack {
+            enemy,
+            kind,
+            damage,
+        } => {
+            attack(enemy, kind, *damage);
+        }
+        Event::EnemyAttack { kind, damage } => {
+            attack(&game.player, kind, *damage);
+        }
         Event::BattleWon {
             xp,
             levels_up,
