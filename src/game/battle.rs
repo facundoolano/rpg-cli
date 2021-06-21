@@ -65,8 +65,11 @@ fn enemy_attack(
     enemy: &mut Character,
     random: &dyn Randomizer,
 ) -> Result<(), Dead> {
-    let (attack_type, damage, _xp) = generate_attack(enemy, &mut game.player, random);
+    let (attack_type, damage, _xp) = generate_attack(enemy, &game.player, random);
     let result = game.player.receive_damage(damage);
+    if let AttackType::Effect(status) = attack_type {
+        game.player.status_effect = Some(status);
+    }
 
     Event::emit(
         game,
@@ -81,11 +84,12 @@ fn enemy_attack(
 /// Return randomized attack parameters according to the character attributes.
 fn generate_attack(
     attacker: &Character,
-    receiver: &mut Character,
+    receiver: &Character,
     random: &dyn Randomizer,
 ) -> (AttackType, i32, i32) {
     let damage = random.damage(attacker.damage(receiver));
     let xp = attacker.xp_gained(receiver, damage);
+
     let attack_type = random.attack_type(
         attacker.inflicted_status_effect(),
         attacker.speed,
@@ -94,9 +98,13 @@ fn generate_attack(
 
     match attack_type {
         AttackType::Miss => (attack_type, 0, 0),
-        AttackType::Regular => (attack_type, damage, xp),
+        AttackType::Regular => (AttackType::Regular, damage, xp),
         AttackType::Critical => (attack_type, damage * 2, xp),
-        AttackType::Effect(_) => (attack_type, damage, xp),
+        AttackType::Effect(status) if Some(status) != receiver.status_effect => {
+            (attack_type, damage, xp)
+        }
+        // don't double-inflict if already has the same status
+        AttackType::Effect(_) => (AttackType::Regular, damage, xp),
     }
 }
 
