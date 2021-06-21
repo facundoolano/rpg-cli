@@ -26,7 +26,6 @@ fn plain() -> bool {
     *PLAIN.get().unwrap_or(&false)
 }
 
-// FIXME handle all
 pub fn handle(game: &Game, event: &Event) {
     match event {
         Event::EnemyAppears { enemy } => {
@@ -99,11 +98,35 @@ pub fn status(game: &Game) {
     }
 }
 
-pub fn enemy_appears(enemy: &Character, location: &Location) {
+pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
+    for item in items {
+        let display = format!("{}", item);
+        println!("    {:<10}  {}", display, format_gold(item.cost()));
+    }
+
+    println!("\n    funds: {}", format_gold(game.gold));
+}
+
+pub fn quest_list(todo: &[String], done: &[String]) {
+    for quest in todo {
+        println!("  {} {}", "□".dimmed(), quest);
+    }
+    for quest in done {
+        println!("  {} {}", "✔".green(), quest.dimmed());
+    }
+}
+
+pub fn quest_done(reward: i32) {
+    if !quiet() {
+        println!("    {} quest completed!", format_gold_plus(reward));
+    }
+}
+
+fn enemy_appears(enemy: &Character, location: &Location) {
     log(enemy, location, "");
 }
 
-pub fn bribe(player: &Character, amount: i32) {
+fn bribe(player: &Character, amount: i32) {
     if amount > 0 {
         let suffix = format!("bribed {}", format!("-{}g", amount).yellow());
         battle_log(player, &suffix);
@@ -113,7 +136,7 @@ pub fn bribe(player: &Character, amount: i32) {
     }
 }
 
-pub fn run_away(player: &Character, success: bool) {
+fn run_away(player: &Character, success: bool) {
     if success {
         battle_log(player, "fled!");
     } else {
@@ -121,7 +144,7 @@ pub fn run_away(player: &Character, success: bool) {
     }
 }
 
-pub fn heal(player: &Character, location: &Location, recovered: i32, healed: bool) {
+fn heal(player: &Character, location: &Location, recovered: i32, healed: bool) {
     let mut recovered_text = String::new();
     let mut healed_text = String::new();
 
@@ -142,7 +165,7 @@ pub fn heal(player: &Character, location: &Location, recovered: i32, healed: boo
     }
 }
 
-pub fn heal_item(player: &Character, item: &str, recovered: i32, healed: bool) {
+fn heal_item(player: &Character, item: &str, recovered: i32, healed: bool) {
     if recovered > 0 {
         battle_log(
             player,
@@ -154,22 +177,22 @@ pub fn heal_item(player: &Character, item: &str, recovered: i32, healed: bool) {
     }
 }
 
-pub fn attack(character: &Character, attack: &AttackType, damage: i32) {
+fn attack(character: &Character, attack: &AttackType, damage: i32) {
     if !quiet() {
         battle_log(character, &format_attack(character, &attack, damage));
     }
 }
 
-pub fn status_effect_damage(character: &Character, damage: i32) {
+fn status_effect_damage(character: &Character, damage: i32) {
     let (_, emoji) = status_effect_params(character.status_effect.unwrap());
     battle_log(character, &format_damage(character, damage, &emoji));
 }
 
-pub fn battle_lost(player: &Character) {
+fn battle_lost(player: &Character) {
     battle_log(player, "\u{1F480}");
 }
 
-pub fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32) {
+fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32) {
     let level_str = if levels_up > 0 {
         let plus = (0..levels_up).map(|_| "+").collect::<String>();
         format!(" {}level", plus).cyan().to_string()
@@ -261,35 +284,11 @@ fn plain_status(game: &Game) {
     );
 }
 
-pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
-    for item in items {
-        let display = format!("{}", item);
-        println!("    {:<10}  {}", display, format_gold(item.cost()));
-    }
-
-    println!("\n    funds: {}", format_gold(game.gold));
-}
-
-pub fn quest_list(todo: &[String], done: &[String]) {
-    for quest in todo {
-        println!("  {} {}", "□".dimmed(), quest);
-    }
-    for quest in done {
-        println!("  {} {}", "✔".green(), quest.dimmed());
-    }
-}
-
-pub fn quest_done(reward: i32) {
-    if !quiet() {
-        println!("    {} quest completed!", format_gold_plus(reward));
-    }
-}
-
-pub fn chest(items: &[String], gold: i32) {
+fn chest(items: &[String], gold: i32) {
     format_ls("\u{1F4E6}", items, gold);
 }
 
-pub fn tombstone(items: &[String], gold: i32) {
+fn tombstone(items: &[String], gold: i32) {
     format_ls("\u{1FAA6}", items, gold);
 }
 
