@@ -1,6 +1,6 @@
+use crate::character::Character;
 use crate::game;
 use crate::game::tombstone::Tombstone;
-use crate::character::Character;
 use crate::item::Item;
 use crate::location::Location;
 use serde::{Deserialize, Serialize};
