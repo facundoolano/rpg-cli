@@ -9,7 +9,8 @@ mod beat_enemy;
 mod tutorial;
 
 pub fn handle(game: &mut game::Game, event: &event::Event) {
-    // TODO separate quest list from game and pass as parameter
+    // it would be preferable to have quests decoupled from the game struct
+    // but that makes event handling much more complicated
     game.gold += game.quests.handle(event);
 }
 

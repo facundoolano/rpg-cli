@@ -5,12 +5,13 @@ use crate::location::Location;
 use crate::log;
 use crate::quest;
 
-/// This module implements basic event management.
-/// It's static, the events are not subscribed at runtime, but
-/// it serves the purpose of decoupling logging and the quest system
-/// from the rest of the codebase.
-// NOTE these kind of abuse the fact that we already get a game instance in the
-// handler, so current location and player are omitted
+/// This module implements basic event management. It's static: the events are
+/// not subscribed at runtime, but it serves the purpose of decoupling logging
+/// and the quest system from the rest of the codebase.
+// NOTE these are not exhaustive, and the only included what we already need.
+// In particular, events that are only used for display kind of abuse the fact
+// that we already get a game instance in the handler, so current location and
+// player are omitted
 pub enum Event<'a> {
     EnemyAppears {
         enemy: &'a Character,
@@ -35,7 +36,6 @@ pub enum Event<'a> {
     },
     BattleWon {
         enemy: &'a Character,
-        // FIXME shouldn't be necessary, keeping because quests don't get game reference
         location: Location,
         xp: i32,
         levels_up: i32,
