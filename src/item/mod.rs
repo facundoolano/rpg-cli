@@ -1,7 +1,7 @@
 use core::fmt;
 
 use crate::character::class as character;
-use crate::event;
+use crate::event::Event;
 use crate::game;
 use serde::{Deserialize, Serialize};
 
@@ -34,11 +34,16 @@ impl fmt::Display for Potion {
 impl Item for Potion {
     fn apply(&self, game: &mut game::Game) {
         let to_restore = character::Class::HERO.hp.at(self.level) / 2;
-        let restored = game.player.heal(to_restore);
+        let recovered = game.player.heal(to_restore);
 
-        // we prefer the battle here since its less ugly to show battle-like
-        // output outside battle than the other way around
-        event::potion(game, restored);
+        Event::emit(
+            game,
+            Event::Heal {
+                item: Some("potion"),
+                recovered,
+                healed: false,
+            },
+        );
     }
 }
 
@@ -77,7 +82,14 @@ impl Remedy {
 impl Item for Remedy {
     fn apply(&self, game: &mut game::Game) {
         let healed = game.player.maybe_remove_status_effect();
-        event::remedy(game, healed);
+        Event::emit(
+            game,
+            Event::Heal {
+                item: Some("remedy"),
+                recovered: 0,
+                healed,
+            },
+        );
     }
 }
 

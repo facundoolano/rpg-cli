@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Display};
 
 use super::equipment::{Equipment, Shield, Sword};
 use crate::character::Character;
-use crate::event;
+use crate::event::Event;
 use crate::game::Game;
 use crate::log;
 
@@ -76,7 +76,14 @@ pub trait Shoppable: Display {
         }
         game.gold -= self.cost();
         self.add_to(game);
-        event::item_bought(game, &self.to_string());
+
+        Event::emit(
+            game,
+            Event::ItemBought {
+                item: self.to_string(),
+            },
+        );
+
         Ok(())
     }
     fn add_to(&self, game: &mut Game);

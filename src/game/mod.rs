@@ -2,7 +2,7 @@ extern crate dirs;
 
 use crate::character;
 use crate::character::Character;
-use crate::event;
+use crate::event::Event;
 use crate::item::{Item, Potion};
 use crate::location::Location;
 use crate::quest::QuestList;
@@ -90,11 +90,17 @@ impl Game {
             match random().range(6) {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
-                    event::chest(self, gold, &[]);
+                    Event::emit(self, Event::ChestFound { items: &[], gold });
                 }
                 1 => {
                     let potion = Potion::new(self.player.level);
-                    event::chest(self, 0, &["potion".to_string()]);
+                    Event::emit(
+                        self,
+                        Event::ChestFound {
+                            items: &["potion".to_string()],
+                            gold: 0,
+                        },
+                    );
                     self.add_item("potion", Box::new(potion));
                 }
                 _ => {}
@@ -108,12 +114,26 @@ impl Game {
         if self.location.is_home() {
             let recovered = self.player.heal_full();
             let healed = self.player.maybe_remove_status_effect();
-            event::heal(self, recovered, healed);
+            Event::emit(
+                self,
+                Event::Heal {
+                    item: None,
+                    recovered,
+                    healed,
+                },
+            );
         }
 
-        // Take an attack hit from status_effects.
         // In location is home, already healed of negative status
-        self.player.receive_status_effect_damage()
+        self.maybe_receive_status_damage()
+    }
+
+    /// Player takes damage from status_effects, if any.
+    fn maybe_receive_status_damage(&mut self) -> Result<(), character::Dead> {
+        if let Some(damage) = self.player.receive_status_effect_damage()? {
+            Event::emit(self, Event::StatusEffectDamage { damage });
+        }
+        Ok(())
     }
 
     /// Set the current location to home, and apply related side-effects
@@ -136,7 +156,7 @@ impl Game {
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(item) = items.pop() {
                 item.apply(self);
-                event::item_used(self, &name);
+                Event::emit(self, Event::ItemUsed { item: name.clone() });
             }
 
             if !items.is_empty() {
@@ -160,18 +180,24 @@ impl Game {
     fn pick_up_tombstone(&mut self) {
         if let Some(mut tombstone) = self.tombstones.remove(&self.location.to_string()) {
             let (items, gold) = tombstone.pick_up(self);
-            event::tombstone(self, &items, gold);
+            Event::emit(
+                self,
+                Event::TombstoneFound {
+                    items: &items,
+                    gold,
+                },
+            );
         }
     }
 
-    pub fn maybe_spawn_enemy(&self) -> Option<Character> {
+    pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {
         let distance = self.location.distance_from_home();
         if random().should_enemy_appear(&distance) {
             let level = enemy_level(self.player.level, distance.len());
             let level = random().enemy_level(level);
             let enemy = Character::enemy(level, distance);
 
-            event::enemy_appears(self, &enemy);
+            Event::emit(self, Event::EnemyAppears { enemy: &enemy });
             Some(enemy)
         } else {
             None
@@ -201,16 +227,16 @@ impl Game {
 
         if self.gold >= bribe_cost && random().bribe_succeeds() {
             self.gold -= bribe_cost;
-            event::bribe(self, bribe_cost);
+            Event::emit(self, Event::Bribe { cost: bribe_cost });
             return true;
         };
-        event::bribe(self, 0);
+        Event::emit(self, Event::Bribe { cost: 0 });
         false
     }
 
-    fn run_away(&self, enemy: &Character) -> bool {
+    fn run_away(&mut self, enemy: &Character) -> bool {
         let success = random().run_away_succeeds(self.player.level, enemy.level);
-        event::run_away(self, success);
+        Event::emit(self, Event::RunAway { success });
         success
     }
 
@@ -219,9 +245,28 @@ impl Game {
             Ok(xp) => {
                 let gold = gold_gained(self.player.level, enemy.level);
                 self.gold += gold;
-                let level_up = self.player.add_experience(xp);
+                let levels_up = self.player.add_experience(xp);
 
-                event::battle_won(self, &enemy, xp, level_up, gold);
+                Event::emit(
+                    self,
+                    Event::BattleWon {
+                        enemy: &enemy,
+                        location: self.location.clone(),
+                        xp,
+                        levels_up,
+                        gold,
+                    },
+                );
+
+                if levels_up > 0 {
+                    Event::emit(
+                        self,
+                        Event::LevelUp {
+                            current: self.player.level,
+                        },
+                    )
+                }
+
                 Ok(())
             }
             Err(character::Dead) => {
@@ -229,7 +274,7 @@ impl Game {
                 let tombstone = Tombstone::drop(self);
                 self.tombstones.insert(self.location.to_string(), tombstone);
 
-                event::battle_lost(self);
+                Event::emit(self, Event::BattleLost);
                 Err(character::Dead)
             }
         }

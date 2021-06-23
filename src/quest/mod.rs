@@ -1,13 +1,16 @@
 use crate::character;
 use crate::event;
 use crate::game;
+use crate::log;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 
 mod beat_enemy;
 mod tutorial;
 
-pub fn handle(game: &mut game::Game, event: event::Event) {
+pub fn handle(game: &mut game::Game, event: &event::Event) {
+    // it would be preferable to have quests decoupled from the game struct
+    // but that makes event handling much more complicated
     game.gold += game.quests.handle(event);
 }
 
@@ -66,16 +69,16 @@ impl QuestList {
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
     /// The total gold reward is returned.
-    fn handle(&mut self, event: event::Event) -> i32 {
+    fn handle(&mut self, event: &event::Event) -> i32 {
         let mut still_todo = Vec::new();
         let mut total_reward = 0;
 
         for (unlock_at, reward, mut quest) in self.todo.drain(..) {
-            let is_done = quest.handle(&event);
+            let is_done = quest.handle(event);
 
             if is_done {
                 total_reward += reward;
-                event::quest_complete(reward);
+                log::quest_done(reward);
 
                 // the done is stored from newer to older
                 self.done.insert(0, quest.description().to_string());
@@ -132,7 +135,17 @@ mod tests {
         assert_eq!(0, game.quests.done.len());
 
         // first quest is to win a battle
-        event::battle_won(&mut game, &fake_enemy, 100, 0, 100);
+        let location = game.location.clone();
+        event::Event::emit(
+            &mut game,
+            event::Event::BattleWon {
+                enemy: &fake_enemy,
+                location,
+                xp: 100,
+                levels_up: 0,
+                gold: 100,
+            },
+        );
         assert_eq!(initial_quests - 1, game.quests.todo.len());
         assert_eq!(1, game.quests.done.len());
 
