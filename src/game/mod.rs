@@ -91,6 +91,7 @@ impl Game {
                 0 => {
                     let gold = random().gold_gained(self.player.level * 200);
                     Event::emit(self, Event::ChestFound { items: &[], gold });
+                    self.gold += gold;
                 }
                 1 => {
                     let potion = Potion::new(self.player.level);
