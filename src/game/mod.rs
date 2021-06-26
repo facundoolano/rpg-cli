@@ -251,8 +251,12 @@ impl Game {
             }
             Err(character::Dead) => {
                 // leave hero items in the location
-                let tombstone = Chest::drop(self);
-                self.tombstones.insert(self.location.to_string(), tombstone);
+                let mut tombstone = Chest::drop(self);
+                let location = self.location.to_string();
+                if let Some(previous) = self.tombstones.remove(&location) {
+                    tombstone.extend(previous);
+                }
+                self.tombstones.insert(location, tombstone);
 
                 Event::emit(self, Event::BattleLost);
                 Err(character::Dead)

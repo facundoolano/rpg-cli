@@ -98,6 +98,30 @@ impl Chest {
         game.gold += self.gold;
         (to_log, self.gold)
     }
+
+    /// Add the elements of `other` to this chest
+    pub fn extend(&mut self, mut other: Self) {
+        // keep the best of each equipment
+        if let Some(sword) = other.sword.take() {
+            if sword.is_upgrade_from(&self.sword.as_ref()) {
+                self.sword = Some(sword);
+            }
+        }
+
+        if let Some(shield) = other.shield.take() {
+            if shield.is_upgrade_from(&self.shield.as_ref()) {
+                self.shield = Some(shield);
+            }
+        }
+
+        // merge both item maps
+        for (key, other_items) in other.items.drain() {
+            let self_items = self.items.entry(key).or_default();
+            self_items.extend(other_items);
+        }
+
+        self.gold = other.gold;
+    }
 }
 
 #[cfg(test)]
@@ -179,5 +203,10 @@ mod tests {
         assert_eq!(10, game.player.shield.as_ref().unwrap().level());
 
         assert_eq!(3, *game.inventory().get("potion").unwrap());
+    }
+
+    #[test]
+    fn test_merge() {
+        todo!();
     }
 }
