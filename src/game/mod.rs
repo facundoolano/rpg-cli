@@ -250,7 +250,8 @@ impl Game {
                 Ok(())
             }
             Err(character::Dead) => {
-                // leave hero items in the location
+                // Drop hero items in the location. If there was a previous tombstone
+                // merge the contents of both chests
                 let mut tombstone = Chest::drop(self);
                 let location = self.location.to_string();
                 if let Some(previous) = self.tombstones.remove(&location) {

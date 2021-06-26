@@ -6,8 +6,9 @@ use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// The tombstone is a bag of items left at the hero's dying location.
-/// When the next hero visits that location, it can pick up the items.
+/// A chest is a bag of items that can be picked up by the hero.
+/// It can randomly appear at a location upon inspection, or dropped
+/// by the hero when they die.
 #[derive(Serialize, Deserialize)]
 pub struct Chest {
     items: HashMap<String, Vec<Box<dyn Item>>>,
