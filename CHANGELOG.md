@@ -12,6 +12,10 @@
 ### Changed
 * Tombstones are found with `rpg ls` instead of automatically #52
 
+### Fixed
+* When hero dies twice in the same location, tombstone chest contents
+are merged instead of overridden #73
+
 ## [0.4.1](https://github.com/facundoolano/rpg-cli/releases/tag/0.4.1) - 2021-06-14
 ### Changed
 * Game data is now serialized to JSON to allow extending it without breaking backwards compatibility.

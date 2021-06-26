@@ -6,8 +6,9 @@ use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// The tombstone is a bag of items left at the hero's dying location.
-/// When the next hero visits that location, it can pick up the items.
+/// A chest is a bag of items that can be picked up by the hero.
+/// It can randomly appear at a location upon inspection, or dropped
+/// by the hero when they die.
 #[derive(Serialize, Deserialize)]
 pub struct Chest {
     items: HashMap<String, Vec<Box<dyn Item>>>,
@@ -98,13 +99,37 @@ impl Chest {
         game.gold += self.gold;
         (to_log, self.gold)
     }
+
+    /// Add the elements of `other` to this chest
+    pub fn extend(&mut self, mut other: Self) {
+        // keep the best of each equipment
+        if let Some(sword) = other.sword.take() {
+            if sword.is_upgrade_from(&self.sword.as_ref()) {
+                self.sword = Some(sword);
+            }
+        }
+
+        if let Some(shield) = other.shield.take() {
+            if shield.is_upgrade_from(&self.shield.as_ref()) {
+                self.shield = Some(shield);
+            }
+        }
+
+        // merge both item maps
+        for (key, other_items) in other.items.drain() {
+            let self_items = self.items.entry(key).or_default();
+            self_items.extend(other_items);
+        }
+
+        self.gold += other.gold;
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::item::equipment::{Shield, Sword};
-    use crate::item::Potion;
+    use crate::item::{Escape, Potion};
 
     #[test]
     fn test_empty_drop_pickup() {
@@ -179,5 +204,37 @@ mod tests {
         assert_eq!(10, game.player.shield.as_ref().unwrap().level());
 
         assert_eq!(3, *game.inventory().get("potion").unwrap());
+    }
+
+    #[test]
+    fn test_merge() {
+        let potions: Vec<Box<dyn Item>> = vec![Box::new(Potion::new(1)), Box::new(Potion::new(1))];
+        let mut items = HashMap::new();
+        items.insert("potion".to_string(), potions);
+        let mut chest1 = Chest {
+            items,
+            sword: Some(Sword::new(1)),
+            shield: Some(Shield::new(10)),
+            gold: 100,
+        };
+
+        let potions: Vec<Box<dyn Item>> = vec![Box::new(Potion::new(1))];
+        let escapes: Vec<Box<dyn Item>> = vec![Box::new(Escape::new())];
+        let mut items = HashMap::new();
+        items.insert("potion".to_string(), potions);
+        items.insert("escape".to_string(), escapes);
+        let chest2 = Chest {
+            items,
+            sword: Some(Sword::new(10)),
+            shield: Some(Shield::new(1)),
+            gold: 100,
+        };
+
+        chest1.extend(chest2);
+        assert_eq!(200, chest1.gold);
+        assert_eq!(10, chest1.sword.as_ref().unwrap().level());
+        assert_eq!(10, chest1.shield.as_ref().unwrap().level());
+        assert_eq!(3, chest1.items.get("potion").unwrap().len());
+        assert_eq!(1, chest1.items.get("escape").unwrap().len());
     }
 }
