@@ -10,38 +10,39 @@ Features:
 * Automatic turn-based combat.
 * Item and equipment support.
 * 15+ enemy classes.
+* Quests to-do list.
 * Chests hidden in directories.
 * Permadeath with item recovering.
 * Run and bribe to escape battles.
 
-## Setup
+## Installation
 
-### Installing from binary
+### From binary
 
 Just download the binary for your platform (linux/macOS/windows) from the [GitHub releases page](https://github.com/facundoolano/rpg-cli/releases/latest).
 
-### Installing with Cargo
+### Using Cargo
 Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/getting-started/installation.html#install-rust-and-cargo):
 
-    $ cargo install --git https://github.com/facundoolano/rpg-cli --force --branch main
+    $ cargo install --git https://github.com/facundoolano/rpg-cli --force --tag 0.4.1
 
 The binary should be available as `rpg-cli` (assuming you have `~/.cargo/bin` in your `$PATH`).
 
-### Installing with homebrew
+### Using homebrew (macOS)
 You can use homebrew to install the binary on macOS::
 
     $ brew install rpg-cli
 
-### Installing with nixpkgs
+### Using nixpkgs
 If you use nix/nixos you can get rpg-cli from nixpkgs, either install it by adding it to your system config, installing it with `nix-env -i rpg-cli` or try it in a ephemeral shell with `nix-shell -p rpg-cli`.
 Note that at the current time of writing, the package hasn't hit any of the channels yet. When you try it, check that it's in your channel.
 
-### Installing with portage (Gentoo)
+### Using portage (Gentoo)
 If you use Gentoo, you can get rpg-cli from portage:
 
     # emerge -av games-rpg/rpg-cli
 
-### Shell integration (recommended)
+## Shell integration (recommended)
 
 The game is designed to integrate with common file system operations, such as changing directories or deleting files.
 The most basic type of integration consists in wrapping rpg-cli in a shell function, such that the working directory is updated to match the hero's progress, effectively working as a `cd` alternative:
@@ -63,10 +64,6 @@ cd () {
 ```
 
 Other commands like `rm`, `mkdir`, `touch`, etc. can also be aliased. Check [this example](shell/example.sh) and the [shell integration guide](shell/README.md) for more sophisticated examples, as well as their fish shell equivalents.
-
-### Troubleshooting
-
-* The release binary for macOS [is not signed](https://github.com/facundoolano/rpg-cli/issues/27). To open it for the first time, right click on the binary and select "Open" from the menu.
 
 ## Usage
 
@@ -138,6 +135,21 @@ Also at the home directory, you can buy items and equipment:
 
 The shortcut `rpg b p` would also work above. The item can then be used as `rpg use potion`.
 
+Some directories have hidden treasure chests that you can find with `rpg ls`:
+
+    ~ $ rpg ls
+    📦  +potionx2
+
+The `rpg todo` command will display a list of quest for your hero:
+
+    ~ $ rpg todo
+      □ buy a sword
+      □ use a potion
+      □ reach level 2
+      ✔ win a battle
+
+Each time you complete an item on the list, you will receive a reward. The quests renew as your level raises, so be sure to check often!
+
 The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health, your hero is likely to die in battle, causing the game to restart at the home directory.
 
     ~ $ rpg cd ~/dev/facundoolano/rpg-cli/target/debug/examples/
@@ -157,3 +169,7 @@ you can recover gold, items and equipment:
 
 
 Try `rpg --help` for more options and check the [shell integration guide](shell/README.md) for ideas to adapt the game to your preferences.
+
+## Troubleshooting
+
+* The release binary for macOS [is not signed](https://github.com/facundoolano/rpg-cli/issues/27). To open it for the first time, right click on the binary and select "Open" from the menu.
