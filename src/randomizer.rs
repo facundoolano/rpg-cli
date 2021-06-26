@@ -133,15 +133,33 @@ impl Randomizer for DefaultRandomizer {
     }
 
     fn gold_chest(&self, distance: &location::Distance) -> bool {
-        todo!();
+        let mut rng = rand::thread_rng();
+
+        match distance {
+            location::Distance::Near(_) => rng.gen_ratio(5, 20),
+            location::Distance::Mid(_) => rng.gen_ratio(6, 20),
+            location::Distance::Far(_) => rng.gen_ratio(3, 20),
+        }
     }
 
     fn equipment_chest(&self, distance: &location::Distance) -> bool {
-        todo!();
+        let mut rng = rand::thread_rng();
+
+        match distance {
+            location::Distance::Near(_) => false,
+            location::Distance::Mid(_) => rng.gen_ratio(3, 20),
+            location::Distance::Far(_) => rng.gen_ratio(5, 20),
+        }
     }
 
     fn item_chest(&self, distance: &location::Distance) -> bool {
-        todo!();
+        let mut rng = rand::thread_rng();
+
+        match distance {
+            location::Distance::Near(_) => rng.gen_ratio(3, 20),
+            location::Distance::Mid(_) => rng.gen_ratio(8, 20),
+            location::Distance::Far(_) => rng.gen_ratio(14, 20),
+        }
     }
 }
 
