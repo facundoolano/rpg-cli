@@ -103,6 +103,12 @@ impl Quest for VisitTomb {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        matches!(event, Event::TombstoneFound { .. })
+        matches!(
+            event,
+            Event::ChestFound {
+                is_tombstone: true,
+                ..
+            }
+        )
     }
 }

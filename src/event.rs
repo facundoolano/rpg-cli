@@ -59,10 +59,7 @@ pub enum Event<'a> {
     ChestFound {
         items: &'a [String],
         gold: i32,
-    },
-    TombstoneFound {
-        items: &'a [String],
-        gold: i32,
+        is_tombstone: bool,
     },
 }
 

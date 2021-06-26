@@ -77,33 +77,28 @@ impl Game {
     }
 
     /// Look for chests and tombstones at the current location.
-    /// Remembers previous checks for consistency.
+    /// Remembers previously visited locations for consistency.
     pub fn inspect(&mut self) {
-        // FIXME reduce duplication, consider unifying the event
-        if let Some(mut chest) = self.tombstones.remove(&self.location.to_string()) {
-            let (items, gold) = chest.pick_up(self);
-            Event::emit(
-                self,
-                Event::TombstoneFound {
-                    items: &items,
-                    gold,
-                },
-            );
-        }
+        let maybe_tomb = self.tombstones.remove(&self.location.to_string());
+        self.pick_up_chest(maybe_tomb, true);
 
         if !self.inspected.contains(&self.location) {
             self.inspected.insert(self.location.clone());
+            self.pick_up_chest(Chest::generate(self), false);
+        }
+    }
 
-            if let Some(mut chest) = Chest::generate(self) {
-                let (items, gold) = chest.pick_up(self);
-                Event::emit(
-                    self,
-                    Event::ChestFound {
-                        items: &items,
-                        gold,
-                    },
-                );
-            }
+    fn pick_up_chest(&mut self, maybe_chest: Option<Chest>, is_tombstone: bool) {
+        if let Some(mut chest) = maybe_chest {
+            let (items, gold) = chest.pick_up(self);
+            Event::emit(
+                self,
+                Event::ChestFound {
+                    items: &items,
+                    gold,
+                    is_tombstone,
+                },
+            );
         }
     }
 
