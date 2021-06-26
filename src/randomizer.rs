@@ -33,6 +33,10 @@ pub trait Randomizer {
     fn stat_increase(&self, increase: i32) -> i32;
 
     fn range(&self, max: i32) -> i32;
+
+    fn gold_chest(&self, distance: &location::Distance) -> bool;
+    fn equipment_chest(&self, distance: &location::Distance) -> bool;
+    fn item_chest(&self, distance: &location::Distance) -> bool;
 }
 
 #[cfg(not(test))]
@@ -127,6 +131,18 @@ impl Randomizer for DefaultRandomizer {
         let mut rng = rand::thread_rng();
         rng.gen_range(0..max)
     }
+
+    fn gold_chest(&self, distance: &location::Distance) -> bool {
+        todo!();
+    }
+
+    fn equipment_chest(&self, distance: &location::Distance) -> bool {
+        todo!();
+    }
+
+    fn item_chest(&self, distance: &location::Distance) -> bool {
+        todo!();
+    }
 }
 
 fn is_critical() -> bool {
@@ -197,6 +213,18 @@ impl Randomizer for TestRandomizer {
 
     fn range(&self, max: i32) -> i32 {
         max
+    }
+
+    fn gold_chest(&self, _distance: &location::Distance) -> bool {
+        false
+    }
+
+    fn equipment_chest(&self, _distance: &location::Distance) -> bool {
+        false
+    }
+
+    fn item_chest(&self, _distance: &location::Distance) -> bool {
+        false
     }
 }
 

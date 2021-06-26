@@ -20,34 +20,35 @@ pub struct Chest {
 impl Chest {
     /// Randomly generate a chest at the current location.
     pub fn generate(game: &game::Game) -> Option<Self> {
-        // FIXME improve random generation logic
-        // FIXME inlcude other items
+        // To give the impression of "dynamic" chest contents, each content type
+        // is randomized separately, and what's found is combined into a single
+        // chest at the end
+        let distance = &game.location.distance_from_home();
+        let gold_chest = random().gold_chest(distance);
+        let equipment_chest = random().equipment_chest(distance);
+        let item_chest = random().item_chest(distance);
 
-        match random().range(6) {
-            0 => {
-                let gold = random().gold_gained(game.player.level * 200);
-                Some(Self {
-                    items: HashMap::new(),
-                    sword: None,
-                    shield: None,
-                    gold,
-                })
-            }
-            1 => {
-                let potion = Box::new(Potion::new(game.player.level));
-                let potions: Vec<Box<dyn Item>> = vec![potion];
+        let mut chest = Self::default();
 
-                let mut items = HashMap::new();
-                items.insert("potion".to_string(), potions);
+        if gold_chest {
+            chest.gold = random().gold_gained(game.player.level * 200)
+        }
 
-                Some(Self {
-                    items,
-                    sword: None,
-                    shield: None,
-                    gold: 0,
-                })
-            }
-            _ => None,
+        if equipment_chest {
+            let (sword, shield) = random_equipment();
+            chest.sword = sword;
+            chest.shield = shield;
+        }
+
+        if item_chest {
+            chest.items = random_items();
+        }
+
+        // Return None instead of an empty chest if none was found
+        if gold_chest || equipment_chest || item_chest {
+            Some(chest)
+        } else {
+            None
         }
     }
 
@@ -122,6 +123,25 @@ impl Chest {
         }
 
         self.gold += other.gold;
+    }
+}
+
+fn random_equipment() -> (Option<Sword>, Option<Shield>) {
+    todo!();
+}
+
+fn random_items() -> HashMap<String, Vec<Box<dyn Item>>> {
+    todo!();
+}
+
+impl Default for Chest {
+    fn default() -> Self {
+        Self {
+            gold: 0,
+            sword: None,
+            shield: None,
+            items: HashMap::new(),
+        }
     }
 }
 
