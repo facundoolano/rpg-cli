@@ -3,14 +3,14 @@ extern crate dirs;
 use crate::character;
 use crate::character::Character;
 use crate::event::Event;
-use crate::item::{Item, Potion};
+use crate::item::Item;
 use crate::location::Location;
 use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
+use chest::Chest;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use chest::Chest;
 
 pub mod battle;
 pub mod chest;
@@ -79,32 +79,30 @@ impl Game {
     /// Look for chests and tombstones at the current location.
     /// Remembers previous checks for consistency.
     pub fn inspect(&mut self) {
-        self.pick_up_tombstone();
+        // FIXME reduce duplication, consider unifying the event
+        if let Some(mut chest) = self.tombstones.remove(&self.location.to_string()) {
+            let (items, gold) = chest.pick_up(self);
+            Event::emit(
+                self,
+                Event::TombstoneFound {
+                    items: &items,
+                    gold,
+                },
+            );
+        }
 
         if !self.inspected.contains(&self.location) {
             self.inspected.insert(self.location.clone());
 
-            // this could be extended to find better items, with a non uniform
-            // probability, and to change according to the distance from home
-            // it's likely better to extract to an item generator module at that point
-            match random().range(6) {
-                0 => {
-                    let gold = random().gold_gained(self.player.level * 200);
-                    Event::emit(self, Event::ChestFound { items: &[], gold });
-                    self.gold += gold;
-                }
-                1 => {
-                    let potion = Potion::new(self.player.level);
-                    Event::emit(
-                        self,
-                        Event::ChestFound {
-                            items: &["potion".to_string()],
-                            gold: 0,
-                        },
-                    );
-                    self.add_item("potion", Box::new(potion));
-                }
-                _ => {}
+            if let Some(mut chest) = Chest::generate(self) {
+                let (items, gold) = chest.pick_up(self);
+                Event::emit(
+                    self,
+                    Event::ChestFound {
+                        items: &items,
+                        gold,
+                    },
+                );
             }
         }
     }
@@ -175,20 +173,6 @@ impl Game {
             .iter()
             .map(|(k, v)| (k.as_ref(), v.len()))
             .collect::<HashMap<&str, usize>>()
-    }
-
-    /// If there's a tombstone laying in the current location, pick up its items
-    fn pick_up_tombstone(&mut self) {
-        if let Some(mut tombstone) = self.tombstones.remove(&self.location.to_string()) {
-            let (items, gold) = tombstone.pick_up(self);
-            Event::emit(
-                self,
-                Event::TombstoneFound {
-                    items: &items,
-                    gold,
-                },
-            );
-        }
     }
 
     pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {

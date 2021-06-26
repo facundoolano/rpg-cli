@@ -1,6 +1,8 @@
 use crate::game;
 use crate::item::equipment::{Shield, Sword};
-use crate::item::{equipment::Equipment, Item};
+use crate::item::{equipment::Equipment, Item, Potion};
+use crate::randomizer::random;
+use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -15,7 +17,40 @@ pub struct Chest {
 }
 
 impl Chest {
-    /// Dump the equipment, items and gold from a hero.
+    /// TODO
+    pub fn generate(game: &game::Game) -> Option<Self> {
+        // FIXME improve random generation logic
+        // FIXME inlcude other items
+
+        match random().range(6) {
+            0 => {
+                let gold = random().gold_gained(game.player.level * 200);
+                Some(Self {
+                    items: HashMap::new(),
+                    sword: None,
+                    shield: None,
+                    gold,
+                })
+            }
+            1 => {
+                let potion = Box::new(Potion::new(game.player.level));
+                let potions: Vec<Box<dyn Item>> = vec![potion];
+
+                let mut items = HashMap::new();
+                items.insert("potion".to_string(), potions);
+
+                Some(Self {
+                    items,
+                    sword: None,
+                    shield: None,
+                    gold: 0,
+                })
+            }
+            _ => None,
+        }
+    }
+
+    /// Remove the gold, items and equipment from a hero and return them as a new chest.
     pub fn drop(game: &mut game::Game) -> Self {
         let sword = game.player.sword.take();
         let shield = game.player.shield.take();
@@ -31,7 +66,7 @@ impl Chest {
         }
     }
 
-    /// Add the items of the tombstone to the current game
+    /// Add the items of this chest to the current game/hero
     pub fn pick_up(&mut self, game: &mut game::Game) -> (Vec<String>, i32) {
         let mut to_log = Vec::new();
 
