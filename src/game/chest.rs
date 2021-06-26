@@ -1,6 +1,6 @@
 use crate::game;
 use crate::item::equipment::{Shield, Sword};
-use crate::item::{equipment::Equipment, Item, Potion};
+use crate::item::{equipment::Equipment, Escape, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
@@ -20,34 +20,35 @@ pub struct Chest {
 impl Chest {
     /// Randomly generate a chest at the current location.
     pub fn generate(game: &game::Game) -> Option<Self> {
-        // FIXME improve random generation logic
-        // FIXME inlcude other items
+        // To give the impression of "dynamic" chest contents, each content type
+        // is randomized separately, and what's found is combined into a single
+        // chest at the end
+        let distance = &game.location.distance_from_home();
+        let gold_chest = random().gold_chest(distance);
+        let equipment_chest = random().equipment_chest(distance);
+        let item_chest = random().item_chest(distance);
 
-        match random().range(6) {
-            0 => {
-                let gold = random().gold_gained(game.player.level * 200);
-                Some(Self {
-                    items: HashMap::new(),
-                    sword: None,
-                    shield: None,
-                    gold,
-                })
-            }
-            1 => {
-                let potion = Box::new(Potion::new(game.player.level));
-                let potions: Vec<Box<dyn Item>> = vec![potion];
+        let mut chest = Self::default();
 
-                let mut items = HashMap::new();
-                items.insert("potion".to_string(), potions);
+        if gold_chest {
+            chest.gold = random().gold_gained(game.player.level * 200)
+        }
 
-                Some(Self {
-                    items,
-                    sword: None,
-                    shield: None,
-                    gold: 0,
-                })
-            }
-            _ => None,
+        if equipment_chest {
+            let (sword, shield) = random_equipment(game.player.rounded_level());
+            chest.sword = sword;
+            chest.shield = shield;
+        }
+
+        if item_chest {
+            chest.items = random_items(game.player.rounded_level());
+        }
+
+        // Return None instead of an empty chest if none was found
+        if gold_chest || equipment_chest || item_chest {
+            Some(chest)
+        } else {
+            None
         }
     }
 
@@ -122,6 +123,42 @@ impl Chest {
         }
 
         self.gold += other.gold;
+    }
+}
+
+// TODO consider using weighted random instead of these matches
+fn random_equipment(level: i32) -> (Option<Sword>, Option<Shield>) {
+    match random().range(15) {
+        n if n < 8 => (Some(Sword::new(level)), None),
+        n if n < 13 => (None, Some(Shield::new(level))),
+        14 => (Some(Sword::new(level + 5)), None),
+        _ => (None, Some(Shield::new(level + 5))),
+    }
+}
+
+fn random_items(level: i32) -> HashMap<String, Vec<Box<dyn Item>>> {
+    let mut map = HashMap::new();
+    let potion = || Box::new(Potion::new(level));
+
+    let (key, items): (&str, Vec<Box<dyn Item>>) = match random().range(15) {
+        n if n < 7 => ("potion", vec![potion()]),
+        n if n < 11 => ("potion", vec![potion(), potion()]),
+        n if n < 13 => ("potion", vec![potion(), potion(), potion()]),
+        13 => ("remedy", vec![Box::new(Remedy::new())]),
+        _ => ("escape", vec![Box::new(Escape::new())]),
+    };
+    map.insert(key.to_string(), items);
+    map
+}
+
+impl Default for Chest {
+    fn default() -> Self {
+        Self {
+            gold: 0,
+            sword: None,
+            shield: None,
+            items: HashMap::new(),
+        }
     }
 }
 

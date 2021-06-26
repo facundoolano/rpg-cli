@@ -203,6 +203,13 @@ impl Character {
             _ => Ok(None),
         }
     }
+
+    /// Return the player level rounded to offer items at "pretty levels", e.g.
+    /// potion[1], sword[5]
+    pub fn rounded_level(self: &Character) -> i32 {
+        // allow level 1 or level 5n
+        std::cmp::max(1, (self.level / 5) * 5)
+    }
 }
 
 #[cfg(test)]
