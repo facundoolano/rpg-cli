@@ -10,10 +10,10 @@ use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use tombstone::Tombstone;
+use chest::Chest;
 
 pub mod battle;
-pub mod tombstone;
+pub mod chest;
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
@@ -23,7 +23,7 @@ pub struct Game {
     pub gold: i32,
     pub quests: QuestList,
     pub inventory: HashMap<String, Vec<Box<dyn Item>>>,
-    pub tombstones: HashMap<String, Tombstone>,
+    pub tombstones: HashMap<String, Chest>,
     inspected: HashSet<Location>,
 }
 
@@ -272,7 +272,7 @@ impl Game {
             }
             Err(character::Dead) => {
                 // leave hero items in the location
-                let tombstone = Tombstone::drop(self);
+                let tombstone = Chest::drop(self);
                 self.tombstones.insert(self.location.to_string(), tombstone);
 
                 Event::emit(self, Event::BattleLost);

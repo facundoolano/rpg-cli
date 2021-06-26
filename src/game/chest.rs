@@ -7,14 +7,14 @@ use std::collections::HashMap;
 /// The tombstone is a bag of items left at the hero's dying location.
 /// When the next hero visits that location, it can pick up the items.
 #[derive(Serialize, Deserialize)]
-pub struct Tombstone {
+pub struct Chest {
     items: HashMap<String, Vec<Box<dyn Item>>>,
     sword: Option<Sword>,
     shield: Option<Shield>,
     gold: i32,
 }
 
-impl Tombstone {
+impl Chest {
     /// Dump the equipment, items and gold from a hero.
     pub fn drop(game: &mut game::Game) -> Self {
         let sword = game.player.sword.take();
@@ -74,7 +74,7 @@ mod tests {
     #[test]
     fn test_empty_drop_pickup() {
         let mut game = game::Game::new();
-        let mut tomb = Tombstone::drop(&mut game);
+        let mut tomb = Chest::drop(&mut game);
 
         assert_eq!(0, tomb.gold);
         assert!(tomb.sword.is_none());
@@ -99,7 +99,7 @@ mod tests {
         game.player.shield = Some(Shield::new(1));
         game.gold = 100;
 
-        let mut tomb = Tombstone::drop(&mut game);
+        let mut tomb = Chest::drop(&mut game);
 
         assert_eq!(100, tomb.gold);
         assert!(tomb.sword.is_some());
@@ -124,7 +124,7 @@ mod tests {
         game.player.shield = Some(Shield::new(10));
         game.gold = 100;
 
-        let mut tomb = Tombstone::drop(&mut game);
+        let mut tomb = Chest::drop(&mut game);
 
         // set some defaults for the new game before picking up
         let mut game = game::Game::new();
