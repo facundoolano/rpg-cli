@@ -297,7 +297,7 @@ fn chest(items: &[String], gold: i32) {
 }
 
 fn tombstone(items: &[String], gold: i32) {
-    format_ls("\u{1FAA6}", items, gold);
+    format_ls("\u{1FAA6} ", items, gold);
 }
 
 fn format_ls(emoji: &str, items: &[String], gold: i32) {
