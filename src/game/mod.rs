@@ -135,6 +135,8 @@ impl Game {
         self.visit(Location::home()).unwrap_or_default();
     }
 
+    // TODO consider introducing an item "bag" wrapper over these types of hashmaps
+    // (same is used in chests and in tests)
     pub fn add_item(&mut self, name: &str, item: Box<dyn Item>) {
         let entry = self
             .inventory

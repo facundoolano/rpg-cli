@@ -37,7 +37,7 @@ pub fn buy(game: &mut Game, item: &str) -> Result<(), Error> {
 /// Build a list of items currently available at the shop
 fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
     let mut items = Vec::<(String, Box<dyn Shoppable>)>::new();
-    let level = available_level(player);
+    let level = player.rounded_level();
 
     let sword = Sword::new(level);
     if sword.is_upgrade_from(&player.sword.as_ref()) {
@@ -59,13 +59,6 @@ fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
     items.push(("escape".to_string(), Box::new(escape)));
 
     items
-}
-
-/// The offered items/equipment have levels e.g. potion[1], sword[5], etc.
-/// they become available for purchase only when the player reaches that level
-fn available_level(player: &Character) -> i32 {
-    // allow level 1 or level 5n
-    std::cmp::max(1, (player.level / 5) * 5)
 }
 
 pub trait Shoppable: Display {

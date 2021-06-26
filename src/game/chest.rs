@@ -1,6 +1,6 @@
 use crate::game;
 use crate::item::equipment::{Shield, Sword};
-use crate::item::{equipment::Equipment, Item, Potion};
+use crate::item::{equipment::Equipment, Escape, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
@@ -35,13 +35,13 @@ impl Chest {
         }
 
         if equipment_chest {
-            let (sword, shield) = random_equipment();
+            let (sword, shield) = random_equipment(game.player.rounded_level());
             chest.sword = sword;
             chest.shield = shield;
         }
 
         if item_chest {
-            chest.items = random_items();
+            chest.items = random_items(game.player.rounded_level());
         }
 
         // Return None instead of an empty chest if none was found
@@ -126,12 +126,29 @@ impl Chest {
     }
 }
 
-fn random_equipment() -> (Option<Sword>, Option<Shield>) {
-    todo!();
+// TODO consider using weighted random instead of these matches
+fn random_equipment(level: i32) -> (Option<Sword>, Option<Shield>) {
+    match random().range(15) {
+        n if n < 8 => (Some(Sword::new(level)), None),
+        n if n < 13 => (None, Some(Shield::new(level))),
+        14 => (Some(Sword::new(level + 5)), None),
+        _ => (None, Some(Shield::new(level + 5))),
+    }
 }
 
-fn random_items() -> HashMap<String, Vec<Box<dyn Item>>> {
-    todo!();
+fn random_items(level: i32) -> HashMap<String, Vec<Box<dyn Item>>> {
+    let mut map = HashMap::new();
+    let potion = || Box::new(Potion::new(level));
+
+    let (key, items): (&str, Vec<Box<dyn Item>>) = match random().range(15) {
+        n if n < 7 => ("potion", vec![potion()]),
+        n if n < 11 => ("potion", vec![potion(), potion()]),
+        n if n < 13 => ("potion", vec![potion(), potion(), potion()]),
+        13 => ("remedy", vec![Box::new(Remedy::new())]),
+        _ => ("escape", vec![Box::new(Escape::new())]),
+    };
+    map.insert(key.to_string(), items);
+    map
 }
 
 impl Default for Chest {
