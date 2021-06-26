@@ -301,7 +301,7 @@ fn tombstone(items: &[String], gold: i32) {
 }
 
 fn format_ls(emoji: &str, items: &[String], gold: i32) {
-    print!("{} ", emoji);
+    print!("{}", emoji);
     if gold > 0 {
         print!("  {}", format_gold_plus(gold));
     }
