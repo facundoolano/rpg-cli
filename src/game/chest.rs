@@ -120,7 +120,7 @@ impl Chest {
             self_items.extend(other_items);
         }
 
-        self.gold = other.gold;
+        self.gold += other.gold;
     }
 }
 
@@ -128,7 +128,7 @@ impl Chest {
 mod tests {
     use super::*;
     use crate::item::equipment::{Shield, Sword};
-    use crate::item::Potion;
+    use crate::item::{Escape, Potion};
 
     #[test]
     fn test_empty_drop_pickup() {
@@ -207,6 +207,33 @@ mod tests {
 
     #[test]
     fn test_merge() {
-        todo!();
+        let potions: Vec<Box<dyn Item>> = vec![Box::new(Potion::new(1)), Box::new(Potion::new(1))];
+        let mut items = HashMap::new();
+        items.insert("potion".to_string(), potions);
+        let mut chest1 = Chest {
+            items,
+            sword: Some(Sword::new(1)),
+            shield: Some(Shield::new(10)),
+            gold: 100,
+        };
+
+        let potions: Vec<Box<dyn Item>> = vec![Box::new(Potion::new(1))];
+        let escapes: Vec<Box<dyn Item>> = vec![Box::new(Escape::new())];
+        let mut items = HashMap::new();
+        items.insert("potion".to_string(), potions);
+        items.insert("escape".to_string(), escapes);
+        let chest2 = Chest {
+            items,
+            sword: Some(Sword::new(10)),
+            shield: Some(Shield::new(1)),
+            gold: 100,
+        };
+
+        chest1.extend(chest2);
+        assert_eq!(200, chest1.gold);
+        assert_eq!(10, chest1.sword.as_ref().unwrap().level());
+        assert_eq!(10, chest1.shield.as_ref().unwrap().level());
+        assert_eq!(3, chest1.items.get("potion").unwrap().len());
+        assert_eq!(1, chest1.items.get("escape").unwrap().len());
     }
 }
