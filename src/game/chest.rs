@@ -17,7 +17,6 @@ pub struct Chest {
 }
 
 impl Chest {
-
     /// Randomly generate a chest at the current location.
     pub fn generate(game: &game::Game) -> Option<Self> {
         // FIXME improve random generation logic
