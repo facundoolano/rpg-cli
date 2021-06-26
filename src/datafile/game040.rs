@@ -1,6 +1,6 @@
 use crate::character::Character;
 use crate::game;
-use crate::game::tombstone::Tombstone;
+use crate::game::chest::Chest;
 use crate::item::Item;
 use crate::location::Location;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ struct Game040 {
     pub location: Location,
     pub gold: i32,
     inventory: HashMap<String, Vec<Box<dyn Item>>>,
-    tombstones: HashMap<Location, Tombstone>,
+    tombstones: HashMap<Location, Chest>,
 }
 
 /// Get a new Game instance out of a v0.4.0 one
@@ -60,7 +60,7 @@ mod tests {
         tombstone_game.add_item("potion", Box::new(item::Potion::new(1)));
         game_v4
             .tombstones
-            .insert(Location::home(), Tombstone::drop(&mut tombstone_game));
+            .insert(Location::home(), Chest::drop(&mut tombstone_game));
 
         let data = bincode::serialize(&game_v4).unwrap();
         let mut new_game = deserialize(&data).unwrap();

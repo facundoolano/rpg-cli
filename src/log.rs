@@ -55,10 +55,18 @@ pub fn handle(game: &Game, event: &Event) {
         Event::BattleLost => {
             battle_lost(&game.player);
         }
-        Event::ChestFound { items, gold } => {
+        Event::ChestFound {
+            is_tombstone: false,
+            items,
+            gold,
+        } => {
             chest(items, *gold);
         }
-        Event::TombstoneFound { items, gold } => {
+        Event::ChestFound {
+            is_tombstone: true,
+            items,
+            gold,
+        } => {
             tombstone(items, *gold);
         }
         Event::Bribe { cost } => {
