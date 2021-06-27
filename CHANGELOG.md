@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## [0.5.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.5.0) - 2021-06-26
 ### Added
 * a `rpg reset --hard` flag to remove data files and forget information from previous plays #46
 * Quest system #47
