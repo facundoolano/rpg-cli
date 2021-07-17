@@ -11,8 +11,7 @@ pub mod class;
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Character {
-    // FIXME should serializae
-    #[serde(skip, default = "default_class")]
+    #[serde(default = "Class::hero")]
     pub class: Class,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
@@ -44,12 +43,6 @@ impl Default for Character {
     fn default() -> Self {
         Character::player()
     }
-}
-
-// Always attach the static hero class to deserialized characters
-fn default_class() -> Class {
-    // TODO select by name
-    Class::hero()
 }
 
 fn default_player() -> bool {
