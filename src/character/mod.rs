@@ -12,7 +12,7 @@ pub mod class;
 #[serde(default)]
 pub struct Character {
     #[serde(skip, default = "default_class")]
-    class: &'static Class,
+    pub class: Class,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
 
@@ -45,8 +45,9 @@ impl Default for Character {
 }
 
 // Always attach the static hero class to deserialized characters
-fn default_class() -> &'static Class {
-    &Class::HERO
+fn default_class() -> Class {
+    // TODO select by name
+    Class::hero()
 }
 
 fn default_player() -> bool {
@@ -55,7 +56,7 @@ fn default_player() -> bool {
 
 impl Character {
     pub fn player() -> Self {
-        Self::new(&Class::HERO, 1, true)
+        Self::new(Class::hero(), 1, true)
     }
 
     pub fn enemy(level: i32, distance: location::Distance) -> Self {
@@ -66,7 +67,11 @@ impl Character {
         self.class.name.to_string()
     }
 
-    fn new(class: &'static Class, level: i32, player: bool) -> Self {
+    fn new(class: Class, level: i32, player: bool) -> Self {
+        let max_hp = class.hp.base();
+        let current_hp = class.hp.base();
+        let strength = class.strength.base();
+        let speed = class.speed.base();
         let mut character = Self {
             class,
             is_player: player,
@@ -74,10 +79,10 @@ impl Character {
             shield: None,
             level: 1,
             xp: 0,
-            max_hp: class.hp.base(),
-            current_hp: class.hp.base(),
-            strength: class.strength.base(),
-            speed: class.speed.base(),
+            max_hp,
+            current_hp,
+            strength,
+            speed,
             status_effect: None,
         };
 
@@ -229,7 +234,7 @@ mod tests {
     };
 
     fn new_char() -> Character {
-        Character::new(&TEST_CLASS, 1, true)
+        Character::new(TEST_CLASS, 1, true)
     }
 
     #[test]

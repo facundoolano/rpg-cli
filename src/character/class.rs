@@ -4,7 +4,8 @@ use rand::prelude::SliceRandom;
 /// A stat represents an attribute of a character, such as strength or speed.
 /// This struct contains a stat starting value and the amount that should be
 /// applied when the level increases.
-#[derive(Debug)]
+// TODO check if we still need clone
+#[derive(Debug, Clone)]
 pub struct Stat(pub i32, pub i32);
 
 impl Stat {
@@ -24,7 +25,8 @@ impl Stat {
 /// Classes are archetypes for characters.
 /// The struct contains a specific stat configuration such that all instances of
 /// the class have a similar combat behavior.
-#[derive(Debug)]
+// TODO check if we still need clone
+#[derive(Debug, Clone)]
 pub struct Class {
     pub name: &'static str,
 
@@ -36,15 +38,19 @@ pub struct Class {
 }
 
 impl Class {
-    pub const HERO: Self = Self {
-        name: "hero",
-        hp: Stat(30, 7),
-        strength: Stat(12, 3),
-        speed: Stat(11, 2),
-        inflicts: None,
-    };
+    pub fn hero() -> Self {
+        // FIXME it's inelegant to be creating a new one in each call to this
+        // especially calls made just to check stats
+        Self {
+            name: "hero",
+            hp: Stat(30, 7),
+            strength: Stat(12, 3),
+            speed: Stat(11, 2),
+            inflicts: None,
+        }
+    }
 
-    pub fn random_enemy(distance: location::Distance) -> &'static Self {
+    pub fn random_enemy(distance: location::Distance) -> Self {
         weighted_choice(distance)
     }
 }
@@ -54,7 +60,7 @@ pub const RARE: &[Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLE
 pub const LEGENDARY: &[Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
-fn weighted_choice(distance: location::Distance) -> &'static Class {
+fn weighted_choice(distance: location::Distance) -> Class {
     // the weights for each group of enemies are different depending on the distance
     // the further from home, the bigger the chance to find difficult enemies
     let (w_near, w_mid, w_far) = match distance {
@@ -77,6 +83,7 @@ fn weighted_choice(distance: location::Distance) -> &'static Class {
         .choose_weighted(&mut rng, |(_c, weight)| *weight)
         .unwrap()
         .0
+        .clone()
 }
 
 // NOTE: we shouldn't end up in a place were the hero raises its value and as
