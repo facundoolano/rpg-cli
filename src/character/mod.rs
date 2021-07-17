@@ -11,6 +11,7 @@ pub mod class;
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Character {
+    // FIXME should serializae
     #[serde(skip, default = "default_class")]
     pub class: Class,
     pub sword: Option<equipment::Sword>,

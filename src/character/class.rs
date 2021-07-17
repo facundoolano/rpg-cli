@@ -1,11 +1,14 @@
+use serde::{Deserialize, Serialize};
 use crate::location;
 use rand::prelude::SliceRandom;
+use once_cell::sync::OnceCell;
+use std::collections::HashMap;
 
 /// A stat represents an attribute of a character, such as strength or speed.
 /// This struct contains a stat starting value and the amount that should be
 /// applied when the level increases.
 // TODO check if we still need clone
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Stat(pub i32, pub i32);
 
 impl Stat {
@@ -26,28 +29,47 @@ impl Stat {
 /// The struct contains a specific stat configuration such that all instances of
 /// the class have a similar combat behavior.
 // TODO check if we still need clone
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Class {
-    pub name: &'static str,
+    pub name: String,
 
     pub hp: Stat,
     pub strength: Stat,
     pub speed: Stat,
 
+    // FIXME probably better to make this an Enum
+    group: String,
+
     pub inflicts: Option<(super::StatusEffect, u32)>,
 }
 
+static CLASSES: OnceCell<HashMap<String, Vec<Class>>> = OnceCell::new();
+
+pub fn init() {
+    // TODO allow to load from a provided classes file alternatively
+    // maybe all of this should be move to the file handling section
+    let class_bytes = include_bytes!("classes.yaml");
+    let mut classes: Vec<Class> = serde_yaml::from_slice(class_bytes).unwrap();
+
+    let mut class_groups = HashMap::new();
+    for class in classes.drain(..) {
+        let entry = class_groups.entry(class.group.clone())
+            .or_insert_with(Vec::new);
+        entry.push(class);
+    }
+    CLASSES.set(class_groups).unwrap();
+}
+
+
+
 impl Class {
+    // TODO consider making all module level or all struct level
     pub fn hero() -> Self {
         // FIXME it's inelegant to be creating a new one in each call to this
         // especially calls made just to check stats
-        Self {
-            name: "hero",
-            hp: Stat(30, 7),
-            strength: Stat(12, 3),
-            speed: Stat(11, 2),
-            inflicts: None,
-        }
+
+        // This is famously the worst line of Rust ever
+        CLASSES.get().unwrap().get("player").unwrap().get(0).unwrap().clone()
     }
 
     pub fn random_enemy(distance: location::Distance) -> Self {
@@ -55,9 +77,9 @@ impl Class {
     }
 }
 
-pub const COMMON: &[Class] = &[RAT, WOLF, SNAKE, SLIME, SPIDER];
-pub const RARE: &[Class] = &[ZOMBIE, ORC, SKELETON, DEMON, VAMPIRE, DRAGON, GOLEM];
-pub const LEGENDARY: &[Class] = &[CHIMERA, BASILISK, MINOTAUR, BALROG, PHOENIX];
+pub const COMMON: &[Class] = &[];
+pub const RARE: &[Class] = &[];
+pub const LEGENDARY: &[Class] = &[];
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
 fn weighted_choice(distance: location::Distance) -> Class {
@@ -85,145 +107,3 @@ fn weighted_choice(distance: location::Distance) -> Class {
         .0
         .clone()
 }
-
-// NOTE: we shouldn't end up in a place were the hero raises its value and as
-// a consequence the enemies raise it too, making them unbeatable.
-// Consider: 1. raising the enemy level solely (or primarily) based on distance;
-// 2. decreasing rates to prevent overgrowth at higher levels
-// as a starting measure, using increase rates way below those of the player
-
-const RAT: Class = Class {
-    name: "rat",
-    hp: Stat(10, 3),
-    strength: Stat(5, 2),
-    speed: Stat(16, 2),
-    inflicts: None,
-};
-
-const WOLF: Class = Class {
-    name: "wolf",
-    hp: Stat(15, 3),
-    strength: Stat(8, 2),
-    speed: Stat(12, 2),
-    inflicts: None,
-};
-
-const SNAKE: Class = Class {
-    name: "snake",
-    hp: Stat(13, 3),
-    strength: Stat(7, 2),
-    speed: Stat(6, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 5)),
-};
-
-const SLIME: Class = Class {
-    name: "slime",
-    hp: Stat(80, 3),
-    strength: Stat(3, 2),
-    speed: Stat(4, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 10)),
-};
-
-const SPIDER: Class = Class {
-    name: "spider",
-    hp: Stat(10, 3),
-    strength: Stat(9, 2),
-    speed: Stat(12, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 20)),
-};
-
-const ZOMBIE: Class = Class {
-    name: "zombie",
-    hp: Stat(50, 3),
-    strength: Stat(8, 2),
-    speed: Stat(6, 2),
-    inflicts: None,
-};
-
-const ORC: Class = Class {
-    name: "orc",
-    hp: Stat(35, 3),
-    strength: Stat(13, 2),
-    speed: Stat(12, 2),
-    inflicts: None,
-};
-
-const SKELETON: Class = Class {
-    name: "skeleton",
-    hp: Stat(30, 3),
-    strength: Stat(10, 2),
-    speed: Stat(10, 2),
-    inflicts: None,
-};
-
-const DEMON: Class = Class {
-    name: "demon",
-    hp: Stat(50, 3),
-    strength: Stat(10, 2),
-    speed: Stat(18, 2),
-    inflicts: Some((super::StatusEffect::Burning, 10)),
-};
-
-const VAMPIRE: Class = Class {
-    name: "vampire",
-    hp: Stat(50, 3),
-    strength: Stat(13, 2),
-    speed: Stat(10, 2),
-    inflicts: None,
-};
-
-const DRAGON: Class = Class {
-    name: "dragon",
-    hp: Stat(100, 3),
-    strength: Stat(25, 2),
-    speed: Stat(8, 2),
-    inflicts: Some((super::StatusEffect::Burning, 2)),
-};
-
-const GOLEM: Class = Class {
-    name: "golem",
-    hp: Stat(50, 3),
-    strength: Stat(45, 2),
-    speed: Stat(2, 1),
-    inflicts: None,
-};
-
-const CHIMERA: Class = Class {
-    name: "chimera",
-    hp: Stat(200, 2),
-    strength: Stat(90, 2),
-    speed: Stat(16, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 3)),
-};
-
-const BASILISK: Class = Class {
-    name: "basilisk",
-    hp: Stat(150, 3),
-    strength: Stat(100, 2),
-    speed: Stat(18, 2),
-    inflicts: Some((super::StatusEffect::Poisoned, 2)),
-};
-
-const MINOTAUR: Class = Class {
-    name: "minotaur",
-    hp: Stat(100, 3),
-    strength: Stat(60, 2),
-    speed: Stat(40, 2),
-    inflicts: None,
-};
-
-const BALROG: Class = Class {
-    name: "balrog",
-    hp: Stat(200, 3),
-    strength: Stat(200, 2),
-    speed: Stat(14, 2),
-    inflicts: Some((super::StatusEffect::Burning, 3)),
-};
-
-const PHOENIX: Class = Class {
-    name: "phoenix",
-    hp: Stat(350, 3),
-    strength: Stat(180, 2),
-    speed: Stat(28, 2),
-    inflicts: Some((super::StatusEffect::Burning, 2)),
-};
