@@ -32,6 +32,7 @@ pub struct Character {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum StatusEffect {
     Burning,
     Poisoned,
@@ -226,16 +227,19 @@ mod tests {
     use super::*;
     use class::Stat;
 
-    const TEST_CLASS: Class = Class {
-        name: "test",
-        hp: Stat(25, 7),
-        strength: Stat(10, 3),
-        speed: Stat(10, 2),
-        inflicts: None,
-    };
-
     fn new_char() -> Character {
-        Character::new(TEST_CLASS, 1, true)
+        Character::new(
+            Class {
+                name: "test".to_string(),
+                group: "player".to_string(),
+                hp: Stat(25, 7),
+                strength: Stat(10, 3),
+                speed: Stat(10, 2),
+                inflicts: None,
+            },
+            1,
+            true,
+        )
     }
 
     #[test]
@@ -245,10 +249,10 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        assert_eq!(TEST_CLASS.hp.base(), hero.current_hp);
-        assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
-        assert_eq!(TEST_CLASS.strength.base(), hero.strength);
-        assert_eq!(TEST_CLASS.speed.base(), hero.speed);
+        assert_eq!(hero.class.hp.base(), hero.current_hp);
+        assert_eq!(hero.class.hp.base(), hero.max_hp);
+        assert_eq!(hero.class.strength.base(), hero.strength);
+        assert_eq!(hero.class.speed.base(), hero.speed);
         assert!(hero.status_effect.is_none());
     }
 
@@ -257,9 +261,9 @@ mod tests {
         let mut hero = new_char();
 
         // assert what we're assuming are the params in the rest of the test
-        assert_eq!(7, TEST_CLASS.hp.increase());
-        assert_eq!(3, TEST_CLASS.strength.increase());
-        assert_eq!(2, TEST_CLASS.speed.increase());
+        assert_eq!(7, hero.class.hp.increase());
+        assert_eq!(3, hero.class.strength.increase());
+        assert_eq!(2, hero.class.speed.increase());
 
         hero.max_hp = 20;
         hero.current_hp = 20;

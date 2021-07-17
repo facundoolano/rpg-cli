@@ -123,11 +123,12 @@ impl fmt::Display for dyn Quest {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::character::Character;
 
     #[test]
     fn test_quest_completed() {
         let mut game = game::Game::new();
-        let fake_enemy = character::Character::player();
+        let fake_enemy = Character::player();
 
         let initial_quests = game.quests.todo.len();
         assert!(initial_quests > 0);

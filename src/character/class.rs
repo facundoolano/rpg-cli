@@ -48,6 +48,10 @@ static CLASSES: OnceCell<HashMap<String, Vec<Class>>> = OnceCell::new();
 pub fn init() {
     // TODO allow to load from a provided classes file alternatively
     // maybe all of this should be move to the file handling section
+    CLASSES.set(default_classes()).unwrap();
+}
+
+fn default_classes() -> HashMap<String, Vec<Class>> {
     let class_bytes = include_bytes!("classes.yaml");
     let mut classes: Vec<Class> = serde_yaml::from_slice(class_bytes).unwrap();
 
@@ -58,7 +62,7 @@ pub fn init() {
             .or_insert_with(Vec::new);
         entry.push(class);
     }
-    CLASSES.set(class_groups).unwrap();
+    class_groups
 }
 
 impl Class {
@@ -67,10 +71,8 @@ impl Class {
         // FIXME it's inelegant to be creating a new one in each call to this
         // especially calls made just to check stats
 
-        // This is famously the worst line of Rust ever
         CLASSES
-            .get()
-            .unwrap()
+            .get_or_init(default_classes)
             .get("player")
             .unwrap()
             .get(0)
@@ -84,8 +86,7 @@ impl Class {
 
     pub fn enemy_names(group: &str) -> HashSet<String> {
         CLASSES
-            .get()
-            .unwrap()
+            .get_or_init(default_classes)
             .get(group)
             .unwrap()
             .iter()
