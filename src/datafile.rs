@@ -1,19 +1,11 @@
 use crate::game;
 use std::{fs, io, path};
 
-mod game040;
-
 pub struct NotFound;
 
 pub fn load() -> Result<game::Game, NotFound> {
     let data: Vec<u8> = read()?;
-    let game: game::Game = if let Ok(game) = serde_json::from_slice(&data) {
-        game
-    } else {
-        // if json deserialization fails, attempt bincode assuming
-        // it may be a file from v0.4.0
-        game040::deserialize(&data).unwrap()
-    };
+    let game = serde_json::from_slice(&data).unwrap();
     Ok(game)
 }
 

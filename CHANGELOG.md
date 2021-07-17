@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Removed
+* Backwards compatibility code for binary game data from v0.4.0 #75
+
 ## [0.5.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.5.0) - 2021-06-26
 ### Added
 * a `rpg reset --hard` flag to remove data files and forget information from previous plays #46
