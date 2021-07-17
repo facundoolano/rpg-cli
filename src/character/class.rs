@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
 use crate::location;
-use rand::prelude::SliceRandom;
 use once_cell::sync::OnceCell;
-use std::collections::HashMap;
+use rand::prelude::SliceRandom;
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 
 /// A stat represents an attribute of a character, such as strength or speed.
 /// This struct contains a stat starting value and the amount that should be
@@ -38,7 +38,7 @@ pub struct Class {
     pub speed: Stat,
 
     // FIXME probably better to make this an Enum
-    group: String,
+    pub group: String,
 
     pub inflicts: Option<(super::StatusEffect, u32)>,
 }
@@ -53,14 +53,13 @@ pub fn init() {
 
     let mut class_groups = HashMap::new();
     for class in classes.drain(..) {
-        let entry = class_groups.entry(class.group.clone())
+        let entry = class_groups
+            .entry(class.group.clone())
             .or_insert_with(Vec::new);
         entry.push(class);
     }
     CLASSES.set(class_groups).unwrap();
 }
-
-
 
 impl Class {
     // TODO consider making all module level or all struct level
@@ -69,41 +68,57 @@ impl Class {
         // especially calls made just to check stats
 
         // This is famously the worst line of Rust ever
-        CLASSES.get().unwrap().get("player").unwrap().get(0).unwrap().clone()
+        CLASSES
+            .get()
+            .unwrap()
+            .get("player")
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .clone()
     }
 
     pub fn random_enemy(distance: location::Distance) -> Self {
         weighted_choice(distance)
     }
-}
 
-pub const COMMON: &[Class] = &[];
-pub const RARE: &[Class] = &[];
-pub const LEGENDARY: &[Class] = &[];
+    pub fn enemy_names(group: &str) -> HashSet<String> {
+        CLASSES
+            .get()
+            .unwrap()
+            .get(group)
+            .unwrap()
+            .iter()
+            .map(|class| class.name.clone())
+            .collect()
+    }
+}
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
 fn weighted_choice(distance: location::Distance) -> Class {
     // the weights for each group of enemies are different depending on the distance
     // the further from home, the bigger the chance to find difficult enemies
-    let (w_near, w_mid, w_far) = match distance {
+    let (w_common, w_rare, w_legendary) = match distance {
         location::Distance::Near(_) => (9, 2, 0),
         location::Distance::Mid(_) => (7, 10, 1),
         location::Distance::Far(_) => (1, 6, 3),
     };
 
-    // assign weights to each group
-    let near = COMMON.iter().map(|c| (c, w_near));
-    let mid = RARE.iter().map(|c| (c, w_mid));
-    let far = LEGENDARY.iter().map(|c| (c, w_far));
-
-    // make a weighted random choice
     let mut rng = rand::thread_rng();
-    near.chain(mid)
-        .chain(far)
-        .collect::<Vec<(&Class, i32)>>()
+
+    // assign weights to each group and select one
+    let weights = vec![
+        ("common", w_common),
+        ("rare", w_rare),
+        ("legendary", w_legendary),
+    ];
+    let group = weights
         .as_slice()
         .choose_weighted(&mut rng, |(_c, weight)| *weight)
         .unwrap()
-        .0
-        .clone()
+        .0;
+
+    // get a random class within the group
+    let classes = CLASSES.get().unwrap().get(group).unwrap();
+    classes.choose(&mut rng).unwrap().clone()
 }
