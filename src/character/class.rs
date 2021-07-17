@@ -67,17 +67,13 @@ fn default_classes() -> HashMap<String, Vec<Class>> {
 
 impl Class {
     // TODO consider making all module level or all struct level
-    pub fn hero() -> Self {
-        // FIXME it's inelegant to be creating a new one in each call to this
-        // especially calls made just to check stats
-
+    pub fn warrior() -> &'static Self {
         CLASSES
             .get_or_init(default_classes)
             .get("player")
             .unwrap()
             .get(0)
             .unwrap()
-            .clone()
     }
 
     pub fn random_enemy(distance: location::Distance) -> Self {

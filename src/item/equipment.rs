@@ -12,7 +12,7 @@ pub trait Equipment: fmt::Display {
     /// the item is equipped.
     fn strength(&self) -> i32 {
         // get the base strength of the hero at this level
-        let player_strength = character::Class::hero().strength.at(self.level());
+        let player_strength = character::Class::warrior().strength.at(self.level());
 
         // calculate the added strength as a function of the player strength
         (player_strength as f64 * 0.5).round() as i32

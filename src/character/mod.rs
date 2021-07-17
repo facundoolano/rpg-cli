@@ -11,7 +11,6 @@ pub mod class;
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Character {
-    #[serde(default = "Class::hero")]
     pub class: Class,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
@@ -51,7 +50,7 @@ fn default_player() -> bool {
 
 impl Character {
     pub fn player() -> Self {
-        Self::new(Class::hero(), 1, true)
+        Self::new(Class::warrior().clone(), 1, true)
     }
 
     pub fn enemy(level: i32, distance: location::Distance) -> Self {
