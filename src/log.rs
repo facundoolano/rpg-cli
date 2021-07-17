@@ -337,7 +337,7 @@ fn battle_log(character: &Character, suffix: &str) {
 
 fn format_character(character: &Character) -> String {
     let name = format!("{:>8}", character.name());
-    let name = if character.is_player() {
+    let name = if character.is_player {
         name.bold()
     } else {
         name.yellow().bold()
@@ -381,7 +381,7 @@ fn format_attack(receiver: &Character, attack: &AttackType, damage: i32) -> Stri
 }
 
 fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
-    let color = if receiver.is_player() {
+    let color = if receiver.is_player {
         "bright red".to_string()
     } else {
         "white".to_string()
@@ -412,7 +412,7 @@ fn hp_display(character: &Character, slots: i32) -> String {
 }
 
 fn xp_display(character: &Character, slots: i32) -> String {
-    if character.is_player() {
+    if character.is_player {
         bar_display(
             slots,
             character.xp,

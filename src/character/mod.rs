@@ -25,6 +25,9 @@ pub struct Character {
     pub strength: i32,
     pub speed: i32,
     pub status_effect: Option<StatusEffect>,
+
+    #[serde(skip, default = "default_player")]
+    pub is_player: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
@@ -46,27 +49,27 @@ fn default_class() -> &'static Class {
     &Class::HERO
 }
 
+fn default_player() -> bool {
+    true
+}
+
 impl Character {
     pub fn player() -> Self {
-        Self::new(&Class::HERO, 1)
+        Self::new(&Class::HERO, 1, true)
     }
 
     pub fn enemy(level: i32, distance: location::Distance) -> Self {
-        Self::new(Class::random_enemy(distance), level)
+        Self::new(Class::random_enemy(distance), level, false)
     }
 
     pub fn name(&self) -> String {
         self.class.name.to_string()
     }
 
-    pub fn is_player(&self) -> bool {
-        // kind of ugly but does the job
-        self.class.name == "hero"
-    }
-
-    fn new(class: &'static Class, level: i32) -> Self {
+    fn new(class: &'static Class, level: i32, player: bool) -> Self {
         let mut character = Self {
             class,
+            is_player: player,
             sword: None,
             shield: None,
             level: 1,
@@ -226,7 +229,7 @@ mod tests {
     };
 
     fn new_char() -> Character {
-        Character::new(&TEST_CLASS, 1)
+        Character::new(&TEST_CLASS, 1, true)
     }
 
     #[test]
