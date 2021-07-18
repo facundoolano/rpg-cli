@@ -223,7 +223,7 @@ mod tests {
         Character::new(
             Class {
                 name: "test".to_string(),
-                group: "player".to_string(),
+                category: class::Category::Player,
                 hp: Stat(25, 7),
                 strength: Stat(10, 3),
                 speed: Stat(10, 2),

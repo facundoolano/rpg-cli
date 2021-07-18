@@ -1,3 +1,4 @@
+use crate::character::class;
 use crate::event;
 use crate::game;
 use crate::log;
@@ -46,7 +47,7 @@ impl QuestList {
         self.todo.push((
             2,
             1000,
-            beat_enemy::of_class("common", "beat all common creatures"),
+            beat_enemy::of_class(class::Category::Common, "beat all common creatures"),
         ));
 
         self.todo.push((5, 200, Box::new(tutorial::VisitTomb)));
@@ -55,14 +56,14 @@ impl QuestList {
         self.todo.push((
             5,
             5000,
-            beat_enemy::of_class("rare", "beat all rare creatures"),
+            beat_enemy::of_class(class::Category::Rare, "beat all rare creatures"),
         ));
         self.todo.push((5, 1000, beat_enemy::at_distance(10)));
 
         self.todo.push((
             10,
             10000,
-            beat_enemy::of_class("legendary", "beat all common creatures"),
+            beat_enemy::of_class(class::Category::Legendary, "beat all common creatures"),
         ));
     }
 

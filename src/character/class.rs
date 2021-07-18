@@ -36,23 +36,34 @@ pub struct Class {
     pub strength: Stat,
     pub speed: Stat,
 
-    // FIXME probably better to make this an Enum
-    pub group: String,
+    pub category: Category,
 
     pub inflicts: Option<(super::StatusEffect, u32)>,
 }
 
-static CLASSES: OnceCell<HashMap<String, Vec<Class>>> = OnceCell::new();
+/// Determines whether the class is intended for a Player or, if it's for an enemy,
+/// How rare it is (how frequently it should appear).
+/// Enables easier customization of the classes via an external file.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, std::hash::Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum Category {
+    Player,
+    Common,
+    Rare,
+    Legendary,
+}
+
+static CLASSES: OnceCell<HashMap<Category, Vec<Class>>> = OnceCell::new();
 
 pub fn customize(bytes: &[u8]) {
     CLASSES.set(from_bytes(bytes)).unwrap();
 }
 
-fn default_classes() -> HashMap<String, Vec<Class>> {
+fn default_classes() -> HashMap<Category, Vec<Class>> {
     from_bytes(include_bytes!("classes.yaml"))
 }
 
-fn from_bytes(bytes: &[u8]) -> HashMap<String, Vec<Class>> {
+fn from_bytes(bytes: &[u8]) -> HashMap<Category, Vec<Class>> {
     // it would arguably be better for these module not to deal with deserialization
     // and yaml, but at this stage it's easier to assume the defaults when customize
     // is not called, especially for tests.
@@ -61,7 +72,7 @@ fn from_bytes(bytes: &[u8]) -> HashMap<String, Vec<Class>> {
     let mut class_groups = HashMap::new();
     for class in classes.drain(..) {
         let entry = class_groups
-            .entry(class.group.clone())
+            .entry(class.category.clone())
             .or_insert_with(Vec::new);
         entry.push(class);
     }
@@ -73,7 +84,7 @@ impl Class {
     pub fn warrior() -> &'static Self {
         CLASSES
             .get_or_init(default_classes)
-            .get("player")
+            .get(&Category::Player)
             .unwrap()
             .get(0)
             .unwrap()
@@ -83,10 +94,10 @@ impl Class {
         weighted_choice(distance)
     }
 
-    pub fn enemy_names(group: &str) -> HashSet<String> {
+    pub fn enemy_names(group: Category) -> HashSet<String> {
         CLASSES
             .get_or_init(default_classes)
-            .get(group)
+            .get(&group)
             .unwrap()
             .iter()
             .map(|class| class.name.clone())
@@ -108,17 +119,17 @@ fn weighted_choice(distance: location::Distance) -> Class {
 
     // assign weights to each group and select one
     let weights = vec![
-        ("common", w_common),
-        ("rare", w_rare),
-        ("legendary", w_legendary),
+        (Category::Common, w_common),
+        (Category::Rare, w_rare),
+        (Category::Legendary, w_legendary),
     ];
-    let group = weights
+    let category = &weights
         .as_slice()
         .choose_weighted(&mut rng, |(_c, weight)| *weight)
         .unwrap()
         .0;
 
     // get a random class within the group
-    let classes = CLASSES.get().unwrap().get(group).unwrap();
+    let classes = CLASSES.get().unwrap().get(category).unwrap();
     classes.choose(&mut rng).unwrap().clone()
 }
