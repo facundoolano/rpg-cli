@@ -10,6 +10,7 @@ Features:
 * Automatic turn-based combat.
 * Item and equipment support.
 * 15+ enemy classes.
+* Extensible player and enemy classes via configuration.
 * Quests to-do list.
 * Chests hidden in directories.
 * Permadeath with item recovering.
@@ -169,6 +170,12 @@ you can recover gold, items and equipment:
 
 
 Try `rpg --help` for more options and check the [shell integration guide](shell/README.md) for ideas to adapt the game to your preferences.
+
+## Customize character classes
+
+The character class determines a character's initial stats and at what pace they increase when leveling up. By default, rpg-cli will use classes as defined by [this file](src/character/classes.yaml), but these definitions can be overridden by placing a YAML file with that same structure at `~/.rpg/classes.yaml`.
+
+The `category` field is used to distinguish between player and enemy classes, and in the latter case how likely a given enemy class is likely to appear (e.g. `legendary` classes will appear less frequently, and only when far away from home).
 
 ## Troubleshooting
 

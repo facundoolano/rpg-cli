@@ -1,4 +1,4 @@
-use crate::character;
+use crate::character::class;
 use crate::event;
 use crate::game;
 use crate::log;
@@ -47,7 +47,7 @@ impl QuestList {
         self.todo.push((
             2,
             1000,
-            beat_enemy::of_class(&character::class::COMMON, "beat all common creatures"),
+            beat_enemy::of_class(class::Category::Common, "beat all common creatures"),
         ));
 
         self.todo.push((5, 200, Box::new(tutorial::VisitTomb)));
@@ -56,14 +56,14 @@ impl QuestList {
         self.todo.push((
             5,
             5000,
-            beat_enemy::of_class(&character::class::RARE, "beat all rare creatures"),
+            beat_enemy::of_class(class::Category::Rare, "beat all rare creatures"),
         ));
         self.todo.push((5, 1000, beat_enemy::at_distance(10)));
 
         self.todo.push((
             10,
             10000,
-            beat_enemy::of_class(&character::class::LEGENDARY, "beat all common creatures"),
+            beat_enemy::of_class(class::Category::Legendary, "beat all common creatures"),
         ));
     }
 
@@ -124,11 +124,12 @@ impl fmt::Display for dyn Quest {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::character::Character;
 
     #[test]
     fn test_quest_completed() {
         let mut game = game::Game::new();
-        let fake_enemy = character::Character::player();
+        let fake_enemy = Character::player();
 
         let initial_quests = game.quests.todo.len();
         assert!(initial_quests > 0);

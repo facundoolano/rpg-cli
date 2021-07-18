@@ -1,0 +1,99 @@
+- name: warrior
+  hp: [30, 7]
+  strength: [12, 3]
+  speed: [11, 2]
+  category: player
+- name: rat
+  hp: [10, 3]
+  strength: [5, 2]
+  speed: [16, 2]
+  category: common
+- name: wolf
+  hp: [15, 3]
+  strength: [8, 2]
+  speed: [12, 2]
+  category: common
+- name: snake
+  hp: [13, 3]
+  strength: [7, 2]
+  speed: [6, 2]
+  inflicts: [poisoned, 5]
+  category: common
+- name: slime
+  hp: [80, 3]
+  strength: [3, 2]
+  speed: [4, 2]
+  inflicts: [poisoned, 10]
+  category: common
+- name: spider
+  hp: [10, 3]
+  strength: [9, 2]
+  speed: [12, 2]
+  inflicts: [poisoned, 20]
+  category: common
+- name: zombie
+  hp: [50, 3]
+  strength: [8, 2]
+  speed: [6, 2]
+  category: rare
+- name: orc
+  hp: [35, 3]
+  strength: [13, 2]
+  speed: [12, 2]
+  category: rare
+- name: skeleton
+  hp: [30, 3]
+  strength: [10, 2]
+  speed: [10, 2]
+  category: rare
+- name: demon
+  hp: [50, 3]
+  strength: [10, 2]
+  speed: [18, 2]
+  inflicts: [burning, 10]
+  category: rare
+- name: vampire
+  hp: [50, 3]
+  strength: [13, 2]
+  speed: [10, 2]
+  category: rare
+- name: dragon
+  hp: [100, 3]
+  strength: [25, 2]
+  speed: [8, 2]
+  inflicts: [burning, 2]
+  category: rare
+- name: golem
+  hp: [50, 3]
+  strength: [45, 2]
+  speed: [2, 1]
+  category: rare
+- name: chimera
+  hp: [200, 2]
+  strength: [90, 2]
+  speed: [16, 2]
+  inflicts: [poisoned, 3]
+  category: legendary
+- name: basilisk
+  hp: [150, 3]
+  strength: [100, 2]
+  speed: [18, 2]
+  inflicts: [poisoned, 2]
+  category: legendary
+- name: minotaur
+  hp: [100, 3]
+  strength: [60, 2]
+  speed: [40, 2]
+  category: legendary
+- name: balrog
+  hp: [200, 3]
+  strength: [200, 2]
+  speed: [14, 2]
+  inflicts: [burning, 3]
+  category: legendary
+- name: phoenix
+  hp: [350, 3]
+  strength: [180, 2]
+  speed: [28, 2]
+  inflicts: [burning, 3]
+  category: legendary

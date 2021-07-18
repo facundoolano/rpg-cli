@@ -1,15 +1,17 @@
 use std::collections::HashSet;
 
 use super::Quest;
+use crate::character::class;
 use crate::character::class::Class;
 use crate::event::Event;
 use serde::{Deserialize, Serialize};
 
-pub fn of_class(classes: &[Class], description: &str) -> Box<dyn Quest> {
-    let to_beat = classes.iter().map(|c| c.name.to_string()).collect();
+pub fn of_class(category: class::Category, description: &str) -> Box<dyn Quest> {
+    let to_beat = Class::enemy_names(category);
+    let total = to_beat.len();
     Box::new(BeatEnemyClass {
         to_beat,
-        total: classes.len(),
+        total,
         description: description.to_string(),
     })
 }

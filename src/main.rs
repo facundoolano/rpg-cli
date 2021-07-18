@@ -110,6 +110,8 @@ fn main() {
         datafile::remove();
     }
 
+    datafile::load_classes();
+
     let mut game = datafile::load().unwrap_or_else(|_| Game::new());
 
     match opts.cmd.unwrap_or(Command::Stat) {

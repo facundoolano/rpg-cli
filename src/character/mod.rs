@@ -11,8 +11,7 @@ pub mod class;
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Character {
-    #[serde(skip, default = "default_class")]
-    class: &'static Class,
+    pub class: Class,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
 
@@ -28,6 +27,7 @@ pub struct Character {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum StatusEffect {
     Burning,
     Poisoned,
@@ -41,14 +41,9 @@ impl Default for Character {
     }
 }
 
-// Always attach the static hero class to deserialized characters
-fn default_class() -> &'static Class {
-    &Class::HERO
-}
-
 impl Character {
     pub fn player() -> Self {
-        Self::new(&Class::HERO, 1)
+        Self::new(Class::warrior().clone(), 1)
     }
 
     pub fn enemy(level: i32, distance: location::Distance) -> Self {
@@ -60,21 +55,24 @@ impl Character {
     }
 
     pub fn is_player(&self) -> bool {
-        // kind of ugly but does the job
-        self.class.name == "hero"
+        self.class.category == class::Category::Player
     }
 
-    fn new(class: &'static Class, level: i32) -> Self {
+    fn new(class: Class, level: i32) -> Self {
+        let max_hp = class.hp.base();
+        let current_hp = class.hp.base();
+        let strength = class.strength.base();
+        let speed = class.speed.base();
         let mut character = Self {
             class,
             sword: None,
             shield: None,
             level: 1,
             xp: 0,
-            max_hp: class.hp.base(),
-            current_hp: class.hp.base(),
-            strength: class.strength.base(),
-            speed: class.speed.base(),
+            max_hp,
+            current_hp,
+            strength,
+            speed,
             status_effect: None,
         };
 
@@ -217,16 +215,18 @@ mod tests {
     use super::*;
     use class::Stat;
 
-    const TEST_CLASS: Class = Class {
-        name: "test",
-        hp: Stat(25, 7),
-        strength: Stat(10, 3),
-        speed: Stat(10, 2),
-        inflicts: None,
-    };
-
     fn new_char() -> Character {
-        Character::new(&TEST_CLASS, 1)
+        Character::new(
+            Class {
+                name: "test".to_string(),
+                category: class::Category::Player,
+                hp: Stat(25, 7),
+                strength: Stat(10, 3),
+                speed: Stat(10, 2),
+                inflicts: None,
+            },
+            1,
+        )
     }
 
     #[test]
@@ -236,10 +236,10 @@ mod tests {
         assert_eq!(1, hero.level);
         assert_eq!(0, hero.xp);
 
-        assert_eq!(TEST_CLASS.hp.base(), hero.current_hp);
-        assert_eq!(TEST_CLASS.hp.base(), hero.max_hp);
-        assert_eq!(TEST_CLASS.strength.base(), hero.strength);
-        assert_eq!(TEST_CLASS.speed.base(), hero.speed);
+        assert_eq!(hero.class.hp.base(), hero.current_hp);
+        assert_eq!(hero.class.hp.base(), hero.max_hp);
+        assert_eq!(hero.class.strength.base(), hero.strength);
+        assert_eq!(hero.class.speed.base(), hero.speed);
         assert!(hero.status_effect.is_none());
     }
 
@@ -248,9 +248,9 @@ mod tests {
         let mut hero = new_char();
 
         // assert what we're assuming are the params in the rest of the test
-        assert_eq!(7, TEST_CLASS.hp.increase());
-        assert_eq!(3, TEST_CLASS.strength.increase());
-        assert_eq!(2, TEST_CLASS.speed.increase());
+        assert_eq!(7, hero.class.hp.increase());
+        assert_eq!(3, hero.class.strength.increase());
+        assert_eq!(2, hero.class.speed.increase());
 
         hero.max_hp = 20;
         hero.current_hp = 20;
