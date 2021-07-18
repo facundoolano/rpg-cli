@@ -18,7 +18,7 @@ pub fn save(game: &game::Game) -> Result<(), io::Error> {
 pub fn remove() {
     let rpg_dir = rpg_dir();
     if rpg_dir.exists() {
-        fs::remove_dir_all(&rpg_dir).unwrap();
+        fs::remove_file(data_file()).unwrap();
     }
 }
 
