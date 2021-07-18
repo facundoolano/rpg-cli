@@ -24,9 +24,6 @@ pub struct Character {
     pub strength: i32,
     pub speed: i32,
     pub status_effect: Option<StatusEffect>,
-
-    #[serde(skip, default = "default_player")]
-    pub is_player: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
@@ -44,31 +41,30 @@ impl Default for Character {
     }
 }
 
-fn default_player() -> bool {
-    true
-}
-
 impl Character {
     pub fn player() -> Self {
-        Self::new(Class::warrior().clone(), 1, true)
+        Self::new(Class::warrior().clone(), 1)
     }
 
     pub fn enemy(level: i32, distance: location::Distance) -> Self {
-        Self::new(Class::random_enemy(distance), level, false)
+        Self::new(Class::random_enemy(distance), level)
     }
 
     pub fn name(&self) -> String {
         self.class.name.to_string()
     }
 
-    fn new(class: Class, level: i32, player: bool) -> Self {
+    pub fn is_player(&self) -> bool {
+        self.class.category == class::Category::Player
+    }
+
+    fn new(class: Class, level: i32) -> Self {
         let max_hp = class.hp.base();
         let current_hp = class.hp.base();
         let strength = class.strength.base();
         let speed = class.speed.base();
         let mut character = Self {
             class,
-            is_player: player,
             sword: None,
             shield: None,
             level: 1,
@@ -230,7 +226,6 @@ mod tests {
                 inflicts: None,
             },
             1,
-            true,
         )
     }
 
