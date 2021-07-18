@@ -7,7 +7,6 @@ use std::collections::{HashMap, HashSet};
 /// A stat represents an attribute of a character, such as strength or speed.
 /// This struct contains a stat starting value and the amount that should be
 /// applied when the level increases.
-// TODO check if we still need clone
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Stat(pub i32, pub i32);
 
