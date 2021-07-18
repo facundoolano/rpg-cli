@@ -89,6 +89,7 @@ pub fn handle(game: &Game, event: &Event) {
         } => {
             heal(&game.player, &game.location, *recovered, *healed);
         }
+        Event::ClassChanged { lost_xp } => change_class(&game.player, &game.location, *lost_xp),
         Event::LevelUp { .. } => {}
         Event::ItemBought { .. } => {}
         Event::ItemUsed { .. } => {}
@@ -183,6 +184,14 @@ fn heal_item(player: &Character, item: &str, recovered: i32, healed: bool) {
     if healed {
         battle_log(player, &format!("+healed {}", item).green());
     }
+}
+
+fn change_class(player: &Character, location: &Location, lost_xp: i32) {
+    let mut lost_text = String::new();
+    if lost_xp > 0 {
+        lost_text = format!("-{}xp", lost_xp).bright_red().to_string();
+    }
+    log(player, location, &lost_text);
 }
 
 fn attack(character: &Character, attack: &AttackType, damage: i32) {

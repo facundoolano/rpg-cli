@@ -61,6 +61,9 @@ pub enum Event<'a> {
         gold: i32,
         is_tombstone: bool,
     },
+    ClassChanged {
+        lost_xp: i32,
+    },
 }
 
 impl Event<'_> {

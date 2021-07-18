@@ -28,6 +28,7 @@ pub struct Game {
 }
 
 pub struct ItemNotFound;
+pub struct ClassNotFound;
 
 impl Game {
     pub fn new() -> Self {
@@ -170,6 +171,19 @@ impl Game {
             .iter()
             .map(|(k, v)| (k.as_ref(), v.len()))
             .collect::<HashMap<&str, usize>>()
+    }
+
+    pub fn change_class(&mut self, class_name: &str) -> Result<(), ClassNotFound> {
+        if let Some(class) = character::class::Class::player_class(class_name) {
+            // TODO most of this probably belongs in character module
+            self.player.class = class.clone();
+            let lost_xp = self.player.xp;
+            self.player.xp = 0;
+            Event::emit(self, Event::ClassChanged { lost_xp });
+            Ok(())
+        } else {
+            Err(ClassNotFound)
+        }
     }
 
     pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {
