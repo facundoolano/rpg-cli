@@ -110,7 +110,7 @@ fn main() {
         datafile::remove();
     }
 
-    character::class::init();
+    datafile::load_classes();
 
     let mut game = datafile::load().unwrap_or_else(|_| Game::new());
 

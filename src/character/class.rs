@@ -28,7 +28,6 @@ impl Stat {
 /// Classes are archetypes for characters.
 /// The struct contains a specific stat configuration such that all instances of
 /// the class have a similar combat behavior.
-// TODO check if we still need clone
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Class {
     pub name: String,
@@ -45,15 +44,19 @@ pub struct Class {
 
 static CLASSES: OnceCell<HashMap<String, Vec<Class>>> = OnceCell::new();
 
-pub fn init() {
-    // TODO allow to load from a provided classes file alternatively
-    // maybe all of this should be move to the file handling section
-    CLASSES.set(default_classes()).unwrap();
+pub fn customize(bytes: &[u8]) {
+    CLASSES.set(from_bytes(bytes)).unwrap();
 }
 
 fn default_classes() -> HashMap<String, Vec<Class>> {
-    let class_bytes = include_bytes!("classes.yaml");
-    let mut classes: Vec<Class> = serde_yaml::from_slice(class_bytes).unwrap();
+    from_bytes(include_bytes!("classes.yaml"))
+}
+
+fn from_bytes(bytes: &[u8]) -> HashMap<String, Vec<Class>> {
+    // it would arguably be better for these module not to deal with deserialization
+    // and yaml, but at this stage it's easier to assume the defaults when customize
+    // is not called, especially for tests.
+    let mut classes: Vec<Class> = serde_yaml::from_slice(bytes).unwrap();
 
     let mut class_groups = HashMap::new();
     for class in classes.drain(..) {
