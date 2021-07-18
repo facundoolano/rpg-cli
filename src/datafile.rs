@@ -24,7 +24,7 @@ pub fn remove() {
 
 pub fn load_classes() {
     if let Ok(bytes) = read(classes_file()) {
-        class::customize(&bytes)
+        class::Class::load(&bytes)
     }
 }
 

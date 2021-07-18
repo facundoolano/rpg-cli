@@ -55,32 +55,14 @@ pub enum Category {
 
 static CLASSES: OnceCell<HashMap<Category, Vec<Class>>> = OnceCell::new();
 
-pub fn customize(bytes: &[u8]) {
-    CLASSES.set(from_bytes(bytes)).unwrap();
-}
-
-fn default_classes() -> HashMap<Category, Vec<Class>> {
-    from_bytes(include_bytes!("classes.yaml"))
-}
-
-fn from_bytes(bytes: &[u8]) -> HashMap<Category, Vec<Class>> {
-    // it would arguably be better for these module not to deal with deserialization
-    // and yaml, but at this stage it's easier to assume the defaults when customize
-    // is not called, especially for tests.
-    let mut classes: Vec<Class> = serde_yaml::from_slice(bytes).unwrap();
-
-    let mut class_groups = HashMap::new();
-    for class in classes.drain(..) {
-        let entry = class_groups
-            .entry(class.category.clone())
-            .or_insert_with(Vec::new);
-        entry.push(class);
-    }
-    class_groups
-}
-
 impl Class {
-    // TODO consider making all module level or all struct level
+    /// Customize the classes definitions based on an input yaml byte array.
+    pub fn load(bytes: &[u8]) {
+        CLASSES.set(from_bytes(bytes)).unwrap();
+    }
+
+    /// The default player class, exposed for initialization and parameterization of
+    /// items and equipment.
     pub fn warrior() -> &'static Self {
         CLASSES
             .get_or_init(default_classes)
@@ -103,6 +85,26 @@ impl Class {
             .map(|class| class.name.clone())
             .collect()
     }
+}
+
+fn default_classes() -> HashMap<Category, Vec<Class>> {
+    from_bytes(include_bytes!("classes.yaml"))
+}
+
+fn from_bytes(bytes: &[u8]) -> HashMap<Category, Vec<Class>> {
+    // it would arguably be better for these module not to deal with deserialization
+    // and yaml, but at this stage it's easier allow it to pick up defaults from
+    // the local file when it hasn't been customized (especially for tests)
+    let mut classes: Vec<Class> = serde_yaml::from_slice(bytes).unwrap();
+
+    let mut class_groups = HashMap::new();
+    for class in classes.drain(..) {
+        let entry = class_groups
+            .entry(class.category.clone())
+            .or_insert_with(Vec::new);
+        entry.push(class);
+    }
+    class_groups
 }
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
