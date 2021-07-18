@@ -3,6 +3,11 @@
   strength: [12, 3]
   speed: [11, 2]
   category: player
+- name: thief
+  hp: [23, 5]
+  strength: [7, 2]
+  speed: [16, 4]
+  category: player  
 - name: rat
   hp: [10, 3]
   strength: [5, 2]
