@@ -43,7 +43,7 @@ impl Default for Character {
 
 impl Character {
     pub fn player() -> Self {
-        Self::new(Class::warrior().clone(), 1)
+        Self::new(Class::player_default().clone(), 1)
     }
 
     pub fn enemy(level: i32, distance: location::Distance) -> Self {

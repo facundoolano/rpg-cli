@@ -62,7 +62,7 @@ impl Class {
 
     /// The default player class, exposed for initialization and parameterization of
     /// items and equipment.
-    pub fn warrior() -> &'static Self {
+    pub fn player_default() -> &'static Self {
         CLASSES
             .get_or_init(default_classes)
             .get(&Category::Player)
