@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+### Added
+* Customizable player and enemy classes #76
 
 ### Removed
 * Backwards compatibility code for binary game data from v0.4.0 #75
