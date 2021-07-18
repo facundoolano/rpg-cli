@@ -34,6 +34,7 @@ pub enum StatusEffect {
 }
 
 pub struct Dead;
+pub struct ClassNotFound;
 
 impl Default for Character {
     fn default() -> Self {
@@ -81,6 +82,19 @@ impl Character {
         }
 
         character
+    }
+
+    pub fn change_class(&mut self, name: &str) -> Result<i32, ClassNotFound> {
+        if name == self.class.name {
+            Ok(0)
+        } else if let Some(class) = Class::player_class(name) {
+            self.class = class.clone();
+            let lost_xp = self.xp;
+            self.xp = 0;
+            Ok(lost_xp)
+        } else {
+            Err(ClassNotFound)
+        }
     }
 
     /// Raise the level and all the character stats.

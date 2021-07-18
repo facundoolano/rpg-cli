@@ -193,6 +193,7 @@ fn shop(game: &mut Game, item_name: &Option<String>) {
             item::shop::list(game);
         }
     } else {
+        // FIXME this rule shouldn't be enforced here
         println!("Shop is only allowed at home.")
     }
 }

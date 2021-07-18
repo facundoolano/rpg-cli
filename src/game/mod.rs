@@ -28,7 +28,10 @@ pub struct Game {
 }
 
 pub struct ItemNotFound;
-pub struct ClassNotFound;
+pub enum ClassChangeError {
+    NotFound,
+    NotAtHome,
+}
 
 impl Game {
     pub fn new() -> Self {
@@ -173,16 +176,14 @@ impl Game {
             .collect::<HashMap<&str, usize>>()
     }
 
-    pub fn change_class(&mut self, class_name: &str) -> Result<(), ClassNotFound> {
-        if let Some(class) = character::class::Class::player_class(class_name) {
-            // TODO most of this probably belongs in character module
-            self.player.class = class.clone();
-            let lost_xp = self.player.xp;
-            self.player.xp = 0;
+    pub fn change_class(&mut self, name: &str) -> Result<(), ClassChangeError> {
+        if !self.location.is_home() {
+            Err(ClassChangeError::NotAtHome)
+        } else if let Ok(lost_xp) = self.player.change_class(name) {
             Event::emit(self, Event::ClassChanged { lost_xp });
             Ok(())
         } else {
-            Err(ClassNotFound)
+            Err(ClassChangeError::NotFound)
         }
     }
 
