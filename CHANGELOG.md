@@ -3,7 +3,7 @@
 ## Unreleased
 ### Added
 * Customizable classes file #76
-* Command to switch the player class and thief class #77.
+* Thief class and command to select player class #77.
 
 ### Removed
 * Backwards compatibility code for binary game data from v0.4.0 #75
