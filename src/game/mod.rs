@@ -56,7 +56,10 @@ impl Game {
         std::mem::swap(&mut new_game.quests, &mut self.quests);
 
         // remember last selected class
-        new_game.player.change_class(&self.player.class.name).unwrap_or_default();
+        new_game
+            .player
+            .change_class(&self.player.class.name)
+            .unwrap_or_default();
 
         // replace the current, finished game with the new one
         *self = new_game;
