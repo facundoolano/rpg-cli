@@ -28,6 +28,10 @@ pub struct Game {
 }
 
 pub struct ItemNotFound;
+pub enum ClassChangeError {
+    NotFound,
+    NotAtHome,
+}
 
 impl Game {
     pub fn new() -> Self {
@@ -50,7 +54,9 @@ impl Game {
         // preserve tombstones and quests across hero's lifes
         std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
         std::mem::swap(&mut new_game.quests, &mut self.quests);
-        // TBD shouldn't chests be preserved?
+
+        // remember last selected class
+        new_game.player.change_class(&self.player.class.name).unwrap_or_default();
 
         // replace the current, finished game with the new one
         *self = new_game;
@@ -172,6 +178,17 @@ impl Game {
             .collect::<HashMap<&str, usize>>()
     }
 
+    pub fn change_class(&mut self, name: &str) -> Result<(), ClassChangeError> {
+        if !self.location.is_home() {
+            Err(ClassChangeError::NotAtHome)
+        } else if let Ok(lost_xp) = self.player.change_class(name) {
+            Event::emit(self, Event::ClassChanged { lost_xp });
+            Ok(())
+        } else {
+            Err(ClassChangeError::NotFound)
+        }
+    }
+
     pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {
         let distance = self.location.distance_from_home();
         if random().should_enemy_appear(&distance) {
@@ -217,7 +234,12 @@ impl Game {
     }
 
     fn run_away(&mut self, enemy: &Character) -> bool {
-        let success = random().run_away_succeeds(self.player.level, enemy.level);
+        let success = random().run_away_succeeds(
+            self.player.level,
+            enemy.level,
+            self.player.speed,
+            enemy.speed,
+        );
         Event::emit(self, Event::RunAway { success });
         success
     }

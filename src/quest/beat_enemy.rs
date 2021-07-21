@@ -7,7 +7,7 @@ use crate::event::Event;
 use serde::{Deserialize, Serialize};
 
 pub fn of_class(category: class::Category, description: &str) -> Box<dyn Quest> {
-    let to_beat = Class::enemy_names(category);
+    let to_beat = Class::names(category);
     let total = to_beat.len();
     Box::new(BeatEnemyClass {
         to_beat,

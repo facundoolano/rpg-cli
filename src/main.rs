@@ -81,6 +81,10 @@ enum Command {
         hard: bool,
     },
 
+    /// Change the character class.
+    /// If name is omitted lists the available character classes.
+    Class { name: Option<String> },
+
     /// Prints the hero's current location
     #[clap(name = "pwd")]
     PrintWorkDir,
@@ -127,6 +131,7 @@ fn main() {
         Command::Inspect => {
             game.inspect();
         }
+        Command::Class { name } => class(&mut game, &name),
         Command::Battle { run, bribe } => {
             exit_code = battle(&mut game, run, bribe);
         }
@@ -174,6 +179,29 @@ fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
     exit_code
 }
 
+/// Set the class for the player character
+fn class(game: &mut Game, class_name: &Option<String>) {
+    if let Some(class_name) = class_name {
+        let class_name = sanitize(class_name);
+        match game.change_class(&class_name) {
+            Err(game::ClassChangeError::NotAtHome) => {
+                println!("Class change is only allowed at home.");
+            }
+            Err(game::ClassChangeError::NotFound) => {
+                println!("Unknown class name.")
+            }
+            Ok(()) => {}
+        }
+    } else {
+        let player_classes: Vec<String> =
+            character::class::Class::names(character::class::Category::Player)
+                .iter()
+                .cloned()
+                .collect();
+        println!("Options: {}", player_classes.join(", "));
+    }
+}
+
 /// Buy an item from the shop or list the available items if no item name is provided.
 /// Shopping is only allowed when the player is at the home directory.
 fn shop(game: &mut Game, item_name: &Option<String>) {
@@ -193,6 +221,7 @@ fn shop(game: &mut Game, item_name: &Option<String>) {
             item::shop::list(game);
         }
     } else {
+        // FIXME this rule shouldn't be enforced here
         println!("Shop is only allowed at home.")
     }
 }

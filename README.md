@@ -177,6 +177,8 @@ The character class determines a character's initial stats and at what pace they
 
 The `category` field is used to distinguish between player and enemy classes, and in the latter case how likely a given enemy class is likely to appear (e.g. `legendary` classes will appear less frequently, and only when far away from home).
 
+The hero's class can be changed at the home directory using `rpg-cli class <name>`. If the hero is at level 1 it will effectively work as a character re-roll with fresh stats; at higher levels the stats are preserved and the class change will start taking effect on the next level increment.
+
 ## Troubleshooting
 
 * The release binary for macOS [is not signed](https://github.com/facundoolano/rpg-cli/issues/27). To open it for the first time, right click on the binary and select "Open" from the menu.

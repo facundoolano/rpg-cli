@@ -62,20 +62,32 @@ impl Class {
 
     /// The default player class, exposed for initialization and parameterization of
     /// items and equipment.
-    pub fn warrior() -> &'static Self {
+    pub fn player_default() -> &'static Self {
         CLASSES
             .get_or_init(default_classes)
             .get(&Category::Player)
             .unwrap()
-            .get(0)
+            .first()
             .unwrap()
+    }
+
+    pub fn player_class(name: &str) -> Option<&Self> {
+        CLASSES
+            .get_or_init(default_classes)
+            .get(&Category::Player)
+            .unwrap()
+            .iter()
+            .filter(|class| class.name == name)
+            .collect::<Vec<&Class>>()
+            .first()
+            .cloned()
     }
 
     pub fn random_enemy(distance: location::Distance) -> Self {
         weighted_choice(distance)
     }
 
-    pub fn enemy_names(group: Category) -> HashSet<String> {
+    pub fn names(group: Category) -> HashSet<String> {
         CLASSES
             .get_or_init(default_classes)
             .get(&group)

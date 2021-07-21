@@ -15,7 +15,13 @@ pub trait Randomizer {
 
     fn bribe_succeeds(&self) -> bool;
 
-    fn run_away_succeeds(&self, player_level: i32, enemy_level: i32) -> bool;
+    fn run_away_succeeds(
+        &self,
+        player_level: i32,
+        enemy_level: i32,
+        player_speed: i32,
+        enemy_speed: i32,
+    ) -> bool;
 
     fn enemy_level(&self, level: i32) -> i32;
 
@@ -69,13 +75,19 @@ impl Randomizer for DefaultRandomizer {
         rng.gen_ratio(1, 2)
     }
 
-    fn run_away_succeeds(&self, player_level: i32, enemy_level: i32) -> bool {
+    fn run_away_succeeds(
+        &self,
+        player_level: i32,
+        enemy_level: i32,
+        player_speed: i32,
+        enemy_speed: i32,
+    ) -> bool {
+        let level_contrib = if player_level > enemy_level { 1 } else { 0 };
+
+        let speed_contrib = if player_speed > enemy_speed { 2 } else { 0 };
+
         let mut rng = rand::thread_rng();
-        match player_level {
-            pl if pl == enemy_level => rng.gen_ratio(1, 3),
-            pl if pl > enemy_level => rng.gen_ratio(2, 3),
-            _ => rng.gen_ratio(1, 5),
-        }
+        rng.gen_ratio(1 + level_contrib + speed_contrib, 5)
     }
 
     fn enemy_level(&self, level: i32) -> i32 {
@@ -200,7 +212,13 @@ impl Randomizer for TestRandomizer {
         false
     }
 
-    fn run_away_succeeds(&self, _player_level: i32, _enemy_level: i32) -> bool {
+    fn run_away_succeeds(
+        &self,
+        _player_level: i32,
+        _enemy_level: i32,
+        _player_speed: i32,
+        _enemy_speed: i32,
+    ) -> bool {
         false
     }
 

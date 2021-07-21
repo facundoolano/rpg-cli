@@ -2,13 +2,16 @@
 
 ## Unreleased
 ### Added
-* Customizable player and enemy classes #76
+* Customizable classes file #76
+* Thief class and command to select player class #77.
 
 ### Removed
 * Backwards compatibility code for binary game data from v0.4.0 #75
 
 ### Changed
 * `rpg reset --hard` removes datafile instead of entire .rpg dir 5adfb87
+* Character speed contributes to run away success probability 4d6e1a3
+* Initial stats are randomized 50af983
 
 ## [0.5.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.5.0) - 2021-06-26
 ### Added

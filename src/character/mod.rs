@@ -34,6 +34,7 @@ pub enum StatusEffect {
 }
 
 pub struct Dead;
+pub struct ClassNotFound;
 
 impl Default for Character {
     fn default() -> Self {
@@ -43,7 +44,7 @@ impl Default for Character {
 
 impl Character {
     pub fn player() -> Self {
-        Self::new(Class::warrior().clone(), 1)
+        Self::new(Class::player_default().clone(), 1)
     }
 
     pub fn enemy(level: i32, distance: location::Distance) -> Self {
@@ -59,28 +60,58 @@ impl Character {
     }
 
     fn new(class: Class, level: i32) -> Self {
-        let max_hp = class.hp.base();
-        let current_hp = class.hp.base();
-        let strength = class.strength.base();
-        let speed = class.speed.base();
+        // randomize level 1 stats by starting the increase from level 0
+        let max_hp = class.hp.base() - class.hp.increase();
+        let strength = class.strength.base() - class.strength.increase();
+        let speed = class.speed.base() - class.speed.increase();
+
         let mut character = Self {
             class,
             sword: None,
             shield: None,
-            level: 1,
+            level: 0,
             xp: 0,
             max_hp,
-            current_hp,
+            current_hp: max_hp,
             strength,
             speed,
             status_effect: None,
         };
 
-        for _ in 1..level {
+        for _ in 0..level {
             character.increase_level();
         }
 
         character
+    }
+
+    /// Replace the character class with the one given by name.
+    /// XP is lost. If the character is at level 1, it works as a re-roll
+    /// with the new class; at other levels the initial stats are preserved.
+    pub fn change_class(&mut self, name: &str) -> Result<i32, ClassNotFound> {
+        if name == self.class.name {
+            Ok(0)
+        } else if let Some(class) = Class::player_class(name) {
+            let lost_xp = self.xp;
+
+            if self.level == 1 {
+                // if class change is done at level 1, it works as a game reset
+                // the player stats are regenerated with the new class
+                // if equipment was already set, it is preserved
+                let sword = self.sword.take();
+                let shield = self.shield.take();
+                *self = Self::new(class.clone(), 1);
+                self.sword = sword;
+                self.shield = shield;
+            } else {
+                self.class = class.clone();
+            }
+
+            self.xp = 0;
+            Ok(lost_xp)
+        } else {
+            Err(ClassNotFound)
+        }
     }
 
     /// Raise the level and all the character stats.
@@ -443,5 +474,48 @@ mod tests {
         hero.current_hp = 1;
         assert!(hero.receive_status_effect_damage().is_err());
         assert!(hero.is_dead());
+    }
+
+    #[test]
+    fn test_class_change() {
+        let mut player = Character::player();
+        player.xp = 20;
+        player.sword = Some(equipment::Sword::new(1));
+
+        let warrior_class = Class::player_class("warrior").unwrap();
+        let thief_class = Class::player_class("thief").unwrap();
+
+        // attempt change to same class
+        assert_eq!("warrior", player.class.name);
+        assert!(player.change_class("warrior").is_ok());
+        assert_eq!("warrior", player.class.name);
+        assert_eq!(20, player.xp);
+        assert_eq!(player.max_hp, warrior_class.hp.base());
+        assert_eq!(player.strength, warrior_class.strength.base());
+        assert_eq!(player.speed, warrior_class.speed.base());
+        assert!(player.sword.is_some());
+
+        // attempt change to unknown class
+        assert!(player.change_class("choripan").is_err());
+
+        // attempt change to different class at level 1 (reset)
+        assert!(player.change_class("thief").is_ok());
+        assert_eq!("thief", player.class.name);
+        assert_eq!(0, player.xp);
+        assert_eq!(player.max_hp, thief_class.hp.base());
+        assert_eq!(player.strength, thief_class.strength.base());
+        assert_eq!(player.speed, thief_class.speed.base());
+        assert!(player.sword.is_some());
+
+        // attempt change to different class at level 2
+        player.level = 2;
+        player.xp = 20;
+        assert!(player.change_class("warrior").is_ok());
+        assert_eq!("warrior", player.class.name);
+        assert_eq!(0, player.xp);
+        assert_eq!(player.max_hp, thief_class.hp.base());
+        assert_eq!(player.strength, thief_class.strength.base());
+        assert_eq!(player.speed, thief_class.speed.base());
+        assert!(player.sword.is_some());
     }
 }
