@@ -87,7 +87,7 @@ impl Class {
         weighted_choice(distance)
     }
 
-    pub fn enemy_names(group: Category) -> HashSet<String> {
+    pub fn names(group: Category) -> HashSet<String> {
         CLASSES
             .get_or_init(default_classes)
             .get(&group)
