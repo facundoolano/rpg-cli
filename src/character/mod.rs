@@ -60,24 +60,25 @@ impl Character {
     }
 
     fn new(class: Class, level: i32) -> Self {
-        let max_hp = class.hp.base();
-        let current_hp = class.hp.base();
-        let strength = class.strength.base();
-        let speed = class.speed.base();
+        // randomize level 1 stats by starting the increase from level 0
+        let max_hp = class.hp.base() - class.hp.increase();
+        let strength = class.strength.base() - class.strength.increase();
+        let speed = class.speed.base() - class.speed.increase();
+
         let mut character = Self {
             class,
             sword: None,
             shield: None,
-            level: 1,
+            level: 0,
             xp: 0,
             max_hp,
-            current_hp,
+            current_hp: max_hp,
             strength,
             speed,
             status_effect: None,
         };
 
-        for _ in 1..level {
+        for _ in 0..level {
             character.increase_level();
         }
 
