@@ -54,7 +54,9 @@ impl Game {
         // preserve tombstones and quests across hero's lifes
         std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
         std::mem::swap(&mut new_game.quests, &mut self.quests);
-        // TBD shouldn't chests be preserved?
+
+        // remember last selected class
+        new_game.player.change_class(&self.player.class.name).unwrap_or_default();
 
         // replace the current, finished game with the new one
         *self = new_game;
