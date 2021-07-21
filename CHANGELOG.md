@@ -10,6 +10,8 @@
 
 ### Changed
 * `rpg reset --hard` removes datafile instead of entire .rpg dir 5adfb87
+* Character speed contributes to run away success probability 4d6e1a3
+* Level 1 stats are randomized 50af983
 
 ## [0.5.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.5.0) - 2021-06-26
 ### Added
