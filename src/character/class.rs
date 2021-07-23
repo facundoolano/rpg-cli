@@ -32,6 +32,7 @@ pub struct Class {
     pub name: String,
 
     pub hp: Stat,
+    pub mp: Option<Stat>,
     pub strength: Stat,
     pub speed: Stat,
 
@@ -95,6 +96,12 @@ impl Class {
             .iter()
             .map(|class| class.name.clone())
             .collect()
+    }
+
+    /// Returns whether this is a magic class, i.e. it can inflict
+    /// magic damage.
+    pub fn is_magic(self) -> bool {
+        self.mp.is_some()
     }
 }
 

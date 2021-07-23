@@ -21,6 +21,9 @@ pub struct Character {
     pub max_hp: i32,
     pub current_hp: i32,
 
+    pub max_mp: i32,
+    pub current_mp: i32,
+
     pub strength: i32,
     pub speed: i32,
     pub status_effect: Option<StatusEffect>,
@@ -64,6 +67,7 @@ impl Character {
         let max_hp = class.hp.base() - class.hp.increase();
         let strength = class.strength.base() - class.strength.increase();
         let speed = class.speed.base() - class.speed.increase();
+        let max_mp = class.mp.as_ref().map_or(0, |mp| mp.base() - mp.increase());
 
         let mut character = Self {
             class,
@@ -73,6 +77,8 @@ impl Character {
             xp: 0,
             max_hp,
             current_hp: max_hp,
+            max_mp,
+            current_mp: max_mp,
             strength,
             speed,
             status_effect: None,
@@ -252,6 +258,7 @@ mod tests {
                 name: "test".to_string(),
                 category: class::Category::Player,
                 hp: Stat(25, 7),
+                mp: None,
                 strength: Stat(10, 3),
                 speed: Stat(10, 2),
                 inflicts: None,
