@@ -4,6 +4,7 @@
 ### Added
 * Customizable classes file #76
 * Thief class and command to select player class #77.
+* Mage class, magic attacks and ether item #78.
 
 ### Removed
 * Backwards compatibility code for binary game data from v0.4.0 #75

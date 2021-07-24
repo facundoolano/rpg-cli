@@ -9,8 +9,9 @@ Features:
 * Character stats and leveling system.
 * Automatic turn-based combat.
 * Item and equipment support.
-* 15+ enemy classes.
-* Extensible player and enemy classes via configuration.
+* Warrior, thief and mage player classes.
+* 15+ Enemy classes.
+* Extensible player and enemy classes via a configuration file.
 * Quests to-do list.
 * Chests hidden in directories.
 * Permadeath with item recovering.
