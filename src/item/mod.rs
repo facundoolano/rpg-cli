@@ -40,7 +40,8 @@ impl Item for Potion {
             game,
             Event::Heal {
                 item: Some("potion"),
-                recovered,
+                recovered_hp: recovered,
+                recovered_mp: 0,
                 healed: false,
             },
         );
@@ -86,7 +87,8 @@ impl Item for Remedy {
             game,
             Event::Heal {
                 item: Some("remedy"),
-                recovered: 0,
+                recovered_hp: 0,
+                recovered_mp: 0,
                 healed,
             },
         );

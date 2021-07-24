@@ -82,17 +82,25 @@ pub fn handle(game: &Game, event: &Event) {
         }
         Event::Heal {
             item: Some(item),
-            recovered,
+            recovered_hp,
+            recovered_mp,
             healed,
         } => {
-            heal_item(&game.player, item, *recovered, *healed);
+            heal_item(&game.player, item, *recovered_hp, *recovered_mp, *healed);
         }
         Event::Heal {
             item: None,
-            recovered,
+            recovered_hp,
+            recovered_mp,
             healed,
         } => {
-            heal(&game.player, &game.location, *recovered, *healed);
+            heal(
+                &game.player,
+                &game.location,
+                *recovered_hp,
+                *recovered_mp,
+                *healed,
+            );
         }
         Event::ClassChanged { lost_xp } => change_class(&game.player, &game.location, *lost_xp),
         Event::LevelUp { .. } => {}
@@ -158,32 +166,51 @@ fn run_away(player: &Character, success: bool) {
     }
 }
 
-fn heal(player: &Character, location: &Location, recovered: i32, healed: bool) {
+fn heal(
+    player: &Character,
+    location: &Location,
+    recovered_hp: i32,
+    recovered_mp: i32,
+    healed: bool,
+) {
     let mut recovered_text = String::new();
     let mut healed_text = String::new();
+    let mut mp_text = String::new();
 
-    if recovered > 0 {
-        recovered_text = format!("+{}hp", recovered);
+    if recovered_hp > 0 {
+        recovered_text = format!("+{}hp ", recovered_hp);
+    }
+    if recovered_mp > 0 {
+        mp_text = format!("+{}mp ", recovered_mp);
     }
     if healed {
-        healed_text = String::from("+healed");
+        healed_text = String::from("+healed ");
     }
-    if recovered > 0 || healed {
+    if recovered_hp > 0 || recovered_mp > 0 || healed {
         log(
             player,
             location,
-            &format!("{} {}", recovered_text, healed_text)
-                .green()
-                .to_string(),
+            &format!(
+                "{}{}{}",
+                recovered_text.green(),
+                mp_text.purple(),
+                healed_text.purple()
+            ),
         );
     }
 }
 
-fn heal_item(player: &Character, item: &str, recovered: i32, healed: bool) {
-    if recovered > 0 {
+fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i32, healed: bool) {
+    if recovered_hp > 0 {
         battle_log(
             player,
-            &format!("+{}hp {}", recovered, item).green().to_string(),
+            &format!("+{}hp {}", recovered_hp, item).green().to_string(),
+        );
+    }
+    if recovered_mp > 0 {
+        battle_log(
+            player,
+            &format!("+{}mp {}", recovered_mp, item).purple().to_string(),
         );
     }
     if healed {

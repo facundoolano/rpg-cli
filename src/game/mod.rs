@@ -115,13 +115,14 @@ impl Game {
     pub fn visit(&mut self, location: Location) -> Result<(), character::Dead> {
         self.location = location;
         if self.location.is_home() {
-            let recovered = self.player.heal_full();
+            let (recovered_hp, recovered_mp) = self.player.heal_full();
             let healed = self.player.maybe_remove_status_effect();
             Event::emit(
                 self,
                 Event::Heal {
                     item: None,
-                    recovered,
+                    recovered_hp,
+                    recovered_mp,
                     healed,
                 },
             );
