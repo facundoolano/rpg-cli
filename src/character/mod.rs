@@ -215,7 +215,11 @@ impl Character {
     }
 
     pub fn magic_attack(&self) -> i32 {
-        self.strength * 3
+        if self.class.is_magic() {
+            self.strength * 3
+        } else {
+            0
+        }
     }
 
     /// The character's class enables magic and there's enough mp left

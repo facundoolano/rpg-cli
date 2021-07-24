@@ -246,7 +246,13 @@ fn long_status(game: &Game) {
         player.current_hp,
         player.max_hp
     );
-    // FIXME add mp display
+
+    println!(
+        "    mp:{} {}/{}",
+        mp_display(player, 10),
+        player.current_mp,
+        player.max_mp
+    );
 
     println!(
         "    xp:{} {}/{}",
@@ -257,10 +263,10 @@ fn long_status(game: &Game) {
     if let Some(status) = player.status_effect {
         println!("    status: {}", format_status_effect(status).bright_red());
     }
-    // FIXME add mag:{}
     println!(
-        "    att:{}   def:{}   spd:{}",
+        "    att:{}   mag:{}   def:{}   spd:{}",
         player.physical_attack(),
+        player.magic_attack(),
         player.deffense(),
         player.speed
     );
@@ -292,16 +298,17 @@ fn plain_status(game: &Game) {
     };
 
     println!(
-        "{}[{}]\t@{}\thp:{}/{}\txp:{}/{}\tatt:{}\tdef:{}\tspd:{}\t{}{}\t{}\tg:{}",
+        "{}[{}]\t@{}\thp:{}/{}\tmp:{}/{}\txp:{}/{}\tatt:{}\tmag:{}\tdef:{}\tspd:{}\t{}{}\t{}\tg:{}",
         player.name(),
         player.level,
         game.location,
         player.current_hp,
         player.max_hp,
-        // FIXME add current and max mp
+        player.current_mp,
+        player.max_mp,
         player.xp,
         player.xp_for_next(),
-        // FIXME add magic_attack
+        player.magic_attack(),
         player.physical_attack(),
         player.deffense(),
         player.speed,
@@ -336,11 +343,11 @@ fn format_ls(emoji: &str, items: &[String], gold: i32) {
 /// Generic log function. At the moment all output of the game is structured as
 /// of a player status at some location, with an optional event suffix.
 fn log(character: &Character, location: &Location, suffix: &str) {
-    // FIXME add mp display
     println!(
-        "{}{}{}@{} {}",
+        "{}{}{}{}@{} {}",
         format_character(character),
         hp_display(character, 4),
+        mp_display(character, 4),
         xp_display(character, 4),
         location,
         suffix
@@ -349,9 +356,10 @@ fn log(character: &Character, location: &Location, suffix: &str) {
 
 fn battle_log(character: &Character, suffix: &str) {
     println!(
-        "{}{} {}",
+        "{}{}{} {}",
         format_character(character),
         hp_display(character, 4),
+        mp_display(character, 4),
         suffix
     );
 }
@@ -429,6 +437,22 @@ fn hp_display(character: &Character, slots: i32) -> String {
         character.max_hp,
         "green",
         "red",
+    )
+}
+
+fn mp_display(character: &Character, slots: i32) -> String {
+    let current_mp = if character.class.is_magic() {
+        character.current_mp
+    } else {
+        0
+    };
+
+    bar_display(
+        slots,
+        current_mp,
+        character.max_mp,
+        "purple",
+        "bright black",
     )
 }
 
