@@ -20,7 +20,7 @@ impl Stat {
     }
 
     pub fn at(&self, level: i32) -> i32 {
-        self.0 + level * self.increase()
+        self.0 + (level - 1) * self.increase()
     }
 }
 

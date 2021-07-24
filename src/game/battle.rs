@@ -135,6 +135,7 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
 mod tests {
     use super::*;
     use crate::location::Distance;
+    use crate::randomizer::random;
 
     #[test]
     fn won() {
@@ -190,6 +191,29 @@ mod tests {
 
     #[test]
     fn magic_attacks() {
-        todo!();
+        let mut game = Game::new();
+        let mut enemy = Character::enemy(1, Distance::Near(1));
+        enemy.max_hp = 100;
+        enemy.current_hp = 100;
+
+        game.player.change_class("mage").unwrap_or_default();
+        game.player.max_mp = 10;
+        game.player.current_mp = 10;
+        game.player.strength = 10;
+
+        // mage -mp with enough mp
+        player_attack(&mut game, &mut enemy, &random());
+        assert_eq!(7, game.player.current_mp);
+        assert_eq!(70, enemy.current_hp);
+
+        player_attack(&mut game, &mut enemy, &random());
+        player_attack(&mut game, &mut enemy, &random());
+        assert_eq!(1, game.player.current_mp);
+        assert_eq!(10, enemy.current_hp);
+
+        // mage -mp=0 without enough mp
+        player_attack(&mut game, &mut enemy, &random());
+        assert_eq!(1, game.player.current_mp);
+        assert_eq!(7, enemy.current_hp);
     }
 }
