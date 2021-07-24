@@ -243,7 +243,8 @@ fn sanitize(name: &str) -> String {
     let name = name.to_lowercase();
     let name = match name.as_str() {
         "p" | "potion" => "potion",
-        "e" | "escape" => "escape",
+        "e" | "ether" => "ether",
+        "es" | "escape" => "escape",
         "sw" | "sword" => "sword",
         "sh" | "shield" => "shield",
         n => n,
