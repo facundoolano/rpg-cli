@@ -26,10 +26,12 @@ pub enum Event<'a> {
         enemy: &'a Character,
         kind: battle::AttackType,
         damage: i32,
+        mp_cost: i32,
     },
     EnemyAttack {
         kind: battle::AttackType,
         damage: i32,
+        mp_cost: i32,
     },
     StatusEffectDamage {
         damage: i32,
@@ -47,7 +49,8 @@ pub enum Event<'a> {
     },
     Heal {
         item: Option<&'static str>,
-        recovered: i32,
+        recovered_hp: i32,
+        recovered_mp: i32,
         healed: bool,
     },
     ItemBought {

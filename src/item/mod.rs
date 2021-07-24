@@ -40,7 +40,8 @@ impl Item for Potion {
             game,
             Event::Heal {
                 item: Some("potion"),
-                recovered,
+                recovered_hp: recovered,
+                recovered_mp: 0,
                 healed: false,
             },
         );
@@ -86,7 +87,8 @@ impl Item for Remedy {
             game,
             Event::Heal {
                 item: Some("remedy"),
-                recovered: 0,
+                recovered_hp: 0,
+                recovered_mp: 0,
                 healed,
             },
         );
@@ -96,5 +98,45 @@ impl Item for Remedy {
 impl fmt::Display for Remedy {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "remedy")
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Ether {
+    level: i32,
+}
+
+impl Ether {
+    pub fn new(level: i32) -> Self {
+        Self { level }
+    }
+}
+
+impl fmt::Display for Ether {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ether[{}]", self.level)
+    }
+}
+
+#[typetag::serde]
+impl Item for Ether {
+    fn apply(&self, game: &mut game::Game) {
+        let to_restore = game
+            .player
+            .class
+            .mp
+            .as_ref()
+            .map_or(0, |mp| mp.at(self.level) / 2);
+        let recovered_mp = game.player.restore_mp(to_restore);
+
+        Event::emit(
+            game,
+            Event::Heal {
+                item: Some("ether"),
+                recovered_hp: 0,
+                recovered_mp,
+                healed: false,
+            },
+        );
     }
 }

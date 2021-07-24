@@ -26,7 +26,7 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
         en_accum += enemy.speed;
 
         if pl_accum >= en_accum {
-            if !autopotion(game, enemy) {
+            if !autopotion(game, enemy) && !autoether(game, enemy) {
                 let new_xp = player_attack(game, enemy, random);
                 xp += new_xp;
             }
@@ -45,8 +45,9 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
 /// Attack enemy, returning the gained experience
 fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (attack_type, damage, new_xp) = generate_attack(&game.player, enemy, random);
+    let (attack_type, damage, mp_cost, new_xp) = generate_attack(&game.player, enemy, random);
     enemy.receive_damage(damage).unwrap_or_default();
+    game.player.current_mp -= mp_cost;
 
     Event::emit(
         game,
@@ -54,6 +55,7 @@ fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer
             enemy,
             kind: attack_type,
             damage,
+            mp_cost,
         },
     );
     new_xp
@@ -65,8 +67,10 @@ fn enemy_attack(
     enemy: &mut Character,
     random: &dyn Randomizer,
 ) -> Result<(), Dead> {
-    let (attack_type, damage, _xp) = generate_attack(enemy, &game.player, random);
+    let (attack_type, damage, mp_cost, _xp) = generate_attack(enemy, &game.player, random);
     let result = game.player.receive_damage(damage);
+    enemy.current_mp -= mp_cost;
+
     if let AttackType::Effect(status) = attack_type {
         game.player.status_effect = Some(status);
     }
@@ -76,6 +80,7 @@ fn enemy_attack(
         Event::EnemyAttack {
             kind: attack_type,
             damage,
+            mp_cost,
         },
     );
     result
@@ -86,8 +91,9 @@ fn generate_attack(
     attacker: &Character,
     receiver: &Character,
     random: &dyn Randomizer,
-) -> (AttackType, i32, i32) {
-    let damage = random.damage(attacker.damage(receiver));
+) -> (AttackType, i32, i32, i32) {
+    let (damage, mp_cost) = attacker.damage(receiver);
+    let damage = random.damage(damage);
     let xp = attacker.xp_gained(receiver, damage);
 
     let attack_type = random.attack_type(
@@ -97,14 +103,14 @@ fn generate_attack(
     );
 
     match attack_type {
-        AttackType::Miss => (attack_type, 0, 0),
-        AttackType::Regular => (AttackType::Regular, damage, xp),
-        AttackType::Critical => (attack_type, damage * 2, xp),
+        AttackType::Miss => (attack_type, 0, mp_cost, 0),
+        AttackType::Regular => (AttackType::Regular, damage, mp_cost, xp),
+        AttackType::Critical => (attack_type, damage * 2, mp_cost, xp),
         AttackType::Effect(status) if Some(status) != receiver.status_effect => {
-            (attack_type, damage, xp)
+            (attack_type, damage, mp_cost, xp)
         }
         // don't double-inflict if already has the same status
-        AttackType::Effect(_) => (AttackType::Regular, damage, xp),
+        AttackType::Effect(_) => (AttackType::Regular, damage, mp_cost, xp),
     }
 }
 
@@ -117,7 +123,7 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
 
     // If there's a good chance of winning the battle on the next attack,
     // don't use the potion.
-    let potential_damage = game.player.damage(enemy);
+    let (potential_damage, _mp_cost) = game.player.damage(enemy);
     if potential_damage >= enemy.current_hp {
         return false;
     }
@@ -125,10 +131,26 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
     game.use_item("potion").is_ok()
 }
 
+fn autoether(game: &mut Game, enemy: &Character) -> bool {
+    if !game.player.class.is_magic() || game.player.can_magic_attack() {
+        return false;
+    }
+
+    // If there's a good chance of winning the battle on the next attack,
+    // don't use the ether.
+    let (potential_damage, _mp_cost) = game.player.damage(enemy);
+    if potential_damage >= enemy.current_hp {
+        return false;
+    }
+
+    game.use_item("ether").is_ok()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::location::Distance;
+    use crate::randomizer::random;
 
     #[test]
     fn won() {
@@ -180,5 +202,33 @@ mod tests {
         let mut enemy = Character::enemy(10, near);
         let result = game.battle(&mut enemy);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn magic_attacks() {
+        let mut game = Game::new();
+        let mut enemy = Character::enemy(1, Distance::Near(1));
+        enemy.max_hp = 100;
+        enemy.current_hp = 100;
+
+        game.player.change_class("mage").unwrap_or_default();
+        game.player.max_mp = 10;
+        game.player.current_mp = 10;
+        game.player.strength = 10;
+
+        // mage -mp with enough mp
+        player_attack(&mut game, &mut enemy, &random());
+        assert_eq!(7, game.player.current_mp);
+        assert_eq!(70, enemy.current_hp);
+
+        player_attack(&mut game, &mut enemy, &random());
+        player_attack(&mut game, &mut enemy, &random());
+        assert_eq!(1, game.player.current_mp);
+        assert_eq!(10, enemy.current_hp);
+
+        // mage -mp=0 without enough mp
+        player_attack(&mut game, &mut enemy, &random());
+        assert_eq!(1, game.player.current_mp);
+        assert_eq!(7, enemy.current_hp);
     }
 }

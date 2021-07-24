@@ -35,11 +35,16 @@ pub fn handle(game: &Game, event: &Event) {
             enemy,
             kind,
             damage,
+            mp_cost,
         } => {
-            attack(enemy, kind, *damage);
+            attack(enemy, kind, *damage, *mp_cost);
         }
-        Event::EnemyAttack { kind, damage } => {
-            attack(&game.player, kind, *damage);
+        Event::EnemyAttack {
+            kind,
+            damage,
+            mp_cost,
+        } => {
+            attack(&game.player, kind, *damage, *mp_cost);
         }
         Event::StatusEffectDamage { damage } => {
             status_effect_damage(&game.player, *damage);
@@ -77,17 +82,25 @@ pub fn handle(game: &Game, event: &Event) {
         }
         Event::Heal {
             item: Some(item),
-            recovered,
+            recovered_hp,
+            recovered_mp,
             healed,
         } => {
-            heal_item(&game.player, item, *recovered, *healed);
+            heal_item(&game.player, item, *recovered_hp, *recovered_mp, *healed);
         }
         Event::Heal {
             item: None,
-            recovered,
+            recovered_hp,
+            recovered_mp,
             healed,
         } => {
-            heal(&game.player, &game.location, *recovered, *healed);
+            heal(
+                &game.player,
+                &game.location,
+                *recovered_hp,
+                *recovered_mp,
+                *healed,
+            );
         }
         Event::ClassChanged { lost_xp } => change_class(&game.player, &game.location, *lost_xp),
         Event::LevelUp { .. } => {}
@@ -153,32 +166,51 @@ fn run_away(player: &Character, success: bool) {
     }
 }
 
-fn heal(player: &Character, location: &Location, recovered: i32, healed: bool) {
+fn heal(
+    player: &Character,
+    location: &Location,
+    recovered_hp: i32,
+    recovered_mp: i32,
+    healed: bool,
+) {
     let mut recovered_text = String::new();
     let mut healed_text = String::new();
+    let mut mp_text = String::new();
 
-    if recovered > 0 {
-        recovered_text = format!("+{}hp", recovered);
+    if recovered_hp > 0 {
+        recovered_text = format!("+{}hp ", recovered_hp);
+    }
+    if recovered_mp > 0 {
+        mp_text = format!("+{}mp ", recovered_mp);
     }
     if healed {
-        healed_text = String::from("+healed");
+        healed_text = String::from("+healed ");
     }
-    if recovered > 0 || healed {
+    if recovered_hp > 0 || recovered_mp > 0 || healed {
         log(
             player,
             location,
-            &format!("{} {}", recovered_text, healed_text)
-                .green()
-                .to_string(),
+            &format!(
+                "{}{}{}",
+                recovered_text.green(),
+                mp_text.purple(),
+                healed_text.purple()
+            ),
         );
     }
 }
 
-fn heal_item(player: &Character, item: &str, recovered: i32, healed: bool) {
-    if recovered > 0 {
+fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i32, healed: bool) {
+    if recovered_hp > 0 {
         battle_log(
             player,
-            &format!("+{}hp {}", recovered, item).green().to_string(),
+            &format!("+{}hp {}", recovered_hp, item).green().to_string(),
+        );
+    }
+    if recovered_mp > 0 {
+        battle_log(
+            player,
+            &format!("+{}mp {}", recovered_mp, item).purple().to_string(),
         );
     }
     if healed {
@@ -194,9 +226,12 @@ fn change_class(player: &Character, location: &Location, lost_xp: i32) {
     log(player, location, &lost_text);
 }
 
-fn attack(character: &Character, attack: &AttackType, damage: i32) {
+fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32) {
     if !quiet() {
-        battle_log(character, &format_attack(character, &attack, damage));
+        battle_log(
+            character,
+            &format_attack(character, &attack, damage, mp_cost),
+        );
     }
 }
 
@@ -240,6 +275,19 @@ fn long_status(game: &Game) {
         player.current_hp,
         player.max_hp
     );
+
+    let (current_mp, max_mp) = if player.class.is_magic() {
+        (player.current_mp, player.max_mp)
+    } else {
+        (0, 0)
+    };
+    println!(
+        "    mp:{} {}/{}",
+        mp_display(player, 10),
+        current_mp,
+        max_mp
+    );
+
     println!(
         "    xp:{} {}/{}",
         xp_display(player, 10),
@@ -250,8 +298,9 @@ fn long_status(game: &Game) {
         println!("    status: {}", format_status_effect(status).bright_red());
     }
     println!(
-        "    att:{}   def:{}   spd:{}",
-        player.attack(),
+        "    att:{}   mag:{}   def:{}   spd:{}",
+        player.physical_attack(),
+        player.magic_attack(),
         player.deffense(),
         player.speed
     );
@@ -283,15 +332,18 @@ fn plain_status(game: &Game) {
     };
 
     println!(
-        "{}[{}]\t@{}\thp:{}/{}\txp:{}/{}\tatt:{}\tdef:{}\tspd:{}\t{}{}\t{}\tg:{}",
+        "{}[{}]\t@{}\thp:{}/{}\tmp:{}/{}\txp:{}/{}\tatt:{}\tmag:{}\tdef:{}\tspd:{}\t{}{}\t{}\tg:{}",
         player.name(),
         player.level,
         game.location,
         player.current_hp,
         player.max_hp,
+        player.current_mp,
+        player.max_mp,
         player.xp,
         player.xp_for_next(),
-        player.attack(),
+        player.magic_attack(),
+        player.physical_attack(),
         player.deffense(),
         player.speed,
         status_effect,
@@ -326,9 +378,10 @@ fn format_ls(emoji: &str, items: &[String], gold: i32) {
 /// of a player status at some location, with an optional event suffix.
 fn log(character: &Character, location: &Location, suffix: &str) {
     println!(
-        "{}{}{}@{} {}",
+        "{}{}{}{}@{} {}",
         format_character(character),
         hp_display(character, 4),
+        mp_display(character, 4),
         xp_display(character, 4),
         location,
         suffix
@@ -337,9 +390,10 @@ fn log(character: &Character, location: &Location, suffix: &str) {
 
 fn battle_log(character: &Character, suffix: &str) {
     println!(
-        "{}{} {}",
+        "{}{}{} {}",
         format_character(character),
         hp_display(character, 4),
+        mp_display(character, 4),
         suffix
     );
 }
@@ -378,14 +432,18 @@ pub fn format_inventory(game: &Game) -> String {
     format!("item:{{{}}}", items.join(","))
 }
 
-fn format_attack(receiver: &Character, attack: &AttackType, damage: i32) -> String {
+fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost: i32) -> String {
+    let magic_effect = if mp_cost > 0 { "\u{2728}" } else { "" };
+
     match attack {
-        AttackType::Regular => format_damage(receiver, damage, ""),
-        AttackType::Critical => format_damage(receiver, damage, "critical!"),
+        AttackType::Regular => format_damage(receiver, damage, &magic_effect),
+        AttackType::Critical => {
+            format_damage(receiver, damage, &format!("{} critical!", magic_effect))
+        }
         AttackType::Effect(status_effect) => {
             format_damage(receiver, damage, &format_status_effect(*status_effect))
         }
-        AttackType::Miss => " dodged!".to_string(),
+        AttackType::Miss => format!("{} dodged!", magic_effect),
     }
 }
 
@@ -417,6 +475,22 @@ fn hp_display(character: &Character, slots: i32) -> String {
         character.max_hp,
         "green",
         "red",
+    )
+}
+
+fn mp_display(character: &Character, slots: i32) -> String {
+    let current_mp = if character.class.is_magic() {
+        character.current_mp
+    } else {
+        0
+    };
+
+    bar_display(
+        slots,
+        current_mp,
+        character.max_mp,
+        "purple",
+        "bright black",
     )
 }
 

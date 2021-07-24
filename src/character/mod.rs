@@ -21,6 +21,9 @@ pub struct Character {
     pub max_hp: i32,
     pub current_hp: i32,
 
+    pub max_mp: i32,
+    pub current_mp: i32,
+
     pub strength: i32,
     pub speed: i32,
     pub status_effect: Option<StatusEffect>,
@@ -64,6 +67,7 @@ impl Character {
         let max_hp = class.hp.base() - class.hp.increase();
         let strength = class.strength.base() - class.strength.increase();
         let speed = class.speed.base() - class.speed.increase();
+        let max_mp = class.mp.as_ref().map_or(0, |mp| mp.base() - mp.increase());
 
         let mut character = Self {
             class,
@@ -73,6 +77,8 @@ impl Character {
             xp: 0,
             max_hp,
             current_hp: max_hp,
+            max_mp,
+            current_mp: max_mp,
             strength,
             speed,
             status_effect: None,
@@ -126,6 +132,15 @@ impl Character {
         let previous_damage = self.max_hp - self.current_hp;
         self.max_hp += random().stat_increase(self.class.hp.increase());
         self.current_hp = self.max_hp - previous_damage;
+
+        // same with mp
+        let previous_used_mp = self.max_mp - self.current_mp;
+        self.max_mp += self
+            .class
+            .mp
+            .as_ref()
+            .map_or(0, |mp| random().stat_increase(mp.increase()));
+        self.current_mp = self.max_mp - previous_used_mp;
     }
 
     /// Add to the accumulated experience points, possibly increasing the level.
@@ -165,9 +180,15 @@ impl Character {
         self.current_hp - previous
     }
 
-    /// Restore all health points to the max_hp
-    pub fn heal_full(&mut self) -> i32 {
-        self.heal(self.max_hp)
+    pub fn restore_mp(&mut self, amount: i32) -> i32 {
+        let previous = self.current_mp;
+        self.current_mp = min(self.max_mp, self.current_mp + amount);
+        self.current_mp - previous
+    }
+
+    /// Restore all health and magic points to their max
+    pub fn heal_full(&mut self) -> (i32, i32) {
+        (self.heal(self.max_hp), self.restore_mp(self.max_mp))
     }
 
     /// How many experience points are required to move to the next level.
@@ -179,13 +200,42 @@ impl Character {
 
     /// Generate a randomized damage number based on the attacker strength
     /// and the receiver strength.
-    pub fn damage(&self, receiver: &Self) -> i32 {
-        max(1, self.attack() - receiver.deffense())
+    /// The second element is the mp cost of the attack, if any.
+    pub fn damage(&self, receiver: &Self) -> (i32, i32) {
+        let (damage, mp_cost) = if self.can_magic_attack() {
+            (self.magic_attack(), self.mp_cost())
+        } else {
+            (self.physical_attack(), 0)
+        };
+
+        (max(1, damage - receiver.deffense()), mp_cost)
     }
 
-    pub fn attack(&self) -> i32 {
-        let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
-        self.strength + sword_str
+    pub fn physical_attack(&self) -> i32 {
+        if self.class.is_magic() {
+            self.strength / 3
+        } else {
+            let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
+            self.strength + sword_str
+        }
+    }
+
+    pub fn magic_attack(&self) -> i32 {
+        if self.class.is_magic() {
+            self.strength * 3
+        } else {
+            0
+        }
+    }
+
+    /// The character's class enables magic and there's enough mp left
+    pub fn can_magic_attack(&self) -> bool {
+        self.class.is_magic() && self.current_mp >= self.mp_cost()
+    }
+
+    fn mp_cost(&self) -> i32 {
+        // each magic attack costs one third of the "canonical" mp total for this level
+        self.class.mp.as_ref().map_or(0, |mp| mp.at(self.level) / 3)
     }
 
     pub fn deffense(&self) -> i32 {
@@ -252,6 +302,7 @@ mod tests {
                 name: "test".to_string(),
                 category: class::Category::Player,
                 hp: Stat(25, 7),
+                mp: None,
                 strength: Stat(10, 3),
                 speed: Stat(10, 2),
                 inflicts: None,
@@ -310,23 +361,72 @@ mod tests {
         // 1 vs 1
         hero.strength = 10;
         foe.strength = 10;
-        assert_eq!(10, hero.damage(&foe));
+        assert_eq!(10, hero.damage(&foe).0);
 
         // level 1 vs level 2
         foe.level = 2;
         foe.strength = 15;
-        assert_eq!(10, hero.damage(&foe));
+        assert_eq!(10, hero.damage(&foe).0);
 
         // level 2 vs level 1
-        assert_eq!(15, foe.damage(&hero));
+        assert_eq!(15, foe.damage(&hero).0);
 
         // level 1 vs level 5
         foe.level = 5;
         foe.strength = 40;
-        assert_eq!(10, hero.damage(&foe));
+        assert_eq!(10, hero.damage(&foe).0);
 
         // level 5 vs level 1
-        assert_eq!(40, foe.damage(&hero));
+        assert_eq!(40, foe.damage(&hero).0);
+    }
+
+    #[test]
+    fn test_magic_attacks() {
+        let mut hero = Character::player();
+        let foe = new_char();
+
+        assert_eq!("warrior", hero.class.name);
+        assert!(!hero.can_magic_attack());
+        let base_strength = hero.class.strength.base();
+
+        // warrior mp = 0
+        assert_eq!((base_strength, 0), hero.damage(&foe));
+
+        // warrior with non zero mp, mp = 0
+        // (this can happen if accumulated mp via class change)
+        hero.current_mp = 10;
+        hero.max_mp = 10;
+        assert!(!hero.can_magic_attack());
+        assert_eq!((base_strength, 0), hero.damage(&foe));
+
+        // warrior + sword, increased damage + mp = 0
+        let sword = equipment::Sword::new(hero.level);
+        let sword_strength = sword.strength();
+        hero.sword = Some(sword);
+        assert_eq!((base_strength + sword_strength, 0), hero.damage(&foe));
+
+        let mut mage = Character::player();
+        mage.change_class("mage").unwrap_or_default();
+        assert_eq!("mage", mage.class.name);
+        assert!(mage.can_magic_attack());
+
+        // mage with enough mp, -mp, *3
+        let base_strength = mage.class.strength.base();
+        assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
+
+        // enough for one more
+        mage.current_mp = mage.max_mp / 3;
+        assert!(mage.can_magic_attack());
+        assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
+
+        // same with sword
+        mage.sword = Some(equipment::Sword::new(hero.level));
+        assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
+
+        // mage without enough mp, 0 mp, /3
+        mage.current_mp = mage.max_mp / 3 - 1;
+        assert!(!mage.can_magic_attack());
+        assert_eq!((base_strength / 3, 0), mage.damage(&foe));
     }
 
     #[test]
@@ -427,7 +527,7 @@ mod tests {
             hero.add_experience(hero.xp_for_next());
             hero.sword = Some(equipment::Sword::new(hero.level));
             let turns_unarmed = hero.max_hp / hero.strength;
-            let turns_armed = hero.max_hp / hero.attack();
+            let turns_armed = hero.max_hp / hero.physical_attack();
             println!(
                 "hero[{}] next={} hp={} spd={} str={} att={} turns_u={} turns_a={}",
                 hero.level,
@@ -435,14 +535,14 @@ mod tests {
                 hero.max_hp,
                 hero.speed,
                 hero.strength,
-                hero.attack(),
+                hero.physical_attack(),
                 turns_unarmed,
                 turns_armed
             );
 
             assert!(hero.max_hp > 0);
             assert!(hero.speed > 0);
-            assert!(hero.attack() > 0);
+            assert!(hero.physical_attack() > 0);
 
             assert!(turns_armed < turns_unarmed);
             assert!(turns_armed < 20);

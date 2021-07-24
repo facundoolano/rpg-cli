@@ -3,6 +3,12 @@
   strength: [12, 3]
   speed: [11, 2]
   category: player
+- name: mage
+  hp: [20, 4]
+  mp: [10, 4]
+  strength: [10, 3]
+  speed: [10, 2]
+  category: player
 - name: thief
   hp: [21, 5]
   strength: [7, 2]
