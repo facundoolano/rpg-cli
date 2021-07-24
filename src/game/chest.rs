@@ -1,6 +1,6 @@
 use crate::game;
 use crate::item::equipment::{Shield, Sword};
-use crate::item::{equipment::Equipment, Escape, Item, Potion, Remedy};
+use crate::item::{equipment::Equipment, Escape, Item, Potion, Remedy, Ether};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
@@ -140,12 +140,13 @@ fn random_items(level: i32) -> HashMap<String, Vec<Box<dyn Item>>> {
     let mut map = HashMap::new();
     let potion = || Box::new(Potion::new(level));
 
-    let (key, items): (&str, Vec<Box<dyn Item>>) = match random().range(15) {
-        n if n < 7 => ("potion", vec![potion()]),
-        n if n < 11 => ("potion", vec![potion(), potion()]),
-        n if n < 13 => ("potion", vec![potion(), potion(), potion()]),
-        13 => ("remedy", vec![Box::new(Remedy::new())]),
-        _ => ("escape", vec![Box::new(Escape::new())]),
+    let (key, items): (&str, Vec<Box<dyn Item>>) = match random().range(20) {
+        n if n < 8 => ("potion", vec![potion()]),
+        n if n < 12 => ("potion", vec![potion(), potion()]),
+        n if n < 14 => ("potion", vec![potion(), potion(), potion()]),
+        n if n < 15 => ("remedy", vec![Box::new(Remedy::new())]),
+        n if n < 18 => ("escape", vec![Box::new(Escape::new())]),
+        _ => ("ether", vec![Box::new(Ether::new(level))])
     };
     map.insert(key.to_string(), items);
     map
