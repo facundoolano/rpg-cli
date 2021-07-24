@@ -1,6 +1,6 @@
 use crate::game;
 use crate::item::equipment::{Shield, Sword};
-use crate::item::{equipment::Equipment, Escape, Item, Potion, Remedy, Ether};
+use crate::item::{equipment::Equipment, Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use serde::{Deserialize, Serialize};
@@ -146,7 +146,7 @@ fn random_items(level: i32) -> HashMap<String, Vec<Box<dyn Item>>> {
         n if n < 14 => ("potion", vec![potion(), potion(), potion()]),
         n if n < 15 => ("remedy", vec![Box::new(Remedy::new())]),
         n if n < 18 => ("escape", vec![Box::new(Escape::new())]),
-        _ => ("ether", vec![Box::new(Ether::new(level))])
+        _ => ("ether", vec![Box::new(Ether::new(level))]),
     };
     map.insert(key.to_string(), items);
     map
