@@ -226,10 +226,12 @@ fn change_class(player: &Character, location: &Location, lost_xp: i32) {
     log(player, location, &lost_text);
 }
 
-fn attack(character: &Character, attack: &AttackType, damage: i32, _mp_cost: i32) {
-    // FIXME include mp
+fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32) {
     if !quiet() {
-        battle_log(character, &format_attack(character, &attack, damage));
+        battle_log(
+            character,
+            &format_attack(character, &attack, damage, mp_cost),
+        );
     }
 }
 
@@ -274,11 +276,16 @@ fn long_status(game: &Game) {
         player.max_hp
     );
 
+    let (current_mp, max_mp) = if player.class.is_magic() {
+        (player.current_mp, player.max_mp)
+    } else {
+        (0, 0)
+    };
     println!(
         "    mp:{} {}/{}",
         mp_display(player, 10),
-        player.current_mp,
-        player.max_mp
+        current_mp,
+        max_mp
     );
 
     println!(
@@ -425,14 +432,18 @@ pub fn format_inventory(game: &Game) -> String {
     format!("item:{{{}}}", items.join(","))
 }
 
-fn format_attack(receiver: &Character, attack: &AttackType, damage: i32) -> String {
+fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost: i32) -> String {
+    let magic_effect = if mp_cost > 0 { "\u{2728}" } else { "" };
+
     match attack {
-        AttackType::Regular => format_damage(receiver, damage, ""),
-        AttackType::Critical => format_damage(receiver, damage, "critical!"),
+        AttackType::Regular => format_damage(receiver, damage, &magic_effect),
+        AttackType::Critical => {
+            format_damage(receiver, damage, &format!("{} critical!", magic_effect))
+        }
         AttackType::Effect(status_effect) => {
             format_damage(receiver, damage, &format_status_effect(*status_effect))
         }
-        AttackType::Miss => " dodged!".to_string(),
+        AttackType::Miss => format!("{} dodged!", magic_effect),
     }
 }
 
