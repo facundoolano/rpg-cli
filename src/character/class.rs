@@ -100,7 +100,7 @@ impl Class {
 
     /// Returns whether this is a magic class, i.e. it can inflict
     /// magic damage.
-    pub fn is_magic(self) -> bool {
+    pub fn is_magic(&self) -> bool {
         self.mp.is_some()
     }
 }

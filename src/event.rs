@@ -26,10 +26,12 @@ pub enum Event<'a> {
         enemy: &'a Character,
         kind: battle::AttackType,
         damage: i32,
+        mp_cost: i32,
     },
     EnemyAttack {
         kind: battle::AttackType,
         damage: i32,
+        mp_cost: i32,
     },
     StatusEffectDamage {
         damage: i32,

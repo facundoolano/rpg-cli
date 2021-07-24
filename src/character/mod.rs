@@ -185,13 +185,38 @@ impl Character {
 
     /// Generate a randomized damage number based on the attacker strength
     /// and the receiver strength.
-    pub fn damage(&self, receiver: &Self) -> i32 {
-        max(1, self.attack() - receiver.deffense())
+    /// The second element is the mp cost of the attack, if any.
+    pub fn damage(&self, receiver: &Self) -> (i32, i32) {
+        let (damage, mp_cost) = if self.can_magic_attack() {
+            (self.magic_attack(), self.mp_cost())
+        } else {
+            (self.physical_attack(), 0)
+        };
+
+        (max(1, damage - receiver.deffense()), mp_cost)
     }
 
-    pub fn attack(&self) -> i32 {
-        let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
-        self.strength + sword_str
+    pub fn physical_attack(&self) -> i32 {
+        if self.class.is_magic() {
+            self.strength / 3
+        } else {
+            let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
+            self.strength + sword_str
+        }
+    }
+
+    pub fn magic_attack(&self) -> i32 {
+        self.strength * 3
+    }
+
+    /// The character's class enables magic and there's enough mp left
+    pub fn can_magic_attack(&self) -> bool {
+        self.class.is_magic() && self.current_mp >= self.mp_cost()
+    }
+
+    fn mp_cost(&self) -> i32 {
+        // each magic attack costs one third of the "canonical" mp total for this level
+        self.class.mp.as_ref().map_or(0, |mp| mp.at(self.level) / 3)
     }
 
     pub fn deffense(&self) -> i32 {

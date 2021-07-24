@@ -35,11 +35,16 @@ pub fn handle(game: &Game, event: &Event) {
             enemy,
             kind,
             damage,
+            mp_cost,
         } => {
-            attack(enemy, kind, *damage);
+            attack(enemy, kind, *damage, *mp_cost);
         }
-        Event::EnemyAttack { kind, damage } => {
-            attack(&game.player, kind, *damage);
+        Event::EnemyAttack {
+            kind,
+            damage,
+            mp_cost,
+        } => {
+            attack(&game.player, kind, *damage, *mp_cost);
         }
         Event::StatusEffectDamage { damage } => {
             status_effect_damage(&game.player, *damage);
@@ -194,7 +199,8 @@ fn change_class(player: &Character, location: &Location, lost_xp: i32) {
     log(player, location, &lost_text);
 }
 
-fn attack(character: &Character, attack: &AttackType, damage: i32) {
+fn attack(character: &Character, attack: &AttackType, damage: i32, _mp_cost: i32) {
+    // FIXME include mp
     if !quiet() {
         battle_log(character, &format_attack(character, &attack, damage));
     }
@@ -240,6 +246,8 @@ fn long_status(game: &Game) {
         player.current_hp,
         player.max_hp
     );
+    // FIXME add mp display
+
     println!(
         "    xp:{} {}/{}",
         xp_display(player, 10),
@@ -249,9 +257,10 @@ fn long_status(game: &Game) {
     if let Some(status) = player.status_effect {
         println!("    status: {}", format_status_effect(status).bright_red());
     }
+    // FIXME add mag:{}
     println!(
         "    att:{}   def:{}   spd:{}",
-        player.attack(),
+        player.physical_attack(),
         player.deffense(),
         player.speed
     );
@@ -289,9 +298,11 @@ fn plain_status(game: &Game) {
         game.location,
         player.current_hp,
         player.max_hp,
+        // FIXME add current and max mp
         player.xp,
         player.xp_for_next(),
-        player.attack(),
+        // FIXME add magic_attack
+        player.physical_attack(),
         player.deffense(),
         player.speed,
         status_effect,
@@ -325,6 +336,7 @@ fn format_ls(emoji: &str, items: &[String], gold: i32) {
 /// Generic log function. At the moment all output of the game is structured as
 /// of a player status at some location, with an optional event suffix.
 fn log(character: &Character, location: &Location, suffix: &str) {
+    // FIXME add mp display
     println!(
         "{}{}{}@{} {}",
         format_character(character),
