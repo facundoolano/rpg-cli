@@ -186,7 +186,7 @@ impl Character {
         self.current_mp - previous
     }
 
-    /// Restore all health points to the max_hp
+    /// Restore all health and magic points to their max
     pub fn heal_full(&mut self) -> (i32, i32) {
         (self.heal(self.max_hp), self.restore_mp(self.max_mp))
     }
