@@ -26,7 +26,7 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
         en_accum += enemy.speed;
 
         if pl_accum >= en_accum {
-            if !autopotion(game, enemy) {
+            if !autopotion(game, enemy) && !autoether(game, enemy) {
                 let new_xp = player_attack(game, enemy, random);
                 xp += new_xp;
             }
@@ -129,6 +129,21 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
     }
 
     game.use_item("potion").is_ok()
+}
+
+fn autoether(game: &mut Game, enemy: &Character) -> bool {
+    if !game.player.class.is_magic() || game.player.can_magic_attack() {
+        return false;
+    }
+
+    // If there's a good chance of winning the battle on the next attack,
+    // don't use the ether.
+    let (potential_damage, _mp_cost) = game.player.damage(enemy);
+    if potential_damage >= enemy.current_hp {
+        return false;
+    }
+
+    game.use_item("ether").is_ok()
 }
 
 #[cfg(test)]
