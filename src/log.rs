@@ -390,10 +390,9 @@ fn log(character: &Character, location: &Location, suffix: &str) {
 
 fn battle_log(character: &Character, suffix: &str) {
     println!(
-        "{}{}{} {}",
+        "{}{} {}",
         format_character(character),
         hp_display(character, 4),
-        mp_display(character, 4),
         suffix
     );
 }
