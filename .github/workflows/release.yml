@@ -23,17 +23,24 @@ jobs:
           TARGET: x86_64-pc-windows-gnu
           EXTENSION: .exe
     steps:
+      - name: Get version from tag
+        id: tag_name
+        run: |
+          echo ::set-output name=current_version::${GITHUB_REF#refs/tags/}
+        shell: bash
       - uses: actions/checkout@v2
       - name: Get Changelog Entry
         id: changelog_reader
         uses: mindsers/changelog-reader-action@v2
+        with:
+          version: ${{ steps.tag_name.outputs.current_version }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: ${{ matrix.TARGET }}
       - uses: Swatinem/rust-cache@v1
       - run: cargo build --release --target ${{ matrix.TARGET }}
-      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
+      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
       
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -41,7 +48,7 @@ jobs:
         with:
           draft: true
           body: ${{ steps.changelog_reader.outputs.changes }}
-          files: rpg-cli-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
+          files: rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
 
 
 
