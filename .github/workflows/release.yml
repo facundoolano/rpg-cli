@@ -1,8 +1,7 @@
 name: publish-release
 on:
   push:
-    # FIXME uncomment
-    # tags:
+    tags:
 jobs:
   tests:
     runs-on: ${{ matrix.os }}
@@ -29,7 +28,7 @@ jobs:
       - name: Get the tag name
         run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       - name: Set the artifact name
-        run: echo "ARTIFACT=rpg-cli-${{ matrix.os }}-${{ env.TAG }}${{ matrix.EXTENSION }}" >> $GITHUB_ENV
+        run: echo "ARTIFACT=rpg-cli-${{ matrix.TARGET }}-${{ env.TAG }}${{ matrix.EXTENSION }}" >> $GITHUB_ENV
       - run: cargo build --release --target ${{ matrix.TARGET }}
       - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} ${{ env.ARTIFACT }}
       - name: Release
