@@ -31,7 +31,9 @@ jobs:
         run: echo ::set-output name=name::${GITHUB_REF#refs/*/}
       - name: Set the artifact name
         id: artifact
-        run: echo ::set-output name=name::"ARTIFACT=rpg-cli-${{ env.RUNNER_OS }}-${{ steps.tag.outputs.name }}${{ matrix.EXTENSION }}"
+        run: echo ::set-output name=name::"rpg-cli-$RUNNER_OS-$TAG${{ matrix.EXTENSION }}"
+        env:
+          TAG: ${{ steps.tag.outputs.name }}
       - run: cargo build --release --target ${{ matrix.TARGET }}
       - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} ${{ steps.artifact.outputs.name }}
       - name: Release
