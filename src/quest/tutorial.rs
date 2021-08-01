@@ -89,7 +89,13 @@ impl Quest for FindChest {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        matches!(event, Event::ChestFound { .. })
+        matches!(
+            event,
+            Event::ChestFound {
+                is_tombstone: false,
+                ..
+            }
+        )
     }
 }
 

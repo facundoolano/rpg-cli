@@ -100,8 +100,8 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> i32 {
         }
         Command::PrintWorkDir => println!("{}", game.location.path_string()),
         Command::Reset { .. } => game.reset(),
-        Command::Buy { item } => shop(game, &item),
-        Command::Use { item } => use_item(game, &item),
+        Command::Buy { item } => exit_code = shop(game, &item),
+        Command::Use { item } => exit_code = use_item(game, &item),
         Command::Todo => {
             let (todo, done) = game.quests.list(&game);
             log::quest_list(&todo, &done);
@@ -166,38 +166,44 @@ fn class(game: &mut Game, class_name: &Option<String>) {
 
 /// Buy an item from the shop or list the available items if no item name is provided.
 /// Shopping is only allowed when the player is at the home directory.
-fn shop(game: &mut Game, item_name: &Option<String>) {
+fn shop(game: &mut Game, item_name: &Option<String>) -> i32 {
     if game.location.is_home() {
         if let Some(item_name) = item_name {
             let item_name = sanitize(item_name);
             match item::shop::buy(game, &item_name) {
                 Err(item::shop::Error::NotEnoughGold) => {
-                    println!("Not enough gold.")
+                    println!("Not enough gold.");
+                    1
                 }
                 Err(item::shop::Error::ItemNotAvailable) => {
-                    println!("Item not available.")
+                    println!("Item not available.");
+                    1
                 }
-                Ok(()) => {}
+                Ok(()) => 0,
             }
         } else {
             item::shop::list(game);
+            0
         }
     } else {
         // FIXME this rule shouldn't be enforced here
-        println!("Shop is only allowed at home.")
+        println!("Shop is only allowed at home.");
+        1
     }
 }
 
 /// Use an item from the inventory or list the inventory contents if no item name is provided.
-fn use_item(game: &mut Game, item_name: &Option<String>) {
+fn use_item(game: &mut Game, item_name: &Option<String>) -> i32 {
     if let Some(item_name) = item_name {
         let item_name = sanitize(item_name);
         if let Err(game::ItemNotFound) = game.use_item(&item_name) {
             println!("Item not found.");
+            return 1;
         }
     } else {
         println!("{}", log::format_inventory(&game));
     }
+    return 0;
 }
 
 /// Return a clean version of an item/equipment name, including aliases
@@ -212,4 +218,186 @@ fn sanitize(name: &str) -> String {
         n => n,
     };
     name.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn change_dir_battle() {
+        let mut game = Game::new();
+        let cmd = Command::ChangeDir {
+            destination: "~/..".to_string(),
+            run: false,
+            bribe: false,
+            force: false,
+        };
+
+        // increase level to ensure win
+        for _ in 0..10 {
+            game.player.add_experience(game.player.xp_for_next());
+        }
+
+        let result = run(Some(cmd), &mut game);
+
+        assert_eq!(0, result);
+        assert!(game.player.xp > 0);
+        assert!(game.gold > 0);
+    }
+
+    #[test]
+    fn change_dir_dead() {
+        let mut game = Game::new();
+        let cmd = Command::ChangeDir {
+            destination: "~/..".to_string(),
+            run: false,
+            bribe: false,
+            force: false,
+        };
+
+        // reduce stats to ensure loss
+        game.player.speed = 1;
+        game.player.strength = 1;
+        game.player.current_hp = 1;
+
+        game.gold = 100;
+        game.player.xp = 100;
+
+        let result = run(Some(cmd), &mut game);
+
+        assert_eq!(1, result);
+        // game reset
+        assert_eq!(game.player.max_hp, game.player.current_hp);
+        assert_eq!(0, game.gold);
+        assert_eq!(0, game.player.xp);
+    }
+
+    #[test]
+    fn change_dir_home() {
+        let mut game = Game::new();
+
+        assert!(game.location.is_home());
+
+        // force move to a non home location
+        let cmd = Command::ChangeDir {
+            destination: "~/..".to_string(),
+            run: false,
+            bribe: false,
+            force: true,
+        };
+
+        let result = run(Some(cmd), &mut game);
+        assert_eq!(0, result);
+        assert!(!game.location.is_home());
+
+        game.player.current_hp = 1;
+
+        // back home (without forcing)
+        let cmd = Command::ChangeDir {
+            destination: "~".to_string(),
+            run: false,
+            bribe: false,
+            force: false,
+        };
+
+        let result = run(Some(cmd), &mut game);
+        assert_eq!(0, result);
+        assert!(game.location.is_home());
+        assert_eq!(game.player.max_hp, game.player.current_hp);
+    }
+
+    #[test]
+    fn inspect_tombstone() {
+        // die at non home with some gold
+        let mut game = Game::new();
+        assert!(game.tombstones.is_empty());
+
+        let cmd = Command::ChangeDir {
+            destination: "~/..".to_string(),
+            run: false,
+            bribe: false,
+            force: false,
+        };
+
+        // reduce stats to ensure loss
+        game.player.speed = 1;
+        game.player.strength = 1;
+        game.player.current_hp = 1;
+
+        game.gold = 100;
+        run(Some(cmd), &mut game);
+
+        assert_eq!(0, game.gold);
+        assert!(!game.tombstones.is_empty());
+
+        // force move to the previous dead location
+        let cmd = Command::ChangeDir {
+            destination: "~/..".to_string(),
+            run: false,
+            bribe: false,
+            force: true,
+        };
+        run(Some(cmd), &mut game);
+
+        // inspect to pick up lost gold
+        let cmd = Command::Inspect;
+        let result = run(Some(cmd), &mut game);
+        assert_eq!(0, result);
+        assert!(game.tombstones.is_empty());
+
+        // includes +200g for visit tombstone quest
+        assert_eq!(300, game.gold);
+    }
+
+    #[test]
+    fn buy_use_item() {
+        let mut game = Game::new();
+        assert!(game.inventory().is_empty());
+
+        // not buy if not enough money
+        let cmd = Command::Buy {
+            item: Some(String::from("potion")),
+        };
+        let result = run(Some(cmd), &mut game);
+        assert_eq!(1, result);
+        assert!(game.inventory().is_empty());
+
+        // buy potion
+        game.gold = 200;
+        let cmd = Command::Buy {
+            item: Some(String::from("potion")),
+        };
+        let result = run(Some(cmd), &mut game);
+        assert_eq!(0, result);
+        assert!(!game.inventory().is_empty());
+        assert_eq!(0, game.gold);
+
+        // use potion
+        game.player.current_hp -= 1;
+        let cmd = Command::Use {
+            item: Some(String::from("potion")),
+        };
+        let result = run(Some(cmd), &mut game);
+        assert_eq!(0, result);
+        assert!(game.inventory().is_empty());
+        assert_eq!(game.player.max_hp, game.player.current_hp);
+
+        // not buy if not home
+        let cmd = Command::ChangeDir {
+            destination: "~/..".to_string(),
+            run: false,
+            bribe: false,
+            force: true,
+        };
+        run(Some(cmd), &mut game);
+
+        game.gold = 200;
+        let cmd = Command::Buy {
+            item: Some(String::from("potion")),
+        };
+        let result = run(Some(cmd), &mut game);
+        assert_eq!(1, result);
+        assert!(game.inventory().is_empty());
+    }
 }
