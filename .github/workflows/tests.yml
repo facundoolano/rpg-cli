@@ -2,7 +2,7 @@ name: run-tests
 on: [push, pull_request]
 jobs:
   tests:
-    runs-on: [linux, macos]
+    runs-on: linux
     steps:
       # FIXME add cache
       - uses: actions/checkout@v2
