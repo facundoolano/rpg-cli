@@ -1,0 +1,44 @@
+name: publish-release
+on:
+  push:
+    # FIXME uncomment
+    # tags:
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+        - os: macos-latest
+          TARGET: x86_64-apple-darwin
+
+        - os: ubuntu-latest
+          TARGET: x86_64-unknown-linux-musl
+
+        - os: windows-latest
+          TARGET: x86_64-pc-windows-gnu
+          EXTENSION: .exe
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          target: ${{ matrix.TARGET }}
+      - uses: Swatinem/rust-cache@v1
+      - name: Get the tag name
+        run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+      - name: Set the artifact name
+        run: echo "ARTIFACT=rpg-cli-${{ matrix.os }}-${{ env.TAG }}${{ matrix.EXTENSION }}" >> $GITHUB_ENV
+      - run: cargo build --release --target ${{ matrix.TARGET }}
+      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} ${{ env.ARTIFACT }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        draft: true
+        with:
+          files: ${{ env.ARTIFACT }}
+
+
+
+# TODO set body from changelog
+
+
