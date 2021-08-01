@@ -2,6 +2,7 @@ name: publish-release
 on:
   push:
     tags:
+      - "*.*.*"
 jobs:
   tests:
     runs-on: ${{ matrix.os }}
