@@ -33,8 +33,9 @@ jobs:
       - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} ${{ env.ARTIFACT }}
       - name: Release
         uses: softprops/action-gh-release@v1
-        draft: true
+        # FIXME remove draft
         with:
+          draft: true
           files: ${{ env.ARTIFACT }}
 
 
