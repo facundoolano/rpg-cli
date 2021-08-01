@@ -14,6 +14,9 @@
 * Character speed contributes to run away success probability 4d6e1a3
 * Initial stats are randomized 50af983
 
+### Fixed
+* Find chest quest not rewarded when finding a tombstone c0d62aa
+
 ## [0.5.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.5.0) - 2021-06-26
 ### Added
 * a `rpg reset --hard` flag to remove data files and forget information from previous plays #46
