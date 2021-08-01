@@ -500,7 +500,7 @@ mod tests {
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
-        assert_eq!(0, hero.heal_full());
+        assert_eq!(0, hero.heal_full().0);
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
@@ -514,7 +514,7 @@ mod tests {
         assert_eq!(25, hero.current_hp);
 
         hero.current_hp = 10;
-        assert_eq!(15, hero.heal_full());
+        assert_eq!(15, hero.heal_full().0);
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
     }
