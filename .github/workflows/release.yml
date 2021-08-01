@@ -11,12 +11,15 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
         - os: macos-latest
+          OS_NAME: macOS
           TARGET: x86_64-apple-darwin
 
         - os: ubuntu-latest
+          OS_NAME: linux
           TARGET: x86_64-unknown-linux-musl
 
         - os: windows-latest
+          OS_NAME: windows
           TARGET: x86_64-pc-windows-gnu
           EXTENSION: .exe
     steps:
@@ -27,13 +30,13 @@ jobs:
           target: ${{ matrix.TARGET }}
       - uses: Swatinem/rust-cache@v1
       - run: cargo build --release --target ${{ matrix.TARGET }}
-      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ env.RUNNER_OS }}${{ matrix.EXTENSION }}
+      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
       - name: Release
         uses: softprops/action-gh-release@v1
         # FIXME remove draft
         with:
           draft: true
-          files: rpg-cli-${{ env.RUNNER_OS }}${{ matrix.EXTENSION }}
+          files: rpg-cli-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
 
 
 
