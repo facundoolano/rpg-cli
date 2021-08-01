@@ -27,13 +27,13 @@ jobs:
           target: ${{ matrix.TARGET }}
       - uses: Swatinem/rust-cache@v1
       - run: cargo build --release --target ${{ matrix.TARGET }}
-      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ matrix.TARGET}}${{ matrix.EXTENSION }}
+      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ env.RUNNER_OS }}${{ matrix.EXTENSION }}
       - name: Release
         uses: softprops/action-gh-release@v1
         # FIXME remove draft
         with:
           draft: true
-          files: rpg-cli-${{ matrix.TARGET}}${{ matrix.EXTENSION }}
+          files: rpg-cli-${{ env.RUNNER_OS }}${{ matrix.EXTENSION }}
 
 
 
