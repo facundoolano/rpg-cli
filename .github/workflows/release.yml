@@ -40,7 +40,7 @@ jobs:
         # FIXME remove draft
         with:
           draft: true
-          body_path: ${{ steps.changelog_reader.outputs.changes }}
+          body: ${{ steps.changelog_reader.outputs.changes }}
           files: rpg-cli-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
 
 
