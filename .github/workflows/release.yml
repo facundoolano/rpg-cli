@@ -24,6 +24,9 @@ jobs:
           EXTENSION: .exe
     steps:
       - uses: actions/checkout@v2
+      - name: Get Changelog Entry
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -31,15 +34,14 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - run: cargo build --release --target ${{ matrix.TARGET }}
       - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
+      
       - name: Release
         uses: softprops/action-gh-release@v1
         # FIXME remove draft
         with:
           draft: true
+          body_path: ${{ steps.changelog_reader.outputs.changes }}
           files: rpg-cli-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
 
-
-
-# TODO set body from changelog
 
 
