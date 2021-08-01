@@ -26,22 +26,14 @@ jobs:
           toolchain: stable
           target: ${{ matrix.TARGET }}
       - uses: Swatinem/rust-cache@v1
-      - name: Set the tag name
-        id: tag
-        run: echo ::set-output name=name::${GITHUB_REF#refs/*/}
-      - name: Set the artifact name
-        id: artifact
-        run: echo ::set-output name=name::"rpg-cli-${{ env.RUNNER_OS }}-${{ env.TAG }}${{ matrix.EXTENSION }}"
-        env:
-          TAG: ${{ steps.tag.outputs.name }}
       - run: cargo build --release --target ${{ matrix.TARGET }}
-      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} "${{ steps.artifact.outputs.name }}"
+      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ matrix.TARGET}}${{ matrix.EXTENSION }}
       - name: Release
         uses: softprops/action-gh-release@v1
         # FIXME remove draft
         with:
           draft: true
-          files: ${{ steps.artifact.outputs.name }}
+          files: rpg-cli-${{ matrix.TARGET}}${{ matrix.EXTENSION }}
 
 
 
