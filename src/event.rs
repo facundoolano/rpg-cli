@@ -42,6 +42,7 @@ pub enum Event<'a> {
         xp: i32,
         levels_up: i32,
         gold: i32,
+        player_class: String,
     },
     BattleLost,
     LevelUp {
@@ -67,6 +68,7 @@ pub enum Event<'a> {
     ClassChanged {
         lost_xp: i32,
     },
+    GameReset,
 }
 
 impl Event<'_> {

@@ -55,31 +55,6 @@ impl Quest for UsePotion {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReachLevel {
-    target: i32,
-}
-
-impl ReachLevel {
-    pub fn new(target: i32) -> Self {
-        Self { target }
-    }
-}
-
-#[typetag::serde]
-impl Quest for ReachLevel {
-    fn description(&self) -> String {
-        format!("reach level {}", self.target)
-    }
-
-    fn handle(&mut self, event: &Event) -> bool {
-        if let Event::LevelUp { current, .. } = event {
-            return *current == self.target;
-        }
-        false
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FindChest;
 
 #[typetag::serde]
