@@ -1,0 +1,52 @@
+name: publish-release
+on:
+  push:
+    tags:
+      - "*.*.*"
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+        - os: macos-latest
+          OS_NAME: macOS
+          TARGET: x86_64-apple-darwin
+
+        - os: ubuntu-latest
+          OS_NAME: linux
+          TARGET: x86_64-unknown-linux-musl
+
+        - os: windows-latest
+          OS_NAME: windows
+          TARGET: x86_64-pc-windows-gnu
+          EXTENSION: .exe
+    steps:
+      - name: Get version from tag
+        id: tag_name
+        run: |
+          echo ::set-output name=current_version::${GITHUB_REF#refs/tags/}
+        shell: bash
+      - uses: actions/checkout@v2
+      - name: Get Changelog Entry
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          version: ${{ steps.tag_name.outputs.current_version }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.TARGET }}
+      - uses: Swatinem/rust-cache@v1
+      - run: cargo build --release --target ${{ matrix.TARGET }}
+      - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
+      
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ steps.changelog_reader.outputs.changes }}
+          files: rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
+
+
+
