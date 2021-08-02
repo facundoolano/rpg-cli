@@ -203,7 +203,7 @@ fn use_item(game: &mut Game, item_name: &Option<String>) -> i32 {
     } else {
         println!("{}", log::format_inventory(&game));
     }
-    return 0;
+    0
 }
 
 /// Return a clean version of an item/equipment name, including aliases

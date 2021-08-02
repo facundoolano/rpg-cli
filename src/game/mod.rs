@@ -63,6 +63,8 @@ impl Game {
 
         // replace the current, finished game with the new one
         *self = new_game;
+
+        Event::emit(self, Event::GameReset);
     }
 
     /// Move the hero's location towards the given destination, one directory
@@ -263,6 +265,7 @@ impl Game {
                         xp,
                         levels_up,
                         gold,
+                        player_class: self.player.name(),
                     },
                 );
 

@@ -106,6 +106,7 @@ pub fn handle(game: &Game, event: &Event) {
         Event::LevelUp { .. } => {}
         Event::ItemBought { .. } => {}
         Event::ItemUsed { .. } => {}
+        Event::GameReset => {}
     }
 }
 

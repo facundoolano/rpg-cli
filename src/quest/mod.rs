@@ -6,6 +6,7 @@ use core::fmt;
 use serde::{Deserialize, Serialize};
 
 mod beat_enemy;
+mod level;
 mod tutorial;
 
 pub fn handle(game: &mut game::Game, event: &event::Event) {
@@ -39,11 +40,11 @@ impl QuestList {
         self.todo.push((1, 100, Box::new(tutorial::BuySword)));
         self.todo.push((1, 100, Box::new(tutorial::UsePotion)));
         self.todo
-            .push((1, 100, Box::new(tutorial::ReachLevel::new(2))));
+            .push((1, 100, Box::new(level::ReachLevel::new(2))));
 
         self.todo.push((2, 200, Box::new(tutorial::FindChest)));
         self.todo
-            .push((2, 500, Box::new(tutorial::ReachLevel::new(5))));
+            .push((2, 500, Box::new(level::ReachLevel::new(5))));
         self.todo.push((
             2,
             1000,
@@ -52,7 +53,7 @@ impl QuestList {
 
         self.todo.push((5, 200, Box::new(tutorial::VisitTomb)));
         self.todo
-            .push((5, 1000, Box::new(tutorial::ReachLevel::new(10))));
+            .push((5, 1000, Box::new(level::ReachLevel::new(10))));
         self.todo.push((
             5,
             5000,
@@ -63,8 +64,19 @@ impl QuestList {
         self.todo.push((
             10,
             10000,
-            beat_enemy::of_class(class::Category::Legendary, "beat all common creatures"),
+            beat_enemy::of_class(class::Category::Legendary, "beat all legendary creatures"),
         ));
+
+        for name in class::Class::names(class::Category::Player) {
+            self.todo
+                .push((10, 5000, Box::new(level::RaiseClassLevels::new(&name))));
+        }
+
+        self.todo
+            .push((2, 500, Box::new(level::ReachLevel::new(50))));
+
+        self.todo
+            .push((2, 500, Box::new(level::ReachLevel::new(100))));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
@@ -145,6 +157,7 @@ mod tests {
                 xp: 100,
                 levels_up: 0,
                 gold: 100,
+                player_class: "warrior".to_string(),
             },
         );
         assert_eq!(initial_quests - 1, game.quests.todo.len());
