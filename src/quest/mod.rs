@@ -65,6 +65,12 @@ impl QuestList {
             10000,
             beat_enemy::of_class(class::Category::Legendary, "beat all common creatures"),
         ));
+
+        self.todo
+            .push((2, 500, Box::new(tutorial::ReachLevel::new(50))));
+
+        self.todo
+            .push((2, 500, Box::new(tutorial::ReachLevel::new(100))));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
