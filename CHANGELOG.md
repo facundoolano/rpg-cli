@@ -2,10 +2,6 @@
 
 ## Unreleased
 ### Added
-* This is a test
-
-## [0.0.12-test](https://github.com/facundoolano/rpg-cli/releases/tag/0.0.12-test) - 2021-08-01
-### Added
 * Customizable classes file #76
 * Thief class and command to select player class #77.
 * Mage class, magic attacks and ether item #78.

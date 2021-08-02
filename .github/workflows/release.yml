@@ -44,9 +44,7 @@ jobs:
       
       - name: Release
         uses: softprops/action-gh-release@v1
-        # FIXME remove draft
         with:
-          draft: true
           body: ${{ steps.changelog_reader.outputs.changes }}
           files: rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
 
