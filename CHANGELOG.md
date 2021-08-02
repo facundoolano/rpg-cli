@@ -4,7 +4,7 @@
 ### Added
 * This is a test
 
-## [test0.0.12](https://github.com/facundoolano/rpg-cli/releases/tag/test0.0.12) - 2021-08-01
+## [0.0.12-test](https://github.com/facundoolano/rpg-cli/releases/tag/0.0.12-test) - 2021-08-01
 ### Added
 * Customizable classes file #76
 * Thief class and command to select player class #77.
