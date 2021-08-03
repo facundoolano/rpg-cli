@@ -365,7 +365,7 @@ mod tests {
 
         // not buy if not enough money
         let cmd = Command::Buy {
-            item: Some(String::from("potion")),
+            items: vec![String::from("potion")],
         };
         let result = run(Some(cmd), &mut game);
         assert_eq!(1, result);
@@ -374,7 +374,7 @@ mod tests {
         // buy potion
         game.gold = 200;
         let cmd = Command::Buy {
-            item: Some(String::from("potion")),
+            items: vec![String::from("potion")],
         };
         let result = run(Some(cmd), &mut game);
         assert_eq!(0, result);
@@ -384,7 +384,7 @@ mod tests {
         // use potion
         game.player.current_hp -= 1;
         let cmd = Command::Use {
-            item: Some(String::from("potion")),
+            items: vec![String::from("potion")],
         };
         let result = run(Some(cmd), &mut game);
         assert_eq!(0, result);
@@ -402,7 +402,7 @@ mod tests {
 
         game.gold = 200;
         let cmd = Command::Buy {
-            item: Some(String::from("potion")),
+            items: vec![String::from("potion")],
         };
         let result = run(Some(cmd), &mut game);
         assert_eq!(1, result);
