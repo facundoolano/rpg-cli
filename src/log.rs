@@ -53,9 +53,10 @@ pub fn handle(game: &Game, event: &Event) {
             xp,
             levels_up,
             gold,
+            items,
             ..
         } => {
-            battle_won(&game, *xp, *levels_up, *gold);
+            battle_won(&game, *xp, *levels_up, *gold, items);
         }
         Event::BattleLost => {
             battle_lost(&game.player);
@@ -153,7 +154,6 @@ fn bribe(player: &Character, amount: i32) {
     if amount > 0 {
         let suffix = format!("bribed {}", format!("-{}g", amount).yellow());
         battle_log(player, &suffix);
-        println!();
     } else {
         battle_log(player, "can't bribe!");
     }
@@ -245,7 +245,7 @@ fn battle_lost(player: &Character) {
     battle_log(player, "\u{1F480}");
 }
 
-fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32) {
+fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32, items: &[String]) {
     let level_str = if levels_up > 0 {
         let plus = (0..levels_up).map(|_| "+").collect::<String>();
         format!(" {}level", plus).cyan().to_string()
@@ -256,10 +256,10 @@ fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32) {
     battle_log(
         &game.player,
         &format!(
-            "{}{} {}",
+            "{}{}{}",
             format!("+{}xp", xp).bold(),
             level_str,
-            format_gold_plus(gold)
+            format_ls("", items, gold)
         ),
     );
     short_status(game);
@@ -355,22 +355,23 @@ fn plain_status(game: &Game) {
 }
 
 fn chest(items: &[String], gold: i32) {
-    format_ls("\u{1F4E6}", items, gold);
+    println!("{}", format_ls("\u{1F4E6}", items, gold));
 }
 
 fn tombstone(items: &[String], gold: i32) {
-    format_ls("\u{1FAA6} ", items, gold);
+    println!("{}", format_ls("\u{1FAA6} ", items, gold));
 }
 
-fn format_ls(emoji: &str, items: &[String], gold: i32) {
-    print!("{}", emoji);
+fn format_ls(emoji: &str, items: &[String], gold: i32) -> String {
+    let mut string = format!("{} ", emoji);
+
     if gold > 0 {
-        print!("  {}", format_gold_plus(gold));
+        string.push_str(&format!("{} ", format_gold_plus(gold)));
     }
     for item in items {
-        print!("  +{}", item);
+        string.push_str(&format!("+{}", item));
     }
-    println!();
+    string
 }
 
 // HELPERS
