@@ -149,6 +149,7 @@ fn autoether(game: &mut Game, enemy: &Character) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::character::class;
     use crate::location::Distance;
     use crate::randomizer::random;
 
@@ -165,6 +166,7 @@ mod tests {
         enemy.speed = 1;
         enemy.current_hp = 15;
         enemy.strength = 5;
+        enemy.class.category = class::Category::Common;
 
         // expected turns
         // enemy - 10hp
@@ -184,6 +186,7 @@ mod tests {
         enemy.speed = 1;
         enemy.current_hp = 15;
         enemy.strength = 5;
+        enemy.class.category = class::Category::Common;
 
         // same turns, added xp increases level
 
