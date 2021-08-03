@@ -41,11 +41,11 @@ pub enum Command {
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
     #[clap(alias = "b", display_order = 2)]
-    Buy { item: Option<String> },
+    Buy { items: Vec<String> },
 
     /// Uses an item from the inventory.
     #[clap(alias = "u", display_order = 3)]
-    Use { item: Option<String> },
+    Use { items: Vec<String> },
 
     /// Prints the quest todo list.
     #[clap(alias = "t", display_order = 4)]
@@ -100,8 +100,8 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> i32 {
         }
         Command::PrintWorkDir => println!("{}", game.location.path_string()),
         Command::Reset { .. } => game.reset(),
-        Command::Buy { item } => exit_code = shop(game, &item),
-        Command::Use { item } => exit_code = use_item(game, &item),
+        Command::Buy { items } => exit_code = shop(game, &items),
+        Command::Use { items } => exit_code = use_item(game, &items),
         Command::Todo => {
             let (todo, done) = game.quests.list(&game);
             log::quest_list(&todo, &done);
@@ -166,23 +166,26 @@ fn class(game: &mut Game, class_name: &Option<String>) {
 
 /// Buy an item from the shop or list the available items if no item name is provided.
 /// Shopping is only allowed when the player is at the home directory.
-fn shop(game: &mut Game, item_name: &Option<String>) -> i32 {
+fn shop(game: &mut Game, items: &[String]) -> i32 {
     if game.location.is_home() {
-        if let Some(item_name) = item_name {
-            let item_name = sanitize(item_name);
-            match item::shop::buy(game, &item_name) {
-                Err(item::shop::Error::NotEnoughGold) => {
-                    println!("Not enough gold.");
-                    1
-                }
-                Err(item::shop::Error::ItemNotAvailable) => {
-                    println!("Item not available.");
-                    1
-                }
-                Ok(()) => 0,
-            }
-        } else {
+        if items.is_empty() {
             item::shop::list(game);
+            0
+        } else {
+            for item_name in items {
+                let item_name = sanitize(item_name);
+                match item::shop::buy(game, &item_name) {
+                    Err(item::shop::Error::NotEnoughGold) => {
+                        println!("Not enough gold.");
+                        return 1;
+                    }
+                    Err(item::shop::Error::ItemNotAvailable) => {
+                        println!("Item not available.");
+                        return 1;
+                    }
+                    Ok(()) => {}
+                }
+            }
             0
         }
     } else {
@@ -193,15 +196,17 @@ fn shop(game: &mut Game, item_name: &Option<String>) -> i32 {
 }
 
 /// Use an item from the inventory or list the inventory contents if no item name is provided.
-fn use_item(game: &mut Game, item_name: &Option<String>) -> i32 {
-    if let Some(item_name) = item_name {
-        let item_name = sanitize(item_name);
-        if let Err(game::ItemNotFound) = game.use_item(&item_name) {
-            println!("Item not found.");
-            return 1;
-        }
-    } else {
+fn use_item(game: &mut Game, items: &[String]) -> i32 {
+    if items.is_empty() {
         println!("{}", log::format_inventory(&game));
+    } else {
+        for item_name in items {
+            let item_name = sanitize(item_name);
+            if let Err(game::ItemNotFound) = game.use_item(&item_name) {
+                println!("Item not found.");
+                return 1;
+            }
+        }
     }
     0
 }
