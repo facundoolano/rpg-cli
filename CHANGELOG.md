@@ -17,6 +17,7 @@
 * Character speed contributes to run away success probability 4d6e1a3
 * Initial stats are randomized 50af983
 * Use GitHub actions instead of travis for CI and release building #80
+* Change xp gained based on enemy class category #83
 
 ### Fixed
 * Find chest quest not rewarded when finding a tombstone c0d62aa
