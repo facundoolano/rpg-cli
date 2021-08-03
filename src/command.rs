@@ -94,7 +94,7 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> i32 {
         Command::Inspect => {
             game.inspect();
         }
-        Command::Class { name } => class(game, &name),
+        Command::Class { name } => exit_code = class(game, &name),
         Command::Battle { run, bribe } => {
             exit_code = battle(game, run, bribe);
         }
@@ -142,15 +142,17 @@ fn battle(game: &mut Game, run: bool, bribe: bool) -> i32 {
 }
 
 /// Set the class for the player character
-fn class(game: &mut Game, class_name: &Option<String>) {
+fn class(game: &mut Game, class_name: &Option<String>) -> i32 {
     if let Some(class_name) = class_name {
         let class_name = sanitize(class_name);
         match game.change_class(&class_name) {
             Err(game::ClassChangeError::NotAtHome) => {
                 println!("Class change is only allowed at home.");
+                return 1;
             }
             Err(game::ClassChangeError::NotFound) => {
-                println!("Unknown class name.")
+                println!("Unknown class name.");
+                return 1;
             }
             Ok(()) => {}
         }
@@ -162,37 +164,38 @@ fn class(game: &mut Game, class_name: &Option<String>) {
                 .collect();
         println!("Options: {}", player_classes.join(", "));
     }
+    0
 }
 
 /// Buy an item from the shop or list the available items if no item name is provided.
 /// Shopping is only allowed when the player is at the home directory.
 fn shop(game: &mut Game, items: &[String]) -> i32 {
-    if game.location.is_home() {
-        if items.is_empty() {
-            item::shop::list(game);
-            0
-        } else {
-            for item_name in items {
-                let item_name = sanitize(item_name);
-                match item::shop::buy(game, &item_name) {
-                    Err(item::shop::Error::NotEnoughGold) => {
-                        println!("Not enough gold.");
-                        return 1;
-                    }
-                    Err(item::shop::Error::ItemNotAvailable) => {
-                        println!("Item not available.");
-                        return 1;
-                    }
-                    Ok(()) => {}
-                }
-            }
-            0
+    if items.is_empty() {
+        if let Err(item::shop::Error::NotAtHome) = item::shop::list(game) {
+            println!("Shop is only allowed at home.");
+            return 1;
         }
     } else {
-        // FIXME this rule shouldn't be enforced here
-        println!("Shop is only allowed at home.");
-        1
+        for item_name in items {
+            let item_name = sanitize(item_name);
+            match item::shop::buy(game, &item_name) {
+                Err(item::shop::Error::NotEnoughGold) => {
+                    println!("Not enough gold.");
+                    return 1;
+                }
+                Err(item::shop::Error::ItemNotAvailable) => {
+                    println!("Item not available.");
+                    return 1;
+                }
+                Err(item::shop::Error::NotAtHome) => {
+                    println!("Shop is only allowed at home.");
+                    return 1;
+                }
+                Ok(()) => {}
+            }
+        }
     }
+    0
 }
 
 /// Use an item from the inventory or list the inventory contents if no item name is provided.

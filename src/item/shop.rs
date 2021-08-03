@@ -9,19 +9,28 @@ use crate::log;
 pub enum Error {
     NotEnoughGold,
     ItemNotAvailable,
+    NotAtHome,
 }
 
 /// Print the list of available items and their price.
-pub fn list(game: &Game) {
+pub fn list(game: &Game) -> Result<(), Error> {
+    if !game.location.is_home() {
+        return Err(Error::NotAtHome);
+    }
     let items = available_items(&game.player)
         .into_iter()
         .map(|(_, item)| item)
         .collect::<Vec<Box<dyn Shoppable>>>();
     log::shop_list(game, items);
+    Ok(())
 }
 
 /// Buy an item and add it to the game.
 pub fn buy(game: &mut Game, item: &str) -> Result<(), Error> {
+    if !game.location.is_home() {
+        return Err(Error::NotAtHome);
+    }
+
     let player = &mut game.player;
     let mut items = available_items(player)
         .into_iter()
