@@ -246,12 +246,16 @@ impl Character {
 
     /// How many experience points are gained by inflicting damage to an enemy.
     pub fn xp_gained(&self, receiver: &Self, damage: i32) -> i32 {
-        // should the player also gain experience by damage received?
+        let class_multiplier = match receiver.class.category {
+            class::Category::Rare => 3,
+            class::Category::Legendary => 5,
+            _ => 1,
+        };
 
         if receiver.level > self.level {
-            damage * (1 + receiver.level - self.level)
+            damage * (1 + receiver.level - self.level) * class_multiplier
         } else {
-            damage / (1 + self.level - receiver.level)
+            damage / (1 + self.level - receiver.level) * class_multiplier
         }
     }
 
