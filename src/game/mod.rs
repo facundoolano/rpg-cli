@@ -257,6 +257,9 @@ impl Game {
                 self.gold += gold;
                 let levels_up = self.player.add_experience(xp);
 
+                let reward_items =
+                    Chest::battle_loot(self).map_or(Vec::new(), |mut chest| chest.pick_up(self).0);
+
                 Event::emit(
                     self,
                     Event::BattleWon {
@@ -265,6 +268,7 @@ impl Game {
                         xp,
                         levels_up,
                         gold,
+                        items: &reward_items,
                         player_class: self.player.name(),
                     },
                 );

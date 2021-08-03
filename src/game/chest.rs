@@ -52,6 +52,15 @@ impl Chest {
         }
     }
 
+    pub fn battle_loot(game: &game::Game) -> Option<Self> {
+        // reuse item % from chests, but don't add extra gold
+        // kind of hacky but does for now
+        Self::generate(game).map(|mut c| {
+            c.gold = 0;
+            c
+        })
+    }
+
     /// Remove the gold, items and equipment from a hero and return them as a new chest.
     pub fn drop(game: &mut game::Game) -> Self {
         let sword = game.player.sword.take();

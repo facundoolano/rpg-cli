@@ -158,6 +158,7 @@ mod tests {
                 levels_up: 0,
                 gold: 100,
                 player_class: "warrior".to_string(),
+                items: &[],
             },
         );
         assert_eq!(initial_quests - 1, game.quests.todo.len());

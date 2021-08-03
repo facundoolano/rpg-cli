@@ -42,6 +42,7 @@ pub enum Event<'a> {
         xp: i32,
         levels_up: i32,
         gold: i32,
+        items: &'a [String],
         player_class: String,
     },
     BattleLost,
