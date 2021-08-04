@@ -8,6 +8,7 @@ use crate::location::Location;
 use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
+use anyhow::{bail, Result};
 use chest::Chest;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -25,12 +26,6 @@ pub struct Game {
     pub inventory: HashMap<String, Vec<Box<dyn Item>>>,
     pub tombstones: HashMap<String, Chest>,
     inspected: HashSet<Location>,
-}
-
-pub struct ItemNotFound;
-pub enum ClassChangeError {
-    NotFound,
-    NotAtHome,
 }
 
 impl Game {
@@ -157,7 +152,7 @@ impl Game {
         entry.push(item);
     }
 
-    pub fn use_item(&mut self, name: &str) -> Result<(), ItemNotFound> {
+    pub fn use_item(&mut self, name: &str) -> Result<()> {
         let name = name.to_string();
         // get all items of that type and use one
         // if there are no remaining, drop the type from the inventory
@@ -173,7 +168,7 @@ impl Game {
 
             Ok(())
         } else {
-            Err(ItemNotFound)
+            bail!("Item not found.")
         }
     }
 
@@ -184,14 +179,14 @@ impl Game {
             .collect::<HashMap<&str, usize>>()
     }
 
-    pub fn change_class(&mut self, name: &str) -> Result<(), ClassChangeError> {
+    pub fn change_class(&mut self, name: &str) -> Result<()> {
         if !self.location.is_home() {
-            Err(ClassChangeError::NotAtHome)
+            bail!("Class change is only allowed at home.")
         } else if let Ok(lost_xp) = self.player.change_class(name) {
             Event::emit(self, Event::ClassChanged { lost_xp });
             Ok(())
         } else {
-            Err(ClassChangeError::NotFound)
+            bail!("Unknown class name.");
         }
     }
 

@@ -369,7 +369,7 @@ fn format_ls(emoji: &str, items: &[String], gold: i32) -> String {
         string.push_str(&format!("{} ", format_gold_plus(gold)));
     }
     for item in items {
-        string.push_str(&format!("+{}", item));
+        string.push_str(&format!("+{} ", item));
     }
     string
 }

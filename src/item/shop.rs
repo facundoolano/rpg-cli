@@ -5,23 +5,28 @@ use crate::character::Character;
 use crate::event::Event;
 use crate::game::Game;
 use crate::log;
-
-pub enum Error {
-    NotEnoughGold,
-    ItemNotAvailable,
-}
+use anyhow::{bail, Result};
 
 /// Print the list of available items and their price.
-pub fn list(game: &Game) {
+pub fn list(game: &Game) -> Result<()> {
+    if !game.location.is_home() {
+        bail!("Shop is only allowed at home.");
+    }
+
     let items = available_items(&game.player)
         .into_iter()
         .map(|(_, item)| item)
         .collect::<Vec<Box<dyn Shoppable>>>();
     log::shop_list(game, items);
+    Ok(())
 }
 
 /// Buy an item and add it to the game.
-pub fn buy(game: &mut Game, item: &str) -> Result<(), Error> {
+pub fn buy(game: &mut Game, item: &str) -> Result<()> {
+    if !game.location.is_home() {
+        bail!("Shop is only allowed at home.");
+    }
+
     let player = &mut game.player;
     let mut items = available_items(player)
         .into_iter()
@@ -30,7 +35,7 @@ pub fn buy(game: &mut Game, item: &str) -> Result<(), Error> {
         item.buy(game)?;
         Ok(())
     } else {
-        Err(Error::ItemNotAvailable)
+        bail!("Item not available.")
     }
 }
 
@@ -66,9 +71,9 @@ fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
 
 pub trait Shoppable: Display {
     fn cost(&self) -> i32;
-    fn buy(&self, game: &mut Game) -> Result<(), Error> {
+    fn buy(&self, game: &mut Game) -> Result<()> {
         if game.gold < self.cost() {
-            return Err(Error::NotEnoughGold);
+            bail!("Not enough gold.");
         }
         game.gold -= self.cost();
         self.add_to(game);
