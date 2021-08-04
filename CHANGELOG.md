@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## [0.6.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.6.0) - 2021-08-04
 ### Added
 * Customizable classes file #76
 * Thief class and command to select player class #77
