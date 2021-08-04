@@ -167,6 +167,7 @@ fn run_away(player: &Character, success: bool) {
     }
 }
 
+// TODO reduce duplication between heal and heal_item
 fn heal(
     player: &Character,
     location: &Location,
@@ -195,7 +196,7 @@ fn heal(
                 "{}{}{}",
                 recovered_text.green(),
                 mp_text.purple(),
-                healed_text.purple()
+                healed_text.green()
             ),
         );
     }
@@ -215,7 +216,7 @@ fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i3
         );
     }
     if healed {
-        battle_log(player, &format!("+healed {}", item).green());
+        battle_log(player, &format!("+healed {}", item).green().to_string());
     }
 }
 
