@@ -45,7 +45,15 @@ fn main() {
 
     let mut game = datafile::load().unwrap_or_else(|_| Game::new());
 
-    let exit_code = command::run(opts.cmd, &mut game);
+    let mut exit_code = 0;
+    if let Err(err) = command::run(opts.cmd, &mut game) {
+        exit_code = 1;
+
+        // don't print a new line if error message is empty
+        if !err.to_string().is_empty() {
+            println!("{}", err);
+        };
+    }
 
     datafile::save(&game).unwrap();
     std::process::exit(exit_code);

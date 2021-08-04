@@ -78,52 +78,29 @@ pub enum Command {
     },
 }
 
-// FIXME return result instead of exit code
-pub fn run(cmd: Option<Command>, game: &mut Game) -> i32 {
-    // TODO move every arm to a function
-    let result = match cmd.unwrap_or(Command::Stat) {
-        Command::Stat => {
-            log::status(&game);
-            Ok(())
-        }
+pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
+    match cmd.unwrap_or(Command::Stat) {
+        Command::Stat => log::status(&game),
         Command::ChangeDir {
             destination,
             run,
             bribe,
             force,
-        } => change_dir(game, &destination, run, bribe, force),
-        Command::Inspect => {
-            game.inspect();
-            Ok(())
-        }
-        Command::Class { name } => class(game, &name),
-        Command::Battle { run, bribe } => battle(game, run, bribe),
-        Command::PrintWorkDir => {
-            println!("{}", game.location.path_string());
-            Ok(())
-        }
-        Command::Reset { .. } => {
-            game.reset();
-            Ok(())
-        }
-        Command::Buy { items } => shop(game, &items),
-        Command::Use { items } => use_item(game, &items),
+        } => change_dir(game, &destination, run, bribe, force)?,
+        Command::Inspect => game.inspect(),
+        Command::Class { name } => class(game, &name)?,
+        Command::Battle { run, bribe } => battle(game, run, bribe)?,
+        Command::PrintWorkDir => println!("{}", game.location.path_string()),
+        Command::Reset { .. } => game.reset(),
+        Command::Buy { items } => shop(game, &items)?,
+        Command::Use { items } => use_item(game, &items)?,
         Command::Todo => {
             let (todo, done) = game.quests.list(&game);
             log::quest_list(&todo, &done);
-            Ok(())
         }
     };
 
-    if let Err(err) = result {
-        // don't print a new line if error message is empty
-        if !err.to_string().is_empty() {
-            println!("{}", err);
-        }
-        1
-    } else {
-        0
-    }
+    Ok(())
 }
 
 /// Attempt to move the hero to the supplied location, possibly engaging
@@ -229,7 +206,7 @@ mod tests {
 
         let result = run(Some(cmd), &mut game);
 
-        assert_eq!(0, result);
+        assert!(result.is_ok());
         assert!(game.player.xp > 0);
         assert!(game.gold > 0);
     }
@@ -254,7 +231,7 @@ mod tests {
 
         let result = run(Some(cmd), &mut game);
 
-        assert_eq!(1, result);
+        assert!(result.is_err());
         // game reset
         assert_eq!(game.player.max_hp, game.player.current_hp);
         assert_eq!(0, game.gold);
@@ -276,7 +253,7 @@ mod tests {
         };
 
         let result = run(Some(cmd), &mut game);
-        assert_eq!(0, result);
+        assert!(result.is_ok());
         assert!(!game.location.is_home());
 
         game.player.current_hp = 1;
@@ -290,7 +267,7 @@ mod tests {
         };
 
         let result = run(Some(cmd), &mut game);
-        assert_eq!(0, result);
+        assert!(result.is_ok());
         assert!(game.location.is_home());
         assert_eq!(game.player.max_hp, game.player.current_hp);
     }
@@ -314,7 +291,7 @@ mod tests {
         game.player.current_hp = 1;
 
         game.gold = 100;
-        run(Some(cmd), &mut game);
+        assert!(run(Some(cmd), &mut game).is_err());
 
         assert_eq!(0, game.gold);
         assert!(!game.tombstones.is_empty());
@@ -326,12 +303,12 @@ mod tests {
             bribe: false,
             force: true,
         };
-        run(Some(cmd), &mut game);
+        run(Some(cmd), &mut game).unwrap();
 
         // inspect to pick up lost gold
         let cmd = Command::Inspect;
         let result = run(Some(cmd), &mut game);
-        assert_eq!(0, result);
+        assert!(result.is_ok());
         assert!(game.tombstones.is_empty());
 
         // includes +200g for visit tombstone quest
@@ -348,7 +325,7 @@ mod tests {
             items: vec![String::from("potion")],
         };
         let result = run(Some(cmd), &mut game);
-        assert_eq!(1, result);
+        assert!(result.is_err());
         assert!(game.inventory().is_empty());
 
         // buy potion
@@ -357,7 +334,7 @@ mod tests {
             items: vec![String::from("potion")],
         };
         let result = run(Some(cmd), &mut game);
-        assert_eq!(0, result);
+        assert!(result.is_ok());
         assert!(!game.inventory().is_empty());
         assert_eq!(0, game.gold);
 
@@ -367,7 +344,7 @@ mod tests {
             items: vec![String::from("potion")],
         };
         let result = run(Some(cmd), &mut game);
-        assert_eq!(0, result);
+        assert!(result.is_ok());
         assert!(game.inventory().is_empty());
         assert_eq!(game.player.max_hp, game.player.current_hp);
 
@@ -378,14 +355,14 @@ mod tests {
             bribe: false,
             force: true,
         };
-        run(Some(cmd), &mut game);
+        run(Some(cmd), &mut game).unwrap();
 
         game.gold = 200;
         let cmd = Command::Buy {
             items: vec![String::from("potion")],
         };
         let result = run(Some(cmd), &mut game);
-        assert_eq!(1, result);
+        assert!(result.is_err());
         assert!(game.inventory().is_empty());
     }
 }
