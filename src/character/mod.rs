@@ -1,12 +1,12 @@
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
-use crate::location;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
+pub mod enemy;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
@@ -48,10 +48,6 @@ impl Default for Character {
 impl Character {
     pub fn player() -> Self {
         Self::new(Class::player_default().clone(), 1)
-    }
-
-    pub fn enemy(level: i32, distance: location::Distance) -> Self {
-        Self::new(Class::random_enemy(distance), level)
     }
 
     pub fn name(&self) -> String {
