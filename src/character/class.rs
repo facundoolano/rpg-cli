@@ -1,4 +1,3 @@
-use crate::location;
 use once_cell::sync::OnceCell;
 use rand::prelude::SliceRandom;
 use serde::{Deserialize, Serialize};
@@ -55,12 +54,14 @@ pub enum Category {
 
 static CLASSES: OnceCell<HashMap<Category, Vec<Class>>> = OnceCell::new();
 
+// FIXME reduce duplication in access to CLASSES within these methods
 impl Class {
     /// Customize the classes definitions based on an input yaml byte array.
     pub fn load(bytes: &[u8]) {
         CLASSES.set(from_bytes(bytes)).unwrap();
     }
 
+    // TODO first?
     /// The default player class, exposed for initialization and parameterization of
     /// items and equipment.
     pub fn player_default() -> &'static Self {
@@ -72,6 +73,7 @@ impl Class {
             .unwrap()
     }
 
+    // TODO generic by name?
     pub fn player_class(name: &str) -> Option<&Self> {
         CLASSES
             .get_or_init(default_classes)
@@ -84,8 +86,11 @@ impl Class {
             .cloned()
     }
 
-    pub fn random_enemy(distance: location::Distance) -> Self {
-        weighted_choice(distance)
+    // TODO why some clone here and others return static ref? make it consistent
+    pub fn random(category: &Category) -> Self {
+        let classes = CLASSES.get().unwrap().get(category).unwrap();
+        let mut rng = rand::thread_rng();
+        classes.choose(&mut rng).unwrap().clone()
     }
 
     pub fn names(group: Category) -> HashSet<String> {
@@ -123,33 +128,4 @@ fn from_bytes(bytes: &[u8]) -> HashMap<Category, Vec<Class>> {
         entry.push(class);
     }
     class_groups
-}
-
-/// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
-fn weighted_choice(distance: location::Distance) -> Class {
-    // the weights for each group of enemies are different depending on the distance
-    // the further from home, the bigger the chance to find difficult enemies
-    let (w_common, w_rare, w_legendary) = match distance {
-        location::Distance::Near(_) => (9, 2, 0),
-        location::Distance::Mid(_) => (7, 10, 1),
-        location::Distance::Far(_) => (1, 6, 3),
-    };
-
-    let mut rng = rand::thread_rng();
-
-    // assign weights to each group and select one
-    let weights = vec![
-        (Category::Common, w_common),
-        (Category::Rare, w_rare),
-        (Category::Legendary, w_legendary),
-    ];
-    let category = &weights
-        .as_slice()
-        .choose_weighted(&mut rng, |(_c, weight)| *weight)
-        .unwrap()
-        .0;
-
-    // get a random class within the group
-    let classes = CLASSES.get().unwrap().get(category).unwrap();
-    classes.choose(&mut rng).unwrap().clone()
 }

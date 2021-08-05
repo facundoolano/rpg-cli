@@ -1,17 +1,46 @@
-use super::{class::Class, Character};
+use super::{class::Category, class::Class, Character};
 use crate::location;
 use crate::randomizer::{random, Randomizer};
+use rand::prelude::SliceRandom;
 
 pub fn at(location: &location::Location, player: &Character) -> Character {
-    let level = level(player.level, location.distance_from_home().len());
-
-    // TODO move random gen over here
-    Character::new(Class::random_enemy(location.distance_from_home()), level)
+    let distance = location.distance_from_home();
+    let level = level(player.level, distance.len());
+    let category = weighted_choice(distance);
+    Character::new(Class::random(&category), level)
 }
 
+// FIXME why pub?
 pub fn level(player_level: i32, distance_from_home: i32) -> i32 {
     let base_level = std::cmp::max(player_level / 2 + distance_from_home - 1, 1);
     random().enemy_level(base_level)
+}
+
+/// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
+fn weighted_choice(distance: location::Distance) -> Category {
+    // the weights for each group of enemies are different depending on the distance
+    // the further from home, the bigger the chance to find difficult enemies
+    let (w_common, w_rare, w_legendary) = match distance {
+        location::Distance::Near(_) => (9, 2, 0),
+        location::Distance::Mid(_) => (7, 10, 1),
+        location::Distance::Far(_) => (1, 6, 3),
+    };
+
+    let mut rng = rand::thread_rng();
+
+    // assign weights to each group and select one
+    let weights = vec![
+        (Category::Common, w_common),
+        (Category::Rare, w_rare),
+        (Category::Legendary, w_legendary),
+    ];
+
+    weights
+        .as_slice()
+        .choose_weighted(&mut rng, |(_c, weight)| *weight)
+        .unwrap()
+        .0
+        .clone()
 }
 
 #[cfg(test)]
