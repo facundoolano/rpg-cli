@@ -47,7 +47,7 @@ impl Default for Character {
 
 impl Character {
     pub fn player() -> Self {
-        Self::new(Class::player_default().clone(), 1)
+        Self::new(Class::player_first().clone(), 1)
     }
 
     pub fn name(&self) -> String {
@@ -93,7 +93,7 @@ impl Character {
     pub fn change_class(&mut self, name: &str) -> Result<i32, ClassNotFound> {
         if name == self.class.name {
             Ok(0)
-        } else if let Some(class) = Class::player_class(name) {
+        } else if let Some(class) = Class::player_by_name(name) {
             let lost_xp = self.xp;
 
             if self.level == 1 {
@@ -582,8 +582,8 @@ mod tests {
         player.xp = 20;
         player.sword = Some(equipment::Sword::new(1));
 
-        let warrior_class = Class::player_class("warrior").unwrap();
-        let thief_class = Class::player_class("thief").unwrap();
+        let warrior_class = Class::player_by_name("warrior").unwrap();
+        let thief_class = Class::player_by_name("thief").unwrap();
 
         // attempt change to same class
         assert_eq!("warrior", player.class.name);

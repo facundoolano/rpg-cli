@@ -158,8 +158,8 @@ mod tests {
     fn won() {
         let mut game = Game::new();
         // same level as player
-        let enemy_class = class::Class::random(&class::Category::Common);
-        let mut enemy = character::Character::new(enemy_class, 1);
+        let enemy_class = class::Class::random(class::Category::Common);
+        let mut enemy = character::Character::new(enemy_class.clone(), 1);
 
         game.player.speed = 2;
         game.player.current_hp = 20;
@@ -183,8 +183,8 @@ mod tests {
         // extra 100g for the completed quest
         assert_eq!(150, game.gold);
 
-        let enemy_class = class::Class::random(&class::Category::Common);
-        let mut enemy = character::Character::new(enemy_class, 1);
+        let enemy_class = class::Class::random(class::Category::Common);
+        let mut enemy = character::Character::new(enemy_class.clone(), 1);
         enemy.speed = 1;
         enemy.current_hp = 15;
         enemy.strength = 5;
@@ -202,8 +202,8 @@ mod tests {
     #[test]
     fn lost() {
         let mut game = Game::new();
-        let enemy_class = class::Class::random(&class::Category::Common);
-        let mut enemy = character::Character::new(enemy_class, 10);
+        let enemy_class = class::Class::random(class::Category::Common);
+        let mut enemy = character::Character::new(enemy_class.clone(), 10);
         let result = game.battle(&mut enemy);
         assert!(result.is_err());
     }

@@ -54,59 +54,47 @@ pub enum Category {
 
 static CLASSES: OnceCell<HashMap<Category, Vec<Class>>> = OnceCell::new();
 
-// FIXME reduce duplication in access to CLASSES within these methods
 impl Class {
+    /// Returns whether this is a magic class, i.e. it can inflict
+    /// magic damage.
+    pub fn is_magic(&self) -> bool {
+        self.mp.is_some()
+    }
+
     /// Customize the classes definitions based on an input yaml byte array.
     pub fn load(bytes: &[u8]) {
         CLASSES.set(from_bytes(bytes)).unwrap();
     }
 
-    // TODO first?
     /// The default player class, exposed for initialization and parameterization of
     /// items and equipment.
-    pub fn player_default() -> &'static Self {
-        CLASSES
-            .get_or_init(default_classes)
-            .get(&Category::Player)
-            .unwrap()
-            .first()
-            .unwrap()
+    pub fn player_first() -> &'static Self {
+        Self::of(Category::Player).first().unwrap()
     }
 
-    // TODO generic by name?
-    pub fn player_class(name: &str) -> Option<&Self> {
-        CLASSES
-            .get_or_init(default_classes)
-            .get(&Category::Player)
-            .unwrap()
+    pub fn player_by_name(name: &str) -> Option<&'static Self> {
+        Self::of(Category::Player)
             .iter()
             .filter(|class| class.name == name)
             .collect::<Vec<&Class>>()
             .first()
-            .cloned()
+            .copied()
     }
 
-    // TODO why some clone here and others return static ref? make it consistent
-    pub fn random(category: &Category) -> Self {
-        let classes = CLASSES.get().unwrap().get(category).unwrap();
+    pub fn random(category: Category) -> &'static Self {
         let mut rng = rand::thread_rng();
-        classes.choose(&mut rng).unwrap().clone()
+        Self::of(category).choose(&mut rng).unwrap()
     }
 
-    pub fn names(group: Category) -> HashSet<String> {
-        CLASSES
-            .get_or_init(default_classes)
-            .get(&group)
-            .unwrap()
+    pub fn names(category: Category) -> HashSet<String> {
+        Self::of(category)
             .iter()
             .map(|class| class.name.clone())
             .collect()
     }
 
-    /// Returns whether this is a magic class, i.e. it can inflict
-    /// magic damage.
-    pub fn is_magic(&self) -> bool {
-        self.mp.is_some()
+    fn of(category: Category) -> &'static Vec<Class> {
+        CLASSES.get_or_init(default_classes).get(&category).unwrap()
     }
 }
 

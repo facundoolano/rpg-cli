@@ -7,7 +7,7 @@ pub fn at(location: &location::Location, player: &Character) -> Character {
     let distance = location.distance_from_home();
     let level = level(player.level, distance.len());
     let category = weighted_choice(distance);
-    Character::new(Class::random(&category), level)
+    Character::new(Class::random(category).clone(), level)
 }
 
 fn level(player_level: i32, distance_from_home: i32) -> i32 {
