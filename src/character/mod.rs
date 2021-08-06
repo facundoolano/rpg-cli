@@ -58,7 +58,7 @@ impl Character {
         self.class.category == class::Category::Player
     }
 
-    fn new(class: Class, level: i32) -> Self {
+    pub fn new(class: Class, level: i32) -> Self {
         // randomize level 1 stats by starting the increase from level 0
         let max_hp = class.hp.base() - class.hp.increase();
         let strength = class.strength.base() - class.strength.increase();
