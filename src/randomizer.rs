@@ -222,8 +222,8 @@ impl Randomizer for TestRandomizer {
         false
     }
 
-    fn enemy_level(&self, _level: i32) -> i32 {
-        0
+    fn enemy_level(&self, level: i32) -> i32 {
+        level
     }
 
     fn damage(&self, value: i32) -> i32 {

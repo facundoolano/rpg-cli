@@ -5,15 +5,14 @@ use rand::prelude::SliceRandom;
 
 pub fn at(location: &location::Location, player: &Character) -> Character {
     let distance = location.distance_from_home();
-    let level = base_level(player.level, distance.len());
-    // TODO try to merge with base_level
-    let level = random().enemy_level(level);
+    let level = level(player.level, distance.len());
     let category = weighted_choice(distance);
     Character::new(Class::random(&category), level)
 }
 
-fn base_level(player_level: i32, distance_from_home: i32) -> i32 {
-    std::cmp::max(player_level / 2 + distance_from_home - 1, 1)
+fn level(player_level: i32, distance_from_home: i32) -> i32 {
+    let level = std::cmp::max(player_level / 2 + distance_from_home - 1, 1);
+    random().enemy_level(level)
 }
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
@@ -50,18 +49,18 @@ mod tests {
     #[test]
     fn test_enemy_level() {
         // player level 1
-        assert_eq!(1, base_level(1, 1));
-        assert_eq!(1, base_level(1, 2));
-        assert_eq!(2, base_level(1, 3));
+        assert_eq!(1, level(1, 1));
+        assert_eq!(1, level(1, 2));
+        assert_eq!(2, level(1, 3));
 
         // Player level 5
-        assert_eq!(2, base_level(5, 1));
-        assert_eq!(3, base_level(5, 2));
-        assert_eq!(4, base_level(5, 3));
+        assert_eq!(2, level(5, 1));
+        assert_eq!(3, level(5, 2));
+        assert_eq!(4, level(5, 3));
 
         // player level 10
-        assert_eq!(5, base_level(10, 1));
-        assert_eq!(6, base_level(10, 2));
-        assert_eq!(7, base_level(10, 3));
+        assert_eq!(5, level(10, 1));
+        assert_eq!(6, level(10, 2));
+        assert_eq!(7, level(10, 3));
     }
 }
