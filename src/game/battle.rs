@@ -149,15 +149,17 @@ fn autoether(game: &mut Game, enemy: &Character) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::character;
     use crate::character::class;
-    use crate::location::Distance;
+    use crate::character::enemy;
     use crate::randomizer::random;
 
     #[test]
     fn won() {
         let mut game = Game::new();
         // same level as player
-        let mut enemy = Character::enemy(1, Distance::Near(1));
+        let enemy_class = class::Class::random(class::Category::Common);
+        let mut enemy = character::Character::new(enemy_class.clone(), 1);
 
         game.player.speed = 2;
         game.player.current_hp = 20;
@@ -166,7 +168,6 @@ mod tests {
         enemy.speed = 1;
         enemy.current_hp = 15;
         enemy.strength = 5;
-        enemy.class.category = class::Category::Common;
 
         // expected turns
         // enemy - 10hp
@@ -182,11 +183,11 @@ mod tests {
         // extra 100g for the completed quest
         assert_eq!(150, game.gold);
 
-        let mut enemy = Character::enemy(1, Distance::Near(1));
+        let enemy_class = class::Class::random(class::Category::Common);
+        let mut enemy = character::Character::new(enemy_class.clone(), 1);
         enemy.speed = 1;
         enemy.current_hp = 15;
         enemy.strength = 5;
-        enemy.class.category = class::Category::Common;
 
         // same turns, added xp increases level
 
@@ -201,8 +202,8 @@ mod tests {
     #[test]
     fn lost() {
         let mut game = Game::new();
-        let near = Distance::Near(1);
-        let mut enemy = Character::enemy(10, near);
+        let enemy_class = class::Class::random(class::Category::Common);
+        let mut enemy = character::Character::new(enemy_class.clone(), 10);
         let result = game.battle(&mut enemy);
         assert!(result.is_err());
     }
@@ -210,7 +211,7 @@ mod tests {
     #[test]
     fn magic_attacks() {
         let mut game = Game::new();
-        let mut enemy = Character::enemy(1, Distance::Near(1));
+        let mut enemy = enemy::at(&game.location, &game.player);
         enemy.max_hp = 100;
         enemy.current_hp = 100;
 

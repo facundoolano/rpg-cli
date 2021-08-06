@@ -1,12 +1,12 @@
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
-use crate::location;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 
 pub mod class;
+pub mod enemy;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
@@ -47,11 +47,7 @@ impl Default for Character {
 
 impl Character {
     pub fn player() -> Self {
-        Self::new(Class::player_default().clone(), 1)
-    }
-
-    pub fn enemy(level: i32, distance: location::Distance) -> Self {
-        Self::new(Class::random_enemy(distance), level)
+        Self::new(Class::player_first().clone(), 1)
     }
 
     pub fn name(&self) -> String {
@@ -62,7 +58,7 @@ impl Character {
         self.class.category == class::Category::Player
     }
 
-    fn new(class: Class, level: i32) -> Self {
+    pub fn new(class: Class, level: i32) -> Self {
         // randomize level 1 stats by starting the increase from level 0
         let max_hp = class.hp.base() - class.hp.increase();
         let strength = class.strength.base() - class.strength.increase();
@@ -97,7 +93,7 @@ impl Character {
     pub fn change_class(&mut self, name: &str) -> Result<i32, ClassNotFound> {
         if name == self.class.name {
             Ok(0)
-        } else if let Some(class) = Class::player_class(name) {
+        } else if let Some(class) = Class::player_by_name(name) {
             let lost_xp = self.xp;
 
             if self.level == 1 {
@@ -586,8 +582,8 @@ mod tests {
         player.xp = 20;
         player.sword = Some(equipment::Sword::new(1));
 
-        let warrior_class = Class::player_class("warrior").unwrap();
-        let thief_class = Class::player_class("thief").unwrap();
+        let warrior_class = Class::player_by_name("warrior").unwrap();
+        let thief_class = Class::player_by_name("thief").unwrap();
 
         // attempt change to same class
         assert_eq!("warrior", player.class.name);

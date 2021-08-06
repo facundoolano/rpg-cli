@@ -193,9 +193,7 @@ impl Game {
     pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {
         let distance = self.location.distance_from_home();
         if random().should_enemy_appear(&distance) {
-            let level = enemy_level(self.player.level, distance.len());
-            let level = random().enemy_level(level);
-            let enemy = Character::enemy(level, distance);
+            let enemy = character::enemy::at(&self.location, &self.player);
 
             Event::emit(self, Event::EnemyAppears { enemy: &enemy });
             Some(enemy)
@@ -302,10 +300,6 @@ impl Default for Game {
     }
 }
 
-fn enemy_level(player_level: i32, distance_from_home: i32) -> i32 {
-    std::cmp::max(player_level / 2 + distance_from_home - 1, 1)
-}
-
 fn gold_gained(player_level: i32, enemy_level: i32) -> i32 {
     let level = std::cmp::max(1, enemy_level - player_level);
     random().gold_gained(level * 50)
@@ -313,30 +307,8 @@ fn gold_gained(player_level: i32, enemy_level: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::location::Distance;
-    use item::equipment::Equipment;
-
     use super::*;
     use crate::item;
-    use crate::randomizer;
-
-    #[test]
-    fn test_enemy_level() {
-        // player level 1
-        assert_eq!(1, enemy_level(1, 1));
-        assert_eq!(1, enemy_level(1, 2));
-        assert_eq!(2, enemy_level(1, 3));
-
-        // Player level 5
-        assert_eq!(2, enemy_level(5, 1));
-        assert_eq!(3, enemy_level(5, 2));
-        assert_eq!(4, enemy_level(5, 3));
-
-        // player level 10
-        assert_eq!(5, enemy_level(10, 1));
-        assert_eq!(6, enemy_level(10, 2));
-        assert_eq!(7, enemy_level(10, 3));
-    }
 
     #[test]
     fn test_inventory() {
@@ -369,139 +341,5 @@ mod tests {
         assert!(game.use_item("potion").is_ok());
         assert_eq!(0, game.inventory().len());
         assert!(game.use_item("potion").is_err());
-    }
-
-    // NOTE: this tests are random and brittle and therefore bad unit tests but they
-    // give a reasonable measure of how difficult the game is, so they are better than
-    // nothing
-    // TODO should do the same with fixed character classes
-    // e.g. verify all classes can be beat at the game
-    // FIXME ignoring as it's preventing builds
-    #[ignore]
-    #[test]
-    fn test_not_unbeatable() {
-        let times = 100;
-        // The premise of this test is: a player with enough potions and its
-        // level's equipment, should be able to beat any enemy of its same level
-        // without relying in randomness.
-        let (wins, lost_to) = run_battles_at(1, 1, times);
-        assert_wins(times, wins, 0.5, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(1, 3, times);
-        assert_wins(times, wins, 0.3, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(5, 5, times);
-        assert_wins(times, wins, 0.7, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(10, 5, times);
-        assert_wins(times, wins, 0.7, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(10, 10, times);
-        assert_wins(times, wins, 0.4, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(15, 13, times);
-        assert_wins(times, wins, 0.7, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(15, 15, times);
-        assert_wins(times, wins, 0.5, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(50, 50, times);
-        assert_wins(times, wins, 0.4, &lost_to);
-
-        let (wins, lost_to) = run_battles_at(100, 100, times);
-        assert_wins(times, wins, 0.4, &lost_to);
-
-        // it shouldn't be too easy either --stronger enemies should have
-        // chances of winning (even with all the equipment)
-        let (wins, _) = run_battles_at(1, 6, times);
-        assert_loses(times, wins, 0.2);
-
-        let (wins, _) = run_battles_at(1, 10, times);
-        assert_loses(times, wins, 0.3);
-
-        let (wins, _) = run_battles_at(5, 10, times);
-        assert_loses(times, wins, 0.2);
-
-        let (wins, _) = run_battles_at(5, 15, times);
-        assert_loses(times, wins, 0.35);
-
-        let (wins, _) = run_battles_at(10, 15, times);
-        assert_loses(times, wins, 0.15);
-
-        let (wins, _) = run_battles_at(15, 20, times);
-        assert_loses(times, wins, 0.15);
-
-        let (wins, _) = run_battles_at(15, 20, times);
-        assert_loses(times, wins, 0.15);
-
-        let (wins, _) = run_battles_at(50, 60, times);
-        assert_loses(times, wins, 0.15);
-    }
-
-    fn assert_wins(total: i32, wins: i32, expected_ratio: f64, lost_to: &Vec<String>) {
-        assert!(
-            wins as f64 >= total as f64 * expected_ratio,
-            "won {} out of {}. Lost to {:?}",
-            wins,
-            total,
-            lost_to
-        );
-    }
-
-    fn assert_loses(total: i32, wins: i32, expected_ratio: f64) {
-        let expected = (total as f64) * (1.0 - expected_ratio);
-        assert!(
-            (wins as f64) <= expected,
-            "won {} out of {} expected at most {}",
-            wins,
-            total,
-            expected
-        );
-    }
-
-    fn run_battles_at(player_level: i32, distance: i32, times: i32) -> (i32, Vec<String>) {
-        let mut wins = 0;
-        let mut lost_to = Vec::new();
-
-        // we don't want randomization turned off for this test
-        let random = randomizer::DefaultRandomizer {};
-
-        for _ in 0..times {
-            let mut game = full_game_at(player_level);
-
-            // duplicate randomization from the game
-            let e_level = enemy_level(player_level, distance);
-            let e_level = random.enemy_level(e_level);
-            let mut enemy = Character::enemy(e_level, Distance::from(distance));
-
-            if battle::run(&mut game, &mut enemy, &random).is_ok() {
-                wins += 1
-            } else {
-                lost_to.push(format!("{}[{}]", enemy.name(), enemy.level));
-            }
-        }
-
-        (wins, lost_to)
-    }
-
-    fn full_game_at(level: i32) -> Game {
-        let mut game = Game::new();
-
-        // get a player of the given level
-        for _ in 0..level - 1 {
-            game.player.add_experience(game.player.xp_for_next());
-        }
-        assert_eq!(level, game.player.level);
-
-        // add potions of the given level
-        for _ in 0..10 {
-            game.add_item("potion", Box::new(item::Potion::new(level)));
-        }
-
-        // add equipment of the given level
-        game.player.sword = Some(item::equipment::Sword::new(level));
-        game.player.shield = Some(item::equipment::Shield::new(level));
-
-        game
     }
 }

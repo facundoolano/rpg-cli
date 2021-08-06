@@ -1,4 +1,3 @@
-use crate::location;
 use once_cell::sync::OnceCell;
 use rand::prelude::SliceRandom;
 use serde::{Deserialize, Serialize};
@@ -56,6 +55,12 @@ pub enum Category {
 static CLASSES: OnceCell<HashMap<Category, Vec<Class>>> = OnceCell::new();
 
 impl Class {
+    /// Returns whether this is a magic class, i.e. it can inflict
+    /// magic damage.
+    pub fn is_magic(&self) -> bool {
+        self.mp.is_some()
+    }
+
     /// Customize the classes definitions based on an input yaml byte array.
     pub fn load(bytes: &[u8]) {
         CLASSES.set(from_bytes(bytes)).unwrap();
@@ -63,45 +68,33 @@ impl Class {
 
     /// The default player class, exposed for initialization and parameterization of
     /// items and equipment.
-    pub fn player_default() -> &'static Self {
-        CLASSES
-            .get_or_init(default_classes)
-            .get(&Category::Player)
-            .unwrap()
-            .first()
-            .unwrap()
+    pub fn player_first() -> &'static Self {
+        Self::of(Category::Player).first().unwrap()
     }
 
-    pub fn player_class(name: &str) -> Option<&Self> {
-        CLASSES
-            .get_or_init(default_classes)
-            .get(&Category::Player)
-            .unwrap()
+    pub fn player_by_name(name: &str) -> Option<&'static Self> {
+        Self::of(Category::Player)
             .iter()
             .filter(|class| class.name == name)
             .collect::<Vec<&Class>>()
             .first()
-            .cloned()
+            .copied()
     }
 
-    pub fn random_enemy(distance: location::Distance) -> Self {
-        weighted_choice(distance)
+    pub fn random(category: Category) -> &'static Self {
+        let mut rng = rand::thread_rng();
+        Self::of(category).choose(&mut rng).unwrap()
     }
 
-    pub fn names(group: Category) -> HashSet<String> {
-        CLASSES
-            .get_or_init(default_classes)
-            .get(&group)
-            .unwrap()
+    pub fn names(category: Category) -> HashSet<String> {
+        Self::of(category)
             .iter()
             .map(|class| class.name.clone())
             .collect()
     }
 
-    /// Returns whether this is a magic class, i.e. it can inflict
-    /// magic damage.
-    pub fn is_magic(&self) -> bool {
-        self.mp.is_some()
+    fn of(category: Category) -> &'static Vec<Class> {
+        CLASSES.get_or_init(default_classes).get(&category).unwrap()
     }
 }
 
@@ -123,33 +116,4 @@ fn from_bytes(bytes: &[u8]) -> HashMap<Category, Vec<Class>> {
         entry.push(class);
     }
     class_groups
-}
-
-/// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
-fn weighted_choice(distance: location::Distance) -> Class {
-    // the weights for each group of enemies are different depending on the distance
-    // the further from home, the bigger the chance to find difficult enemies
-    let (w_common, w_rare, w_legendary) = match distance {
-        location::Distance::Near(_) => (9, 2, 0),
-        location::Distance::Mid(_) => (7, 10, 1),
-        location::Distance::Far(_) => (1, 6, 3),
-    };
-
-    let mut rng = rand::thread_rng();
-
-    // assign weights to each group and select one
-    let weights = vec![
-        (Category::Common, w_common),
-        (Category::Rare, w_rare),
-        (Category::Legendary, w_legendary),
-    ];
-    let category = &weights
-        .as_slice()
-        .choose_weighted(&mut rng, |(_c, weight)| *weight)
-        .unwrap()
-        .0;
-
-    // get a random class within the group
-    let classes = CLASSES.get().unwrap().get(category).unwrap();
-    classes.choose(&mut rng).unwrap().clone()
 }
