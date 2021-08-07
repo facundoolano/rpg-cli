@@ -23,7 +23,18 @@ pub fn shadow() -> Box<dyn Quest> {
     Box::new(BeatEnemyClass {
         to_beat,
         total: 1,
-        description: String::from("Beat your own shadow."),
+        description: String::from("Beat your own shadow"),
+    })
+}
+
+pub fn dev() -> Box<dyn Quest> {
+    let mut to_beat = HashSet::new();
+    to_beat.insert(String::from("dev"));
+
+    Box::new(BeatEnemyClass {
+        to_beat,
+        total: 1,
+        description: String::from("Beat the dev"),
     })
 }
 

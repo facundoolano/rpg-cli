@@ -76,6 +76,7 @@ impl QuestList {
         }
 
         self.todo.push((15, 20000, beat_enemy::shadow()));
+        self.todo.push((15, 20000, beat_enemy::dev()));
 
         self.todo
             .push((50, 100000, Box::new(level::ReachLevel::new(100))));
