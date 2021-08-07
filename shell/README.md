@@ -126,4 +126,5 @@ dn () {
     else
         command mkdir -p dungeon/1 && cd dungeon/1 && rpg ls
     fi
+}
 ```
