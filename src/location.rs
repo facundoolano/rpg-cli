@@ -39,6 +39,10 @@ impl Location {
         self.path == dirs::home_dir().unwrap()
     }
 
+    pub fn is_rpg_dir(&self) -> bool {
+        self.path == dirs::home_dir().unwrap().join(".rpg")
+    }
+
     /// Return a new location that it's one dir closer to the given destination.
     pub fn go_to(&self, dest: &Self) -> Self {
         let next = if dest.path.starts_with(&self.path) {

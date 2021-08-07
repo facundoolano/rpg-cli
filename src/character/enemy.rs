@@ -9,6 +9,13 @@ pub fn at(location: &location::Location, player: &Character) -> Character {
         let mut class = player.class.clone();
         class.name = String::from("shadow");
         (class, player.level + 3)
+    } else if should_find_dev(location) {
+        let mut class = Class::player_first().clone();
+        class.name = String::from("dev");
+        class.hp.0 /= 2;
+        class.strength.0 /= 2;
+        class.speed.0 /= 2;
+        (class, player.level)
     } else {
         let distance = location.distance_from_home();
         let level = level(player.level, distance.len());
@@ -27,6 +34,11 @@ fn level(player_level: i32, distance_from_home: i32) -> i32 {
 fn should_find_shadow(location: &location::Location) -> bool {
     let mut rng = rand::thread_rng();
     location.is_home() && rng.gen_ratio(1, 10)
+}
+
+fn should_find_dev(location: &location::Location) -> bool {
+    let mut rng = rand::thread_rng();
+    location.is_rpg_dir() && rng.gen_ratio(1, 10)
 }
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.

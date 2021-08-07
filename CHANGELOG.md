@@ -4,6 +4,7 @@
 
 ### Added
 * Quest to beat your own shadow #86
+* Easter egg quest  #87
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
