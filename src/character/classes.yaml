@@ -79,6 +79,13 @@
   strength: [45, 2]
   speed: [2, 1]
   category: rare
+- name: sorcerer
+  hp: [30, 3]
+  mp: [13, 1]
+  strength: [10, 2]
+  speed: [8, 2]
+  inflicts: [burning, 5]
+  category: rare
 - name: chimera
   hp: [200, 2]
   strength: [90, 2]
