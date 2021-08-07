@@ -16,6 +16,17 @@ pub fn of_class(category: class::Category, description: &str) -> Box<dyn Quest> 
     })
 }
 
+pub fn shadow() -> Box<dyn Quest> {
+    let mut to_beat = HashSet::new();
+    to_beat.insert(String::from("shadow"));
+
+    Box::new(BeatEnemyClass {
+        to_beat,
+        total: 1,
+        description: String::from("Beat your own shadow."),
+    })
+}
+
 pub fn at_distance(distance: i32) -> Box<dyn Quest> {
     Box::new(BeatEnemyDistance { distance })
 }

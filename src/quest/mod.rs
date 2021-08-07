@@ -67,16 +67,18 @@ impl QuestList {
             beat_enemy::of_class(class::Category::Legendary, "beat all legendary creatures"),
         ));
 
+        self.todo
+            .push((10, 10000, Box::new(level::ReachLevel::new(50))));
+
         for name in class::Class::names(class::Category::Player) {
             self.todo
                 .push((10, 5000, Box::new(level::RaiseClassLevels::new(&name))));
         }
 
-        self.todo
-            .push((2, 500, Box::new(level::ReachLevel::new(50))));
+        self.todo.push((15, 20000, beat_enemy::shadow()));
 
         self.todo
-            .push((2, 500, Box::new(level::ReachLevel::new(100))));
+            .push((50, 100000, Box::new(level::ReachLevel::new(100))));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
