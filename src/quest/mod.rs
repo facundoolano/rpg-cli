@@ -15,20 +15,23 @@ pub fn handle(game: &mut game::Game, event: &event::Event) {
     game.gold += game.quests.handle(event);
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+enum Status {
+    Locked(i32),
+    Unlocked,
+    Completed,
+}
+
 /// Keeps a TODO list of quests for the game.
 /// Each quest is unlocked at a certain level and has completion reward.
 #[derive(Serialize, Deserialize, Default)]
 pub struct QuestList {
-    todo: Vec<(i32, i32, Box<dyn Quest>)>,
-    done: Vec<String>,
+    quests: Vec<(Status, i32, Box<dyn Quest>)>,
 }
 
 impl QuestList {
     pub fn new() -> Self {
-        let mut quests = Self {
-            todo: Vec::new(),
-            done: Vec::new(),
-        };
+        let mut quests = Self { quests: Vec::new() };
 
         quests.setup();
         quests
@@ -36,85 +39,119 @@ impl QuestList {
 
     /// Load the quests for a new game
     fn setup(&mut self) {
-        self.todo.push((1, 100, Box::new(tutorial::WinBattle)));
-        self.todo.push((1, 100, Box::new(tutorial::BuySword)));
-        self.todo.push((1, 100, Box::new(tutorial::UsePotion)));
-        self.todo
-            .push((1, 100, Box::new(level::ReachLevel::new(2))));
+        self.quests
+            .push((Status::Unlocked, 100, Box::new(tutorial::WinBattle)));
+        self.quests
+            .push((Status::Unlocked, 100, Box::new(tutorial::BuySword)));
+        self.quests
+            .push((Status::Unlocked, 100, Box::new(tutorial::UsePotion)));
+        self.quests
+            .push((Status::Unlocked, 100, Box::new(level::ReachLevel::new(2))));
 
-        self.todo.push((2, 200, Box::new(tutorial::FindChest)));
-        self.todo
-            .push((2, 500, Box::new(level::ReachLevel::new(5))));
-        self.todo.push((
-            2,
+        self.quests
+            .push((Status::Locked(2), 200, Box::new(tutorial::FindChest)));
+        self.quests
+            .push((Status::Locked(2), 500, Box::new(level::ReachLevel::new(5))));
+        self.quests.push((
+            Status::Locked(2),
             1000,
             beat_enemy::of_class(class::Category::Common, "beat all common creatures"),
         ));
 
-        self.todo.push((5, 200, Box::new(tutorial::VisitTomb)));
-        self.todo
-            .push((5, 1000, Box::new(level::ReachLevel::new(10))));
-        self.todo.push((
-            5,
+        self.quests
+            .push((Status::Locked(5), 200, Box::new(tutorial::VisitTomb)));
+        self.quests.push((
+            Status::Locked(5),
+            1000,
+            Box::new(level::ReachLevel::new(10)),
+        ));
+        self.quests.push((
+            Status::Locked(5),
             5000,
             beat_enemy::of_class(class::Category::Rare, "beat all rare creatures"),
         ));
-        self.todo.push((5, 1000, beat_enemy::at_distance(10)));
+        self.quests
+            .push((Status::Locked(5), 1000, beat_enemy::at_distance(10)));
 
-        self.todo.push((
-            10,
+        self.quests.push((
+            Status::Locked(10),
             10000,
             beat_enemy::of_class(class::Category::Legendary, "beat all legendary creatures"),
         ));
 
-        self.todo
-            .push((10, 10000, Box::new(level::ReachLevel::new(50))));
+        self.quests.push((
+            Status::Locked(10),
+            10000,
+            Box::new(level::ReachLevel::new(50)),
+        ));
 
         for name in class::Class::names(class::Category::Player) {
-            self.todo
-                .push((10, 5000, Box::new(level::RaiseClassLevels::new(&name))));
+            self.quests.push((
+                Status::Locked(10),
+                5000,
+                Box::new(level::RaiseClassLevels::new(&name)),
+            ));
         }
 
-        self.todo.push((15, 20000, beat_enemy::shadow()));
-        self.todo.push((15, 20000, beat_enemy::dev()));
+        self.quests
+            .push((Status::Locked(15), 20000, beat_enemy::shadow()));
+        self.quests
+            .push((Status::Locked(15), 20000, beat_enemy::dev()));
 
-        self.todo
-            .push((50, 100000, Box::new(level::ReachLevel::new(100))));
+        self.quests.push((
+            Status::Locked(50),
+            100000,
+            Box::new(level::ReachLevel::new(100)),
+        ));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
     /// The total gold reward is returned.
     fn handle(&mut self, event: &event::Event) -> i32 {
-        let mut still_todo = Vec::new();
+        self.unlock_quests(event);
+
         let mut total_reward = 0;
 
-        for (unlock_at, reward, mut quest) in self.todo.drain(..) {
+        for (status, reward, quest) in &mut self.quests {
+            if let Status::Completed = status {
+                continue;
+            }
+
             let is_done = quest.handle(event);
-
             if is_done {
-                total_reward += reward;
-                log::quest_done(reward);
-
-                // the done is stored from newer to older
-                self.done.insert(0, quest.description().to_string());
-            } else {
-                still_todo.push((unlock_at, reward, quest));
+                total_reward += *reward;
+                log::quest_done(*reward);
+                *status = Status::Completed
             }
         }
 
-        self.todo = still_todo;
         total_reward
     }
 
-    pub fn list(&self, game: &game::Game) -> (Vec<String>, Vec<String>) {
-        let todo = self
-            .todo
-            .iter()
-            .filter(|(level, _, _)| &game.player.level >= level)
-            .map(|(_, _, q)| q.description())
-            .collect();
+    /// If the event is a level up, unlock quests for that level.
+    fn unlock_quests(&mut self, event: &event::Event) {
+        if let event::Event::LevelUp { current } = event {
+            for (status, _, _) in &mut self.quests {
+                if let Status::Locked(level) = status {
+                    if *level <= *current {
+                        *status = Status::Unlocked;
+                    }
+                }
+            }
+        }
+    }
 
-        (todo, self.done.clone())
+    pub fn list(&self) -> Vec<(bool, String)> {
+        let mut result = Vec::new();
+
+        for (status, _, q) in &self.quests {
+            match status {
+                Status::Locked(_) => {}
+                Status::Unlocked => result.push((false, q.description())),
+                Status::Completed => result.push((true, q.description())),
+            };
+        }
+        result
     }
 }
 
@@ -146,9 +183,9 @@ mod tests {
         let mut game = game::Game::new();
         let fake_enemy = Character::player();
 
-        let initial_quests = game.quests.todo.len();
+        let initial_quests = count_status(&game.quests, Status::Unlocked);
         assert!(initial_quests > 0);
-        assert_eq!(0, game.quests.done.len());
+        assert_eq!(0, count_status(&game.quests, Status::Completed));
 
         // first quest is to win a battle
         let location = game.location.clone();
@@ -164,8 +201,11 @@ mod tests {
                 items: &[],
             },
         );
-        assert_eq!(initial_quests - 1, game.quests.todo.len());
-        assert_eq!(1, game.quests.done.len());
+        assert_eq!(
+            initial_quests - 1,
+            count_status(&game.quests, Status::Unlocked)
+        );
+        assert_eq!(1, count_status(&game.quests, Status::Completed));
 
         game.gold = 10;
         game.reset();
@@ -173,7 +213,18 @@ mod tests {
         assert_eq!(0, game.gold);
 
         // verify that quests are preserved
-        assert_eq!(initial_quests - 1, game.quests.todo.len());
-        assert_eq!(1, game.quests.done.len());
+        assert_eq!(
+            initial_quests - 1,
+            count_status(&game.quests, Status::Unlocked)
+        );
+        assert_eq!(1, count_status(&game.quests, Status::Completed));
+    }
+
+    fn count_status(quests: &QuestList, status: Status) -> usize {
+        quests
+            .quests
+            .iter()
+            .filter(|(q_status, _, _)| *q_status == status)
+            .count()
     }
 }
