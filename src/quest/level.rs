@@ -40,7 +40,7 @@ impl Quest for RaiseClassLevels {
     fn description(&self) -> String {
         let progress = TOTAL_LEVELS - self.remaining;
         format!(
-            "Raise {} levels with class {} {}/{}",
+            "raise {} levels with class {} {}/{}",
             TOTAL_LEVELS, self.class_name, progress, TOTAL_LEVELS
         )
     }
