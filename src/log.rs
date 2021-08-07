@@ -402,7 +402,9 @@ fn battle_log(character: &Character, suffix: &str) {
 
 fn format_character(character: &Character) -> String {
     let name = format!("{:>8}", character.name());
-    let name = if character.is_player() {
+    let name = if character.name() == "shadow" {
+        name.dimmed()
+    } else if character.is_player() {
         name.bold()
     } else {
         name.yellow().bold()
