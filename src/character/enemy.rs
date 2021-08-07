@@ -2,17 +2,31 @@ use super::{class::Category, class::Class, Character};
 use crate::location;
 use crate::randomizer::{random, Randomizer};
 use rand::prelude::SliceRandom;
+use rand::Rng;
 
 pub fn at(location: &location::Location, player: &Character) -> Character {
-    let distance = location.distance_from_home();
-    let level = level(player.level, distance.len());
-    let category = weighted_choice(distance);
-    Character::new(Class::random(category).clone(), level)
+    let (class, level) = if should_find_shadow(location) {
+        let mut class = player.class.clone();
+        class.name = String::from("shadow");
+        (class, player.level + 3)
+    } else {
+        let distance = location.distance_from_home();
+        let level = level(player.level, distance.len());
+        let category = weighted_choice(distance);
+        (Class::random(category).clone(), level)
+    };
+
+    Character::new(class, level)
 }
 
 fn level(player_level: i32, distance_from_home: i32) -> i32 {
     let level = std::cmp::max(player_level / 2 + distance_from_home - 1, 1);
     random().enemy_level(level)
+}
+
+fn should_find_shadow(location: &location::Location) -> bool {
+    let mut rng = rand::thread_rng();
+    location.is_home() && rng.gen_ratio(1, 10)
 }
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.

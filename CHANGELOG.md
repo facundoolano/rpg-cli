@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+* Quest to beat your own shadow #86
+
+### Fixed
+* Reach level 50 and 100 unlock and reward 4128f75
+
 ## [0.6.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.6.0) - 2021-08-04
 ### Added
 * Customizable classes file #76
