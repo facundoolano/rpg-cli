@@ -131,12 +131,13 @@ pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
     println!("\n    funds: {}", format_gold(game.gold));
 }
 
-pub fn quest_list(todo: &[String], done: &[String]) {
-    for quest in todo {
-        println!("  {} {}", "□".dimmed(), quest);
-    }
-    for quest in done {
-        println!("  {} {}", "✔".green(), quest.dimmed());
+pub fn quest_list(quests: Vec<(bool, String)>) {
+    for (completed, quest) in quests {
+        if completed {
+            println!("  {} {}", "✔".green(), quest.dimmed());
+        } else {
+            println!("  {} {}", "□".dimmed(), quest);
+        }
     }
 }
 

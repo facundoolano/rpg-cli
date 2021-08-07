@@ -38,9 +38,10 @@ pub struct RaiseClassLevels {
 #[typetag::serde]
 impl Quest for RaiseClassLevels {
     fn description(&self) -> String {
+        let progress = TOTAL_LEVELS - self.remaining;
         format!(
-            "Raise {} levels with class {} {}/{}",
-            TOTAL_LEVELS, self.class_name, self.remaining, TOTAL_LEVELS
+            "raise {} levels with class {} {}/{}",
+            TOTAL_LEVELS, self.class_name, progress, TOTAL_LEVELS
         )
     }
 

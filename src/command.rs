@@ -95,8 +95,7 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
         Command::Buy { items } => shop(game, &items)?,
         Command::Use { items } => use_item(game, &items)?,
         Command::Todo => {
-            let (todo, done) = game.quests.list(&game);
-            log::quest_list(&todo, &done);
+            log::quest_list(game.quests.list());
         }
     };
 

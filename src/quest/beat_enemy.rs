@@ -23,7 +23,7 @@ pub fn shadow() -> Box<dyn Quest> {
     Box::new(BeatEnemyClass {
         to_beat,
         total: 1,
-        description: String::from("Beat your own shadow"),
+        description: String::from("beat your own shadow"),
     })
 }
 
@@ -34,7 +34,7 @@ pub fn dev() -> Box<dyn Quest> {
     Box::new(BeatEnemyClass {
         to_beat,
         total: 1,
-        description: String::from("Beat the dev"),
+        description: String::from("beat the dev"),
     })
 }
 
