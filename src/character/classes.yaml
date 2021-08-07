@@ -84,7 +84,7 @@
   mp: [13, 1]
   strength: [10, 2]
   speed: [8, 2]
-  inflicts: [poisoned, 5]
+  inflicts: [burning, 5]
   category: rare
 - name: chimera
   hp: [200, 2]
