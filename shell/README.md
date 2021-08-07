@@ -107,3 +107,23 @@ A simple of showing the hero status at the bash prompt is:
     hero[4][xxxx][x---]@home
 
 `rpg --plain` can be used as a building block for more sophisticated display.
+
+## Arbitrary dungeon levels
+
+After some time it can become tedious to find deep enough directories to level-up your character. This function will create new dungeon directories, cd into them and ls to
+look for chests:
+
+``` sh
+dn () {
+    current=$(basename $PWD)
+    number_re='^[0-9]+$'
+
+    if [[ $current =~ $number_re ]]; then
+        next=$(($current + 1))
+        command mkdir -p $next && cd $next && rpg ls
+    elif [[ -d 1 ]] ; then
+        cd 1 && rpg ls
+    else
+        command mkdir -p dungeon/1 && cd dungeon/1 && rpg ls
+    fi
+```

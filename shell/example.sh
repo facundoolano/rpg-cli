@@ -26,6 +26,20 @@ ls () {
     fi
 }
 
+# Generate dungeon levels on the fly
+dn () {
+    current=$(basename $PWD)
+    number_re='^[0-9]+$'
+
+    if [[ $current =~ $number_re ]]; then
+        next=$(($current + 1))
+        command mkdir -p $next && cd $next && rpg ls
+    elif [[ -d 1 ]] ; then
+        cd 1 && rpg ls
+    else
+        command mkdir -p dungeon/1 && cd dungeon/1 && rpg ls
+    fi
+}
 
 # For other file related commands, force-move the hero to the current working dir
 # then potentially initiate a battle. Only if the hero wins or there's no battle
