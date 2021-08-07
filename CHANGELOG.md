@@ -7,6 +7,9 @@
 * Easter egg quest  #87
 * Sorcerer enemy class  #88
 
+### Changed
+* Remember unlocked quests and todo list order #89
+
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
 
