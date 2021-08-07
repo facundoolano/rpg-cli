@@ -218,6 +218,27 @@ mod tests {
             count_status(&game.quests, Status::Unlocked)
         );
         assert_eq!(1, count_status(&game.quests, Status::Completed));
+
+        // verify that it doesn't reward twice
+        let location = game.location.clone();
+        event::Event::emit(
+            &mut game,
+            event::Event::BattleWon {
+                enemy: &fake_enemy,
+                location,
+                xp: 100,
+                levels_up: 0,
+                gold: 100,
+                player_class: "warrior".to_string(),
+                items: &[],
+            },
+        );
+        assert_eq!(0, game.gold);
+        assert_eq!(
+            initial_quests - 1,
+            count_status(&game.quests, Status::Unlocked)
+        );
+        assert_eq!(1, count_status(&game.quests, Status::Completed));
     }
 
     fn count_status(quests: &QuestList, status: Status) -> usize {
