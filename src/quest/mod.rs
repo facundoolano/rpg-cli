@@ -181,20 +181,28 @@ mod tests {
     #[test]
     fn test_quest_status() {
         let mut quests = QuestList { quests: Vec::new() };
-        quests.quests.push((Status::Unlocked, 10, Box::new(level::ReachLevel::new(2))));
-        quests.quests.push((Status::Locked(2), 20, Box::new(level::ReachLevel::new(3))));
-        quests.quests.push((Status::Locked(3), 30, Box::new(level::ReachLevel::new(4))));
-        quests.quests.push((Status::Locked(4), 40, Box::new(level::ReachLevel::new(5))));
+        quests
+            .quests
+            .push((Status::Unlocked, 10, Box::new(level::ReachLevel::new(2))));
+        quests
+            .quests
+            .push((Status::Locked(2), 20, Box::new(level::ReachLevel::new(3))));
+        quests
+            .quests
+            .push((Status::Locked(3), 30, Box::new(level::ReachLevel::new(4))));
+        quests
+            .quests
+            .push((Status::Locked(4), 40, Box::new(level::ReachLevel::new(5))));
 
         assert_eq!(1, count_status(&quests, Status::Unlocked));
         assert_eq!(0, count_status(&quests, Status::Completed));
 
-        let reward = quests.handle(&event::Event::LevelUp{current: 2});
+        let reward = quests.handle(&event::Event::LevelUp { current: 2 });
         assert_eq!(1, count_status(&quests, Status::Unlocked));
         assert_eq!(1, count_status(&quests, Status::Completed));
         assert_eq!(10, reward);
 
-        let reward = quests.handle(&event::Event::LevelUp{current: 4});
+        let reward = quests.handle(&event::Event::LevelUp { current: 4 });
         assert_eq!(1, count_status(&quests, Status::Unlocked));
         assert_eq!(3, count_status(&quests, Status::Completed));
         assert_eq!(50, reward);
