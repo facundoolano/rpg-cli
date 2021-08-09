@@ -9,6 +9,7 @@
 
 ### Changed
 * Remember unlocked quests and todo list order #89
+* Cheaper ether 62bb9ed
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
