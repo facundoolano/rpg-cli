@@ -142,7 +142,7 @@ impl Shoppable for super::Remedy {
 
 impl Shoppable for super::Ether {
     fn cost(&self) -> i32 {
-        self.level * 400
+        self.level * 250
     }
 
     fn add_to(&self, game: &mut Game) {
