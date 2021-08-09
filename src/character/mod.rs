@@ -107,6 +107,19 @@ impl Character {
                 self.shield = shield;
             } else {
                 self.class = class.clone();
+
+                // if switching to a magic class on a higher level, we need to
+                // force the base mp so it can attack like a level 1 char
+                // rather than having no magic at all
+                if class.is_magic() && self.max_mp == 0 {
+                    let base_mp = class
+                        .mp
+                        .as_ref()
+                        .map(|mp| mp.base() - mp.increase() + random().stat_increase(mp.increase()))
+                        .unwrap();
+                    self.max_mp = base_mp;
+                    self.current_mp = base_mp;
+                }
             }
 
             self.xp = 0;
@@ -381,55 +394,6 @@ mod tests {
     }
 
     #[test]
-    fn test_magic_attacks() {
-        let mut hero = Character::player();
-        let foe = new_char();
-
-        assert_eq!("warrior", hero.class.name);
-        assert!(!hero.can_magic_attack());
-        let base_strength = hero.class.strength.base();
-
-        // warrior mp = 0
-        assert_eq!((base_strength, 0), hero.damage(&foe));
-
-        // warrior with non zero mp, mp = 0
-        // (this can happen if accumulated mp via class change)
-        hero.current_mp = 10;
-        hero.max_mp = 10;
-        assert!(!hero.can_magic_attack());
-        assert_eq!((base_strength, 0), hero.damage(&foe));
-
-        // warrior + sword, increased damage + mp = 0
-        let sword = equipment::Sword::new(hero.level);
-        let sword_strength = sword.strength();
-        hero.sword = Some(sword);
-        assert_eq!((base_strength + sword_strength, 0), hero.damage(&foe));
-
-        let mut mage = Character::player();
-        mage.change_class("mage").unwrap_or_default();
-        assert_eq!("mage", mage.class.name);
-        assert!(mage.can_magic_attack());
-
-        // mage with enough mp, -mp, *3
-        let base_strength = mage.class.strength.base();
-        assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
-
-        // enough for one more
-        mage.current_mp = mage.max_mp / 3;
-        assert!(mage.can_magic_attack());
-        assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
-
-        // same with sword
-        mage.sword = Some(equipment::Sword::new(hero.level));
-        assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
-
-        // mage without enough mp, 0 mp, /3
-        mage.current_mp = mage.max_mp / 3 - 1;
-        assert!(!mage.can_magic_attack());
-        assert_eq!((base_strength / 3, 0), mage.damage(&foe));
-    }
-
-    #[test]
     fn test_xp_gained() {
         let hero = new_char();
         let mut foe = new_char();
@@ -617,5 +581,83 @@ mod tests {
         assert_eq!(player.strength, thief_class.strength.base());
         assert_eq!(player.speed, thief_class.speed.base());
         assert!(player.sword.is_some());
+    }
+
+    #[test]
+    fn test_change_to_magic_class() {
+        let mut player = Character::player();
+        assert_eq!("warrior", player.class.name);
+        assert_eq!(0, player.max_mp);
+        assert_eq!(0, player.current_mp);
+
+        // when changing at level 1, it's a re-roll of the character
+        player.change_class("mage").unwrap_or_default();
+        let base_mp = player.class.mp.as_ref().map_or(0, |mp| mp.base());
+        assert!(base_mp > 0);
+        assert_eq!(base_mp, player.max_mp);
+        assert_eq!(base_mp, player.current_mp);
+
+        player.change_class("warrior").unwrap_or_default();
+        assert_eq!(0, player.max_mp);
+        assert_eq!(0, player.current_mp);
+
+        player.increase_level();
+        player.increase_level();
+        assert_eq!(0, player.max_mp);
+        assert_eq!(0, player.current_mp);
+
+        // in level > 1, change to magic class should give base magic instead of zero
+        player.change_class("mage").unwrap_or_default();
+        assert_eq!(base_mp, player.max_mp);
+        assert_eq!(base_mp, player.current_mp);
+    }
+
+    #[test]
+    fn test_magic_attacks() {
+        let mut hero = Character::player();
+        let foe = new_char();
+
+        assert_eq!("warrior", hero.class.name);
+        assert!(!hero.can_magic_attack());
+        let base_strength = hero.class.strength.base();
+
+        // warrior mp = 0
+        assert_eq!((base_strength, 0), hero.damage(&foe));
+
+        // warrior with non zero mp, mp = 0
+        // (this can happen if accumulated mp via class change)
+        hero.current_mp = 10;
+        hero.max_mp = 10;
+        assert!(!hero.can_magic_attack());
+        assert_eq!((base_strength, 0), hero.damage(&foe));
+
+        // warrior + sword, increased damage + mp = 0
+        let sword = equipment::Sword::new(hero.level);
+        let sword_strength = sword.strength();
+        hero.sword = Some(sword);
+        assert_eq!((base_strength + sword_strength, 0), hero.damage(&foe));
+
+        let mut mage = Character::player();
+        mage.change_class("mage").unwrap_or_default();
+        assert_eq!("mage", mage.class.name);
+        assert!(mage.can_magic_attack());
+
+        // mage with enough mp, -mp, *3
+        let base_strength = mage.class.strength.base();
+        assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
+
+        // enough for one more
+        mage.current_mp = mage.max_mp / 3;
+        assert!(mage.can_magic_attack());
+        assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
+
+        // same with sword
+        mage.sword = Some(equipment::Sword::new(hero.level));
+        assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
+
+        // mage without enough mp, 0 mp, /3
+        mage.current_mp = mage.max_mp / 3 - 1;
+        assert!(!mage.can_magic_attack());
+        assert_eq!((base_strength / 3, 0), mage.damage(&foe));
     }
 }
