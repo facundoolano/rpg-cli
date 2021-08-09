@@ -21,7 +21,7 @@ impl Quest for ReachLevel {
 
     fn handle(&mut self, event: &Event) -> bool {
         if let Event::LevelUp { current, .. } = event {
-            return *current == self.target;
+            return *current >= self.target;
         }
         false
     }

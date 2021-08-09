@@ -13,6 +13,7 @@
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
 * Properly report raise class levels quest progress e7d73f9
+* Reach level quests rewarded when multiple levels raised in a single event 60f5fb2
 
 ## [0.6.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.6.0) - 2021-08-04
 ### Added
