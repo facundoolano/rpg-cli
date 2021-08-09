@@ -28,19 +28,19 @@
   hp: [13, 3]
   strength: [7, 2]
   speed: [6, 2]
-  inflicts: [poisoned, 5]
+  inflicts: [poison, 5]
   category: common
 - name: slime
   hp: [80, 3]
   strength: [3, 2]
   speed: [4, 2]
-  inflicts: [poisoned, 10]
+  inflicts: [poison, 10]
   category: common
 - name: spider
   hp: [10, 3]
   strength: [9, 2]
   speed: [12, 2]
-  inflicts: [poisoned, 20]
+  inflicts: [poison, 20]
   category: common
 - name: zombie
   hp: [50, 3]
@@ -61,7 +61,7 @@
   hp: [50, 3]
   strength: [10, 2]
   speed: [18, 2]
-  inflicts: [burning, 10]
+  inflicts: [burn, 10]
   category: rare
 - name: vampire
   hp: [50, 3]
@@ -72,7 +72,7 @@
   hp: [100, 3]
   strength: [25, 2]
   speed: [8, 2]
-  inflicts: [burning, 2]
+  inflicts: [burn, 2]
   category: rare
 - name: golem
   hp: [50, 3]
@@ -84,19 +84,19 @@
   mp: [13, 1]
   strength: [10, 2]
   speed: [8, 2]
-  inflicts: [burning, 5]
+  inflicts: [burn, 5]
   category: rare
 - name: chimera
   hp: [200, 2]
   strength: [90, 2]
   speed: [16, 2]
-  inflicts: [poisoned, 3]
+  inflicts: [poison, 3]
   category: legendary
 - name: basilisk
   hp: [150, 3]
   strength: [100, 2]
   speed: [18, 2]
-  inflicts: [poisoned, 2]
+  inflicts: [poison, 2]
   category: legendary
 - name: minotaur
   hp: [100, 3]
@@ -107,11 +107,11 @@
   hp: [200, 3]
   strength: [200, 2]
   speed: [14, 2]
-  inflicts: [burning, 3]
+  inflicts: [burn, 3]
   category: legendary
 - name: phoenix
   hp: [350, 3]
   strength: [180, 2]
   speed: [28, 2]
-  inflicts: [burning, 3]
+  inflicts: [burn, 3]
   category: legendary

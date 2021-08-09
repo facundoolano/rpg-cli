@@ -32,8 +32,8 @@ pub struct Character {
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum StatusEffect {
-    Burning,
-    Poisoned,
+    Burn,
+    Poison,
 }
 
 pub struct Dead;
@@ -286,7 +286,7 @@ impl Character {
     pub fn receive_status_effect_damage(&mut self) -> Result<Option<i32>, Dead> {
         // NOTE: in the future we could have a positive status that e.g. regen hp
         match self.status_effect {
-            Some(StatusEffect::Burning) | Some(StatusEffect::Poisoned) => {
+            Some(StatusEffect::Burn) | Some(StatusEffect::Poison) => {
                 let damage = std::cmp::max(1, self.max_hp / 20);
                 let damage = random().damage(damage);
                 self.receive_damage(damage)?;
@@ -522,11 +522,11 @@ mod tests {
         hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(25, hero.current_hp);
 
-        hero.status_effect = Some(StatusEffect::Burning);
+        hero.status_effect = Some(StatusEffect::Burn);
         hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(24, hero.current_hp);
 
-        hero.status_effect = Some(StatusEffect::Poisoned);
+        hero.status_effect = Some(StatusEffect::Poison);
         hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 
@@ -534,7 +534,7 @@ mod tests {
         hero.receive_status_effect_damage().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 
-        hero.status_effect = Some(StatusEffect::Burning);
+        hero.status_effect = Some(StatusEffect::Burn);
         hero.current_hp = 1;
         assert!(hero.receive_status_effect_damage().is_err());
         assert!(hero.is_dead());
