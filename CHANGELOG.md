@@ -10,6 +10,7 @@
 ### Changed
 * Remember unlocked quests and todo list order #89
 * Cheaper ether 62bb9ed
+* Renamed status effects "poisoned" to "poison" and "burning" to "burn" #92
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
