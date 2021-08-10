@@ -44,6 +44,12 @@ If you use Gentoo, you can get rpg-cli from portage:
 
     # emerge -av games-rpg/rpg-cli
 
+### Using pacman (Arch Linux)
+
+rpg-cli can be installed from the [community repository](https://archlinux.org/packages/community/x86_64/rpg-cli/) for Arch Linux:
+
+    $ pacman -S rpg-cli
+
 ## Shell integration (recommended)
 
 The game is designed to integrate with common file system operations, such as changing directories or deleting files.
