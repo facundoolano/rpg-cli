@@ -3,6 +3,7 @@ use crate::item::equipment::{Shield, Sword};
 use crate::item::{equipment::Equipment, Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
+use rand::prelude::SliceRandom;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -135,28 +136,40 @@ impl Chest {
     }
 }
 
-// TODO consider using weighted random instead of these matches
 fn random_equipment(level: i32) -> (Option<Sword>, Option<Shield>) {
-    match random().range(15) {
-        n if n < 8 => (Some(Sword::new(level)), None),
-        n if n < 13 => (None, Some(Shield::new(level))),
-        14 => (Some(Sword::new(level + 5)), None),
-        _ => (None, Some(Shield::new(level + 5))),
-    }
+    let mut rng = rand::thread_rng();
+
+    vec![
+        (100, (Some(Sword::new(level)), None)),
+        (80, (None, Some(Shield::new(level)))),
+        (30, (Some(Sword::new(level + 5)), None)),
+        (20, (None, Some(Shield::new(level + 5)))),
+        (1, (None, Some(Shield::new(100)))),
+    ]
+    .choose_weighted_mut(&mut rng, |c| c.0)
+    .unwrap()
+    .to_owned()
+    .1
 }
 
+type WeightedItems = (i32, &'static str, Vec<Box<dyn Item>>);
+
 fn random_items(level: i32) -> HashMap<String, Vec<Box<dyn Item>>> {
-    let mut map = HashMap::new();
     let potion = || Box::new(Potion::new(level));
 
-    let (key, items): (&str, Vec<Box<dyn Item>>) = match random().range(20) {
-        n if n < 8 => ("potion", vec![potion()]),
-        n if n < 12 => ("potion", vec![potion(), potion()]),
-        n if n < 14 => ("potion", vec![potion(), potion(), potion()]),
-        n if n < 15 => ("remedy", vec![Box::new(Remedy::new())]),
-        n if n < 18 => ("escape", vec![Box::new(Escape::new())]),
-        _ => ("ether", vec![Box::new(Ether::new(level))]),
-    };
+    let mut choices: Vec<WeightedItems> = vec![
+        (100, "potion", vec![potion()]),
+        (30, "potion", vec![potion(), potion()]),
+        (10, "potion", vec![potion(), potion(), potion()]),
+        (10, "remedy", vec![Box::new(Remedy::new())]),
+        (10, "escape", vec![Box::new(Escape::new())]),
+        (50, "ether", vec![Box::new(Ether::new(level))]),
+    ];
+
+    let mut rng = rand::thread_rng();
+    let (_, key, items) = choices.choose_weighted_mut(&mut rng, |c| c.0).unwrap();
+    let items = items.drain(..).collect();
+    let mut map = HashMap::new();
     map.insert(key.to_string(), items);
     map
 }
