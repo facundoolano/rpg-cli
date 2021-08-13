@@ -181,7 +181,7 @@ fn sanitize(name: &str) -> String {
         "sh" => "shield",
         "hp" | "health" => "hp-stone",
         "mp" | "magic" => "mp-stone",
-        "str" | "strength"  => "str-stone",
+        "str" | "strength" => "str-stone",
         "spd" | "speed" => "spd-stone",
         "level" | "lv" | "lvl" => "lvl-stone",
         n => n,

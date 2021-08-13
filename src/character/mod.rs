@@ -133,28 +133,36 @@ impl Character {
         self.increase_mp();
     }
 
-    pub fn increase_strength(&mut self) {
-        self.strength += self.class.strength.increase();
+    pub fn increase_strength(&mut self) -> i32 {
+        let inc = self.class.strength.increase();
+        self.strength += inc;
+        inc
     }
 
-    pub fn increase_speed(&mut self) {
-        self.speed += self.class.speed.increase();
+    pub fn increase_speed(&mut self) -> i32 {
+        let inc = self.class.speed.increase();
+        self.speed += inc;
+        inc
     }
 
-    pub fn increase_hp(&mut self) {
+    pub fn increase_hp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp += self.class.hp.increase();
+        let inc = self.class.hp.increase();
+        self.max_hp += inc;
         self.current_hp = self.max_hp - previous_damage;
+        inc
     }
 
-    pub fn increase_mp(&mut self) {
+    pub fn increase_mp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous mp consumption
         let previous_used_mp = self.max_mp - self.current_mp;
-        self.max_mp += self.class.mp.as_ref().map_or(0, |mp| mp.increase());
+        let inc = self.class.mp.as_ref().map_or(0, |mp| mp.increase());
+        self.max_mp += inc;
         self.current_mp = self.max_mp - previous_used_mp;
+        inc
     }
 
     /// Add to the accumulated experience points, possibly increasing the level.

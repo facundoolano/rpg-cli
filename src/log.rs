@@ -104,6 +104,9 @@ pub fn handle(game: &Game, event: &Event) {
             );
         }
         Event::ClassChanged { lost_xp } => change_class(&game.player, &game.location, *lost_xp),
+        Event::StatIncrease { stat, increase } => {
+            stat_increase(&game.player, *stat, *increase);
+        }
         Event::LevelUp { .. } => {}
         Event::ItemBought { .. } => {}
         Event::ItemUsed { .. } => {}
@@ -248,23 +251,34 @@ fn battle_lost(player: &Character) {
 }
 
 fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32, items: &[String]) {
-    let level_str = if levels_up > 0 {
-        let plus = (0..levels_up).map(|_| "+").collect::<String>();
-        format!(" {}level", plus).cyan().to_string()
-    } else {
-        "".to_string()
-    };
-
     battle_log(
         &game.player,
         &format!(
             "{}{}{}",
             format!("+{}xp", xp).bold(),
-            level_str,
+            level_up(levels_up),
             format_ls("", items, gold)
         ),
     );
     short_status(game);
+}
+
+fn level_up(levels_up: i32) -> String {
+    if levels_up > 0 {
+        let plus = (0..levels_up).map(|_| "+").collect::<String>();
+        format!(" {}level", plus).cyan().to_string()
+    } else {
+        "".to_string()
+    }
+}
+
+fn stat_increase(player: &Character, stat: &str, increase: i32) {
+    let suffix = if stat == "level" {
+        level_up(increase)
+    } else {
+        format!("+{}{}", increase, stat).cyan().to_string()
+    };
+    battle_log(&player, &suffix);
 }
 
 fn long_status(game: &Game) {

@@ -1,7 +1,7 @@
 use crate::game;
 use crate::item::equipment::{Shield, Sword};
-use crate::item::{equipment::Equipment, Escape, Ether, Item, Potion, Remedy};
 use crate::item::stone;
+use crate::item::{equipment::Equipment, Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use rand::prelude::SliceRandom;
