@@ -1,5 +1,6 @@
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
+use crate::item::ring::RingPair;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -8,12 +9,13 @@ use std::cmp::{max, min};
 pub mod class;
 pub mod enemy;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct Character {
     pub class: Class,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
+    pub rings: RingPair,
 
     pub level: i32,
     pub xp: i32,
@@ -77,6 +79,7 @@ impl Character {
             strength,
             speed,
             status_effect: None,
+            rings: RingPair::new(),
         };
 
         for _ in 1..level {

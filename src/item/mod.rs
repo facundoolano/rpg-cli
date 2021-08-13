@@ -6,6 +6,7 @@ use crate::game;
 use serde::{Deserialize, Serialize};
 
 pub mod equipment;
+pub mod ring;
 pub mod shop;
 pub mod stone;
 
