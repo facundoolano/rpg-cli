@@ -18,6 +18,11 @@ impl Stat {
         self.1
     }
 
+    /// Level zero value. Used to later get a randomized value on level 1.
+    pub fn floor(&self) -> i32 {
+        self.base() - self.increase()
+    }
+
     pub fn at(&self, level: i32) -> i32 {
         self.0 + (level - 1) * self.increase()
     }

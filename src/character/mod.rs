@@ -59,11 +59,10 @@ impl Character {
     }
 
     pub fn new(class: Class, level: i32) -> Self {
-        // randomize level 1 stats by starting the increase from level 0
-        let max_hp = class.hp.base() - class.hp.increase();
-        let strength = class.strength.base() - class.strength.increase();
-        let speed = class.speed.base() - class.speed.increase();
-        let max_mp = class.mp.as_ref().map_or(0, |mp| mp.base() - mp.increase());
+        let max_hp = class.hp.floor();
+        let strength = class.strength.floor();
+        let speed = class.speed.floor();
+        let max_mp = class.mp.as_ref().map_or(0, |mp| mp.floor());
 
         let mut character = Self {
             class,
@@ -115,7 +114,7 @@ impl Character {
                     let base_mp = class
                         .mp
                         .as_ref()
-                        .map(|mp| mp.base() - mp.increase() + random().stat_increase(mp.increase()))
+                        .map(|mp| mp.floor() + random().stat_increase(mp.increase()))
                         .unwrap();
                     self.max_mp = base_mp;
                     self.current_mp = base_mp;
@@ -129,6 +128,7 @@ impl Character {
         }
     }
 
+    // FIXME consider moving the random() to the class
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
         self.level += 1;
