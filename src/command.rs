@@ -174,11 +174,16 @@ fn use_item(game: &mut Game, items: &[String]) -> Result<()> {
 fn sanitize(name: &str) -> String {
     let name = name.to_lowercase();
     let name = match name.as_str() {
-        "p" | "potion" => "potion",
-        "e" | "ether" => "ether",
-        "es" | "escape" => "escape",
-        "sw" | "sword" => "sword",
-        "sh" | "shield" => "shield",
+        "p" => "potion",
+        "e" => "ether",
+        "es" => "escape",
+        "sw" => "sword",
+        "sh" => "shield",
+        "hp" | "health" => "hp-stone",
+        "mp" | "magic" => "mp-stone",
+        "str" | "strength"  => "str-stone",
+        "spd" | "speed" => "spd-stone",
+        "level" | "lv" | "lvl" => "lvl-stone",
         n => n,
     };
     name.to_string()
