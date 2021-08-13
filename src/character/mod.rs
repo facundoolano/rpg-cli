@@ -59,16 +59,16 @@ impl Character {
     }
 
     pub fn new(class: Class, level: i32) -> Self {
-        let max_hp = class.hp.floor();
-        let strength = class.strength.floor();
-        let speed = class.speed.floor();
-        let max_mp = class.mp.as_ref().map_or(0, |mp| mp.floor());
+        let max_hp = class.hp.base();
+        let strength = class.strength.base();
+        let speed = class.speed.base();
+        let max_mp = class.mp.as_ref().map_or(0, |mp| mp.base());
 
         let mut character = Self {
             class,
             sword: None,
             shield: None,
-            level: 0,
+            level: 1,
             xp: 0,
             max_hp,
             current_hp: max_hp,
@@ -79,7 +79,7 @@ impl Character {
             status_effect: None,
         };
 
-        for _ in 0..level {
+        for _ in 1..level {
             character.increase_level();
         }
 
@@ -111,11 +111,7 @@ impl Character {
                 // force the base mp so it can attack like a level 1 char
                 // rather than having no magic at all
                 if class.is_magic() && self.max_mp == 0 {
-                    let base_mp = class
-                        .mp
-                        .as_ref()
-                        .map(|mp| mp.floor() + random().stat_increase(mp.increase()))
-                        .unwrap();
+                    let base_mp = class.mp.as_ref().map(|mp| mp.base()).unwrap();
                     self.max_mp = base_mp;
                     self.current_mp = base_mp;
                 }
@@ -128,27 +124,22 @@ impl Character {
         }
     }
 
-    // FIXME consider moving the random() to the class
     /// Raise the level and all the character stats.
     fn increase_level(&mut self) {
         self.level += 1;
 
-        self.strength += random().stat_increase(self.class.strength.increase());
-        self.speed += random().stat_increase(self.class.speed.increase());
+        self.strength += self.class.strength.increase();
+        self.speed += self.class.speed.increase();
 
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp += random().stat_increase(self.class.hp.increase());
+        self.max_hp += self.class.hp.increase();
         self.current_hp = self.max_hp - previous_damage;
 
         // same with mp
         let previous_used_mp = self.max_mp - self.current_mp;
-        self.max_mp += self
-            .class
-            .mp
-            .as_ref()
-            .map_or(0, |mp| random().stat_increase(mp.increase()));
+        self.max_mp += self.class.mp.as_ref().map_or(0, |mp| mp.increase());
         self.current_mp = self.max_mp - previous_used_mp;
     }
 
