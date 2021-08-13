@@ -6,11 +6,13 @@
 * Quest to beat your own shadow #86
 * Easter egg quest  #87
 * Sorcerer enemy class  #88
+* Stat increasing stones #95
 
 ### Changed
 * Remember unlocked quests and todo list order #89
 * Cheaper ether 62bb9ed
 * Renamed status effects "poisoned" to "poison" and "burning" to "burn" #92
+* Doubled ether restored mp 0e01209
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
