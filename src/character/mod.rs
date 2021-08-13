@@ -125,7 +125,7 @@ impl Character {
     }
 
     /// Raise the level and all the character stats.
-    fn increase_level(&mut self) {
+    pub fn increase_level(&mut self) {
         self.level += 1;
         self.increase_strength();
         self.increase_speed();
@@ -133,15 +133,15 @@ impl Character {
         self.increase_mp();
     }
 
-    fn increase_strength(&mut self) {
+    pub fn increase_strength(&mut self) {
         self.strength += self.class.strength.increase();
     }
 
-    fn increase_speed(&mut self) {
+    pub fn increase_speed(&mut self) {
         self.speed += self.class.speed.increase();
     }
 
-    fn increase_hp(&mut self) {
+    pub fn increase_hp(&mut self) {
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
@@ -149,7 +149,7 @@ impl Character {
         self.current_hp = self.max_hp - previous_damage;
     }
 
-    fn increase_mp(&mut self) {
+    pub fn increase_mp(&mut self) {
         // the current should increase proportionally but not
         // erase previous mp consumption
         let previous_used_mp = self.max_mp - self.current_mp;
