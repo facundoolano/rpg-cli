@@ -1,5 +1,6 @@
 use crate::game;
 use crate::item::equipment::{Shield, Sword};
+use crate::item::stone;
 use crate::item::{equipment::Equipment, Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
@@ -164,6 +165,11 @@ fn random_items(level: i32) -> HashMap<String, Vec<Box<dyn Item>>> {
         (10, "remedy", vec![Box::new(Remedy::new())]),
         (10, "escape", vec![Box::new(Escape::new())]),
         (50, "ether", vec![Box::new(Ether::new(level))]),
+        (10, "hp-stone", vec![Box::new(stone::Health)]),
+        (10, "mp-stone", vec![Box::new(stone::Magic)]),
+        (10, "str-stone", vec![Box::new(stone::Power)]),
+        (10, "spd-stone", vec![Box::new(stone::Speed)]),
+        (5, "lvl-stone", vec![Box::new(stone::Level)]),
     ];
 
     let mut rng = rand::thread_rng();

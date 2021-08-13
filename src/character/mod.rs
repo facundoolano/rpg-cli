@@ -59,17 +59,16 @@ impl Character {
     }
 
     pub fn new(class: Class, level: i32) -> Self {
-        // randomize level 1 stats by starting the increase from level 0
-        let max_hp = class.hp.base() - class.hp.increase();
-        let strength = class.strength.base() - class.strength.increase();
-        let speed = class.speed.base() - class.speed.increase();
-        let max_mp = class.mp.as_ref().map_or(0, |mp| mp.base() - mp.increase());
+        let max_hp = class.hp.base();
+        let strength = class.strength.base();
+        let speed = class.speed.base();
+        let max_mp = class.mp.as_ref().map_or(0, |mp| mp.base());
 
         let mut character = Self {
             class,
             sword: None,
             shield: None,
-            level: 0,
+            level: 1,
             xp: 0,
             max_hp,
             current_hp: max_hp,
@@ -80,7 +79,7 @@ impl Character {
             status_effect: None,
         };
 
-        for _ in 0..level {
+        for _ in 1..level {
             character.increase_level();
         }
 
@@ -112,11 +111,7 @@ impl Character {
                 // force the base mp so it can attack like a level 1 char
                 // rather than having no magic at all
                 if class.is_magic() && self.max_mp == 0 {
-                    let base_mp = class
-                        .mp
-                        .as_ref()
-                        .map(|mp| mp.base() - mp.increase() + random().stat_increase(mp.increase()))
-                        .unwrap();
+                    let base_mp = class.mp.as_ref().map(|mp| mp.base()).unwrap();
                     self.max_mp = base_mp;
                     self.current_mp = base_mp;
                 }
@@ -130,26 +125,44 @@ impl Character {
     }
 
     /// Raise the level and all the character stats.
-    fn increase_level(&mut self) {
+    pub fn increase_level(&mut self) {
         self.level += 1;
+        self.increase_strength();
+        self.increase_speed();
+        self.increase_hp();
+        self.increase_mp();
+    }
 
-        self.strength += random().stat_increase(self.class.strength.increase());
-        self.speed += random().stat_increase(self.class.speed.increase());
+    pub fn increase_strength(&mut self) -> i32 {
+        let inc = self.class.strength.increase();
+        self.strength += inc;
+        inc
+    }
 
+    pub fn increase_speed(&mut self) -> i32 {
+        let inc = self.class.speed.increase();
+        self.speed += inc;
+        inc
+    }
+
+    pub fn increase_hp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp - self.current_hp;
-        self.max_hp += random().stat_increase(self.class.hp.increase());
+        let inc = self.class.hp.increase();
+        self.max_hp += inc;
         self.current_hp = self.max_hp - previous_damage;
+        inc
+    }
 
-        // same with mp
+    pub fn increase_mp(&mut self) -> i32 {
+        // the current should increase proportionally but not
+        // erase previous mp consumption
         let previous_used_mp = self.max_mp - self.current_mp;
-        self.max_mp += self
-            .class
-            .mp
-            .as_ref()
-            .map_or(0, |mp| random().stat_increase(mp.increase()));
+        let inc = self.class.mp.as_ref().map_or(0, |mp| mp.increase());
+        self.max_mp += inc;
         self.current_mp = self.max_mp - previous_used_mp;
+        inc
     }
 
     /// Add to the accumulated experience points, possibly increasing the level.

@@ -46,8 +46,13 @@ pub enum Event<'a> {
         player_class: String,
     },
     BattleLost,
+    // TODO redundant with stat increase?
     LevelUp {
         current: i32,
+    },
+    StatIncrease {
+        stat: &'static str,
+        increase: i32,
     },
     Heal {
         item: Option<&'static str>,

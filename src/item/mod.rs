@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod equipment;
 pub mod shop;
+pub mod stone;
 
 #[typetag::serde(tag = "type")]
 pub trait Item {
@@ -126,7 +127,7 @@ impl Item for Ether {
             .class
             .mp
             .as_ref()
-            .map_or(0, |mp| mp.at(self.level) / 2);
+            .map_or(0, |mp| mp.at(self.level));
         let recovered_mp = game.player.restore_mp(to_restore);
 
         Event::emit(

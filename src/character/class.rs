@@ -1,3 +1,4 @@
+use crate::randomizer::{random, Randomizer};
 use once_cell::sync::OnceCell;
 use rand::prelude::SliceRandom;
 use serde::{Deserialize, Serialize};
@@ -11,15 +12,18 @@ pub struct Stat(pub i32, pub i32);
 
 impl Stat {
     pub fn base(&self) -> i32 {
-        self.0
+        // Instead of returning the base level as-is, simulate a randomized
+        // zero to one level increase of the stat
+        let floor = self.0 - self.1;
+        floor + self.increase()
     }
 
     pub fn increase(&self) -> i32 {
-        self.1
+        random().stat_increase(self.1)
     }
 
     pub fn at(&self, level: i32) -> i32 {
-        self.0 + (level - 1) * self.increase()
+        self.0 + (level - 1) * self.1
     }
 }
 
