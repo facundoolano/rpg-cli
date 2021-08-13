@@ -78,15 +78,18 @@ mod tests {
         assert_eq!(1, level(1, 1));
         assert_eq!(1, level(1, 2));
         assert_eq!(2, level(1, 3));
+        assert_eq!(9, level(1, 10));
 
         // Player level 5
-        assert_eq!(2, level(5, 1));
-        assert_eq!(3, level(5, 2));
-        assert_eq!(4, level(5, 3));
+        assert_eq!(1, level(5, 1));
+        assert_eq!(1, level(5, 2));
+        assert_eq!(2, level(5, 3));
+        assert_eq!(9, level(5, 10));
 
         // player level 10
-        assert_eq!(5, level(10, 1));
-        assert_eq!(6, level(10, 2));
-        assert_eq!(7, level(10, 3));
+        assert_eq!(1, level(10, 1));
+        assert_eq!(2, level(10, 2));
+        assert_eq!(3, level(10, 3));
+        assert_eq!(10, level(10, 10));
     }
 }
