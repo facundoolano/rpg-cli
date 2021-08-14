@@ -4,14 +4,15 @@ use serde::{Deserialize, Serialize};
 
 /// Rings are a kind of equipment that produce arbitrary effects hooked in
 /// different places of the game, e.g. increase a stat, double gold gained, etc.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq)]
 pub enum Ring {
     Void,
-    AttackRing,
-    DeffenseRing,
-    MagicRing,
-    MPRing,
-    HPRing,
+    Attack,
+    Deffense,
+    Speed,
+    Magic,
+    MP,
+    HP,
 }
 
 /// The character is allowed to hold two rings.
@@ -40,30 +41,41 @@ impl RingPair {
         None
     }
 
-    fn apply_mult(&self, base: i32, fun: fn(&Ring) -> f64) -> i32 {
-        let base = base as f64;
-        let mult = self.left.as_ref().map_or(1.0, fun) + self.right.as_ref().map_or(1.0, fun);
-        (base * mult).round() as i32
+    fn apply(&self, base: i32, ring: Ring, mult: f64) -> i32 {
+        let lmult = match &self.left {
+            Some(left_ring) if ring == *left_ring => mult,
+            _ => 0.0,
+        };
+        let rmult = match &self.right {
+            Some(right_ring) if ring == *right_ring => mult,
+            _ => 0.0,
+        };
+
+        (base as f64 * (lmult + rmult)).round() as i32
     }
 
-    pub fn attack(&self, base: i32) -> i32 {
-        self.apply_mult(base, Ring::attack_mult)
+    pub fn attack(&self, strength: i32) -> i32 {
+        self.apply(strength, Ring::Attack, 0.5)
     }
 
-    pub fn deffense(&self, base: i32) -> i32 {
-        self.apply_mult(base, Ring::deffense_mult)
+    pub fn deffense(&self, strength: i32) -> i32 {
+        self.apply(strength, Ring::Deffense, 0.5)
+    }
+
+    pub fn speed(&self, strength: i32) -> i32 {
+        self.apply(strength, Ring::Deffense, 0.5)
     }
 
     pub fn magic(&self, base: i32) -> i32 {
-        self.apply_mult(base, Ring::magic_mult)
+        self.apply(base, Ring::Magic, 0.5)
     }
 
     pub fn mp(&self, base: i32) -> i32 {
-        self.apply_mult(base, Ring::mp_mult)
+        self.apply(base, Ring::MP, 0.5)
     }
 
     pub fn hp(&self, base: i32) -> i32 {
-        self.apply_mult(base, Ring::hp_mult)
+        self.apply(base, Ring::HP, 0.5)
     }
 }
 
@@ -95,35 +107,15 @@ impl Ring {
     fn key(&self) -> &'static str {
         match self {
             Ring::Void => "void",
-            Ring::AttackRing => "attack",
-            Ring::DeffenseRing => "deffense",
-            Ring::MagicRing => "magic",
-            Ring::MPRing => "mp",
-            Ring::HPRing => "hp",
+            Ring::Attack => "attack",
+            Ring::Deffense => "deffense",
+            Ring::Speed => "speed",
+            Ring::Magic => "magic",
+            Ring::MP => "mp",
+            Ring::HP => "hp",
         }
-    }
-
-    fn attack_mult(&self) -> f64 {
-        if let Ring::AttackRing = self {
-            1.5
-        } else {
-            1.0
-        }
-    }
-
-    fn deffense_mult(&self) -> f64 {
-        1.0
-    }
-
-    fn magic_mult(&self) -> f64 {
-        1.0
-    }
-
-    fn mp_mult(&self) -> f64 {
-        1.0
-    }
-
-    fn hp_mult(&self) -> f64 {
-        1.0
     }
 }
+
+// TODO add tests
+// TODO make sure that all uses of these modified stats call the ring modified version

@@ -20,6 +20,7 @@ pub struct Character {
     pub level: i32,
     pub xp: i32,
 
+    // FIXME remove exposure of the internal fields
     pub max_hp: i32,
     pub current_hp: i32,
 
@@ -237,17 +238,19 @@ impl Character {
     }
 
     pub fn physical_attack(&self) -> i32 {
+        let base = self.strength + self.rings.attack(self.strength);
         if self.class.is_magic() {
-            self.strength / 3
+            base / 3
         } else {
             let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
-            self.strength + sword_str
+            base + sword_str
         }
     }
 
     pub fn magic_attack(&self) -> i32 {
         if self.class.is_magic() {
-            self.strength * 3
+            let base = self.strength * 3;
+            base + self.rings.magic(base)
         } else {
             0
         }
@@ -266,7 +269,9 @@ impl Character {
     pub fn deffense(&self) -> i32 {
         // we could incorporate strength here, but it's not clear if wouldn't just be noise
         // and it could also made it hard to make damage to stronger enemies
-        self.shield.as_ref().map_or(0, |s| s.strength())
+        let shield = self.shield.as_ref().map_or(0, |s| s.strength());
+        let rings = self.rings.deffense(self.strength);
+        shield + rings
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
