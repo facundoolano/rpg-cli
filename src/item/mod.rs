@@ -12,7 +12,7 @@ pub mod stone;
 
 #[typetag::serde(tag = "type")]
 pub trait Item {
-    fn apply(&self, game: &mut game::Game);
+    fn apply(&mut self, game: &mut game::Game);
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -34,7 +34,7 @@ impl fmt::Display for Potion {
 
 #[typetag::serde]
 impl Item for Potion {
-    fn apply(&self, game: &mut game::Game) {
+    fn apply(&mut self, game: &mut game::Game) {
         let to_restore = character::Class::player_first().hp.at(self.level) / 2;
         let recovered = game.player.heal(to_restore);
 
@@ -61,7 +61,7 @@ impl Escape {
 
 #[typetag::serde]
 impl Item for Escape {
-    fn apply(&self, game: &mut game::Game) {
+    fn apply(&mut self, game: &mut game::Game) {
         game.visit_home();
     }
 }
@@ -83,7 +83,7 @@ impl Remedy {
 
 #[typetag::serde]
 impl Item for Remedy {
-    fn apply(&self, game: &mut game::Game) {
+    fn apply(&mut self, game: &mut game::Game) {
         let healed = game.player.maybe_remove_status_effect();
         Event::emit(
             game,
@@ -122,7 +122,7 @@ impl fmt::Display for Ether {
 
 #[typetag::serde]
 impl Item for Ether {
-    fn apply(&self, game: &mut game::Game) {
+    fn apply(&mut self, game: &mut game::Game) {
         let to_restore = game
             .player
             .class

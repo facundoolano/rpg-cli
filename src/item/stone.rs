@@ -20,7 +20,7 @@ pub struct Level;
 
 #[typetag::serde]
 impl Item for Health {
-    fn apply(&self, game: &mut game::Game) {
+    fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.increase_hp();
         event(game, "hp", inc);
     }
@@ -28,7 +28,7 @@ impl Item for Health {
 
 #[typetag::serde]
 impl Item for Magic {
-    fn apply(&self, game: &mut game::Game) {
+    fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.increase_mp();
         event(game, "mp", inc);
     }
@@ -36,7 +36,7 @@ impl Item for Magic {
 
 #[typetag::serde]
 impl Item for Power {
-    fn apply(&self, game: &mut game::Game) {
+    fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.increase_strength();
         event(game, "str", inc);
     }
@@ -44,7 +44,7 @@ impl Item for Power {
 
 #[typetag::serde]
 impl Item for Speed {
-    fn apply(&self, game: &mut game::Game) {
+    fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.increase_speed();
         event(game, "spd", inc);
     }
@@ -52,7 +52,7 @@ impl Item for Speed {
 
 #[typetag::serde]
 impl Item for Level {
-    fn apply(&self, game: &mut game::Game) {
+    fn apply(&mut self, game: &mut game::Game) {
         game.player.increase_level();
         event(game, "level", 1);
     }

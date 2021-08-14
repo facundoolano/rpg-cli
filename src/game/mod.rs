@@ -157,7 +157,7 @@ impl Game {
         // get all items of that type and use one
         // if there are no remaining, drop the type from the inventory
         if let Some(mut items) = self.inventory.remove(&name) {
-            if let Some(item) = items.pop() {
+            if let Some(mut item) = items.pop() {
                 item.apply(self);
                 Event::emit(self, Event::ItemUsed { item: name.clone() });
             }
