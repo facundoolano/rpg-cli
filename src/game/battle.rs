@@ -22,8 +22,8 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     let mut xp = 0;
 
     while !enemy.is_dead() {
-        pl_accum += game.player.speed;
-        en_accum += enemy.speed;
+        pl_accum += game.player.speed();
+        en_accum += enemy.speed();
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) && !autoether(game, enemy) {
@@ -98,8 +98,8 @@ fn generate_attack(
 
     let attack_type = random.attack_type(
         attacker.inflicted_status_effect(),
-        attacker.speed,
-        receiver.speed,
+        attacker.speed(),
+        receiver.speed(),
     );
 
     match attack_type {
@@ -117,7 +117,7 @@ fn generate_attack(
 /// If the player is low on hp and has a potion available use it
 /// instead of attacking in the current turn.
 fn autopotion(game: &mut Game, enemy: &Character) -> bool {
-    if game.player.current_hp > game.player.max_hp / 3 {
+    if game.player.current_hp > game.player.max_hp() / 3 {
         return false;
     }
 

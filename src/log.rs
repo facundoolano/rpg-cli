@@ -290,11 +290,11 @@ fn long_status(game: &Game) {
         "    hp:{} {}/{}",
         hp_display(player, 10),
         player.current_hp,
-        player.max_hp
+        player.max_hp()
     );
 
     let (current_mp, max_mp) = if player.class.is_magic() {
-        (player.current_mp, player.max_mp)
+        (player.current_mp, player.max_mp())
     } else {
         (0, 0)
     };
@@ -319,7 +319,7 @@ fn long_status(game: &Game) {
         player.physical_attack(),
         player.magic_attack(),
         player.deffense(),
-        player.speed
+        player.speed()
     );
     println!("    {}", format_equipment(player));
     println!("    {}", format_inventory(game));
@@ -354,15 +354,15 @@ fn plain_status(game: &Game) {
         player.level,
         game.location,
         player.current_hp,
-        player.max_hp,
+        player.max_hp(),
         player.current_mp,
-        player.max_mp,
+        player.max_mp(),
         player.xp,
         player.xp_for_next(),
         player.magic_attack(),
         player.physical_attack(),
         player.deffense(),
-        player.speed,
+        player.speed(),
         status_effect,
         format_equipment(player),
         format_inventory(game),
@@ -491,7 +491,7 @@ fn hp_display(character: &Character, slots: i32) -> String {
     bar_display(
         slots,
         character.current_hp,
-        character.max_hp,
+        character.max_hp(),
         "green",
         "red",
     )
@@ -507,7 +507,7 @@ fn mp_display(character: &Character, slots: i32) -> String {
     bar_display(
         slots,
         current_mp,
-        character.max_mp,
+        character.max_mp(),
         "purple",
         "bright black",
     )

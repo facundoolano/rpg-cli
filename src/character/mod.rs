@@ -20,15 +20,14 @@ pub struct Character {
     pub level: i32,
     pub xp: i32,
 
-    // FIXME remove exposure of the internal fields
-    pub max_hp: i32,
+    max_hp: i32,
     pub current_hp: i32,
 
-    pub max_mp: i32,
+    max_mp: i32,
     pub current_mp: i32,
 
-    pub strength: i32,
-    pub speed: i32,
+    strength: i32,
+    speed: i32,
     pub status_effect: Option<StatusEffect>,
 }
 
@@ -152,20 +151,20 @@ impl Character {
     pub fn increase_hp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous damage
-        let previous_damage = self.max_hp - self.current_hp;
+        let previous_damage = self.max_hp() - self.current_hp;
         let inc = self.class.hp.increase();
         self.max_hp += inc;
-        self.current_hp = self.max_hp - previous_damage;
+        self.current_hp = self.max_hp() - previous_damage;
         inc
     }
 
     pub fn increase_mp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous mp consumption
-        let previous_used_mp = self.max_mp - self.current_mp;
+        let previous_used_mp = self.max_mp() - self.current_mp;
         let inc = self.class.mp.as_ref().map_or(0, |mp| mp.increase());
         self.max_mp += inc;
-        self.current_mp = self.max_mp - previous_used_mp;
+        self.current_mp = self.max_mp() - previous_used_mp;
         inc
     }
 
@@ -202,19 +201,19 @@ impl Character {
     /// Return the amount actually restored.
     pub fn heal(&mut self, amount: i32) -> i32 {
         let previous = self.current_hp;
-        self.current_hp = min(self.max_hp, self.current_hp + amount);
+        self.current_hp = min(self.max_hp(), self.current_hp + amount);
         self.current_hp - previous
     }
 
     pub fn restore_mp(&mut self, amount: i32) -> i32 {
         let previous = self.current_mp;
-        self.current_mp = min(self.max_mp, self.current_mp + amount);
+        self.current_mp = min(self.max_mp(), self.current_mp + amount);
         self.current_mp - previous
     }
 
     /// Restore all health and magic points to their max
     pub fn heal_full(&mut self) -> (i32, i32) {
-        (self.heal(self.max_hp), self.restore_mp(self.max_mp))
+        (self.heal(self.max_hp()), self.restore_mp(self.max_mp()))
     }
 
     /// How many experience points are required to move to the next level.
@@ -235,6 +234,18 @@ impl Character {
         };
 
         (max(1, damage - receiver.deffense()), mp_cost)
+    }
+
+    pub fn max_hp(&self) -> i32 {
+        self.max_hp + self.rings.hp(self.max_hp)
+    }
+
+    pub fn max_mp(&self) -> i32 {
+        self.max_mp + self.rings.mp(self.max_mp)
+    }
+
+    pub fn speed(&self) -> i32 {
+        self.speed + self.rings.speed(self.speed)
     }
 
     pub fn physical_attack(&self) -> i32 {
