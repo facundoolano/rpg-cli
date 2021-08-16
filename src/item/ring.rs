@@ -140,7 +140,7 @@ impl RingPair {
     fn apply(&self, base: i32, ring: Ring) -> i32 {
         let factor =
             |r: &Option<Ring>| r.as_ref().filter(|&l| *l == ring).map_or(0.0, Ring::factor);
-        let factor = factor(&self.left) + factor(&self.left);
+        let factor = factor(&self.left) + factor(&self.right);
         (base as f64 * factor).round() as i32
     }
 }
@@ -208,6 +208,21 @@ mod tests {
         assert_eq!(2, *game.inventory().get("void").unwrap());
         assert_eq!("speed", game.player.rings.left.as_ref().map_or("fail", Ring::key));
         assert_eq!("void", game.player.rings.right.as_ref().map_or("fail", Ring::key));
+    }
+
+    #[test]
+    fn test_apply_factor() {
+        let mut rings = RingPair::new();
+        assert_eq!(0, rings.apply(10, Ring::HP));
+        rings.left = Some(Ring::Void);
+        rings.right = Some(Ring::Void);
+        assert_eq!(0, rings.apply(10, Ring::HP));
+
+        rings.left = Some(Ring::HP);
+        assert_eq!(5, rings.apply(10, Ring::HP));
+
+        rings.right = Some(Ring::HP);
+        assert_eq!(10, rings.apply(10, Ring::HP));
     }
 
     fn test_game() -> game::Game {
