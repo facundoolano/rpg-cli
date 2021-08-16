@@ -1,4 +1,5 @@
 use super::Item;
+use crate::character;
 use crate::game;
 use serde::{Deserialize, Serialize};
 
@@ -41,41 +42,65 @@ impl RingPair {
         None
     }
 
-    fn apply(&self, base: i32, ring: Ring, mult: f64) -> i32 {
-        let lmult = match &self.left {
-            Some(left_ring) if ring == *left_ring => mult,
-            _ => 0.0,
-        };
-        let rmult = match &self.right {
-            Some(right_ring) if ring == *right_ring => mult,
-            _ => 0.0,
-        };
+    /// TODO explain
+    // these two functions are kind of ugly but at least keep related knowledge
+    // close and it beats the complexity of using traits instead of enums
+    fn equip_side_effect(character: &mut character::Character, ring: &Ring) {
+        match ring {
+            Ring::HP => {
+                character.current_hp += (ring.factor() * character.max_hp() as f64) as i32;
+            }
+            Ring::MP => {
+                character.current_mp += (ring.factor() * character.max_mp() as f64) as i32;
+            }
+            _ => {}
+        }
+    }
 
-        (base as f64 * (lmult + rmult)).round() as i32
+    fn unequip_side_effect(character: &mut character::Character, ring: &Ring) {
+        match ring {
+            Ring::HP => {
+                let to_remove = (ring.factor() * character.max_hp() as f64) as i32;
+                character.current_hp += std::cmp::max(1, character.current_hp - to_remove);
+            }
+            Ring::MP => {
+                let to_remove = (ring.factor() * character.max_mp() as f64) as i32;
+                character.current_mp += std::cmp::max(1, character.current_mp - to_remove);
+            }
+            _ => {}
+        }
+    }
+
+    /// TODO
+    fn apply(&self, base: i32, ring: Ring) -> i32 {
+        let factor =
+            |r: &Option<Ring>| r.as_ref().filter(|&l| *l == ring).map_or(0.0, Ring::factor);
+        let factor = factor(&self.left) + factor(&self.left);
+        (base as f64 * factor).round() as i32
     }
 
     pub fn attack(&self, strength: i32) -> i32 {
-        self.apply(strength, Ring::Attack, 0.5)
+        self.apply(strength, Ring::Attack)
     }
 
     pub fn deffense(&self, strength: i32) -> i32 {
-        self.apply(strength, Ring::Deffense, 0.5)
+        self.apply(strength, Ring::Deffense)
     }
 
     pub fn speed(&self, strength: i32) -> i32 {
-        self.apply(strength, Ring::Deffense, 0.5)
+        self.apply(strength, Ring::Deffense)
     }
 
     pub fn magic(&self, base: i32) -> i32 {
-        self.apply(base, Ring::Magic, 0.5)
+        self.apply(base, Ring::Magic)
     }
 
     pub fn mp(&self, base: i32) -> i32 {
-        self.apply(base, Ring::MP, 0.5)
+        self.apply(base, Ring::MP)
     }
 
     pub fn hp(&self, base: i32) -> i32 {
-        self.apply(base, Ring::HP, 0.5)
+        self.apply(base, Ring::HP)
     }
 }
 
@@ -96,7 +121,9 @@ impl Item for RingItem {
         // replace its memory with a throw away Void ring
         let ring = std::mem::replace(&mut self.ring, Ring::Void);
 
+        RingPair::equip_side_effect(&mut game.player, &ring);
         if let Some(removed) = game.player.rings.equip(ring) {
+            RingPair::unequip_side_effect(&mut game.player, &removed);
             let key = removed.key();
             game.add_item(&key, Box::new(RingItem { ring: removed }));
         }
@@ -104,6 +131,7 @@ impl Item for RingItem {
 }
 
 impl Ring {
+    // TODO should this be to_string instead?
     fn key(&self) -> &'static str {
         match self {
             Ring::Void => "void",
@@ -113,6 +141,19 @@ impl Ring {
             Ring::Magic => "magic",
             Ring::MP => "mp",
             Ring::HP => "hp",
+        }
+    }
+
+    /// TODO
+    fn factor(&self) -> f64 {
+        match self {
+            Ring::Attack => 0.5,
+            Ring::Deffense => 0.5,
+            Ring::Speed => 0.5,
+            Ring::Magic => 0.5,
+            Ring::MP => 0.5,
+            Ring::HP => 0.5,
+            _ => 0.0,
         }
     }
 }
