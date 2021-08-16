@@ -61,11 +61,11 @@ impl Ring {
         match self {
             Ring::HP => {
                 let to_remove = (self.factor() * character.max_hp() as f64) as i32;
-                character.current_hp += std::cmp::max(1, character.current_hp - to_remove);
+                character.current_hp = std::cmp::max(1, character.current_hp - to_remove);
             }
             Ring::MP => {
                 let to_remove = (self.factor() * character.max_mp() as f64) as i32;
-                character.current_mp += std::cmp::max(1, character.current_mp - to_remove);
+                character.current_mp = std::cmp::max(1, character.current_mp - to_remove);
             }
             _ => {}
         }
@@ -162,8 +162,6 @@ impl Item for RingItem {
         // In order to move out the inner ring (without having to change it to an Option)
         // replace its memory with a throw away Void ring
         let ring = std::mem::replace(&mut self.ring, Ring::Void);
-
-        ring.equip_side_effect(&mut game.player);
         if let Some(removed) = RingPair::equip(&mut game.player, ring) {
             let key = removed.key();
             game.add_item(&key, Box::new(RingItem { ring: removed }));
@@ -263,8 +261,8 @@ mod tests {
         // push out to unequip
         equip(&mut game, Ring::Void);
         equip(&mut game, Ring::Void);
-        assert_eq!(10, game.player.current_hp);
         assert_eq!(10, game.player.max_hp());
+        assert_eq!(10, game.player.current_hp);
 
         // FIXME what if double equip (for some reason)?
     }

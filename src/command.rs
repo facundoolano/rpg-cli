@@ -226,6 +226,7 @@ mod tests {
         };
 
         // reduce stats to ensure loss
+        // FIXME this is flaky now
         game.player.current_hp = 1;
 
         game.gold = 100;
