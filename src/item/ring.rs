@@ -93,11 +93,23 @@ impl RingPair {
 
     /// Put the given ring in the left, moving the left (if any) to the right
     /// and returning the right (if any)
-    fn equip(&mut self, ring: Ring) -> Option<Ring> {
-        if let Some(old_left) = self.left.replace(ring) {
-            return self.right.replace(old_left);
-        }
-        None
+    // TODO update comment
+    fn equip(character: &mut character::Character, ring: Ring) -> Option<Ring> {
+        // Remove the right ring and unapply its side-effects
+        let old_right = if let Some(removed) = character.rings.right.take() {
+            // FIXME this should live in this class
+            removed.unequip_side_effect(character);
+            Some(removed)
+        } else {
+            None
+        };
+
+        // put the new ring in left, pushing the previous one
+        // FIXME this should live in this class
+        ring.equip_side_effect(character);
+        character.rings.right = character.rings.left.replace(ring);
+
+        old_right
     }
 
     pub fn attack(&self, strength: i32) -> i32 {
@@ -140,6 +152,7 @@ pub struct RingItem {
     ring: Ring,
 }
 
+// FIXME impl this trait for enum? could that work
 #[typetag::serde]
 impl Item for RingItem {
     /// When the item is used, equip the inner ring in the player.
@@ -151,8 +164,7 @@ impl Item for RingItem {
         let ring = std::mem::replace(&mut self.ring, Ring::Void);
 
         ring.equip_side_effect(&mut game.player);
-        if let Some(removed) = game.player.rings.equip(ring) {
-            removed.unequip_side_effect(&mut game.player);
+        if let Some(removed) = RingPair::equip(&mut game.player, ring) {
             let key = removed.key();
             game.add_item(&key, Box::new(RingItem { ring: removed }));
         }
