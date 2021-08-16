@@ -226,8 +226,6 @@ mod tests {
         };
 
         // reduce stats to ensure loss
-        game.player.speed = 1;
-        game.player.strength = 1;
         game.player.current_hp = 1;
 
         game.gold = 100;
@@ -237,7 +235,7 @@ mod tests {
 
         assert!(result.is_err());
         // game reset
-        assert_eq!(game.player.max_hp, game.player.current_hp);
+        assert_eq!(game.player.max_hp(), game.player.current_hp);
         assert_eq!(0, game.gold);
         assert_eq!(0, game.player.xp);
     }
@@ -273,7 +271,7 @@ mod tests {
         let result = run(Some(cmd), &mut game);
         assert!(result.is_ok());
         assert!(game.location.is_home());
-        assert_eq!(game.player.max_hp, game.player.current_hp);
+        assert_eq!(game.player.max_hp(), game.player.current_hp);
     }
 
     #[test]
@@ -290,8 +288,6 @@ mod tests {
         };
 
         // reduce stats to ensure loss
-        game.player.speed = 1;
-        game.player.strength = 1;
         game.player.current_hp = 1;
 
         game.gold = 100;
@@ -350,7 +346,7 @@ mod tests {
         let result = run(Some(cmd), &mut game);
         assert!(result.is_ok());
         assert!(game.inventory().is_empty());
-        assert_eq!(game.player.max_hp, game.player.current_hp);
+        assert_eq!(game.player.max_hp(), game.player.current_hp);
 
         // not buy if not home
         let cmd = Command::ChangeDir {

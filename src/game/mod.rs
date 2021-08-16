@@ -327,12 +327,12 @@ mod tests {
         assert_eq!(2, *game.inventory().get("potion").unwrap());
 
         game.player.current_hp -= 3;
-        assert_ne!(game.player.max_hp, game.player.current_hp);
+        assert_ne!(game.player.max_hp(), game.player.current_hp);
 
         assert!(game.use_item("potion").is_ok());
 
         // check it actually restores the hp
-        assert_eq!(game.player.max_hp, game.player.current_hp);
+        assert_eq!(game.player.max_hp(), game.player.current_hp);
 
         // check item was consumed
         assert_eq!(1, game.inventory().len());
