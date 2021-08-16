@@ -1,6 +1,6 @@
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
-use crate::item::ring::RingPair;
+use crate::item::ring::{Ring, RingPair};
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -333,6 +333,53 @@ impl Character {
     pub fn rounded_level(self: &Character) -> i32 {
         // allow level 1 or level 5n
         std::cmp::max(1, (self.level / 5) * 5)
+    }
+
+    /// Put the given ring in the left, moving the left (if any) to the right
+    /// and returning the right (if any)
+    // TODO update comment
+    pub fn equip_ring(&mut self, ring: Ring) -> Option<Ring> {
+        // Remove the right ring and unapply its side-effects
+        let old_right = if let Some(removed) = self.rings.right.take() {
+            self.unequip_ring_side_effect(&removed);
+            Some(removed)
+        } else {
+            None
+        };
+
+        // put the new ring in left, pushing the previous one
+        self.equip_ring_side_effect(&ring);
+        self.rings.right = self.rings.left.replace(ring);
+
+        old_right
+    }
+
+    /// TODO explain
+    fn equip_ring_side_effect(&mut self, ring: &Ring) {
+        match ring {
+            Ring::HP => {
+                self.current_hp += (ring.factor() * self.max_hp as f64) as i32;
+            }
+            Ring::MP => {
+                self.current_mp += (ring.factor() * self.max_mp as f64) as i32;
+            }
+            _ => {}
+        }
+    }
+
+    /// TODO explain
+    fn unequip_ring_side_effect(&mut self, ring: &Ring) {
+        match ring {
+            Ring::HP => {
+                let to_remove = (ring.factor() * self.max_hp as f64) as i32;
+                self.current_hp = std::cmp::max(1, self.current_hp - to_remove);
+            }
+            Ring::MP => {
+                let to_remove = (ring.factor() * self.max_mp as f64) as i32;
+                self.current_mp = std::cmp::max(1, self.current_mp - to_remove);
+            }
+            _ => {}
+        }
     }
 }
 
