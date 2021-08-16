@@ -122,8 +122,8 @@ pub enum Distance {
 impl Distance {
     pub fn from(len: i32) -> Self {
         match len {
-            n if n <= 4 => Self::Near(len),
-            n if n <= 9 => Self::Mid(len),
+            n if n <= 6 => Self::Near(len),
+            n if n <= 15 => Self::Mid(len),
             _ => Self::Far(len),
         }
     }
