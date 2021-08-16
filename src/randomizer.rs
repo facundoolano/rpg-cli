@@ -92,7 +92,7 @@ impl Randomizer for DefaultRandomizer {
 
     fn enemy_level(&self, level: i32) -> i32 {
         let mut rng = rand::thread_rng();
-        max(1, level + rng.gen_range(-1..2))
+        max(1, level + rng.gen_range(-4..5))
     }
 
     /// add +/- 20% variance to a the damage
