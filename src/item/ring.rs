@@ -197,4 +197,63 @@ mod tests {
         assert_eq!("speed", game.player.rings.left.as_ref().map_or("fail", Ring::key));
         assert_eq!("void", game.player.rings.right.as_ref().map_or("fail", Ring::key));
     }
+
+    fn test_game() -> game::Game {
+        let mut game = game::Game::new();
+        let stat = character::class::Stat(10, 1);
+        let player = character::Character::new(character::class::Class{
+            name: String::from("test"),
+            hp: stat.clone(),
+            mp: Some(stat.clone()),
+            strength: stat.clone(),
+            speed: stat.clone(),
+            category: character::class::Category::Player,
+            inflicts: None,
+        }, 1);
+        game.player = player;
+        game
+    }
+
+    // FIXME this weirdness to use means the abstractions are not that solid?
+    fn equip(game: &mut game::Game, ring: Ring) {
+        let key = ring.key();
+        let item = Box::new(RingItem{ring});
+        game.add_item(&key, item);
+        game.use_item(&key).unwrap();
+    }
+
+    // FIXME this test logic that partially lives somewhere else
+    #[test]
+    fn test_hp_ring() {
+        let mut game = test_game();
+        assert_eq!(10, game.player.current_hp);
+        assert_eq!(10, game.player.max_hp());
+
+        equip(&mut game, Ring::HP);
+        assert_eq!(15, game.player.max_hp());
+        assert_eq!(15, game.player.current_hp);
+
+        // push out to unequip
+        equip(&mut game, Ring::Void);
+        equip(&mut game, Ring::Void);
+        assert_eq!(10, game.player.current_hp);
+        assert_eq!(10, game.player.max_hp());
+
+        // FIXME what if double equip (for some reason)?
+    }
+
+    #[test]
+    fn test_mp_ring() {}
+
+    #[test]
+    fn test_attack_ring() {}
+
+    #[test]
+    fn test_deffense_ring() {}
+
+    #[test]
+    fn test_magic_ring() {}
+
+    #[test]
+    fn test_speed_ring() {}
 }
