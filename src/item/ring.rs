@@ -2,9 +2,9 @@ use super::Item;
 use crate::game;
 use serde::{Deserialize, Serialize};
 
-/// Rings are a kind of equipment that produce arbitrary effects hooked in
+/// Rings are a wearable item that produce arbitrary effects hooked in
 /// different places of the game, e.g. increase a stat, double gold gained, etc.
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum Ring {
     Void,
     Attack,
@@ -17,6 +17,7 @@ pub enum Ring {
 
 impl Ring {
     // TODO should this be to_string instead?
+    // FIXME consider this key to be a standard item thing
     pub fn key(&self) -> &'static str {
         match self {
             Ring::Void => "void",
@@ -43,18 +44,28 @@ impl Ring {
     }
 }
 
+#[typetag::serde]
+impl Item for Ring {
+    /// When the ring is used, equip in the player. If the player was already
+    /// wearing two rings, move the second one back to the inventory.
+    fn apply(&mut self, game: &mut game::Game) {
+        if let Some(removed) = game.player.equip_ring(self.clone()) {
+            game.add_item(removed.key(), Box::new(removed));
+        }
+    }
+}
+
 /// The character is allowed to hold two rings.
-/// The ring pair struct is used to hold the rings that the character is wearing,
-/// handling the equipping and calculating the net combined effect of the two rings.
+/// This struct provides a simplified interface to get the ring pair net
+/// contribution to different aspects of the game, e.g. character stats.
 #[derive(Serialize, Deserialize, Default)]
-pub struct RingPair {
+pub struct RingSet {
     pub left: Option<Ring>,
     pub right: Option<Ring>,
 }
 
-// TODO consider removing/reducing this one
-// rename to RingSet? RingHolder? RingEquip
-impl RingPair {
+// TODO rename to RingSet? RingHolder? RingEquip
+impl RingSet {
     pub fn new() -> Self {
         Self {
             left: None,
@@ -95,30 +106,6 @@ impl RingPair {
     }
 }
 
-/// RingItem is a wrapper that lets the rings be added to the inventory and
-/// used them to equip them.
-#[derive(Serialize, Deserialize)]
-pub struct RingItem {
-    ring: Ring,
-}
-
-// FIXME impl this trait for enum? could that work
-#[typetag::serde]
-impl Item for RingItem {
-    /// When the item is used, equip the inner ring in the player.
-    /// If the player was already wearing two rings, move the second one back
-    /// to the inventory.
-    fn apply(&mut self, game: &mut game::Game) {
-        // In order to move out the inner ring (without having to change it to an Option)
-        // replace its memory with a throw away Void ring
-        let ring = std::mem::replace(&mut self.ring, Ring::Void);
-        if let Some(removed) = game.player.equip_ring(ring) {
-            let key = removed.key();
-            game.add_item(&key, Box::new(RingItem { ring: removed }));
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -131,9 +118,9 @@ mod tests {
         assert!(game.player.rings.left.is_none());
         assert!(game.player.rings.right.is_none());
 
-        game.add_item("void", Box::new(RingItem { ring: Ring::Void }));
-        game.add_item("void", Box::new(RingItem { ring: Ring::Void }));
-        game.add_item("void", Box::new(RingItem { ring: Ring::Void }));
+        game.add_item("void", Box::new(Ring::Void));
+        game.add_item("void", Box::new(Ring::Void));
+        game.add_item("void", Box::new(Ring::Void));
         assert_eq!(3, *game.inventory().get("void").unwrap());
 
         game.use_item("void").unwrap();
@@ -166,7 +153,7 @@ mod tests {
             game.player.rings.right.as_ref().map_or("fail", Ring::key)
         );
 
-        game.add_item("speed", Box::new(RingItem { ring: Ring::Speed }));
+        game.add_item("speed", Box::new(Ring::Speed));
         game.use_item("speed").unwrap();
         assert_eq!(2, *game.inventory().get("void").unwrap());
         assert_eq!(
@@ -197,7 +184,7 @@ mod tests {
 
     #[test]
     fn test_apply_factor() {
-        let mut rings = RingPair::new();
+        let mut rings = RingSet::new();
         assert_eq!(0, rings.apply(10, Ring::HP));
         rings.left = Some(Ring::Void);
         rings.right = Some(Ring::Void);

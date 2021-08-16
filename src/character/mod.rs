@@ -1,6 +1,6 @@
 use crate::item::equipment;
 use crate::item::equipment::Equipment;
-use crate::item::ring::{Ring, RingPair};
+use crate::item::ring::{Ring, RingSet};
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ pub struct Character {
     pub class: Class,
     pub sword: Option<equipment::Sword>,
     pub shield: Option<equipment::Shield>,
-    pub rings: RingPair,
+    pub rings: RingSet,
 
     pub level: i32,
     pub xp: i32,
@@ -79,7 +79,7 @@ impl Character {
             strength,
             speed,
             status_effect: None,
-            rings: RingPair::new(),
+            rings: RingSet::new(),
         };
 
         for _ in 1..level {
