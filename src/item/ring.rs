@@ -16,6 +16,62 @@ pub enum Ring {
     HP,
 }
 
+impl Ring {
+    // TODO should this be to_string instead?
+    fn key(&self) -> &'static str {
+        match self {
+            Ring::Void => "void",
+            Ring::Attack => "attack",
+            Ring::Deffense => "deffense",
+            Ring::Speed => "speed",
+            Ring::Magic => "magic",
+            Ring::MP => "mp",
+            Ring::HP => "hp",
+        }
+    }
+
+    /// TODO
+    fn factor(&self) -> f64 {
+        match self {
+            Ring::Attack => 0.5,
+            Ring::Deffense => 0.5,
+            Ring::Speed => 0.5,
+            Ring::Magic => 0.5,
+            Ring::MP => 0.5,
+            Ring::HP => 0.5,
+            _ => 0.0,
+        }
+    }
+
+    /// TODO explain
+    fn equip_side_effect(&self, character: &mut character::Character) {
+        match self {
+            Ring::HP => {
+                character.current_hp += (self.factor() * character.max_hp() as f64) as i32;
+            }
+            Ring::MP => {
+                character.current_mp += (self.factor() * character.max_mp() as f64) as i32;
+            }
+            _ => {}
+        }
+    }
+
+    /// TODO explain
+    fn unequip_side_effect(&self, character: &mut character::Character) {
+        match self {
+            Ring::HP => {
+                let to_remove = (self.factor() * character.max_hp() as f64) as i32;
+                character.current_hp += std::cmp::max(1, character.current_hp - to_remove);
+            }
+            Ring::MP => {
+                let to_remove = (self.factor() * character.max_mp() as f64) as i32;
+                character.current_mp += std::cmp::max(1, character.current_mp - to_remove);
+            }
+            _ => {}
+        }
+    }
+}
+
 /// The character is allowed to hold two rings.
 /// The ring pair struct is used to hold the rings that the character is wearing,
 /// handling the equipping and calculating the net combined effect of the two rings.
@@ -25,6 +81,8 @@ pub struct RingPair {
     right: Option<Ring>,
 }
 
+// TODO consider removing/reducing this one
+// rename to RingSet? RingHolder? RingEquip
 impl RingPair {
     pub fn new() -> Self {
         Self {
@@ -40,43 +98,6 @@ impl RingPair {
             return self.right.replace(old_left);
         }
         None
-    }
-
-    /// TODO explain
-    // these two functions are kind of ugly but at least keep related knowledge
-    // close and it beats the complexity of using traits instead of enums
-    fn equip_side_effect(character: &mut character::Character, ring: &Ring) {
-        match ring {
-            Ring::HP => {
-                character.current_hp += (ring.factor() * character.max_hp() as f64) as i32;
-            }
-            Ring::MP => {
-                character.current_mp += (ring.factor() * character.max_mp() as f64) as i32;
-            }
-            _ => {}
-        }
-    }
-
-    fn unequip_side_effect(character: &mut character::Character, ring: &Ring) {
-        match ring {
-            Ring::HP => {
-                let to_remove = (ring.factor() * character.max_hp() as f64) as i32;
-                character.current_hp += std::cmp::max(1, character.current_hp - to_remove);
-            }
-            Ring::MP => {
-                let to_remove = (ring.factor() * character.max_mp() as f64) as i32;
-                character.current_mp += std::cmp::max(1, character.current_mp - to_remove);
-            }
-            _ => {}
-        }
-    }
-
-    /// TODO
-    fn apply(&self, base: i32, ring: Ring) -> i32 {
-        let factor =
-            |r: &Option<Ring>| r.as_ref().filter(|&l| *l == ring).map_or(0.0, Ring::factor);
-        let factor = factor(&self.left) + factor(&self.left);
-        (base as f64 * factor).round() as i32
     }
 
     pub fn attack(&self, strength: i32) -> i32 {
@@ -102,6 +123,14 @@ impl RingPair {
     pub fn hp(&self, base: i32) -> i32 {
         self.apply(base, Ring::HP)
     }
+
+    /// TODO
+    fn apply(&self, base: i32, ring: Ring) -> i32 {
+        let factor =
+            |r: &Option<Ring>| r.as_ref().filter(|&l| *l == ring).map_or(0.0, Ring::factor);
+        let factor = factor(&self.left) + factor(&self.left);
+        (base as f64 * factor).round() as i32
+    }
 }
 
 /// RingItem is a wrapper that lets the rings be added to the inventory and
@@ -121,39 +150,11 @@ impl Item for RingItem {
         // replace its memory with a throw away Void ring
         let ring = std::mem::replace(&mut self.ring, Ring::Void);
 
-        RingPair::equip_side_effect(&mut game.player, &ring);
+        ring.equip_side_effect(&mut game.player);
         if let Some(removed) = game.player.rings.equip(ring) {
-            RingPair::unequip_side_effect(&mut game.player, &removed);
+            removed.unequip_side_effect(&mut game.player);
             let key = removed.key();
             game.add_item(&key, Box::new(RingItem { ring: removed }));
-        }
-    }
-}
-
-impl Ring {
-    // TODO should this be to_string instead?
-    fn key(&self) -> &'static str {
-        match self {
-            Ring::Void => "void",
-            Ring::Attack => "attack",
-            Ring::Deffense => "deffense",
-            Ring::Speed => "speed",
-            Ring::Magic => "magic",
-            Ring::MP => "mp",
-            Ring::HP => "hp",
-        }
-    }
-
-    /// TODO
-    fn factor(&self) -> f64 {
-        match self {
-            Ring::Attack => 0.5,
-            Ring::Deffense => 0.5,
-            Ring::Speed => 0.5,
-            Ring::Magic => 0.5,
-            Ring::MP => 0.5,
-            Ring::HP => 0.5,
-            _ => 0.0,
         }
     }
 }
