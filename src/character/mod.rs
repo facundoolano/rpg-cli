@@ -1,5 +1,4 @@
 use crate::item::equipment;
-use crate::item::equipment::Equipment;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -12,8 +11,8 @@ pub mod enemy;
 #[serde(default)]
 pub struct Character {
     pub class: Class,
-    pub sword: Option<equipment::Sword>,
-    pub shield: Option<equipment::Shield>,
+    pub sword: Option<equipment::Weapon>,
+    pub shield: Option<equipment::Weapon>,
 
     pub level: i32,
     pub xp: i32,

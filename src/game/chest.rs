@@ -1,7 +1,7 @@
 use crate::game;
-use crate::item::equipment::{Shield, Sword};
+use crate::item::equipment::Weapon;
 use crate::item::stone;
-use crate::item::{equipment::Equipment, Escape, Ether, Item, Potion, Remedy};
+use crate::item::{Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use rand::prelude::SliceRandom;
@@ -14,8 +14,8 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize)]
 pub struct Chest {
     items: HashMap<String, Vec<Box<dyn Item>>>,
-    sword: Option<Sword>,
-    shield: Option<Shield>,
+    sword: Option<Weapon>,
+    shield: Option<Weapon>,
     gold: i32,
 }
 
@@ -137,15 +137,15 @@ impl Chest {
     }
 }
 
-fn random_equipment(level: i32) -> (Option<Sword>, Option<Shield>) {
+fn random_equipment(level: i32) -> (Option<Weapon>, Option<Weapon>) {
     let mut rng = rand::thread_rng();
 
     vec![
-        (100, (Some(Sword::new(level)), None)),
-        (80, (None, Some(Shield::new(level)))),
-        (30, (Some(Sword::new(level + 5)), None)),
-        (20, (None, Some(Shield::new(level + 5)))),
-        (1, (None, Some(Shield::new(100)))),
+        (100, (Some(Weapon::sword(level)), None)),
+        (80, (None, Some(Weapon::shield(level)))),
+        (30, (Some(Weapon::sword(level + 5)), None)),
+        (20, (None, Some(Weapon::shield(level + 5)))),
+        (1, (Some(Weapon::sword(100)), None)),
     ]
     .choose_weighted_mut(&mut rng, |c| c.0)
     .unwrap()
