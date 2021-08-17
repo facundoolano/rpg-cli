@@ -194,7 +194,7 @@ impl Default for Chest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::item::equipment::{Shield, Sword};
+    use crate::item::equipment::Weapon;
     use crate::item::{Escape, Potion};
 
     #[test]
@@ -221,8 +221,8 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.sword = Some(Sword::new(1));
-        game.player.shield = Some(Shield::new(1));
+        game.player.sword = Some(Weapon::sword(1));
+        game.player.shield = Some(Weapon::shield(1));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
@@ -246,8 +246,8 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.sword = Some(Sword::new(1));
-        game.player.shield = Some(Shield::new(10));
+        game.player.sword = Some(Weapon::sword(1));
+        game.player.shield = Some(Weapon::shield(10));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
@@ -255,8 +255,8 @@ mod tests {
         // set some defaults for the new game before picking up
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.sword = Some(Sword::new(5));
-        game.player.shield = Some(Shield::new(5));
+        game.player.sword = Some(Weapon::sword(5));
+        game.player.shield = Some(Weapon::shield(5));
         game.gold = 50;
 
         tomb.pick_up(&mut game);
@@ -264,10 +264,10 @@ mod tests {
         assert_eq!(150, game.gold);
 
         // the sword was upgrade, picked it up
-        assert_eq!(5, game.player.sword.as_ref().unwrap().level());
+        assert_eq!(5, game.player.sword.as_ref().unwrap().level);
 
         // the shield was downgrade, kept the current one
-        assert_eq!(10, game.player.shield.as_ref().unwrap().level());
+        assert_eq!(10, game.player.shield.as_ref().unwrap().level);
 
         assert_eq!(3, *game.inventory().get("potion").unwrap());
     }
@@ -279,8 +279,8 @@ mod tests {
         items.insert("potion".to_string(), potions);
         let mut chest1 = Chest {
             items,
-            sword: Some(Sword::new(1)),
-            shield: Some(Shield::new(10)),
+            sword: Some(Weapon::sword(1)),
+            shield: Some(Weapon::shield(10)),
             gold: 100,
         };
 
@@ -291,15 +291,15 @@ mod tests {
         items.insert("escape".to_string(), escapes);
         let chest2 = Chest {
             items,
-            sword: Some(Sword::new(10)),
-            shield: Some(Shield::new(1)),
+            sword: Some(Weapon::sword(10)),
+            shield: Some(Weapon::shield(1)),
             gold: 100,
         };
 
         chest1.extend(chest2);
         assert_eq!(200, chest1.gold);
-        assert_eq!(10, chest1.sword.as_ref().unwrap().level());
-        assert_eq!(10, chest1.shield.as_ref().unwrap().level());
+        assert_eq!(10, chest1.sword.as_ref().unwrap().level);
+        assert_eq!(10, chest1.shield.as_ref().unwrap().level);
         assert_eq!(3, chest1.items.get("potion").unwrap().len());
         assert_eq!(1, chest1.items.get("escape").unwrap().len());
     }
