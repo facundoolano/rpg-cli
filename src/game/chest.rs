@@ -79,14 +79,14 @@ impl Chest {
 
         // the equipment is picked up only if it's better than the current one
         if let Some(sword) = self.equip.sword.take() {
-            if sword.is_upgrade_from(&game.player.equip.sword.as_ref()) {
+            if sword.is_upgrade_from(&game.player.equip.sword) {
                 to_log.push(sword.to_string());
                 game.player.equip.sword = Some(sword);
             }
         }
 
         if let Some(shield) = self.equip.shield.take() {
-            if shield.is_upgrade_from(&game.player.equip.shield.as_ref()) {
+            if shield.is_upgrade_from(&game.player.equip.shield) {
                 to_log.push(shield.to_string());
                 game.player.equip.shield = Some(shield);
             }
@@ -112,13 +112,13 @@ impl Chest {
 
         // keep the best of each equipment
         if let Some(sword) = other.equip.sword.take() {
-            if sword.is_upgrade_from(&self.equip.sword.as_ref()) {
+            if sword.is_upgrade_from(&self.equip.sword) {
                 self.equip.sword = Some(sword);
             }
         }
 
         if let Some(shield) = other.equip.shield.take() {
-            if shield.is_upgrade_from(&self.equip.shield.as_ref()) {
+            if shield.is_upgrade_from(&self.equip.shield) {
                 self.equip.shield = Some(shield);
             }
         }

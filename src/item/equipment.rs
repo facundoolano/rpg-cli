@@ -3,6 +3,7 @@ use core::fmt;
 use crate::character::class as character;
 use serde::{Deserialize, Serialize};
 
+/// TODO document
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Equipment {
     pub sword: Option<Weapon>,
@@ -28,6 +29,7 @@ impl Equipment {
 
 // TODO move to separate modules
 
+/// TODO document
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Weapon {
     pub level: i32,
@@ -59,7 +61,7 @@ impl Weapon {
         (player_strength as f64 * 0.5).round() as i32
     }
 
-    pub fn is_upgrade_from(&self, maybe_other: &Option<&Self>) -> bool {
+    pub fn is_upgrade_from(&self, maybe_other: &Option<Self>) -> bool {
         if let Some(equip) = maybe_other {
             self.level > equip.level
         } else {

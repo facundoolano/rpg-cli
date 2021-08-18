@@ -45,12 +45,12 @@ fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
     let level = player.rounded_level();
 
     let sword = Weapon::sword(level);
-    if sword.is_upgrade_from(&player.equip.sword.as_ref()) {
+    if sword.is_upgrade_from(&player.equip.sword) {
         items.push(("sword".to_string(), Box::new(sword)));
     }
 
     let shield = Weapon::shield(level);
-    if shield.is_upgrade_from(&player.equip.shield.as_ref()) {
+    if shield.is_upgrade_from(&player.equip.shield) {
         items.push(("shield".to_string(), Box::new(shield)));
     }
 
