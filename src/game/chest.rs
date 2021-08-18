@@ -1,5 +1,5 @@
 use crate::game;
-use crate::item::equipment::Weapon;
+use crate::item::equipment::{Equipment, Weapon};
 use crate::item::stone;
 use crate::item::{Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
@@ -14,8 +14,7 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize)]
 pub struct Chest {
     items: HashMap<String, Vec<Box<dyn Item>>>,
-    sword: Option<Weapon>,
-    shield: Option<Weapon>,
+    equip: Equipment,
     gold: i32,
 }
 
@@ -37,9 +36,7 @@ impl Chest {
         }
 
         if equipment_chest {
-            let (sword, shield) = random_equipment(game.player.rounded_level());
-            chest.sword = sword;
-            chest.shield = shield;
+            chest.equip = random_equipment(game.player.rounded_level());
         }
 
         if item_chest {
@@ -65,36 +62,33 @@ impl Chest {
 
     /// Remove the gold, items and equipment from a hero and return them as a new chest.
     pub fn drop(game: &mut game::Game) -> Self {
-        let sword = game.player.sword.take();
-        let shield = game.player.shield.take();
+        let equip = std::mem::take(&mut game.player.equip);
         let items = game.inventory.drain().collect();
         let gold = game.gold;
         game.gold = 0;
 
-        Self {
-            items,
-            sword,
-            shield,
-            gold,
-        }
+        Self { items, equip, gold }
     }
 
     /// Add the items of this chest to the current game/hero
     pub fn pick_up(&mut self, game: &mut game::Game) -> (Vec<String>, i32) {
         let mut to_log = Vec::new();
 
+        // FIXME review if this logic can be moved over to the equipment
+        // or at least factored to a helper
+
         // the equipment is picked up only if it's better than the current one
-        if let Some(sword) = self.sword.take() {
-            if sword.is_upgrade_from(&game.player.sword.as_ref()) {
+        if let Some(sword) = self.equip.sword.take() {
+            if sword.is_upgrade_from(&game.player.equip.sword.as_ref()) {
                 to_log.push(sword.to_string());
-                game.player.sword = Some(sword);
+                game.player.equip.sword = Some(sword);
             }
         }
 
-        if let Some(shield) = self.shield.take() {
-            if shield.is_upgrade_from(&game.player.shield.as_ref()) {
+        if let Some(shield) = self.equip.shield.take() {
+            if shield.is_upgrade_from(&game.player.equip.shield.as_ref()) {
                 to_log.push(shield.to_string());
-                game.player.shield = Some(shield);
+                game.player.equip.shield = Some(shield);
             }
         }
 
@@ -114,16 +108,18 @@ impl Chest {
 
     /// Add the elements of `other` to this chest
     pub fn extend(&mut self, mut other: Self) {
+        // FIXME some of this logic should go to equip
+
         // keep the best of each equipment
-        if let Some(sword) = other.sword.take() {
-            if sword.is_upgrade_from(&self.sword.as_ref()) {
-                self.sword = Some(sword);
+        if let Some(sword) = other.equip.sword.take() {
+            if sword.is_upgrade_from(&self.equip.sword.as_ref()) {
+                self.equip.sword = Some(sword);
             }
         }
 
-        if let Some(shield) = other.shield.take() {
-            if shield.is_upgrade_from(&self.shield.as_ref()) {
-                self.shield = Some(shield);
+        if let Some(shield) = other.equip.shield.take() {
+            if shield.is_upgrade_from(&self.equip.shield.as_ref()) {
+                self.equip.shield = Some(shield);
             }
         }
 
@@ -137,10 +133,10 @@ impl Chest {
     }
 }
 
-fn random_equipment(level: i32) -> (Option<Weapon>, Option<Weapon>) {
+fn random_equipment(level: i32) -> Equipment {
     let mut rng = rand::thread_rng();
 
-    vec![
+    let (sword, shield) = vec![
         (100, (Some(Weapon::sword(level)), None)),
         (80, (None, Some(Weapon::shield(level)))),
         (30, (Some(Weapon::sword(level + 5)), None)),
@@ -150,7 +146,9 @@ fn random_equipment(level: i32) -> (Option<Weapon>, Option<Weapon>) {
     .choose_weighted_mut(&mut rng, |c| c.0)
     .unwrap()
     .to_owned()
-    .1
+    .1;
+
+    Equipment { sword, shield }
 }
 
 type WeightedItems = (i32, &'static str, Vec<Box<dyn Item>>);
@@ -184,8 +182,7 @@ impl Default for Chest {
     fn default() -> Self {
         Self {
             gold: 0,
-            sword: None,
-            shield: None,
+            equip: Equipment::new(),
             items: HashMap::new(),
         }
     }

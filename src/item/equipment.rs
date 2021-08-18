@@ -3,6 +3,31 @@ use core::fmt;
 use crate::character::class as character;
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct Equipment {
+    pub sword: Option<Weapon>,
+    pub shield: Option<Weapon>,
+}
+
+impl Equipment {
+    pub fn new() -> Self {
+        Self {
+            sword: None,
+            shield: None,
+        }
+    }
+
+    pub fn attack(&self) -> i32 {
+        self.sword.as_ref().map_or(0, |s| s.strength())
+    }
+
+    pub fn deffense(&self) -> i32 {
+        self.shield.as_ref().map_or(0, |s| s.strength())
+    }
+}
+
+// TODO move to separate modules
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Weapon {
     pub level: i32,

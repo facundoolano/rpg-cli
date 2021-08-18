@@ -11,8 +11,7 @@ pub mod enemy;
 #[serde(default)]
 pub struct Character {
     pub class: Class,
-    pub sword: Option<equipment::Weapon>,
-    pub shield: Option<equipment::Weapon>,
+    pub equip: equipment::Equipment,
 
     pub level: i32,
     pub xp: i32,
@@ -65,8 +64,7 @@ impl Character {
 
         let mut character = Self {
             class,
-            sword: None,
-            shield: None,
+            equip: equipment::Equipment::new(),
             level: 1,
             xp: 0,
             max_hp,
@@ -98,11 +96,9 @@ impl Character {
                 // if class change is done at level 1, it works as a game reset
                 // the player stats are regenerated with the new class
                 // if equipment was already set, it is preserved
-                let sword = self.sword.take();
-                let shield = self.shield.take();
+                let equip = std::mem::take(&mut self.equip);
                 *self = Self::new(class.clone(), 1);
-                self.sword = sword;
-                self.shield = shield;
+                self.equip = equip;
             } else {
                 self.class = class.clone();
 
@@ -236,8 +232,7 @@ impl Character {
         if self.class.is_magic() {
             self.strength / 3
         } else {
-            let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
-            self.strength + sword_str
+            self.strength + self.equip.attack()
         }
     }
 
@@ -260,9 +255,7 @@ impl Character {
     }
 
     pub fn deffense(&self) -> i32 {
-        // we could incorporate strength here, but it's not clear if wouldn't just be noise
-        // and it could also made it hard to make damage to stronger enemies
-        self.shield.as_ref().map_or(0, |s| s.strength())
+        self.equip.deffense()
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
