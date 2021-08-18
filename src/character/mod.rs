@@ -494,7 +494,7 @@ mod tests {
 
         while hero.level < 500 {
             hero.add_experience(hero.xp_for_next());
-            hero.sword = Some(equipment::Weapon::sword(hero.level));
+            hero.equip.sword = Some(equipment::Weapon::sword(hero.level));
             let turns_unarmed = hero.max_hp / hero.strength;
             let turns_armed = hero.max_hp / hero.physical_attack();
             println!(
@@ -549,7 +549,7 @@ mod tests {
     fn test_class_change() {
         let mut player = Character::player();
         player.xp = 20;
-        player.sword = Some(equipment::Weapon::sword(1));
+        player.equip.sword = Some(equipment::Weapon::sword(1));
 
         let warrior_class = Class::player_by_name("warrior").unwrap();
         let thief_class = Class::player_by_name("thief").unwrap();
@@ -562,7 +562,7 @@ mod tests {
         assert_eq!(player.max_hp, warrior_class.hp.base());
         assert_eq!(player.strength, warrior_class.strength.base());
         assert_eq!(player.speed, warrior_class.speed.base());
-        assert!(player.sword.is_some());
+        assert!(player.equip.sword.is_some());
 
         // attempt change to unknown class
         assert!(player.change_class("choripan").is_err());
@@ -574,7 +574,7 @@ mod tests {
         assert_eq!(player.max_hp, thief_class.hp.base());
         assert_eq!(player.strength, thief_class.strength.base());
         assert_eq!(player.speed, thief_class.speed.base());
-        assert!(player.sword.is_some());
+        assert!(player.equip.sword.is_some());
 
         // attempt change to different class at level 2
         player.level = 2;
@@ -585,7 +585,7 @@ mod tests {
         assert_eq!(player.max_hp, thief_class.hp.base());
         assert_eq!(player.strength, thief_class.strength.base());
         assert_eq!(player.speed, thief_class.speed.base());
-        assert!(player.sword.is_some());
+        assert!(player.equip.sword.is_some());
     }
 
     #[test]
@@ -639,7 +639,7 @@ mod tests {
         // warrior + sword, increased damage + mp = 0
         let sword = equipment::Weapon::sword(hero.level);
         let sword_strength = sword.strength();
-        hero.sword = Some(sword);
+        hero.equip.sword = Some(sword);
         assert_eq!((base_strength + sword_strength, 0), hero.damage(&foe));
 
         let mut mage = Character::player();
@@ -657,7 +657,7 @@ mod tests {
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // same with sword
-        mage.sword = Some(equipment::Weapon::sword(hero.level));
+        mage.equip.sword = Some(equipment::Weapon::sword(hero.level));
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // mage without enough mp, 0 mp, /3
