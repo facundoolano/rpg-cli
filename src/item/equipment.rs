@@ -3,7 +3,11 @@ use core::fmt;
 use crate::character::class as character;
 use serde::{Deserialize, Serialize};
 
-/// TODO document
+/// Packages together different equipment pieces that can be worn by characters
+/// or found in chests.
+/// Provides a unified interface for stat contributions to the base stats of a
+/// characters, e.g. the increased attack contributed by a sword and the
+/// deffense contributed by a shield.
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Equipment {
     pub sword: Option<Weapon>,
@@ -18,7 +22,9 @@ impl Equipment {
         }
     }
 
-    /// TODO
+    /// Take the sword and/or shield from the given equipment if
+    /// self has none or has one with lower level.
+    /// Returns a tuple indicating whether there were (sword, shield) upgrades.
     pub fn upgrade(&mut self, other: &mut Self) -> (bool, bool) {
         (
             maybe_upgrade(&mut self.sword, &mut other.sword),
@@ -45,9 +51,8 @@ fn maybe_upgrade(current: &mut Option<Weapon>, other: &mut Option<Weapon>) -> bo
     false
 }
 
-// TODO move to separate modules
-
-/// TODO document
+/// Equipment piece with a strength contribution based on
+/// a level. Used to generically represent swords and shields.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Weapon {
     pub level: i32,
@@ -79,6 +84,7 @@ impl Weapon {
         (player_strength as f64 * 0.5).round() as i32
     }
 
+    /// Return true if the other weapon either is None or has lower level than this one.
     pub fn is_upgrade_from(&self, maybe_other: &Option<Self>) -> bool {
         if let Some(equip) = maybe_other {
             self.level > equip.level
