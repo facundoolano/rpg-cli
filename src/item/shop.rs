@@ -44,12 +44,12 @@ fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
     let mut items = Vec::<(String, Box<dyn Shoppable>)>::new();
     let level = player.rounded_level();
 
-    let sword = Weapon::sword(level);
+    let sword = Weapon::Sword(level);
     if sword.is_upgrade_from(&player.equip.sword) {
         items.push(("sword".to_string(), Box::new(sword)));
     }
 
-    let shield = Weapon::shield(level);
+    let shield = Weapon::Shield(level);
     if shield.is_upgrade_from(&player.equip.shield) {
         items.push(("shield".to_string(), Box::new(shield)));
     }
@@ -92,15 +92,13 @@ pub trait Shoppable: Display {
 
 impl Shoppable for Weapon {
     fn cost(&self) -> i32 {
-        self.level * 500
+        self.level() * 500
     }
 
     fn add_to(&self, game: &mut Game) {
-        // FIXME this is crap
-        if self.to_string().contains("sword") {
-            game.player.equip.sword = Some(self.clone())
-        } else {
-            game.player.equip.shield = Some(self.clone())
+        match self {
+            Weapon::Sword(_) => game.player.equip.sword = Some(self.clone()),
+            Weapon::Shield(_) => game.player.equip.shield = Some(self.clone()),
         }
     }
 }

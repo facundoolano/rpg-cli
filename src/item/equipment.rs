@@ -54,23 +54,16 @@ fn maybe_upgrade(current: &mut Option<Weapon>, other: &mut Option<Weapon>) -> bo
 /// Equipment piece with a strength contribution based on
 /// a level. Used to generically represent swords and shields.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Weapon {
-    pub level: i32,
-    name: String,
+pub enum Weapon {
+    Sword(i32),
+    Shield(i32),
 }
 
 impl Weapon {
-    pub fn sword(level: i32) -> Self {
-        Self {
-            name: "sword".to_string(),
-            level,
-        }
-    }
-
-    pub fn shield(level: i32) -> Self {
-        Self {
-            name: "shield".to_string(),
-            level,
+    pub fn level(&self) -> i32 {
+        match self {
+            Weapon::Sword(level) => *level,
+            Weapon::Shield(level) => *level,
         }
     }
 
@@ -78,7 +71,7 @@ impl Weapon {
     /// the item is equipped.
     pub fn strength(&self) -> i32 {
         // get the base strength of the hero at this level
-        let player_strength = character::Class::player_first().strength.at(self.level);
+        let player_strength = character::Class::player_first().strength.at(self.level());
 
         // calculate the added strength as a function of the player strength
         (player_strength as f64 * 0.5).round() as i32
@@ -87,7 +80,7 @@ impl Weapon {
     /// Return true if the other weapon either is None or has lower level than this one.
     pub fn is_upgrade_from(&self, maybe_other: &Option<Self>) -> bool {
         if let Some(equip) = maybe_other {
-            self.level > equip.level
+            self.level() > equip.level()
         } else {
             true
         }
@@ -96,6 +89,10 @@ impl Weapon {
 
 impl fmt::Display for Weapon {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}[{}]", self.name, self.level)
+        let name = match self {
+            Weapon::Sword(_) => "sword",
+            Weapon::Shield(_) => "shield",
+        };
+        write!(f, "{}[{}]", name, self.level())
     }
 }

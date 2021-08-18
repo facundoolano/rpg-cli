@@ -116,11 +116,11 @@ fn random_equipment(level: i32) -> Equipment {
     let mut rng = rand::thread_rng();
 
     let (sword, shield) = vec![
-        (100, (Some(Weapon::sword(level)), None)),
-        (80, (None, Some(Weapon::shield(level)))),
-        (30, (Some(Weapon::sword(level + 5)), None)),
-        (20, (None, Some(Weapon::shield(level + 5)))),
-        (1, (Some(Weapon::sword(100)), None)),
+        (100, (Some(Weapon::Sword(level)), None)),
+        (80, (None, Some(Weapon::Shield(level)))),
+        (30, (Some(Weapon::Sword(level + 5)), None)),
+        (20, (None, Some(Weapon::Shield(level + 5)))),
+        (1, (Some(Weapon::Sword(100)), None)),
     ]
     .choose_weighted_mut(&mut rng, |c| c.0)
     .unwrap()
@@ -197,8 +197,8 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.equip.sword = Some(Weapon::sword(1));
-        game.player.equip.shield = Some(Weapon::shield(1));
+        game.player.equip.sword = Some(Weapon::Sword(1));
+        game.player.equip.shield = Some(Weapon::Shield(1));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
@@ -222,8 +222,8 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.equip.sword = Some(Weapon::sword(1));
-        game.player.equip.shield = Some(Weapon::shield(10));
+        game.player.equip.sword = Some(Weapon::Sword(1));
+        game.player.equip.shield = Some(Weapon::Shield(10));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
@@ -231,8 +231,8 @@ mod tests {
         // set some defaults for the new game before picking up
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.equip.sword = Some(Weapon::sword(5));
-        game.player.equip.shield = Some(Weapon::shield(5));
+        game.player.equip.sword = Some(Weapon::Sword(5));
+        game.player.equip.shield = Some(Weapon::Shield(5));
         game.gold = 50;
 
         tomb.pick_up(&mut game);
@@ -240,10 +240,10 @@ mod tests {
         assert_eq!(150, game.gold);
 
         // the sword was upgrade, picked it up
-        assert_eq!(5, game.player.equip.sword.as_ref().unwrap().level);
+        assert_eq!(5, game.player.equip.sword.as_ref().unwrap().level());
 
         // the shield was downgrade, kept the current one
-        assert_eq!(10, game.player.equip.shield.as_ref().unwrap().level);
+        assert_eq!(10, game.player.equip.shield.as_ref().unwrap().level());
 
         assert_eq!(3, *game.inventory().get("potion").unwrap());
     }
@@ -256,8 +256,8 @@ mod tests {
         let mut chest1 = Chest {
             items,
             equip: Equipment {
-                sword: Some(Weapon::sword(1)),
-                shield: Some(Weapon::shield(10)),
+                sword: Some(Weapon::Sword(1)),
+                shield: Some(Weapon::Shield(10)),
             },
             gold: 100,
         };
@@ -270,16 +270,16 @@ mod tests {
         let chest2 = Chest {
             items,
             equip: Equipment {
-                sword: Some(Weapon::sword(10)),
-                shield: Some(Weapon::shield(1)),
+                sword: Some(Weapon::Sword(10)),
+                shield: Some(Weapon::Shield(1)),
             },
             gold: 100,
         };
 
         chest1.extend(chest2);
         assert_eq!(200, chest1.gold);
-        assert_eq!(10, chest1.equip.sword.as_ref().unwrap().level);
-        assert_eq!(10, chest1.equip.shield.as_ref().unwrap().level);
+        assert_eq!(10, chest1.equip.sword.as_ref().unwrap().level());
+        assert_eq!(10, chest1.equip.shield.as_ref().unwrap().level());
         assert_eq!(3, chest1.items.get("potion").unwrap().len());
         assert_eq!(1, chest1.items.get("escape").unwrap().len());
     }
