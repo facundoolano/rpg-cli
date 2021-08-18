@@ -18,6 +18,14 @@ impl Equipment {
         }
     }
 
+    /// TODO
+    pub fn upgrade(&mut self, other: &mut Self) -> (bool, bool) {
+        (
+            maybe_upgrade(&mut self.sword, &mut other.sword),
+            maybe_upgrade(&mut self.shield, &mut other.shield),
+        )
+    }
+
     pub fn attack(&self) -> i32 {
         self.sword.as_ref().map_or(0, |s| s.strength())
     }
@@ -25,6 +33,16 @@ impl Equipment {
     pub fn deffense(&self) -> i32 {
         self.shield.as_ref().map_or(0, |s| s.strength())
     }
+}
+
+fn maybe_upgrade(current: &mut Option<Weapon>, other: &mut Option<Weapon>) -> bool {
+    if let Some(shield) = other.take() {
+        if shield.is_upgrade_from(current) {
+            current.replace(shield);
+            return true;
+        }
+    }
+    false
 }
 
 // TODO move to separate modules

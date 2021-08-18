@@ -74,22 +74,13 @@ impl Chest {
     pub fn pick_up(&mut self, game: &mut game::Game) -> (Vec<String>, i32) {
         let mut to_log = Vec::new();
 
-        // FIXME review if this logic can be moved over to the equipment
-        // or at least factored to a helper
-
         // the equipment is picked up only if it's better than the current one
-        if let Some(sword) = self.equip.sword.take() {
-            if sword.is_upgrade_from(&game.player.equip.sword) {
-                to_log.push(sword.to_string());
-                game.player.equip.sword = Some(sword);
-            }
+        let (upgraded_sword, upgraded_shield) = game.player.equip.upgrade(&mut self.equip);
+        if upgraded_sword {
+            to_log.push(game.player.equip.sword.as_ref().unwrap().to_string());
         }
-
-        if let Some(shield) = self.equip.shield.take() {
-            if shield.is_upgrade_from(&game.player.equip.shield) {
-                to_log.push(shield.to_string());
-                game.player.equip.shield = Some(shield);
-            }
+        if upgraded_shield {
+            to_log.push(game.player.equip.sword.as_ref().unwrap().to_string());
         }
 
         // items and gold are always picked up
@@ -108,20 +99,8 @@ impl Chest {
 
     /// Add the elements of `other` to this chest
     pub fn extend(&mut self, mut other: Self) {
-        // FIXME some of this logic should go to equip
-
         // keep the best of each equipment
-        if let Some(sword) = other.equip.sword.take() {
-            if sword.is_upgrade_from(&self.equip.sword) {
-                self.equip.sword = Some(sword);
-            }
-        }
-
-        if let Some(shield) = other.equip.shield.take() {
-            if shield.is_upgrade_from(&self.equip.shield) {
-                self.equip.shield = Some(shield);
-            }
-        }
+        self.equip.upgrade(&mut other.equip);
 
         // merge both item maps
         for (key, other_items) in other.items.drain() {
