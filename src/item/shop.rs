@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use super::equipment::{Equipment, Shield, Sword};
+use super::equipment::Weapon;
 use crate::character::Character;
 use crate::event::Event;
 use crate::game::Game;
@@ -44,13 +44,13 @@ fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
     let mut items = Vec::<(String, Box<dyn Shoppable>)>::new();
     let level = player.rounded_level();
 
-    let sword = Sword::new(level);
-    if sword.is_upgrade_from(&player.sword.as_ref()) {
+    let sword = Weapon::Sword(level);
+    if sword.is_upgrade_from(&player.equip.sword) {
         items.push(("sword".to_string(), Box::new(sword)));
     }
 
-    let shield = Shield::new(level);
-    if shield.is_upgrade_from(&player.shield.as_ref()) {
+    let shield = Weapon::Shield(level);
+    if shield.is_upgrade_from(&player.equip.shield) {
         items.push(("shield".to_string(), Box::new(shield)));
     }
 
@@ -90,23 +90,16 @@ pub trait Shoppable: Display {
     fn add_to(&self, game: &mut Game);
 }
 
-impl Shoppable for Sword {
+impl Shoppable for Weapon {
     fn cost(&self) -> i32 {
         self.level() * 500
     }
 
     fn add_to(&self, game: &mut Game) {
-        game.player.sword = Some(self.clone())
-    }
-}
-
-impl Shoppable for Shield {
-    fn cost(&self) -> i32 {
-        self.level() * 500
-    }
-
-    fn add_to(&self, game: &mut Game) {
-        game.player.shield = Some(self.clone())
+        match self {
+            Weapon::Sword(_) => game.player.equip.sword = Some(self.clone()),
+            Weapon::Shield(_) => game.player.equip.shield = Some(self.clone()),
+        }
     }
 }
 

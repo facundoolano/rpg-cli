@@ -27,7 +27,7 @@ pub fn at(location: &location::Location, player: &Character) -> Character {
 }
 
 fn level(player_level: i32, distance_from_home: i32) -> i32 {
-    let level = std::cmp::max(player_level / 2 + distance_from_home - 1, 1);
+    let level = std::cmp::max(player_level / 10 + distance_from_home - 1, 1);
     random().enemy_level(level)
 }
 
@@ -46,9 +46,9 @@ fn weighted_choice(distance: location::Distance) -> Category {
     // the weights for each group of enemies are different depending on the distance
     // the further from home, the bigger the chance to find difficult enemies
     let (w_common, w_rare, w_legendary) = match distance {
-        location::Distance::Near(_) => (9, 2, 0),
-        location::Distance::Mid(_) => (7, 10, 1),
-        location::Distance::Far(_) => (1, 6, 3),
+        location::Distance::Near(_) => (10, 2, 0),
+        location::Distance::Mid(_) => (8, 10, 1),
+        location::Distance::Far(_) => (0, 8, 2),
     };
 
     let mut rng = rand::thread_rng();
@@ -78,15 +78,18 @@ mod tests {
         assert_eq!(1, level(1, 1));
         assert_eq!(1, level(1, 2));
         assert_eq!(2, level(1, 3));
+        assert_eq!(9, level(1, 10));
 
         // Player level 5
-        assert_eq!(2, level(5, 1));
-        assert_eq!(3, level(5, 2));
-        assert_eq!(4, level(5, 3));
+        assert_eq!(1, level(5, 1));
+        assert_eq!(1, level(5, 2));
+        assert_eq!(2, level(5, 3));
+        assert_eq!(9, level(5, 10));
 
         // player level 10
-        assert_eq!(5, level(10, 1));
-        assert_eq!(6, level(10, 2));
-        assert_eq!(7, level(10, 3));
+        assert_eq!(1, level(10, 1));
+        assert_eq!(2, level(10, 2));
+        assert_eq!(3, level(10, 3));
+        assert_eq!(10, level(10, 10));
     }
 }

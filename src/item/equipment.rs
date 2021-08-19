@@ -3,14 +3,73 @@ use core::fmt;
 use crate::character::class as character;
 use serde::{Deserialize, Serialize};
 
-pub trait Equipment: fmt::Display {
-    fn new(level: i32) -> Self;
+/// Packages together different equipment pieces that can be worn by characters
+/// or found in chests.
+/// Provides a unified interface for stat contributions to the base stats of a
+/// characters, e.g. the increased attack contributed by a sword and the
+/// deffense contributed by a shield.
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct Equipment {
+    pub sword: Option<Weapon>,
+    pub shield: Option<Weapon>,
+}
 
-    fn level(&self) -> i32;
+impl Equipment {
+    pub fn new() -> Self {
+        Self {
+            sword: None,
+            shield: None,
+        }
+    }
+
+    /// Take the sword and/or shield from the given equipment if
+    /// self has none or has one with lower level.
+    /// Returns a tuple indicating whether there were (sword, shield) upgrades.
+    pub fn upgrade(&mut self, other: &mut Self) -> (bool, bool) {
+        (
+            maybe_upgrade(&mut self.sword, &mut other.sword),
+            maybe_upgrade(&mut self.shield, &mut other.shield),
+        )
+    }
+
+    pub fn attack(&self) -> i32 {
+        self.sword.as_ref().map_or(0, |s| s.strength())
+    }
+
+    pub fn deffense(&self) -> i32 {
+        self.shield.as_ref().map_or(0, |s| s.strength())
+    }
+}
+
+fn maybe_upgrade(current: &mut Option<Weapon>, other: &mut Option<Weapon>) -> bool {
+    if let Some(shield) = other.take() {
+        if shield.is_upgrade_from(current) {
+            current.replace(shield);
+            return true;
+        }
+    }
+    false
+}
+
+/// Equipment piece with a strength contribution based on
+/// a level. Used to generically represent swords and shields.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum Weapon {
+    Sword(i32),
+    Shield(i32),
+}
+
+impl Weapon {
+    pub fn level(&self) -> i32 {
+        match self {
+            Weapon::Sword(level) => *level,
+            Weapon::Shield(level) => *level,
+        }
+    }
 
     /// How many strength points get added to the player when
     /// the item is equipped.
-    fn strength(&self) -> i32 {
+    pub fn strength(&self) -> i32 {
         // get the base strength of the hero at this level
         let player_strength = character::Class::player_first().strength.at(self.level());
 
@@ -18,7 +77,8 @@ pub trait Equipment: fmt::Display {
         (player_strength as f64 * 0.5).round() as i32
     }
 
-    fn is_upgrade_from(&self, maybe_other: &Option<&Self>) -> bool {
+    /// Return true if the other weapon either is None or has lower level than this one.
+    pub fn is_upgrade_from(&self, maybe_other: &Option<Self>) -> bool {
         if let Some(equip) = maybe_other {
             self.level() > equip.level()
         } else {
@@ -27,44 +87,12 @@ pub trait Equipment: fmt::Display {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Sword {
-    level: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Shield {
-    level: i32,
-}
-
-impl fmt::Display for Sword {
+impl fmt::Display for Weapon {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "sword[{}]", self.level())
-    }
-}
-
-impl Equipment for Sword {
-    fn new(level: i32) -> Self {
-        Self { level }
-    }
-
-    fn level(&self) -> i32 {
-        self.level
-    }
-}
-
-impl fmt::Display for Shield {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "shield[{}]", self.level())
-    }
-}
-
-impl Equipment for Shield {
-    fn new(level: i32) -> Self {
-        Self { level }
-    }
-
-    fn level(&self) -> i32 {
-        self.level
+        let name = match self {
+            Weapon::Sword(_) => "sword",
+            Weapon::Shield(_) => "shield",
+        };
+        write!(f, "{}[{}]", name, self.level())
     }
 }

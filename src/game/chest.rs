@@ -1,7 +1,7 @@
 use crate::game;
-use crate::item::equipment::{Shield, Sword};
+use crate::item::equipment::{Equipment, Weapon};
 use crate::item::stone;
-use crate::item::{equipment::Equipment, Escape, Ether, Item, Potion, Remedy};
+use crate::item::{Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use rand::prelude::SliceRandom;
@@ -14,8 +14,7 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize)]
 pub struct Chest {
     items: HashMap<String, Vec<Box<dyn Item>>>,
-    sword: Option<Sword>,
-    shield: Option<Shield>,
+    equip: Equipment,
     gold: i32,
 }
 
@@ -37,9 +36,7 @@ impl Chest {
         }
 
         if equipment_chest {
-            let (sword, shield) = random_equipment(game.player.rounded_level());
-            chest.sword = sword;
-            chest.shield = shield;
+            chest.equip = random_equipment(game.player.rounded_level());
         }
 
         if item_chest {
@@ -65,18 +62,12 @@ impl Chest {
 
     /// Remove the gold, items and equipment from a hero and return them as a new chest.
     pub fn drop(game: &mut game::Game) -> Self {
-        let sword = game.player.sword.take();
-        let shield = game.player.shield.take();
+        let equip = std::mem::take(&mut game.player.equip);
         let items = game.inventory.drain().collect();
         let gold = game.gold;
         game.gold = 0;
 
-        Self {
-            items,
-            sword,
-            shield,
-            gold,
-        }
+        Self { items, equip, gold }
     }
 
     /// Add the items of this chest to the current game/hero
@@ -84,18 +75,12 @@ impl Chest {
         let mut to_log = Vec::new();
 
         // the equipment is picked up only if it's better than the current one
-        if let Some(sword) = self.sword.take() {
-            if sword.is_upgrade_from(&game.player.sword.as_ref()) {
-                to_log.push(sword.to_string());
-                game.player.sword = Some(sword);
-            }
+        let (upgraded_sword, upgraded_shield) = game.player.equip.upgrade(&mut self.equip);
+        if upgraded_sword {
+            to_log.push(game.player.equip.sword.as_ref().unwrap().to_string());
         }
-
-        if let Some(shield) = self.shield.take() {
-            if shield.is_upgrade_from(&game.player.shield.as_ref()) {
-                to_log.push(shield.to_string());
-                game.player.shield = Some(shield);
-            }
+        if upgraded_shield {
+            to_log.push(game.player.equip.sword.as_ref().unwrap().to_string());
         }
 
         // items and gold are always picked up
@@ -115,17 +100,7 @@ impl Chest {
     /// Add the elements of `other` to this chest
     pub fn extend(&mut self, mut other: Self) {
         // keep the best of each equipment
-        if let Some(sword) = other.sword.take() {
-            if sword.is_upgrade_from(&self.sword.as_ref()) {
-                self.sword = Some(sword);
-            }
-        }
-
-        if let Some(shield) = other.shield.take() {
-            if shield.is_upgrade_from(&self.shield.as_ref()) {
-                self.shield = Some(shield);
-            }
-        }
+        self.equip.upgrade(&mut other.equip);
 
         // merge both item maps
         for (key, other_items) in other.items.drain() {
@@ -137,20 +112,22 @@ impl Chest {
     }
 }
 
-fn random_equipment(level: i32) -> (Option<Sword>, Option<Shield>) {
+fn random_equipment(level: i32) -> Equipment {
     let mut rng = rand::thread_rng();
 
-    vec![
-        (100, (Some(Sword::new(level)), None)),
-        (80, (None, Some(Shield::new(level)))),
-        (30, (Some(Sword::new(level + 5)), None)),
-        (20, (None, Some(Shield::new(level + 5)))),
-        (1, (None, Some(Shield::new(100)))),
+    let (sword, shield) = vec![
+        (100, (Some(Weapon::Sword(level)), None)),
+        (80, (None, Some(Weapon::Shield(level)))),
+        (30, (Some(Weapon::Sword(level + 5)), None)),
+        (20, (None, Some(Weapon::Shield(level + 5)))),
+        (1, (Some(Weapon::Sword(100)), None)),
     ]
     .choose_weighted_mut(&mut rng, |c| c.0)
     .unwrap()
     .to_owned()
-    .1
+    .1;
+
+    Equipment { sword, shield }
 }
 
 type WeightedItems = (i32, &'static str, Vec<Box<dyn Item>>);
@@ -184,8 +161,7 @@ impl Default for Chest {
     fn default() -> Self {
         Self {
             gold: 0,
-            sword: None,
-            shield: None,
+            equip: Equipment::new(),
             items: HashMap::new(),
         }
     }
@@ -194,7 +170,7 @@ impl Default for Chest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::item::equipment::{Shield, Sword};
+    use crate::item::equipment::Weapon;
     use crate::item::{Escape, Potion};
 
     #[test]
@@ -203,16 +179,16 @@ mod tests {
         let mut tomb = Chest::drop(&mut game);
 
         assert_eq!(0, tomb.gold);
-        assert!(tomb.sword.is_none());
-        assert!(tomb.shield.is_none());
+        assert!(tomb.equip.sword.is_none());
+        assert!(tomb.equip.shield.is_none());
         assert!(tomb.items.is_empty());
 
         let mut game = game::Game::new();
         tomb.pick_up(&mut game);
 
         assert_eq!(0, game.gold);
-        assert!(game.player.sword.is_none());
-        assert!(game.player.shield.is_none());
+        assert!(game.player.equip.sword.is_none());
+        assert!(game.player.equip.shield.is_none());
         assert!(game.inventory().is_empty());
     }
 
@@ -221,23 +197,23 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.sword = Some(Sword::new(1));
-        game.player.shield = Some(Shield::new(1));
+        game.player.equip.sword = Some(Weapon::Sword(1));
+        game.player.equip.shield = Some(Weapon::Shield(1));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
 
         assert_eq!(100, tomb.gold);
-        assert!(tomb.sword.is_some());
-        assert!(tomb.shield.is_some());
+        assert!(tomb.equip.sword.is_some());
+        assert!(tomb.equip.shield.is_some());
         assert_eq!(2, tomb.items.get("potion").unwrap().len());
 
         let mut game = game::Game::new();
         tomb.pick_up(&mut game);
 
         assert_eq!(100, game.gold);
-        assert!(game.player.sword.is_some());
-        assert!(game.player.shield.is_some());
+        assert!(game.player.equip.sword.is_some());
+        assert!(game.player.equip.shield.is_some());
         assert_eq!(2, *game.inventory().get("potion").unwrap());
     }
 
@@ -246,8 +222,8 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.sword = Some(Sword::new(1));
-        game.player.shield = Some(Shield::new(10));
+        game.player.equip.sword = Some(Weapon::Sword(1));
+        game.player.equip.shield = Some(Weapon::Shield(10));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
@@ -255,8 +231,8 @@ mod tests {
         // set some defaults for the new game before picking up
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.sword = Some(Sword::new(5));
-        game.player.shield = Some(Shield::new(5));
+        game.player.equip.sword = Some(Weapon::Sword(5));
+        game.player.equip.shield = Some(Weapon::Shield(5));
         game.gold = 50;
 
         tomb.pick_up(&mut game);
@@ -264,10 +240,10 @@ mod tests {
         assert_eq!(150, game.gold);
 
         // the sword was upgrade, picked it up
-        assert_eq!(5, game.player.sword.as_ref().unwrap().level());
+        assert_eq!(5, game.player.equip.sword.as_ref().unwrap().level());
 
         // the shield was downgrade, kept the current one
-        assert_eq!(10, game.player.shield.as_ref().unwrap().level());
+        assert_eq!(10, game.player.equip.shield.as_ref().unwrap().level());
 
         assert_eq!(3, *game.inventory().get("potion").unwrap());
     }
@@ -279,8 +255,10 @@ mod tests {
         items.insert("potion".to_string(), potions);
         let mut chest1 = Chest {
             items,
-            sword: Some(Sword::new(1)),
-            shield: Some(Shield::new(10)),
+            equip: Equipment {
+                sword: Some(Weapon::Sword(1)),
+                shield: Some(Weapon::Shield(10)),
+            },
             gold: 100,
         };
 
@@ -291,15 +269,17 @@ mod tests {
         items.insert("escape".to_string(), escapes);
         let chest2 = Chest {
             items,
-            sword: Some(Sword::new(10)),
-            shield: Some(Shield::new(1)),
+            equip: Equipment {
+                sword: Some(Weapon::Sword(10)),
+                shield: Some(Weapon::Shield(1)),
+            },
             gold: 100,
         };
 
         chest1.extend(chest2);
         assert_eq!(200, chest1.gold);
-        assert_eq!(10, chest1.sword.as_ref().unwrap().level());
-        assert_eq!(10, chest1.shield.as_ref().unwrap().level());
+        assert_eq!(10, chest1.equip.sword.as_ref().unwrap().level());
+        assert_eq!(10, chest1.equip.shield.as_ref().unwrap().level());
         assert_eq!(3, chest1.items.get("potion").unwrap().len());
         assert_eq!(1, chest1.items.get("escape").unwrap().len());
     }

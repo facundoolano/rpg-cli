@@ -1,5 +1,4 @@
 use crate::item::equipment;
-use crate::item::equipment::Equipment;
 use crate::item::ring::{Ring, RingSet};
 use crate::randomizer::{random, Randomizer};
 use class::Class;
@@ -13,8 +12,8 @@ pub mod enemy;
 #[serde(default)]
 pub struct Character {
     pub class: Class,
-    pub sword: Option<equipment::Sword>,
-    pub shield: Option<equipment::Shield>,
+    pub equip: equipment::Equipment,
+    // FIXME merge into equip
     pub rings: RingSet,
 
     pub level: i32,
@@ -68,8 +67,8 @@ impl Character {
 
         let mut character = Self {
             class,
-            sword: None,
-            shield: None,
+            equip: equipment::Equipment::new(),
+            rings: RingSet::new(),
             level: 1,
             xp: 0,
             max_hp,
@@ -79,7 +78,6 @@ impl Character {
             strength,
             speed,
             status_effect: None,
-            rings: RingSet::new(),
         };
 
         for _ in 1..level {
@@ -102,11 +100,9 @@ impl Character {
                 // if class change is done at level 1, it works as a game reset
                 // the player stats are regenerated with the new class
                 // if equipment was already set, it is preserved
-                let sword = self.sword.take();
-                let shield = self.shield.take();
+                let equip = std::mem::take(&mut self.equip);
                 *self = Self::new(class.clone(), 1);
-                self.sword = sword;
-                self.shield = shield;
+                self.equip = equip;
             } else {
                 self.class = class.clone();
 
@@ -249,12 +245,12 @@ impl Character {
     }
 
     pub fn physical_attack(&self) -> i32 {
-        let base = self.strength + self.rings.attack(self.strength);
+        let attack = self.strength + self.rings.attack(self.strength);
         if self.class.is_magic() {
-            base / 3
+            attack / 3
         } else {
-            let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
-            base + sword_str
+            // FIXME this is not correct, magician should get weapon bonus for physycal attacks
+            attack + self.equip.attack()
         }
     }
 
@@ -278,11 +274,7 @@ impl Character {
     }
 
     pub fn deffense(&self) -> i32 {
-        // we could incorporate strength here, but it's not clear if wouldn't just be noise
-        // and it could also made it hard to make damage to stronger enemies
-        let shield = self.shield.as_ref().map_or(0, |s| s.strength());
-        let rings = self.rings.deffense(self.strength);
-        shield + rings
+        self.equip.deffense() + self.rings.deffense(self.strength)
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
@@ -568,7 +560,7 @@ mod tests {
 
         while hero.level < 500 {
             hero.add_experience(hero.xp_for_next());
-            hero.sword = Some(equipment::Sword::new(hero.level));
+            hero.equip.sword = Some(equipment::Weapon::Sword(hero.level));
             let turns_unarmed = hero.max_hp / hero.strength;
             let turns_armed = hero.max_hp / hero.physical_attack();
             println!(
@@ -623,7 +615,7 @@ mod tests {
     fn test_class_change() {
         let mut player = Character::player();
         player.xp = 20;
-        player.sword = Some(equipment::Sword::new(1));
+        player.equip.sword = Some(equipment::Weapon::Sword(1));
 
         let warrior_class = Class::player_by_name("warrior").unwrap();
         let thief_class = Class::player_by_name("thief").unwrap();
@@ -636,7 +628,7 @@ mod tests {
         assert_eq!(player.max_hp, warrior_class.hp.base());
         assert_eq!(player.strength, warrior_class.strength.base());
         assert_eq!(player.speed, warrior_class.speed.base());
-        assert!(player.sword.is_some());
+        assert!(player.equip.sword.is_some());
 
         // attempt change to unknown class
         assert!(player.change_class("choripan").is_err());
@@ -648,7 +640,7 @@ mod tests {
         assert_eq!(player.max_hp, thief_class.hp.base());
         assert_eq!(player.strength, thief_class.strength.base());
         assert_eq!(player.speed, thief_class.speed.base());
-        assert!(player.sword.is_some());
+        assert!(player.equip.sword.is_some());
 
         // attempt change to different class at level 2
         player.level = 2;
@@ -659,7 +651,7 @@ mod tests {
         assert_eq!(player.max_hp, thief_class.hp.base());
         assert_eq!(player.strength, thief_class.strength.base());
         assert_eq!(player.speed, thief_class.speed.base());
-        assert!(player.sword.is_some());
+        assert!(player.equip.sword.is_some());
     }
 
     #[test]
@@ -711,9 +703,9 @@ mod tests {
         assert_eq!((base_strength, 0), hero.damage(&foe));
 
         // warrior + sword, increased damage + mp = 0
-        let sword = equipment::Sword::new(hero.level);
+        let sword = equipment::Weapon::Sword(hero.level);
         let sword_strength = sword.strength();
-        hero.sword = Some(sword);
+        hero.equip.sword = Some(sword);
         assert_eq!((base_strength + sword_strength, 0), hero.damage(&foe));
 
         let mut mage = Character::player();
@@ -731,7 +723,7 @@ mod tests {
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // same with sword
-        mage.sword = Some(equipment::Sword::new(hero.level));
+        mage.equip.sword = Some(equipment::Weapon::Sword(hero.level));
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // mage without enough mp, 0 mp, /3

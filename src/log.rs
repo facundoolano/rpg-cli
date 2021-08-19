@@ -430,11 +430,11 @@ fn format_character(character: &Character) -> String {
 fn format_equipment(character: &Character) -> String {
     let mut fragments = Vec::new();
 
-    if let Some(sword) = &character.sword {
+    if let Some(sword) = &character.equip.sword {
         fragments.push(sword.to_string());
     }
 
-    if let Some(shield) = &character.shield {
+    if let Some(shield) = &character.equip.shield {
         fragments.push(shield.to_string());
     }
     format!("equip:{{{}}}", fragments.join(","))
