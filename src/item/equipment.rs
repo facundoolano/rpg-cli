@@ -1,7 +1,7 @@
 use core::fmt;
 
 use super::ring::Ring;
-use crate::character::class as character;
+use crate::character::class::Class;
 use serde::{Deserialize, Serialize};
 
 /// Packages together different equipment pieces that can be worn by characters
@@ -35,6 +35,16 @@ impl Equipment {
             maybe_upgrade(&mut self.sword, &mut other.sword),
             maybe_upgrade(&mut self.shield, &mut other.shield),
         )
+    }
+
+    /// Set the given ring as the left ring.
+    /// If there was a left ring already, put it in the right.
+    /// If there was a right ring already, return it.
+    pub fn put_ring(&mut self, ring: Ring) -> Option<Ring> {
+        let removed = self.right_ring.take();
+        self.right_ring = self.left_ring.take();
+        self.left_ring = Some(ring);
+        removed
     }
 
     pub fn attack(&self, strength: i32) -> i32 {
@@ -101,7 +111,7 @@ impl Weapon {
     /// the item is equipped.
     pub fn strength(&self) -> i32 {
         // get the base strength of the hero at this level
-        let player_strength = character::Class::player_first().strength.at(self.level());
+        let player_strength = Class::player_first().strength.at(self.level());
 
         // calculate the added strength as a function of the player strength
         (player_strength as f64 * 0.5).round() as i32

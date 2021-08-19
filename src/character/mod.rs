@@ -323,28 +323,22 @@ impl Character {
         std::cmp::max(1, (self.level / 5) * 5)
     }
 
-    // FIXME this shouldn't be here ?
-    /// Put the given ring in the left, moving the left (if any) to the right
-    /// and returning the right (if any)
-    // TODO update comment
+    /// Equip the given ring and apply its side-effects.
+    /// If already carrying two rings, the least recently equipped one is
+    /// removed, undoing its side-effects.
     pub fn equip_ring(&mut self, ring: Ring) -> Option<Ring> {
         // Remove the right ring and unapply its side-effects
-        let old_right = if let Some(removed) = self.equip.right_ring.take() {
+        if let Some(removed) = self.equip.put_ring(ring.clone()) {
             self.unequip_ring_side_effect(&removed);
+            self.equip_ring_side_effect(&ring);
             Some(removed)
         } else {
             None
-        };
-
-        // put the new ring in left, pushing the previous one
-        self.equip_ring_side_effect(&ring);
-        self.equip.right_ring = self.equip.left_ring.replace(ring);
-
-        old_right
+        }
     }
 
-    // FIXME this shouldn't be here ?
-    /// TODO explain
+    /// Apply any side-effects of the ring over the character stats, e.g.
+    /// increasing its max hp for an HP ring.
     fn equip_ring_side_effect(&mut self, ring: &Ring) {
         match ring {
             Ring::HP => {
@@ -357,7 +351,7 @@ impl Character {
         }
     }
 
-    /// TODO explain
+    /// Unapply the side-effects of the ring on the character.
     fn unequip_ring_side_effect(&mut self, ring: &Ring) {
         match ring {
             Ring::HP => {
