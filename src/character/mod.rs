@@ -245,12 +245,11 @@ impl Character {
     }
 
     pub fn physical_attack(&self) -> i32 {
-        let attack = self.strength + self.rings.attack(self.strength);
+        let attack = self.strength + self.equip.attack() + self.rings.attack(self.strength);
         if self.class.is_magic() {
             attack / 3
         } else {
-            // FIXME this is not correct, magician should get weapon bonus for physycal attacks
-            attack + self.equip.attack()
+            attack
         }
     }
 
@@ -722,13 +721,13 @@ mod tests {
         assert!(mage.can_magic_attack());
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
-        // same with sword
+        // with sword, it affects the physical attacks
         mage.equip.sword = Some(equipment::Weapon::Sword(hero.level));
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // mage without enough mp, 0 mp, /3
         mage.current_mp = mage.max_mp / 3 - 1;
         assert!(!mage.can_magic_attack());
-        assert_eq!((base_strength / 3, 0), mage.damage(&foe));
+        assert_eq!(((base_strength + sword_strength) / 3, 0), mage.damage(&foe));
     }
 }
