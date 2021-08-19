@@ -263,6 +263,8 @@ mod tests {
             equip: Equipment {
                 sword: Some(Weapon::Sword(1)),
                 shield: Some(Weapon::Shield(10)),
+                left_ring: None,
+                right_ring: None,
             },
             gold: 100,
         };
@@ -277,6 +279,8 @@ mod tests {
             equip: Equipment {
                 sword: Some(Weapon::Sword(10)),
                 shield: Some(Weapon::Shield(1)),
+                left_ring: None,
+                right_ring: None,
             },
             gold: 100,
         };

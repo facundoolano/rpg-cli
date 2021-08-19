@@ -64,8 +64,8 @@ mod tests {
     fn test_ring_equip() {
         let mut game = game::Game::new();
 
-        assert!(game.player.rings.left.is_none());
-        assert!(game.player.rings.right.is_none());
+        assert!(game.player.equip.left_ring.is_none());
+        assert!(game.player.equip.right_ring.is_none());
 
         game.add_item("void", Box::new(Ring::Void));
         game.add_item("void", Box::new(Ring::Void));
@@ -76,30 +76,50 @@ mod tests {
         assert_eq!(2, *game.inventory().get("void").unwrap());
         assert_eq!(
             "void",
-            game.player.rings.left.as_ref().map_or("fail", Ring::key)
+            game.player
+                .equip
+                .left_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
         );
-        assert!(game.player.rings.right.is_none());
+        assert!(game.player.equip.right_ring.is_none());
 
         game.use_item("void").unwrap();
         assert_eq!(1, *game.inventory().get("void").unwrap());
         assert_eq!(
             "void",
-            game.player.rings.left.as_ref().map_or("fail", Ring::key)
+            game.player
+                .equip
+                .left_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
         );
         assert_eq!(
             "void",
-            game.player.rings.right.as_ref().map_or("fail", Ring::key)
+            game.player
+                .equip
+                .right_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
         );
 
         game.use_item("void").unwrap();
         assert_eq!(1, *game.inventory().get("void").unwrap());
         assert_eq!(
             "void",
-            game.player.rings.left.as_ref().map_or("fail", Ring::key)
+            game.player
+                .equip
+                .left_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
         );
         assert_eq!(
             "void",
-            game.player.rings.right.as_ref().map_or("fail", Ring::key)
+            game.player
+                .equip
+                .right_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
         );
 
         game.add_item("speed", Box::new(Ring::Speed));
@@ -107,11 +127,19 @@ mod tests {
         assert_eq!(2, *game.inventory().get("void").unwrap());
         assert_eq!(
             "speed",
-            game.player.rings.left.as_ref().map_or("fail", Ring::key)
+            game.player
+                .equip
+                .left_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
         );
         assert_eq!(
             "void",
-            game.player.rings.right.as_ref().map_or("fail", Ring::key)
+            game.player
+                .equip
+                .right_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
         );
     }
 
@@ -129,21 +157,6 @@ mod tests {
             },
             1,
         )
-    }
-
-    #[test]
-    fn test_apply_factor() {
-        let mut rings = RingSet::new();
-        assert_eq!(0, rings.ring_contribution(10, Ring::HP));
-        rings.left = Some(Ring::Void);
-        rings.right = Some(Ring::Void);
-        assert_eq!(0, rings.ring_contribution(10, Ring::HP));
-
-        rings.left = Some(Ring::HP);
-        assert_eq!(5, rings.ring_contribution(10, Ring::HP));
-
-        rings.right = Some(Ring::HP);
-        assert_eq!(10, rings.ring_contribution(10, Ring::HP));
     }
 
     #[test]
