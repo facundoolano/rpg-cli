@@ -181,10 +181,55 @@ mod tests {
         char.equip_ring(Ring::Void);
         assert_eq!(10, char.max_hp());
         assert_eq!(10, char.current_hp);
+
+        // preserve taken damage
+        char.current_hp -= 3;
+
+        char.equip_ring(Ring::HP);
+        assert_eq!(15, char.max_hp());
+        assert_eq!(12, char.current_hp);
+
+        char.equip_ring(Ring::Void);
+        char.equip_ring(Ring::Void);
+        assert_eq!(10, char.max_hp());
+        assert_eq!(7, char.current_hp);
     }
 
     #[test]
-    fn test_mp_ring() {}
+    fn test_mp_ring() {
+        let mut char = test_character();
+        assert_eq!(10, char.current_mp);
+        assert_eq!(10, char.max_mp());
+
+        char.equip_ring(Ring::MP);
+        assert_eq!(15, char.max_mp());
+        assert_eq!(15, char.current_mp);
+
+        char.equip_ring(Ring::MP);
+        assert_eq!(20, char.max_mp());
+        assert_eq!(20, char.current_mp);
+
+        // push out to unequip
+        char.equip_ring(Ring::Void);
+        assert_eq!(15, char.max_mp());
+        assert_eq!(15, char.current_mp);
+
+        char.equip_ring(Ring::Void);
+        assert_eq!(10, char.max_mp());
+        assert_eq!(10, char.current_mp);
+
+        // preserve taken damage
+        char.current_mp -= 3;
+
+        char.equip_ring(Ring::MP);
+        assert_eq!(15, char.max_mp());
+        assert_eq!(12, char.current_mp);
+
+        char.equip_ring(Ring::Void);
+        char.equip_ring(Ring::Void);
+        assert_eq!(10, char.max_mp());
+        assert_eq!(7, char.current_mp);
+    }
 
     #[test]
     fn test_attack_ring() {}
