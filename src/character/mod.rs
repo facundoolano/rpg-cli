@@ -1,5 +1,5 @@
 use crate::item::equipment;
-use crate::item::ring::{Ring, RingSet};
+use crate::item::ring::Ring;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -13,8 +13,6 @@ pub mod enemy;
 pub struct Character {
     pub class: Class,
     pub equip: equipment::Equipment,
-    // FIXME merge into equip
-    pub rings: RingSet,
 
     pub level: i32,
     pub xp: i32,
@@ -68,7 +66,6 @@ impl Character {
         let mut character = Self {
             class,
             equip: equipment::Equipment::new(),
-            rings: RingSet::new(),
             level: 1,
             xp: 0,
             max_hp,
@@ -233,19 +230,19 @@ impl Character {
     }
 
     pub fn max_hp(&self) -> i32 {
-        self.max_hp + self.rings.hp(self.max_hp)
+        self.max_hp + self.equip.hp(self.max_hp)
     }
 
     pub fn max_mp(&self) -> i32 {
-        self.max_mp + self.rings.mp(self.max_mp)
+        self.max_mp + self.equip.mp(self.max_mp)
     }
 
     pub fn speed(&self) -> i32 {
-        self.speed + self.rings.speed(self.speed)
+        self.speed + self.equip.speed(self.speed)
     }
 
     pub fn physical_attack(&self) -> i32 {
-        let attack = self.strength + self.equip.attack() + self.rings.attack(self.strength);
+        let attack = self.strength + self.equip.attack(self.strength);
         if self.class.is_magic() {
             attack / 3
         } else {
@@ -256,7 +253,7 @@ impl Character {
     pub fn magic_attack(&self) -> i32 {
         if self.class.is_magic() {
             let base = self.strength * 3;
-            base + self.rings.magic(base)
+            base + self.equip.magic(base)
         } else {
             0
         }
@@ -273,7 +270,7 @@ impl Character {
     }
 
     pub fn deffense(&self) -> i32 {
-        self.equip.deffense() + self.rings.deffense(self.strength)
+        self.equip.deffense(self.strength)
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
@@ -326,12 +323,13 @@ impl Character {
         std::cmp::max(1, (self.level / 5) * 5)
     }
 
+    // FIXME this shouldn't be here ?
     /// Put the given ring in the left, moving the left (if any) to the right
     /// and returning the right (if any)
     // TODO update comment
     pub fn equip_ring(&mut self, ring: Ring) -> Option<Ring> {
         // Remove the right ring and unapply its side-effects
-        let old_right = if let Some(removed) = self.rings.right.take() {
+        let old_right = if let Some(removed) = self.equip.right_ring.take() {
             self.unequip_ring_side_effect(&removed);
             Some(removed)
         } else {
@@ -340,11 +338,12 @@ impl Character {
 
         // put the new ring in left, pushing the previous one
         self.equip_ring_side_effect(&ring);
-        self.rings.right = self.rings.left.replace(ring);
+        self.equip.right_ring = self.equip.left_ring.replace(ring);
 
         old_right
     }
 
+    // FIXME this shouldn't be here ?
     /// TODO explain
     fn equip_ring_side_effect(&mut self, ring: &Ring) {
         match ring {

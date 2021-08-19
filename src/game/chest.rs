@@ -127,7 +127,12 @@ fn random_equipment(level: i32) -> Equipment {
     .to_owned()
     .1;
 
-    Equipment { sword, shield }
+    Equipment {
+        sword,
+        shield,
+        left_ring: None,
+        right_ring: None,
+    }
 }
 
 type WeightedItems = (i32, &'static str, Vec<Box<dyn Item>>);

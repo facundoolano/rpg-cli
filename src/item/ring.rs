@@ -55,57 +55,6 @@ impl Item for Ring {
     }
 }
 
-/// The character is allowed to hold two rings.
-/// This struct provides a simplified interface to get the ring pair net
-/// contribution to different aspects of the game, e.g. character stats.
-#[derive(Serialize, Deserialize, Default)]
-pub struct RingSet {
-    pub left: Option<Ring>,
-    pub right: Option<Ring>,
-}
-
-// TODO rename to RingSet? RingHolder? RingEquip
-impl RingSet {
-    pub fn new() -> Self {
-        Self {
-            left: None,
-            right: None,
-        }
-    }
-
-    pub fn attack(&self, strength: i32) -> i32 {
-        self.apply(strength, Ring::Attack)
-    }
-
-    pub fn deffense(&self, strength: i32) -> i32 {
-        self.apply(strength, Ring::Deffense)
-    }
-
-    pub fn speed(&self, strength: i32) -> i32 {
-        self.apply(strength, Ring::Deffense)
-    }
-
-    pub fn magic(&self, base: i32) -> i32 {
-        self.apply(base, Ring::Magic)
-    }
-
-    pub fn mp(&self, base: i32) -> i32 {
-        self.apply(base, Ring::MP)
-    }
-
-    pub fn hp(&self, base: i32) -> i32 {
-        self.apply(base, Ring::HP)
-    }
-
-    /// TODO
-    fn apply(&self, base: i32, ring: Ring) -> i32 {
-        let factor =
-            |r: &Option<Ring>| r.as_ref().filter(|&l| *l == ring).map_or(0.0, Ring::factor);
-        let factor = factor(&self.left) + factor(&self.right);
-        (base as f64 * factor).round() as i32
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -185,16 +134,16 @@ mod tests {
     #[test]
     fn test_apply_factor() {
         let mut rings = RingSet::new();
-        assert_eq!(0, rings.apply(10, Ring::HP));
+        assert_eq!(0, rings.ring_contribution(10, Ring::HP));
         rings.left = Some(Ring::Void);
         rings.right = Some(Ring::Void);
-        assert_eq!(0, rings.apply(10, Ring::HP));
+        assert_eq!(0, rings.ring_contribution(10, Ring::HP));
 
         rings.left = Some(Ring::HP);
-        assert_eq!(5, rings.apply(10, Ring::HP));
+        assert_eq!(5, rings.ring_contribution(10, Ring::HP));
 
         rings.right = Some(Ring::HP);
-        assert_eq!(10, rings.apply(10, Ring::HP));
+        assert_eq!(10, rings.ring_contribution(10, Ring::HP));
     }
 
     #[test]

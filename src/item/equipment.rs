@@ -1,5 +1,6 @@
 use core::fmt;
 
+use super::ring::Ring;
 use crate::character::class as character;
 use serde::{Deserialize, Serialize};
 
@@ -8,10 +9,12 @@ use serde::{Deserialize, Serialize};
 /// Provides a unified interface for stat contributions to the base stats of a
 /// characters, e.g. the increased attack contributed by a sword and the
 /// deffense contributed by a shield.
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct Equipment {
     pub sword: Option<Weapon>,
     pub shield: Option<Weapon>,
+    pub left_ring: Option<Ring>,
+    pub right_ring: Option<Ring>,
 }
 
 impl Equipment {
@@ -19,6 +22,8 @@ impl Equipment {
         Self {
             sword: None,
             shield: None,
+            left_ring: None,
+            right_ring: None,
         }
     }
 
@@ -32,12 +37,37 @@ impl Equipment {
         )
     }
 
-    pub fn attack(&self) -> i32 {
+    pub fn attack(&self, strength: i32) -> i32 {
         self.sword.as_ref().map_or(0, |s| s.strength())
+            + self.ring_contribution(strength, Ring::Attack)
     }
 
-    pub fn deffense(&self) -> i32 {
+    pub fn deffense(&self, strength: i32) -> i32 {
         self.shield.as_ref().map_or(0, |s| s.strength())
+            + self.ring_contribution(strength, Ring::Deffense)
+    }
+
+    pub fn speed(&self, strength: i32) -> i32 {
+        self.ring_contribution(strength, Ring::Deffense)
+    }
+
+    pub fn magic(&self, base: i32) -> i32 {
+        self.ring_contribution(base, Ring::Magic)
+    }
+
+    pub fn mp(&self, base: i32) -> i32 {
+        self.ring_contribution(base, Ring::MP)
+    }
+
+    pub fn hp(&self, base: i32) -> i32 {
+        self.ring_contribution(base, Ring::HP)
+    }
+
+    fn ring_contribution(&self, base: i32, ring: Ring) -> i32 {
+        let factor =
+            |r: &Option<Ring>| r.as_ref().filter(|&l| *l == ring).map_or(0.0, Ring::factor);
+        let factor = factor(&self.left_ring) + factor(&self.right_ring);
+        (base as f64 * factor).round() as i32
     }
 }
 
