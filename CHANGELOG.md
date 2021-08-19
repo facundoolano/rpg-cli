@@ -14,6 +14,7 @@
 * Renamed status effects "poisoned" to "poison" and "burning" to "burn" #92
 * Doubled ether restored mp 0e01209
 * Tweaked enemy levels to be based primarily on distance from home rather than player level 0798d53
+* Changed internal representation of equipment #99
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
