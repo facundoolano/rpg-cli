@@ -232,14 +232,39 @@ mod tests {
     }
 
     #[test]
-    fn test_attack_ring() {}
+    fn test_attack_ring() {
+        let mut char = test_character();
+        char.class.mp = None;
+        assert_eq!(10, char.physical_attack());
+
+        char.equip_ring(Ring::Attack);
+        assert_eq!(15, char.physical_attack());
+    }
 
     #[test]
-    fn test_deffense_ring() {}
+    fn test_deffense_ring() {
+        let mut char = test_character();
+        assert_eq!(0, char.deffense());
+
+        char.equip_ring(Ring::Deffense);
+        assert_eq!(5, char.deffense());
+    }
 
     #[test]
-    fn test_magic_ring() {}
+    fn test_magic_ring() {
+        let mut char = test_character();
+        assert_eq!(30, char.magic_attack());
+
+        char.equip_ring(Ring::Magic);
+        assert_eq!(45, char.magic_attack());
+    }
 
     #[test]
-    fn test_speed_ring() {}
+    fn test_speed_ring() {
+        let mut char = test_character();
+        assert_eq!(10, char.speed());
+
+        char.equip_ring(Ring::Speed);
+        assert_eq!(15, char.speed());
+    }
 }

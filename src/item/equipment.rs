@@ -57,8 +57,8 @@ impl Equipment {
             + self.ring_contribution(strength, Ring::Deffense)
     }
 
-    pub fn speed(&self, strength: i32) -> i32 {
-        self.ring_contribution(strength, Ring::Deffense)
+    pub fn speed(&self, base: i32) -> i32 {
+        self.ring_contribution(base, Ring::Speed)
     }
 
     pub fn magic(&self, base: i32) -> i32 {
