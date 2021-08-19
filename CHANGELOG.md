@@ -15,6 +15,7 @@
 * Doubled ether restored mp 0e01209
 * Tweaked enemy levels to be based primarily on distance from home rather than player level 0798d53
 * Changed internal representation of equipment #99
+* When a magic-using character runs out of mp, its physical attacks incorporate the weapon contribution 39c5e01
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
