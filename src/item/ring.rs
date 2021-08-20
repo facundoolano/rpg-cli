@@ -6,13 +6,29 @@ use serde::{Deserialize, Serialize};
 /// different places of the game, e.g. increase a stat, double gold gained, etc.
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum Ring {
+    /// No-effect ring
     Void,
+
+    /// Increases physical attack
     Attack,
+
+    /// Increases deffense
     Deffense,
+
+    /// Increases speed stat
     Speed,
+
+    /// Increases magical attack
     Magic,
+
+    /// Increases max MP
     MP,
+
+    /// Increases max HP
     HP,
+
+    /// Run away always succeeds when equipped
+    Run,
 }
 
 impl Ring {
@@ -27,6 +43,7 @@ impl Ring {
             Ring::Magic => "magic",
             Ring::MP => "mp",
             Ring::HP => "hp",
+            Ring::Run => "run",
         }
     }
 
@@ -266,5 +283,20 @@ mod tests {
 
         char.equip_ring(Ring::Speed);
         assert_eq!(15, char.speed());
+    }
+
+    #[test]
+    fn test_run_ring() {
+        let mut char = test_character();
+        assert!(!char.equip.run_away_succeeds());
+
+        char.equip_ring(Ring::Run);
+        assert!(char.equip.run_away_succeeds());
+
+        char.equip_ring(Ring::Void);
+        assert!(char.equip.run_away_succeeds());
+
+        char.equip_ring(Ring::Void);
+        assert!(!char.equip.run_away_succeeds());
     }
 }

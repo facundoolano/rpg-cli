@@ -73,6 +73,10 @@ impl Equipment {
         self.ring_contribution(base, Ring::HP)
     }
 
+    pub fn run_away_succeeds(&self) -> bool {
+        self.left_ring == Some(Ring::Run) || self.right_ring == Some(Ring::Run)
+    }
+
     fn ring_contribution(&self, base: i32, ring: Ring) -> i32 {
         let factor =
             |r: &Option<Ring>| r.as_ref().filter(|&l| *l == ring).map_or(0.0, Ring::factor);

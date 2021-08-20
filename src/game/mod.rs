@@ -233,12 +233,13 @@ impl Game {
     }
 
     fn run_away(&mut self, enemy: &Character) -> bool {
-        let success = random().run_away_succeeds(
-            self.player.level,
-            enemy.level,
-            self.player.speed(),
-            enemy.speed(),
-        );
+        let success = self.player.equip.run_away_succeeds()
+            || random().run_away_succeeds(
+                self.player.level,
+                enemy.level,
+                self.player.speed(),
+                enemy.speed(),
+            );
         Event::emit(self, Event::RunAway { success });
         success
     }
