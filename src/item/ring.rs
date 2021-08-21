@@ -8,7 +8,7 @@ use strum_macros::EnumIter;
 
 /// Rings are a wearable item that produce arbitrary effects hooked in
 /// different places of the game, e.g. increase a stat, double gold gained, etc.
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, EnumIter)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, EnumIter, Debug)]
 pub enum Ring {
     /// No-effect ring
     Void,
@@ -105,73 +105,24 @@ mod tests {
 
         game.use_item("void-rng").unwrap();
         assert_eq!(2, *game.inventory().get("void-rng").unwrap());
-        assert_eq!(
-            "void-rng",
-            game.player
-                .equip
-                .left_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
         assert!(game.player.equip.right_ring.is_none());
 
         game.use_item("void-rng").unwrap();
         assert_eq!(1, *game.inventory().get("void-rng").unwrap());
-        assert_eq!(
-            "void-rng",
-            game.player
-                .equip
-                .left_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
-        assert_eq!(
-            "void-rng",
-            game.player
-                .equip
-                .right_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
 
         game.use_item("void-rng").unwrap();
         assert_eq!(1, *game.inventory().get("void-rng").unwrap());
-        assert_eq!(
-            "void-rng",
-            game.player
-                .equip
-                .left_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
-        assert_eq!(
-            "void-rng",
-            game.player
-                .equip
-                .right_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
 
         game.add_item("spd-rng", Box::new(Ring::Speed));
         game.use_item("spd-rng").unwrap();
         assert_eq!(2, *game.inventory().get("void-rng").unwrap());
-        assert_eq!(
-            "spd-rng",
-            game.player
-                .equip
-                .left_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
-        assert_eq!(
-            "void-rng",
-            game.player
-                .equip
-                .right_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
+        assert_eq!(Some(Ring::Speed), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
     }
 
     #[test]
@@ -182,14 +133,7 @@ mod tests {
         game.add_item("hp-rng", Box::new(Ring::HP));
         game.use_item("void-rng").unwrap();
         assert!(game.inventory().get("void-rng").is_none());
-        assert_eq!(
-            "void-rng",
-            game.player
-                .equip
-                .left_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
 
         game.use_item("void-rng").unwrap();
         assert!(game.inventory().get("void-rng").is_some());
@@ -200,34 +144,13 @@ mod tests {
         game.use_item("hp-rng").unwrap();
         assert!(game.inventory().get("void-rng").is_none());
         assert!(game.inventory().get("hp-rng").is_none());
-        assert_eq!(
-            "hp-rng",
-            game.player
-                .equip
-                .left_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
-        assert_eq!(
-            "void-rng",
-            game.player
-                .equip
-                .right_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
+        assert_eq!(Some(Ring::HP), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
         assert!(game.player.max_hp() > base_hp);
 
         game.use_item("hp-rng").unwrap();
         assert!(game.inventory().get("hp-rng").is_some());
-        assert_eq!(
-            "void-rng",
-            game.player
-                .equip
-                .left_ring
-                .as_ref()
-                .map_or("fail", Ring::key)
-        );
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
         assert!(game.player.equip.right_ring.is_none());
         assert_eq!(base_hp, game.player.max_hp());
     }
