@@ -55,9 +55,17 @@ impl Item for Level {
     fn apply(&self, game: &mut game::Game) {
         game.player.increase_level();
         event(game, "level", 1);
+        Event::emit(
+            game,
+            Event::LevelUp {
+                count: 1,
+                current: game.player.level,
+                class: game.player.name(),
+            },
+        )
     }
 }
 
 fn event(game: &mut game::Game, stat: &'static str, increase: i32) {
-    Event::emit(game, Event::StatIncrease { stat, increase });
+    Event::emit(game, Event::StoneUsed { stat, increase });
 }
