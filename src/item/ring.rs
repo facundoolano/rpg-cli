@@ -30,8 +30,8 @@ pub enum Ring {
     /// Increases max HP
     HP,
 
-    /// Run away always succeeds when equipped
-    Run,
+    /// Enemies don't appear while wearing this ring
+    Evade,
 }
 
 impl Ring {
@@ -50,7 +50,7 @@ impl Ring {
             Ring::Magic => "magic-ring",
             Ring::MP => "mp-ring",
             Ring::HP => "hp-ring",
-            Ring::Run => "run-ring",
+            Ring::Evade => "run-ring",
         }
     }
 
@@ -294,16 +294,16 @@ mod tests {
 
     #[test]
     fn test_run_ring() {
-        let mut char = test_character();
-        assert!(!char.equip.run_away_succeeds());
+        let mut game = game::Game::new();
+        assert!(game.maybe_spawn_enemy().is_some());
 
-        char.equip_ring(Ring::Run);
-        assert!(char.equip.run_away_succeeds());
+        game.player.equip_ring(Ring::Evade);
+        assert!(game.maybe_spawn_enemy().is_none());
 
-        char.equip_ring(Ring::Void);
-        assert!(char.equip.run_away_succeeds());
+        game.player.equip_ring(Ring::Void);
+        assert!(game.maybe_spawn_enemy().is_none());
 
-        char.equip_ring(Ring::Void);
-        assert!(!char.equip.run_away_succeeds());
+        game.player.equip_ring(Ring::Void);
+        assert!(game.maybe_spawn_enemy().is_some());
     }
 }

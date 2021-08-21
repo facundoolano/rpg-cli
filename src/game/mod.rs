@@ -205,6 +205,10 @@ impl Game {
     }
 
     pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {
+        if self.player.equip.enemies_evaded() {
+            return None;
+        }
+
         let distance = self.location.distance_from_home();
         if random().should_enemy_appear(&distance) {
             let enemy = character::enemy::at(&self.location, &self.player);
@@ -247,13 +251,12 @@ impl Game {
     }
 
     fn run_away(&mut self, enemy: &Character) -> bool {
-        let success = self.player.equip.run_away_succeeds()
-            || random().run_away_succeeds(
-                self.player.level,
-                enemy.level,
-                self.player.speed(),
-                enemy.speed(),
-            );
+        let success = random().run_away_succeeds(
+            self.player.level,
+            enemy.level,
+            self.player.speed(),
+            enemy.speed(),
+        );
         Event::emit(self, Event::RunAway { success });
         success
     }

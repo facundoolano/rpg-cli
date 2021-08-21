@@ -73,8 +73,8 @@ impl Equipment {
         self.ring_contribution(base, Ring::HP)
     }
 
-    pub fn run_away_succeeds(&self) -> bool {
-        self.left_ring == Some(Ring::Run) || self.right_ring == Some(Ring::Run)
+    pub fn enemies_evaded(&self) -> bool {
+        self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
     }
 
     fn ring_contribution(&self, base: i32, ring: Ring) -> i32 {
