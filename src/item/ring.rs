@@ -98,15 +98,15 @@ mod tests {
         assert!(game.player.equip.left_ring.is_none());
         assert!(game.player.equip.right_ring.is_none());
 
-        game.add_item("void-ring", Box::new(Ring::Void));
-        game.add_item("void-ring", Box::new(Ring::Void));
-        game.add_item("void-ring", Box::new(Ring::Void));
-        assert_eq!(3, *game.inventory().get("void-ring").unwrap());
+        game.add_item("void-rng", Box::new(Ring::Void));
+        game.add_item("void-rng", Box::new(Ring::Void));
+        game.add_item("void-rng", Box::new(Ring::Void));
+        assert_eq!(3, *game.inventory().get("void-rng").unwrap());
 
-        game.use_item("void-ring").unwrap();
-        assert_eq!(2, *game.inventory().get("void-ring").unwrap());
+        game.use_item("void-rng").unwrap();
+        assert_eq!(2, *game.inventory().get("void-rng").unwrap());
         assert_eq!(
-            "void-ring",
+            "void-rng",
             game.player
                 .equip
                 .left_ring
@@ -115,10 +115,10 @@ mod tests {
         );
         assert!(game.player.equip.right_ring.is_none());
 
-        game.use_item("void-ring").unwrap();
-        assert_eq!(1, *game.inventory().get("void-ring").unwrap());
+        game.use_item("void-rng").unwrap();
+        assert_eq!(1, *game.inventory().get("void-rng").unwrap());
         assert_eq!(
-            "void-ring",
+            "void-rng",
             game.player
                 .equip
                 .left_ring
@@ -126,7 +126,7 @@ mod tests {
                 .map_or("fail", Ring::key)
         );
         assert_eq!(
-            "void-ring",
+            "void-rng",
             game.player
                 .equip
                 .right_ring
@@ -134,10 +134,10 @@ mod tests {
                 .map_or("fail", Ring::key)
         );
 
-        game.use_item("void-ring").unwrap();
-        assert_eq!(1, *game.inventory().get("void-ring").unwrap());
+        game.use_item("void-rng").unwrap();
+        assert_eq!(1, *game.inventory().get("void-rng").unwrap());
         assert_eq!(
-            "void-ring",
+            "void-rng",
             game.player
                 .equip
                 .left_ring
@@ -145,7 +145,7 @@ mod tests {
                 .map_or("fail", Ring::key)
         );
         assert_eq!(
-            "void-ring",
+            "void-rng",
             game.player
                 .equip
                 .right_ring
@@ -153,11 +153,11 @@ mod tests {
                 .map_or("fail", Ring::key)
         );
 
-        game.add_item("speed-ring", Box::new(Ring::Speed));
-        game.use_item("speed-ring").unwrap();
-        assert_eq!(2, *game.inventory().get("void-ring").unwrap());
+        game.add_item("spd-rng", Box::new(Ring::Speed));
+        game.use_item("spd-rng").unwrap();
+        assert_eq!(2, *game.inventory().get("void-rng").unwrap());
         assert_eq!(
-            "speed-ring",
+            "spd-rng",
             game.player
                 .equip
                 .left_ring
@@ -165,7 +165,7 @@ mod tests {
                 .map_or("fail", Ring::key)
         );
         assert_eq!(
-            "void-ring",
+            "void-rng",
             game.player
                 .equip
                 .right_ring
