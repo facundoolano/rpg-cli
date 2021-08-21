@@ -7,7 +7,7 @@
 * Easter egg quest  #87
 * Sorcerer enemy class  #88
 * Stat increasing stones #95
-* Effect rings as items and equipment #98
+* Effect rings as items and equipment, initial set of stat-based rings #98
 
 ### Changed
 * Remember unlocked quests and todo list order #89
