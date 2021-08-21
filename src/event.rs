@@ -43,14 +43,14 @@ pub enum Event<'a> {
         levels_up: i32,
         gold: i32,
         items: &'a [String],
-        player_class: String,
     },
     BattleLost,
-    // TODO redundant with stat increase?
     LevelUp {
+        count: i32,
         current: i32,
+        class: String,
     },
-    StatIncrease {
+    StoneUsed {
         stat: &'static str,
         increase: i32,
     },

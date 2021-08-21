@@ -277,7 +277,6 @@ impl Game {
                         levels_up,
                         gold,
                         items: &reward_items,
-                        player_class: self.player.name(),
                     },
                 );
 
@@ -285,7 +284,9 @@ impl Game {
                     Event::emit(
                         self,
                         Event::LevelUp {
+                            count: levels_up,
                             current: self.player.level,
+                            class: self.player.name(),
                         },
                     )
                 }
