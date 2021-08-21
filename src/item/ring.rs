@@ -1,10 +1,13 @@
 use super::Item;
 use crate::game;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 /// Rings are a wearable item that produce arbitrary effects hooked in
 /// different places of the game, e.g. increase a stat, double gold gained, etc.
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, EnumIter)]
 pub enum Ring {
     /// No-effect ring
     Void,
@@ -32,6 +35,10 @@ pub enum Ring {
 }
 
 impl Ring {
+    pub fn set() -> HashSet<Ring> {
+        Ring::iter().collect()
+    }
+
     // TODO should this be to_string instead?
     // FIXME consider this key to be a standard item thing
     pub fn key(&self) -> &'static str {
