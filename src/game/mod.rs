@@ -4,6 +4,7 @@ use crate::character;
 use crate::character::Character;
 use crate::event::Event;
 use crate::item::Item;
+use crate::item::ring::Ring;
 use crate::location::Location;
 use crate::quest::QuestList;
 use crate::randomizer::random;
@@ -24,7 +25,17 @@ pub struct Game {
     pub gold: i32,
     pub quests: QuestList,
     pub inventory: HashMap<String, Vec<Box<dyn Item>>>,
+
+    /// Chest left at the location where the player dies.
     pub tombstones: HashMap<String, Chest>,
+
+    /// There's one instance of each type of ring in the game.
+    /// This set starts with all rings and they are moved to the inventory as
+    /// they are found in chests.
+    pub ring_pool: HashSet<Ring>,
+
+    /// Locations where chest have already been looked for, and therefore
+    /// can't be found again.
     inspected: HashSet<Location>,
 }
 
@@ -39,6 +50,7 @@ impl Game {
             tombstones: HashMap::new(),
             inspected: HashSet::new(),
             quests,
+            ring_pool: Ring::set()
         }
     }
 
@@ -49,6 +61,7 @@ impl Game {
         // preserve tombstones and quests across hero's lifes
         std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
         std::mem::swap(&mut new_game.quests, &mut self.quests);
+        std::mem::swap(&mut new_game.ring_pool, &mut self.ring_pool);
 
         // remember last selected class
         new_game
