@@ -213,7 +213,7 @@ impl Game {
             if self.bribe(enemy) {
                 return Ok(());
             }
-        } else if run && self.run_away(&enemy) {
+        } else if run && self.run_away(enemy) {
             return Ok(());
         }
 
@@ -257,7 +257,7 @@ impl Game {
                 Event::emit(
                     self,
                     Event::BattleWon {
-                        enemy: &enemy,
+                        enemy,
                         location: self.location.clone(),
                         xp,
                         levels_up,

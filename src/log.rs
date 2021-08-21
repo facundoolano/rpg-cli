@@ -56,7 +56,7 @@ pub fn handle(game: &Game, event: &Event) {
             items,
             ..
         } => {
-            battle_won(&game, *xp, *levels_up, *gold, items);
+            battle_won(game, *xp, *levels_up, *gold, items);
         }
         Event::BattleLost => {
             battle_lost(&game.player);
@@ -236,14 +236,14 @@ fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32)
     if !quiet() {
         battle_log(
             character,
-            &format_attack(character, &attack, damage, mp_cost),
+            &format_attack(character, attack, damage, mp_cost),
         );
     }
 }
 
 fn status_effect_damage(character: &Character, damage: i32) {
     let (_, emoji) = status_effect_params(character.status_effect.unwrap());
-    battle_log(character, &format_damage(character, damage, &emoji));
+    battle_log(character, &format_damage(character, damage, emoji));
 }
 
 fn battle_lost(player: &Character) {
@@ -278,7 +278,7 @@ fn stat_increase(player: &Character, stat: &str, increase: i32) {
     } else {
         format!("+{}{}", increase, stat).cyan().to_string()
     };
-    battle_log(&player, &suffix);
+    battle_log(player, &suffix);
 }
 
 fn long_status(game: &Game) {
@@ -335,7 +335,7 @@ fn short_status(game: &Game) {
     } else {
         ""
     };
-    log(player, &game.location, &suffix);
+    log(player, &game.location, suffix);
 }
 
 fn plain_status(game: &Game) {
@@ -455,7 +455,7 @@ fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost
     let magic_effect = if mp_cost > 0 { "\u{2728}" } else { "" };
 
     match attack {
-        AttackType::Regular => format_damage(receiver, damage, &magic_effect),
+        AttackType::Regular => format_damage(receiver, damage, magic_effect),
         AttackType::Critical => {
             format_damage(receiver, damage, &format!("{} critical!", magic_effect))
         }

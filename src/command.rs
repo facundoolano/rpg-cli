@@ -80,7 +80,7 @@ pub enum Command {
 
 pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
     match cmd.unwrap_or(Command::Stat) {
-        Command::Stat => log::status(&game),
+        Command::Stat => log::status(game),
         Command::ChangeDir {
             destination,
             run,
@@ -105,7 +105,7 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
 /// Attempt to move the hero to the supplied location, possibly engaging
 /// in combat along the way.
 fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) -> Result<()> {
-    let dest = Location::from(&dest)?;
+    let dest = Location::from(dest)?;
     if force {
         game.location = dest;
     } else if let Err(character::Dead) = game.go_to(&dest, run, bribe) {
@@ -160,7 +160,7 @@ fn shop(game: &mut Game, items: &[String]) -> Result<()> {
 /// Use an item from the inventory or list the inventory contents if no item name is provided.
 fn use_item(game: &mut Game, items: &[String]) -> Result<()> {
     if items.is_empty() {
-        println!("{}", log::format_inventory(&game));
+        println!("{}", log::format_inventory(game));
     } else {
         for item_name in items {
             let item_name = sanitize(item_name);
