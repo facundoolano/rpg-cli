@@ -3,8 +3,8 @@ extern crate dirs;
 use crate::character;
 use crate::character::Character;
 use crate::event::Event;
-use crate::item::Item;
 use crate::item::ring::Ring;
+use crate::item::Item;
 use crate::location::Location;
 use crate::quest::QuestList;
 use crate::randomizer::random;
@@ -50,7 +50,7 @@ impl Game {
             tombstones: HashMap::new(),
             inspected: HashSet::new(),
             quests,
-            ring_pool: Ring::set()
+            ring_pool: Ring::set(),
         }
     }
 
@@ -103,7 +103,8 @@ impl Game {
 
         if !self.inspected.contains(&self.location) {
             self.inspected.insert(self.location.clone());
-            self.pick_up_chest(Chest::generate(self), false);
+            let chest = Chest::generate(self);
+            self.pick_up_chest(chest, false);
         }
     }
 
