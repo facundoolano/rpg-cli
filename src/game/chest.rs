@@ -89,7 +89,7 @@ impl Chest {
             to_log.push(game.player.equip.sword.as_ref().unwrap().to_string());
         }
         if upgraded_shield {
-            to_log.push(game.player.equip.sword.as_ref().unwrap().to_string());
+            to_log.push(game.player.equip.shield.as_ref().unwrap().to_string());
         }
 
         // items and gold are always picked up
