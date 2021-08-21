@@ -146,7 +146,7 @@ pub fn quest_list(quests: Vec<(bool, String)>) {
 
 pub fn quest_done(reward: i32) {
     if !quiet() {
-        println!("    {} quest completed!", format_gold_plus(reward));
+        println!("   {} quest completed!", format_gold_plus(reward));
     }
 }
 

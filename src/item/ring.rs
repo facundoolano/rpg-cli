@@ -40,7 +40,6 @@ impl Ring {
         Ring::iter().collect()
     }
 
-    // TODO should this be to_string instead?
     // FIXME consider this key to be a standard item thing
     pub fn key(&self) -> &'static str {
         match self {
@@ -51,11 +50,12 @@ impl Ring {
             Ring::Magic => "magic-ring",
             Ring::MP => "mp-ring",
             Ring::HP => "hp-ring",
-            Ring::Evade => "run-ring",
+            Ring::Evade => "evade-ring",
         }
     }
 
-    /// TODO
+    /// For stat modifying stats, return the factor that should be
+    /// applied to the base character stat.
     pub fn factor(&self) -> f64 {
         match self {
             Ring::Attack => 0.5,
