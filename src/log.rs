@@ -104,7 +104,7 @@ pub fn handle(game: &Game, event: &Event) {
             );
         }
         Event::ClassChanged { lost_xp } => change_class(&game.player, &game.location, *lost_xp),
-        Event::StatIncrease { stat, increase } => {
+        Event::StoneUsed { stat, increase } => {
             stat_increase(&game.player, *stat, *increase);
         }
         Event::LevelUp { .. } => {}

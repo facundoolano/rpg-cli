@@ -46,14 +46,9 @@ impl Quest for RaiseClassLevels {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        if let Event::BattleWon {
-            levels_up,
-            player_class,
-            ..
-        } = event
-        {
-            if *player_class == self.class_name {
-                self.remaining -= levels_up;
+        if let Event::LevelUp { count, class, .. } = event {
+            if *class == self.class_name {
+                self.remaining -= count;
             }
         } else if let Event::GameReset = event {
             self.remaining = TOTAL_LEVELS

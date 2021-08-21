@@ -130,7 +130,7 @@ impl QuestList {
 
     /// If the event is a level up, unlock quests for that level.
     fn unlock_quests(&mut self, event: &event::Event) {
-        if let event::Event::LevelUp { current } = event {
+        if let event::Event::LevelUp { current, .. } = event {
             for (status, _, _) in &mut self.quests {
                 if let Status::Locked(level) = status {
                     if *level <= *current {
@@ -197,12 +197,20 @@ mod tests {
         assert_eq!(1, count_status(&quests, Status::Unlocked));
         assert_eq!(0, count_status(&quests, Status::Completed));
 
-        let reward = quests.handle(&event::Event::LevelUp { current: 2 });
+        let reward = quests.handle(&event::Event::LevelUp {
+            count: 1,
+            current: 2,
+            class: "warrior".to_string(),
+        });
         assert_eq!(1, count_status(&quests, Status::Unlocked));
         assert_eq!(1, count_status(&quests, Status::Completed));
         assert_eq!(10, reward);
 
-        let reward = quests.handle(&event::Event::LevelUp { current: 4 });
+        let reward = quests.handle(&event::Event::LevelUp {
+            count: 2,
+            current: 4,
+            class: "warrior".to_string(),
+        });
         assert_eq!(1, count_status(&quests, Status::Unlocked));
         assert_eq!(3, count_status(&quests, Status::Completed));
         assert_eq!(50, reward);
@@ -227,7 +235,6 @@ mod tests {
                 xp: 100,
                 levels_up: 0,
                 gold: 100,
-                player_class: "warrior".to_string(),
                 items: &[],
             },
         );
@@ -259,7 +266,6 @@ mod tests {
                 xp: 100,
                 levels_up: 0,
                 gold: 100,
-                player_class: "warrior".to_string(),
                 items: &[],
             },
         );
