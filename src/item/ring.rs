@@ -43,14 +43,14 @@ impl Ring {
     // FIXME consider this key to be a standard item thing
     pub fn key(&self) -> &'static str {
         match self {
-            Ring::Void => "void-ring",
-            Ring::Attack => "attack-ring",
-            Ring::Deffense => "deffense-ring",
-            Ring::Speed => "speed-ring",
-            Ring::Magic => "magic-ring",
-            Ring::MP => "mp-ring",
-            Ring::HP => "hp-ring",
-            Ring::Evade => "evade-ring",
+            Ring::Void => "void-rng",
+            Ring::Attack => "att-rng",
+            Ring::Deffense => "def-rng",
+            Ring::Speed => "spd-rng",
+            Ring::Magic => "mag-rng",
+            Ring::MP => "mp-rng",
+            Ring::HP => "hp-rng",
+            Ring::Evade => "evade-rng",
         }
     }
 
