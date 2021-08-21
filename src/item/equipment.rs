@@ -47,6 +47,18 @@ impl Equipment {
         removed
     }
 
+    pub fn remove_ring(&mut self, name: &str) -> Option<Ring> {
+        match (&self.left_ring, &self.right_ring) {
+            (Some(ring), _) if ring.key() == name => {
+                let removed = self.left_ring.take();
+                self.left_ring = self.right_ring.take();
+                removed
+            }
+            (_, Some(ring)) if ring.key() == name => self.right_ring.take(),
+            _ => None,
+        }
+    }
+
     pub fn attack(&self, strength: i32) -> i32 {
         self.sword.as_ref().map_or(0, |s| s.strength())
             + self.ring_contribution(strength, Ring::Attack)

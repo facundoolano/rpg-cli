@@ -181,6 +181,13 @@ impl Game {
             }
 
             Ok(())
+        } else if let Some(ring) = self.player.unequip_ring(&name) {
+            // Rings are a special case of item in that they can be "used" while being
+            // equipped, that is, while not being in the inventory.
+            // The effect of using them is unequipping them.
+            // This bit of complexity enables a cleaner command api.
+            self.add_item(ring.key(), Box::new(ring));
+            Ok(())
         } else {
             bail!("Item not found.")
         }

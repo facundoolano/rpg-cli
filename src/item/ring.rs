@@ -174,6 +174,64 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_ring_unequip() {
+        let mut game = game::Game::new();
+
+        game.add_item("void-rng", Box::new(Ring::Void));
+        game.add_item("hp-rng", Box::new(Ring::HP));
+        game.use_item("void-rng").unwrap();
+        assert!(game.inventory().get("void-rng").is_none());
+        assert_eq!(
+            "void-rng",
+            game.player
+                .equip
+                .left_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
+        );
+
+        game.use_item("void-rng").unwrap();
+        assert!(game.inventory().get("void-rng").is_some());
+        assert!(game.player.equip.left_ring.is_none());
+
+        let base_hp = game.player.max_hp();
+        game.use_item("void-rng").unwrap();
+        game.use_item("hp-rng").unwrap();
+        assert!(game.inventory().get("void-rng").is_none());
+        assert!(game.inventory().get("hp-rng").is_none());
+        assert_eq!(
+            "hp-rng",
+            game.player
+                .equip
+                .left_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
+        );
+        assert_eq!(
+            "void-rng",
+            game.player
+                .equip
+                .right_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
+        );
+        assert!(game.player.max_hp() > base_hp);
+
+        game.use_item("hp-rng").unwrap();
+        assert!(game.inventory().get("hp-rng").is_some());
+        assert_eq!(
+            "void-rng",
+            game.player
+                .equip
+                .left_ring
+                .as_ref()
+                .map_or("fail", Ring::key)
+        );
+        assert!(game.player.equip.right_ring.is_none());
+        assert_eq!(base_hp, game.player.max_hp());
+    }
+
     fn test_character() -> character::Character {
         let stat = character::class::Stat(10, 1);
         character::Character::new(
@@ -205,11 +263,11 @@ mod tests {
         assert_eq!(20, char.current_hp);
 
         // push out to unequip
-        char.equip_ring(Ring::Void);
+        char.unequip_ring("hp-rng");
         assert_eq!(15, char.max_hp());
         assert_eq!(15, char.current_hp);
 
-        char.equip_ring(Ring::Void);
+        char.unequip_ring("hp-rng");
         assert_eq!(10, char.max_hp());
         assert_eq!(10, char.current_hp);
 
@@ -220,8 +278,7 @@ mod tests {
         assert_eq!(15, char.max_hp());
         assert_eq!(12, char.current_hp);
 
-        char.equip_ring(Ring::Void);
-        char.equip_ring(Ring::Void);
+        char.unequip_ring("hp-rng");
         assert_eq!(10, char.max_hp());
         assert_eq!(7, char.current_hp);
     }
@@ -241,11 +298,11 @@ mod tests {
         assert_eq!(20, char.current_mp);
 
         // push out to unequip
-        char.equip_ring(Ring::Void);
+        char.unequip_ring("mp-rng");
         assert_eq!(15, char.max_mp());
         assert_eq!(15, char.current_mp);
 
-        char.equip_ring(Ring::Void);
+        char.unequip_ring("mp-rng");
         assert_eq!(10, char.max_mp());
         assert_eq!(10, char.current_mp);
 
@@ -256,8 +313,7 @@ mod tests {
         assert_eq!(15, char.max_mp());
         assert_eq!(12, char.current_mp);
 
-        char.equip_ring(Ring::Void);
-        char.equip_ring(Ring::Void);
+        char.unequip_ring("mp-rng");
         assert_eq!(10, char.max_mp());
         assert_eq!(7, char.current_mp);
     }

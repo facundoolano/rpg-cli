@@ -338,6 +338,17 @@ impl Character {
         removed
     }
 
+    /// Remove the ring by the given name from the equipment (if any),
+    /// unapplying its side-effects.
+    pub fn unequip_ring(&mut self, name: &str) -> Option<Ring> {
+        if let Some(removed) = self.equip.remove_ring(name) {
+            self.unequip_ring_side_effect(&removed);
+            Some(removed)
+        } else {
+            None
+        }
+    }
+
     /// Apply any side-effects of the ring over the character stats, e.g.
     /// increasing its max hp for an HP ring.
     fn equip_ring_side_effect(&mut self, ring: &Ring) {
