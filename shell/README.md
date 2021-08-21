@@ -128,3 +128,7 @@ dn () {
     fi
 }
 ```
+
+## Customize the home directory
+
+If for some reason the system's default home directory is not practical for the game, it can be overridden by setting the `$HOME` environment variable. More details and examples [here](https://github.com/facundoolano/rpg-cli/issues/100).
