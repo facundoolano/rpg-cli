@@ -437,6 +437,15 @@ fn format_equipment(character: &Character) -> String {
     if let Some(shield) = &character.equip.shield {
         fragments.push(shield.to_string());
     }
+
+    if let Some(ring) = &character.equip.left_ring {
+        fragments.push(ring.to_string());
+    }
+
+    if let Some(ring) = &character.equip.right_ring {
+        fragments.push(ring.to_string());
+    }
+
     format!("equip:{{{}}}", fragments.join(","))
 }
 

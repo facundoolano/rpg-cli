@@ -47,7 +47,7 @@ impl Chest {
 
         if ring_chest {
             if let Some(ring) = random_ring(game) {
-                let key = ring.key().to_string();
+                let key = ring.to_string();
                 chest.items.insert(key, vec![Box::new(ring)]);
             }
         }

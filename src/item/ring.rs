@@ -1,5 +1,6 @@
 use super::Item;
 use crate::game;
+use core::fmt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use strum::IntoEnumIterator;
@@ -68,13 +69,19 @@ impl Ring {
     }
 }
 
+impl fmt::Display for Ring {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.key())
+    }
+}
+
 #[typetag::serde]
 impl Item for Ring {
     /// When the ring is used, equip in the player. If the player was already
     /// wearing two rings, move the second one back to the inventory.
     fn apply(&mut self, game: &mut game::Game) {
         if let Some(removed) = game.player.equip_ring(self.clone()) {
-            game.add_item(removed.key(), Box::new(removed));
+            game.add_item(&removed.to_string(), Box::new(removed));
         }
     }
 }
