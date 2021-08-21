@@ -149,11 +149,8 @@ fn shop(game: &mut Game, items: &[String]) -> Result<()> {
     if items.is_empty() {
         item::shop::list(game)
     } else {
-        for item_name in items {
-            let item_name = sanitize(item_name);
-            item::shop::buy(game, &item_name)?
-        }
-        Ok(())
+        let items: Vec<_> = items.iter().map(|s| sanitize(s)).collect();
+        item::shop::buy(game, &items)
     }
 }
 

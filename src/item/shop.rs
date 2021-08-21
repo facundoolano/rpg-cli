@@ -13,58 +13,81 @@ pub fn list(game: &Game) -> Result<()> {
         bail!("Shop is only allowed at home.");
     }
 
-    let items = available_items(&game.player)
+    let items: Vec<_> = available_items(&game.player)
         .into_iter()
         .map(|(_, item)| item)
-        .collect::<Vec<Box<dyn Shoppable>>>();
+        .collect();
     log::shop_list(game, items);
     Ok(())
 }
 
-/// Buy an item and add it to the game.
-pub fn buy(game: &mut Game, item: &str) -> Result<()> {
+/// Atomically buy all the items and add them to the game or none of them
+/// if any item can't be bought (not enough gold or not available).
+pub fn buy(game: &mut Game, items: &[String]) -> Result<()> {
     if !game.location.is_home() {
         bail!("Shop is only allowed at home.");
     }
 
     let player = &mut game.player;
-    let mut items = available_items(player)
-        .into_iter()
-        .collect::<HashMap<String, Box<dyn Shoppable>>>();
-    if let Some(item) = items.remove(item) {
-        item.buy(game)?;
-        Ok(())
-    } else {
-        bail!("Item not available.")
+    let mut shop_items: HashMap<_, _> = available_items(player).into_iter().collect();
+
+    // We check that we have enough golds and that all of the items we try to buy are available.
+    let mut total_cost = 0;
+    let mut unavailable_items = Vec::new();
+    let mut tmp_shop_items: HashMap<_, _> = available_items(player).into_iter().collect();
+    for item in items {
+        match tmp_shop_items.remove(item.as_str()) {
+            Some(item) => total_cost += item.cost(),
+            None => unavailable_items.push(item.as_str()),
+        }
     }
+
+    if !unavailable_items.is_empty() {
+        let count = unavailable_items.len();
+        let verb = if count == 1 { "item is" } else { "are" };
+        let items = unavailable_items.join(", ");
+        bail!("{} {} unavailable.", items, verb);
+    }
+
+    if total_cost > game.gold {
+        bail!("Not enough gold.");
+    }
+
+    for item in items {
+        if let Some(item) = shop_items.remove(item.as_str()) {
+            item.buy(game)?;
+        }
+    }
+
+    Ok(())
 }
 
 /// Build a list of items currently available at the shop
-fn available_items(player: &Character) -> Vec<(String, Box<dyn Shoppable>)> {
-    let mut items = Vec::<(String, Box<dyn Shoppable>)>::new();
+fn available_items(player: &Character) -> Vec<(&'static str, Box<dyn Shoppable>)> {
+    let mut items = Vec::<(_, Box<dyn Shoppable>)>::new();
     let level = player.rounded_level();
 
     let sword = Weapon::Sword(level);
     if sword.is_upgrade_from(&player.equip.sword) {
-        items.push(("sword".to_string(), Box::new(sword)));
+        items.push(("sword", Box::new(sword)));
     }
 
     let shield = Weapon::Shield(level);
     if shield.is_upgrade_from(&player.equip.shield) {
-        items.push(("shield".to_string(), Box::new(shield)));
+        items.push(("shield", Box::new(shield)));
     }
 
     let potion = super::Potion::new(level);
-    items.push(("potion".to_string(), Box::new(potion)));
+    items.push(("potion", Box::new(potion)));
 
     let ether = super::Ether::new(level);
-    items.push(("ether".to_string(), Box::new(ether)));
+    items.push(("ether", Box::new(ether)));
 
     let remedy = super::Remedy::new();
-    items.push(("remedy".to_string(), Box::new(remedy)));
+    items.push(("remedy", Box::new(remedy)));
 
     let escape = super::Escape::new();
-    items.push(("escape".to_string(), Box::new(escape)));
+    items.push(("escape", Box::new(escape)));
 
     items
 }
