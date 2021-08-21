@@ -327,7 +327,6 @@ impl Character {
     /// If already carrying two rings, the least recently equipped one is
     /// removed, undoing its side-effects.
     pub fn equip_ring(&mut self, ring: Ring) -> Option<Ring> {
-        // Remove the right ring and unapply its side-effects
         let removed = if let Some(removed) = self.equip.put_ring(ring.clone()) {
             self.unequip_ring_side_effect(&removed);
             Some(removed)
