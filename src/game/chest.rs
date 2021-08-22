@@ -72,14 +72,15 @@ impl Chest {
     /// Remove the gold, items and equipment from a hero and return them as a new chest.
     pub fn drop(game: &mut game::Game) -> Self {
         let mut items: HashMap<String, Vec<Box<dyn Item>>> = game.inventory.drain().collect();
-        let mut equip = std::mem::take(&mut game.player.equip);
+        let sword = game.player.sword.take();
+        let shield = game.player.shield.take();
 
         // equipped rings should be dropped as items
-        if let Some(ring) = equip.left_ring.take() {
+        if let Some(ring) = game.player.left_ring.take() {
             let key = ring.to_string();
             items.insert(key, vec![Box::new(ring)]);
         }
-        if let Some(ring) = equip.right_ring.take() {
+        if let Some(ring) = game.player.right_ring.take() {
             let key = ring.to_string();
             items.insert(key, vec![Box::new(ring)]);
         }
@@ -87,7 +88,16 @@ impl Chest {
 
         game.gold = 0;
 
-        Self { items, equip, gold }
+        Self {
+            items,
+            equip: Equipment {
+                sword,
+                shield,
+                left_ring: None,
+                right_ring: None,
+            },
+            gold,
+        }
     }
 
     /// Add the items of this chest to the current game/hero
@@ -95,12 +105,11 @@ impl Chest {
         let mut to_log = Vec::new();
 
         // the equipment is picked up only if it's better than the current one
-        let (upgraded_sword, upgraded_shield) = game.player.equip.upgrade(&mut self.equip);
-        if upgraded_sword {
-            to_log.push(game.player.equip.sword.as_ref().unwrap().to_string());
+        if maybe_upgrade(&mut game.player.sword, &mut self.equip.sword) {
+            to_log.push(game.player.sword.as_ref().unwrap().to_string());
         }
-        if upgraded_shield {
-            to_log.push(game.player.equip.shield.as_ref().unwrap().to_string());
+        if maybe_upgrade(&mut game.player.shield, &mut self.equip.shield) {
+            to_log.push(game.player.sword.as_ref().unwrap().to_string());
         }
 
         // items and gold are always picked up
@@ -120,7 +129,8 @@ impl Chest {
     /// Add the elements of `other` to this chest
     pub fn extend(&mut self, mut other: Self) {
         // keep the best of each equipment
-        self.equip.upgrade(&mut other.equip);
+        maybe_upgrade(&mut self.equip.sword, &mut other.equip.sword);
+        maybe_upgrade(&mut self.equip.shield, &mut other.equip.shield);
 
         // merge both item maps
         for (key, other_items) in other.items.drain() {
@@ -130,6 +140,16 @@ impl Chest {
 
         self.gold += other.gold;
     }
+}
+
+fn maybe_upgrade(current: &mut Option<Weapon>, other: &mut Option<Weapon>) -> bool {
+    if let Some(shield) = other.take() {
+        if shield.is_upgrade_from(current) {
+            current.replace(shield);
+            return true;
+        }
+    }
+    false
 }
 
 fn random_equipment(level: i32) -> Equipment {

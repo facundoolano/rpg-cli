@@ -212,7 +212,7 @@ impl Game {
     }
 
     pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {
-        if self.player.equip.enemies_evaded() {
+        if self.player.enemies_evaded() {
             return None;
         }
 

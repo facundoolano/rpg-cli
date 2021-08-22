@@ -12,8 +12,6 @@ pub mod enemy;
 #[serde(default)]
 pub struct Character {
     pub class: Class,
-    pub equip: equipment::Equipment,
-
     pub level: i32,
     pub xp: i32,
 
@@ -25,6 +23,12 @@ pub struct Character {
 
     strength: i32,
     speed: i32,
+
+    pub sword: Option<equipment::Weapon>,
+    pub shield: Option<equipment::Weapon>,
+    pub left_ring: Option<Ring>,
+    pub right_ring: Option<Ring>,
+
     pub status_effect: Option<StatusEffect>,
 }
 
@@ -65,7 +69,10 @@ impl Character {
 
         let mut character = Self {
             class,
-            equip: equipment::Equipment::new(),
+            sword: None,
+            shield: None,
+            left_ring: None,
+            right_ring: None,
             level: 1,
             xp: 0,
             max_hp,
@@ -97,9 +104,16 @@ impl Character {
                 // if class change is done at level 1, it works as a game reset
                 // the player stats are regenerated with the new class
                 // if equipment was already set, it is preserved
-                let equip = std::mem::take(&mut self.equip);
+                let sword = self.sword.take();
+                let shield = self.shield.take();
+                let left_ring = self.left_ring.take();
+                let right_ring = self.right_ring.take();
+
                 *self = Self::new(class.clone(), 1);
-                self.equip = equip;
+                self.sword = sword;
+                self.shield = shield;
+                self.left_ring = left_ring;
+                self.right_ring = right_ring;
             } else {
                 self.class = class.clone();
 
@@ -209,6 +223,10 @@ impl Character {
         (self.heal(self.max_hp()), self.restore_mp(self.max_mp()))
     }
 
+    pub fn enemies_evaded(&self) -> bool {
+        self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
+    }
+
     /// How many experience points are required to move to the next level.
     pub fn xp_for_next(&self) -> i32 {
         let exp = 1.5;
@@ -230,19 +248,20 @@ impl Character {
     }
 
     pub fn max_hp(&self) -> i32 {
-        self.max_hp + self.equip.hp(self.max_hp)
+        self.modify_stat(self.max_hp, Ring::HP)
     }
 
     pub fn max_mp(&self) -> i32 {
-        self.max_mp + self.equip.mp(self.max_mp)
+        self.modify_stat(self.max_mp, Ring::MP)
     }
 
     pub fn speed(&self) -> i32 {
-        self.speed + self.equip.speed(self.speed)
+        self.modify_stat(self.speed, Ring::Speed)
     }
 
     pub fn physical_attack(&self) -> i32 {
-        let attack = self.strength + self.equip.attack(self.strength);
+        let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
+        let attack = self.modify_stat(self.strength, Ring::Attack) + sword_str;
         if self.class.is_magic() {
             attack / 3
         } else {
@@ -253,7 +272,7 @@ impl Character {
     pub fn magic_attack(&self) -> i32 {
         if self.class.is_magic() {
             let base = self.strength * 3;
-            base + self.equip.magic(base)
+            self.modify_stat(base, Ring::Magic)
         } else {
             0
         }
@@ -270,7 +289,9 @@ impl Character {
     }
 
     pub fn deffense(&self) -> i32 {
-        self.equip.deffense(self.strength)
+        let shield_str = self.shield.as_ref().map_or(0, |s| s.strength());
+        // base strength should be zero, subtract it from ring calculation
+        shield_str + self.modify_stat(self.strength, Ring::Deffense) - self.strength
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
@@ -327,13 +348,17 @@ impl Character {
     /// If already carrying two rings, the least recently equipped one is
     /// removed, undoing its side-effects.
     pub fn equip_ring(&mut self, ring: Ring) -> Option<Ring> {
-        let removed = if let Some(removed) = self.equip.put_ring(ring.clone()) {
+        // TODO try to refactor with replace
+        let removed = if let Some(removed) = self.right_ring.take() {
             self.unequip_ring_side_effect(&removed);
             Some(removed)
         } else {
             None
         };
+
+        self.right_ring = self.left_ring.take();
         self.equip_ring_side_effect(&ring);
+        self.left_ring = Some(ring);
 
         removed
     }
@@ -341,11 +366,19 @@ impl Character {
     /// Remove the ring by the given name from the equipment (if any),
     /// unapplying its side-effects.
     pub fn unequip_ring(&mut self, name: &str) -> Option<Ring> {
-        if let Some(removed) = self.equip.remove_ring(name) {
-            self.unequip_ring_side_effect(&removed);
-            Some(removed)
-        } else {
-            None
+        match (&self.left_ring, &self.right_ring) {
+            (Some(ring), _) if ring.key() == name => {
+                let removed = self.left_ring.take();
+                self.unequip_ring_side_effect(removed.as_ref().unwrap());
+                self.left_ring = self.right_ring.take();
+                removed
+            }
+            (_, Some(ring)) if ring.key() == name => {
+                let removed = self.right_ring.take();
+                self.unequip_ring_side_effect(removed.as_ref().unwrap());
+                removed
+            }
+            _ => None,
         }
     }
 
@@ -376,6 +409,17 @@ impl Character {
             }
             _ => {}
         }
+    }
+
+    fn modify_stat(&self, base: i32, ring: Ring) -> i32 {
+        let mut factor = 1.0;
+        if self.left_ring.as_ref() == Some(&ring) {
+            factor += ring.factor();
+        }
+        if self.right_ring.as_ref() == Some(&ring) {
+            factor += ring.factor();
+        }
+        (base as f64 * factor).round() as i32
     }
 }
 
