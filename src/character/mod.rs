@@ -12,8 +12,6 @@ pub mod enemy;
 #[serde(default)]
 pub struct Character {
     pub class: Class,
-    pub equip: equipment::Equipment,
-
     pub level: i32,
     pub xp: i32,
 
@@ -25,6 +23,12 @@ pub struct Character {
 
     strength: i32,
     speed: i32,
+
+    pub sword: Option<equipment::Equipment>,
+    pub shield: Option<equipment::Equipment>,
+    pub left_ring: Option<Ring>,
+    pub right_ring: Option<Ring>,
+
     pub status_effect: Option<StatusEffect>,
 }
 
@@ -65,7 +69,10 @@ impl Character {
 
         let mut character = Self {
             class,
-            equip: equipment::Equipment::new(),
+            sword: None,
+            shield: None,
+            left_ring: None,
+            right_ring: None,
             level: 1,
             xp: 0,
             max_hp,
@@ -97,9 +104,16 @@ impl Character {
                 // if class change is done at level 1, it works as a game reset
                 // the player stats are regenerated with the new class
                 // if equipment was already set, it is preserved
-                let equip = std::mem::take(&mut self.equip);
+                let sword = self.sword.take();
+                let shield = self.shield.take();
+                let left_ring = self.left_ring.take();
+                let right_ring = self.right_ring.take();
+
                 *self = Self::new(class.clone(), 1);
-                self.equip = equip;
+                self.sword = sword;
+                self.shield = shield;
+                self.left_ring = left_ring;
+                self.right_ring = right_ring;
             } else {
                 self.class = class.clone();
 
@@ -209,6 +223,11 @@ impl Character {
         (self.heal(self.max_hp()), self.restore_mp(self.max_mp()))
     }
 
+    /// Return true if an evade ring is equipped, i.e. no enemies should appear.
+    pub fn enemies_evaded(&self) -> bool {
+        self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
+    }
+
     /// How many experience points are required to move to the next level.
     pub fn xp_for_next(&self) -> i32 {
         let exp = 1.5;
@@ -230,19 +249,22 @@ impl Character {
     }
 
     pub fn max_hp(&self) -> i32 {
-        self.max_hp + self.equip.hp(self.max_hp)
+        self.modify_stat(self.max_hp, Ring::HP)
     }
 
     pub fn max_mp(&self) -> i32 {
-        self.max_mp + self.equip.mp(self.max_mp)
+        self.modify_stat(self.max_mp, Ring::MP)
     }
 
     pub fn speed(&self) -> i32 {
-        self.speed + self.equip.speed(self.speed)
+        self.modify_stat(self.speed, Ring::Speed)
     }
 
+    /// Amount of damage the character can inflict with physical atacks, given
+    /// its strength and equipment. Magic using characters' strength is dimmed.
     pub fn physical_attack(&self) -> i32 {
-        let attack = self.strength + self.equip.attack(self.strength);
+        let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
+        let attack = self.modify_stat(self.strength, Ring::Attack) + sword_str;
         if self.class.is_magic() {
             attack / 3
         } else {
@@ -250,10 +272,12 @@ impl Character {
         }
     }
 
+    /// Amount of damage the character can inflict with magical attacks.
+    /// Zero if the current character class is not magic.
     pub fn magic_attack(&self) -> i32 {
         if self.class.is_magic() {
             let base = self.strength * 3;
-            base + self.equip.magic(base)
+            self.modify_stat(base, Ring::Magic)
         } else {
             0
         }
@@ -270,7 +294,9 @@ impl Character {
     }
 
     pub fn deffense(&self) -> i32 {
-        self.equip.deffense(self.strength)
+        let shield_str = self.shield.as_ref().map_or(0, |s| s.strength());
+        // base strength should be zero, subtract it from ring calculation
+        shield_str + self.modify_stat(self.strength, Ring::Deffense) - self.strength
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
@@ -327,13 +353,10 @@ impl Character {
     /// If already carrying two rings, the least recently equipped one is
     /// removed, undoing its side-effects.
     pub fn equip_ring(&mut self, ring: Ring) -> Option<Ring> {
-        let removed = if let Some(removed) = self.equip.put_ring(ring.clone()) {
-            self.unequip_ring_side_effect(&removed);
-            Some(removed)
-        } else {
-            None
-        };
+        let removed = self.right_ring.take();
+        self.unequip_ring_side_effect(&removed);
         self.equip_ring_side_effect(&ring);
+        self.right_ring = self.left_ring.replace(ring);
 
         removed
     }
@@ -341,11 +364,19 @@ impl Character {
     /// Remove the ring by the given name from the equipment (if any),
     /// unapplying its side-effects.
     pub fn unequip_ring(&mut self, name: &str) -> Option<Ring> {
-        if let Some(removed) = self.equip.remove_ring(name) {
-            self.unequip_ring_side_effect(&removed);
-            Some(removed)
-        } else {
-            None
+        match (self.left_ring.clone(), self.right_ring.clone()) {
+            (Some(ring), _) if ring.key() == name => {
+                let removed = self.left_ring.take();
+                self.unequip_ring_side_effect(&removed);
+                self.left_ring = self.right_ring.take();
+                removed
+            }
+            (_, Some(ring)) if ring.key() == name => {
+                let removed = self.right_ring.take();
+                self.unequip_ring_side_effect(&removed);
+                removed
+            }
+            _ => None,
         }
     }
 
@@ -364,18 +395,31 @@ impl Character {
     }
 
     /// Unapply the side-effects of the ring on the character.
-    fn unequip_ring_side_effect(&mut self, ring: &Ring) {
+    fn unequip_ring_side_effect(&mut self, ring: &Option<Ring>) {
         match ring {
-            Ring::HP => {
-                let to_remove = (ring.factor() * self.max_hp as f64) as i32;
+            Some(Ring::HP) => {
+                let to_remove = (ring.as_ref().unwrap().factor() * self.max_hp as f64) as i32;
                 self.current_hp = std::cmp::max(1, self.current_hp - to_remove);
             }
-            Ring::MP => {
-                let to_remove = (ring.factor() * self.max_mp as f64) as i32;
+            Some(Ring::MP) => {
+                let to_remove = (ring.as_ref().unwrap().factor() * self.max_mp as f64) as i32;
                 self.current_mp = std::cmp::max(1, self.current_mp - to_remove);
             }
             _ => {}
         }
+    }
+
+    /// If either ring matches the given one, apply the ring effect
+    /// to the given base stat, e.g. for an HP ring increase the base HP.
+    fn modify_stat(&self, base: i32, ring: Ring) -> i32 {
+        let mut factor = 1.0;
+        if self.left_ring.as_ref() == Some(&ring) {
+            factor += ring.factor();
+        }
+        if self.right_ring.as_ref() == Some(&ring) {
+            factor += ring.factor();
+        }
+        (base as f64 * factor).round() as i32
     }
 }
 
@@ -383,21 +427,6 @@ impl Character {
 mod tests {
     use super::*;
     use class::Stat;
-
-    fn new_char() -> Character {
-        Character::new(
-            Class {
-                name: "test".to_string(),
-                category: class::Category::Player,
-                hp: Stat(25, 7),
-                mp: None,
-                strength: Stat(10, 3),
-                speed: Stat(10, 2),
-                inflicts: None,
-            },
-            1,
-        )
-    }
 
     #[test]
     fn test_new() {
@@ -564,7 +593,7 @@ mod tests {
 
         while hero.level < 500 {
             hero.add_experience(hero.xp_for_next());
-            hero.equip.sword = Some(equipment::Weapon::Sword(hero.level));
+            hero.sword = Some(equipment::Equipment::Sword(hero.level));
             let turns_unarmed = hero.max_hp / hero.strength;
             let turns_armed = hero.max_hp / hero.physical_attack();
             println!(
@@ -619,7 +648,7 @@ mod tests {
     fn test_class_change() {
         let mut player = Character::player();
         player.xp = 20;
-        player.equip.sword = Some(equipment::Weapon::Sword(1));
+        player.sword = Some(equipment::Equipment::Sword(1));
 
         let warrior_class = Class::player_by_name("warrior").unwrap();
         let thief_class = Class::player_by_name("thief").unwrap();
@@ -632,7 +661,7 @@ mod tests {
         assert_eq!(player.max_hp, warrior_class.hp.base());
         assert_eq!(player.strength, warrior_class.strength.base());
         assert_eq!(player.speed, warrior_class.speed.base());
-        assert!(player.equip.sword.is_some());
+        assert!(player.sword.is_some());
 
         // attempt change to unknown class
         assert!(player.change_class("choripan").is_err());
@@ -644,7 +673,7 @@ mod tests {
         assert_eq!(player.max_hp, thief_class.hp.base());
         assert_eq!(player.strength, thief_class.strength.base());
         assert_eq!(player.speed, thief_class.speed.base());
-        assert!(player.equip.sword.is_some());
+        assert!(player.sword.is_some());
 
         // attempt change to different class at level 2
         player.level = 2;
@@ -655,7 +684,7 @@ mod tests {
         assert_eq!(player.max_hp, thief_class.hp.base());
         assert_eq!(player.strength, thief_class.strength.base());
         assert_eq!(player.speed, thief_class.speed.base());
-        assert!(player.equip.sword.is_some());
+        assert!(player.sword.is_some());
     }
 
     #[test]
@@ -707,9 +736,9 @@ mod tests {
         assert_eq!((base_strength, 0), hero.damage(&foe));
 
         // warrior + sword, increased damage + mp = 0
-        let sword = equipment::Weapon::Sword(hero.level);
+        let sword = equipment::Equipment::Sword(hero.level);
         let sword_strength = sword.strength();
-        hero.equip.sword = Some(sword);
+        hero.sword = Some(sword);
         assert_eq!((base_strength + sword_strength, 0), hero.damage(&foe));
 
         let mut mage = Character::player();
@@ -727,7 +756,7 @@ mod tests {
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // with sword, it affects the physical attacks
-        mage.equip.sword = Some(equipment::Weapon::Sword(hero.level));
+        mage.sword = Some(equipment::Equipment::Sword(hero.level));
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // mage without enough mp, 0 mp, /3
@@ -738,7 +767,7 @@ mod tests {
 
     #[test]
     fn test_hp_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(10, char.current_hp);
         assert_eq!(10, char.max_hp());
 
@@ -773,7 +802,7 @@ mod tests {
 
     #[test]
     fn test_mp_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(10, char.current_mp);
         assert_eq!(10, char.max_mp());
 
@@ -808,7 +837,7 @@ mod tests {
 
     #[test]
     fn test_attack_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         char.class.mp = None;
         assert_eq!(10, char.physical_attack());
 
@@ -818,7 +847,7 @@ mod tests {
 
     #[test]
     fn test_deffense_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(0, char.deffense());
 
         char.equip_ring(Ring::Deffense);
@@ -827,7 +856,7 @@ mod tests {
 
     #[test]
     fn test_magic_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(30, char.magic_attack());
 
         char.equip_ring(Ring::Magic);
@@ -836,14 +865,46 @@ mod tests {
 
     #[test]
     fn test_speed_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(10, char.speed());
 
         char.equip_ring(Ring::Speed);
         assert_eq!(15, char.speed());
     }
 
-    fn test_character() -> Character {
+    #[test]
+    fn modify_stat() {
+        let mut char = new_plain_stats_char();
+        assert_eq!(10, char.modify_stat(10, Ring::HP));
+        char.left_ring = Some(Ring::Void);
+        char.right_ring = Some(Ring::Void);
+        assert_eq!(10, char.modify_stat(10, Ring::HP));
+
+        char.left_ring = Some(Ring::HP);
+        assert_eq!(15, char.modify_stat(10, Ring::HP));
+
+        char.right_ring = Some(Ring::HP);
+        assert_eq!(20, char.modify_stat(10, Ring::HP));
+    }
+
+    // HELPERS
+
+    fn new_char() -> Character {
+        Character::new(
+            Class {
+                name: "test".to_string(),
+                category: class::Category::Player,
+                hp: Stat(25, 7),
+                mp: None,
+                strength: Stat(10, 3),
+                speed: Stat(10, 2),
+                inflicts: None,
+            },
+            1,
+        )
+    }
+
+    fn new_plain_stats_char() -> Character {
         Character {
             max_hp: 10,
             current_hp: 10,

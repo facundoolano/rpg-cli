@@ -430,19 +430,19 @@ fn format_character(character: &Character) -> String {
 fn format_equipment(character: &Character) -> String {
     let mut fragments = Vec::new();
 
-    if let Some(sword) = &character.equip.sword {
+    if let Some(sword) = &character.sword {
         fragments.push(sword.to_string());
     }
 
-    if let Some(shield) = &character.equip.shield {
+    if let Some(shield) = &character.shield {
         fragments.push(shield.to_string());
     }
 
-    if let Some(ring) = &character.equip.left_ring {
+    if let Some(ring) = &character.left_ring {
         fragments.push(ring.to_string());
     }
 
-    if let Some(ring) = &character.equip.right_ring {
+    if let Some(ring) = &character.right_ring {
         fragments.push(ring.to_string());
     }
 
