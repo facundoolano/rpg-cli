@@ -443,6 +443,20 @@ mod tests {
         )
     }
 
+    // FIXME rename or merge with the helper above
+    fn test_character() -> Character {
+        Character {
+            max_hp: 10,
+            current_hp: 10,
+            max_mp: 10,
+            current_mp: 10,
+            strength: 10,
+            speed: 10,
+            class: Class::player_by_name("mage").unwrap().clone(),
+            ..Character::default()
+        }
+    }
+
     #[test]
     fn test_new() {
         let hero = new_char();
@@ -608,7 +622,7 @@ mod tests {
 
         while hero.level < 500 {
             hero.add_experience(hero.xp_for_next());
-            hero.equip.sword = Some(equipment::Weapon::Sword(hero.level));
+            hero.sword = Some(equipment::Weapon::Sword(hero.level));
             let turns_unarmed = hero.max_hp / hero.strength;
             let turns_armed = hero.max_hp / hero.physical_attack();
             println!(
@@ -663,7 +677,7 @@ mod tests {
     fn test_class_change() {
         let mut player = Character::player();
         player.xp = 20;
-        player.equip.sword = Some(equipment::Weapon::Sword(1));
+        player.sword = Some(equipment::Weapon::Sword(1));
 
         let warrior_class = Class::player_by_name("warrior").unwrap();
         let thief_class = Class::player_by_name("thief").unwrap();
@@ -676,7 +690,7 @@ mod tests {
         assert_eq!(player.max_hp, warrior_class.hp.base());
         assert_eq!(player.strength, warrior_class.strength.base());
         assert_eq!(player.speed, warrior_class.speed.base());
-        assert!(player.equip.sword.is_some());
+        assert!(player.sword.is_some());
 
         // attempt change to unknown class
         assert!(player.change_class("choripan").is_err());
@@ -688,7 +702,7 @@ mod tests {
         assert_eq!(player.max_hp, thief_class.hp.base());
         assert_eq!(player.strength, thief_class.strength.base());
         assert_eq!(player.speed, thief_class.speed.base());
-        assert!(player.equip.sword.is_some());
+        assert!(player.sword.is_some());
 
         // attempt change to different class at level 2
         player.level = 2;
@@ -699,7 +713,7 @@ mod tests {
         assert_eq!(player.max_hp, thief_class.hp.base());
         assert_eq!(player.strength, thief_class.strength.base());
         assert_eq!(player.speed, thief_class.speed.base());
-        assert!(player.equip.sword.is_some());
+        assert!(player.sword.is_some());
     }
 
     #[test]
@@ -753,7 +767,7 @@ mod tests {
         // warrior + sword, increased damage + mp = 0
         let sword = equipment::Weapon::Sword(hero.level);
         let sword_strength = sword.strength();
-        hero.equip.sword = Some(sword);
+        hero.sword = Some(sword);
         assert_eq!((base_strength + sword_strength, 0), hero.damage(&foe));
 
         let mut mage = Character::player();
@@ -771,7 +785,7 @@ mod tests {
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // with sword, it affects the physical attacks
-        mage.equip.sword = Some(equipment::Weapon::Sword(hero.level));
+        mage.sword = Some(equipment::Weapon::Sword(hero.level));
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // mage without enough mp, 0 mp, /3
@@ -887,16 +901,18 @@ mod tests {
         assert_eq!(15, char.speed());
     }
 
-    fn test_character() -> Character {
-        Character {
-            max_hp: 10,
-            current_hp: 10,
-            max_mp: 10,
-            current_mp: 10,
-            strength: 10,
-            speed: 10,
-            class: Class::player_by_name("mage").unwrap().clone(),
-            ..Character::default()
-        }
+    #[test]
+    fn modify_stat() {
+        let mut char = test_character();
+        assert_eq!(10, char.modify_stat(10, Ring::HP));
+        char.left_ring = Some(Ring::Void);
+        char.right_ring = Some(Ring::Void);
+        assert_eq!(10, char.modify_stat(10, Ring::HP));
+
+        char.left_ring = Some(Ring::HP);
+        assert_eq!(15, char.modify_stat(10, Ring::HP));
+
+        char.right_ring = Some(Ring::HP);
+        assert_eq!(20, char.modify_stat(10, Ring::HP));
     }
 }
