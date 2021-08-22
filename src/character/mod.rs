@@ -348,17 +348,10 @@ impl Character {
     /// If already carrying two rings, the least recently equipped one is
     /// removed, undoing its side-effects.
     pub fn equip_ring(&mut self, ring: Ring) -> Option<Ring> {
-        // TODO try to refactor with replace
-        let removed = if let Some(removed) = self.right_ring.take() {
-            self.unequip_ring_side_effect(&removed);
-            Some(removed)
-        } else {
-            None
-        };
-
-        self.right_ring = self.left_ring.take();
+        let removed = self.right_ring.take();
+        self.unequip_ring_side_effect(&removed);
         self.equip_ring_side_effect(&ring);
-        self.left_ring = Some(ring);
+        self.right_ring = self.left_ring.replace(ring);
 
         removed
     }
@@ -366,16 +359,16 @@ impl Character {
     /// Remove the ring by the given name from the equipment (if any),
     /// unapplying its side-effects.
     pub fn unequip_ring(&mut self, name: &str) -> Option<Ring> {
-        match (&self.left_ring, &self.right_ring) {
+        match (self.left_ring.clone(), self.right_ring.clone()) {
             (Some(ring), _) if ring.key() == name => {
                 let removed = self.left_ring.take();
-                self.unequip_ring_side_effect(removed.as_ref().unwrap());
+                self.unequip_ring_side_effect(&removed);
                 self.left_ring = self.right_ring.take();
                 removed
             }
             (_, Some(ring)) if ring.key() == name => {
                 let removed = self.right_ring.take();
-                self.unequip_ring_side_effect(removed.as_ref().unwrap());
+                self.unequip_ring_side_effect(&removed);
                 removed
             }
             _ => None,
@@ -397,14 +390,14 @@ impl Character {
     }
 
     /// Unapply the side-effects of the ring on the character.
-    fn unequip_ring_side_effect(&mut self, ring: &Ring) {
+    fn unequip_ring_side_effect(&mut self, ring: &Option<Ring>) {
         match ring {
-            Ring::HP => {
-                let to_remove = (ring.factor() * self.max_hp as f64) as i32;
+            Some(Ring::HP) => {
+                let to_remove = (ring.as_ref().unwrap().factor() * self.max_hp as f64) as i32;
                 self.current_hp = std::cmp::max(1, self.current_hp - to_remove);
             }
-            Ring::MP => {
-                let to_remove = (ring.factor() * self.max_mp as f64) as i32;
+            Some(Ring::MP) => {
+                let to_remove = (ring.as_ref().unwrap().factor() * self.max_mp as f64) as i32;
                 self.current_mp = std::cmp::max(1, self.current_mp - to_remove);
             }
             _ => {}
