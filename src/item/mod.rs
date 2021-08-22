@@ -6,6 +6,7 @@ use crate::game;
 use serde::{Deserialize, Serialize};
 
 pub mod equipment;
+pub mod key;
 pub mod ring;
 pub mod shop;
 pub mod stone;
@@ -13,6 +14,7 @@ pub mod stone;
 #[typetag::serde(tag = "type")]
 pub trait Item {
     fn apply(&mut self, game: &mut game::Game);
+    fn key(&self) -> key::Key;
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -48,6 +50,10 @@ impl Item for Potion {
             },
         );
     }
+
+    fn key(&self) -> key::Key {
+        key::Key::Potion
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -63,6 +69,10 @@ impl Escape {
 impl Item for Escape {
     fn apply(&mut self, game: &mut game::Game) {
         game.visit_home();
+    }
+
+    fn key(&self) -> key::Key {
+        key::Key::Escape
     }
 }
 
@@ -94,6 +104,10 @@ impl Item for Remedy {
                 healed,
             },
         );
+    }
+
+    fn key(&self) -> key::Key {
+        key::Key::Remedy
     }
 }
 
@@ -140,5 +154,9 @@ impl Item for Ether {
                 healed: false,
             },
         );
+    }
+
+    fn key(&self) -> key::Key {
+        key::Key::Ether
     }
 }

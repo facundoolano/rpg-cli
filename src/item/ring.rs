@@ -1,4 +1,4 @@
-use super::Item;
+use super::{key, Item};
 use crate::game;
 use core::fmt;
 use serde::{Deserialize, Serialize};
@@ -83,5 +83,9 @@ impl Item for Ring {
         if let Some(removed) = game.player.equip_ring(self.clone()) {
             game.add_item(&removed.to_string(), Box::new(removed));
         }
+    }
+
+    fn key(&self) -> key::Key {
+        key::Key::Ring(self.clone())
     }
 }
