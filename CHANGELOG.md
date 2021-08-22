@@ -7,6 +7,7 @@
 * Easter egg quest  #87
 * Sorcerer enemy class  #88
 * Stat increasing stones #95
+* Effect rings as items and equipment, initial set of stat-based rings #98
 
 ### Changed
 * Remember unlocked quests and todo list order #89
@@ -15,12 +16,14 @@
 * Doubled ether restored mp 0e01209
 * Tweaked enemy levels to be based primarily on distance from home rather than player level 0798d53
 * Changed internal representation of equipment #99
+* When a magic-using character runs out of mp, its physical attacks incorporate the weapon contribution 39c5e01
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
 * Properly report raise class levels quest progress e7d73f9
 * Reach level quests rewarded when multiple levels raised in a single event 60f5fb2
 * Give base mp when switching to a magic class from a non base level 96c2de6
+* Missed levels with class quest completion 1ec760
 
 ## [0.6.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.6.0) - 2021-08-04
 ### Added

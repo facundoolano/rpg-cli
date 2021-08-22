@@ -1,4 +1,5 @@
 use crate::item::equipment;
+use crate::item::ring::Ring;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -7,7 +8,7 @@ use std::cmp::{max, min};
 pub mod class;
 pub mod enemy;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct Character {
     pub class: Class,
@@ -16,14 +17,14 @@ pub struct Character {
     pub level: i32,
     pub xp: i32,
 
-    pub max_hp: i32,
+    max_hp: i32,
     pub current_hp: i32,
 
-    pub max_mp: i32,
+    max_mp: i32,
     pub current_mp: i32,
 
-    pub strength: i32,
-    pub speed: i32,
+    strength: i32,
+    speed: i32,
     pub status_effect: Option<StatusEffect>,
 }
 
@@ -143,20 +144,20 @@ impl Character {
     pub fn increase_hp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous damage
-        let previous_damage = self.max_hp - self.current_hp;
+        let previous_damage = self.max_hp() - self.current_hp;
         let inc = self.class.hp.increase();
         self.max_hp += inc;
-        self.current_hp = self.max_hp - previous_damage;
+        self.current_hp = self.max_hp() - previous_damage;
         inc
     }
 
     pub fn increase_mp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous mp consumption
-        let previous_used_mp = self.max_mp - self.current_mp;
+        let previous_used_mp = self.max_mp() - self.current_mp;
         let inc = self.class.mp.as_ref().map_or(0, |mp| mp.increase());
         self.max_mp += inc;
-        self.current_mp = self.max_mp - previous_used_mp;
+        self.current_mp = self.max_mp() - previous_used_mp;
         inc
     }
 
@@ -193,19 +194,19 @@ impl Character {
     /// Return the amount actually restored.
     pub fn heal(&mut self, amount: i32) -> i32 {
         let previous = self.current_hp;
-        self.current_hp = min(self.max_hp, self.current_hp + amount);
+        self.current_hp = min(self.max_hp(), self.current_hp + amount);
         self.current_hp - previous
     }
 
     pub fn restore_mp(&mut self, amount: i32) -> i32 {
         let previous = self.current_mp;
-        self.current_mp = min(self.max_mp, self.current_mp + amount);
+        self.current_mp = min(self.max_mp(), self.current_mp + amount);
         self.current_mp - previous
     }
 
     /// Restore all health and magic points to their max
     pub fn heal_full(&mut self) -> (i32, i32) {
-        (self.heal(self.max_hp), self.restore_mp(self.max_mp))
+        (self.heal(self.max_hp()), self.restore_mp(self.max_mp()))
     }
 
     /// How many experience points are required to move to the next level.
@@ -228,17 +229,31 @@ impl Character {
         (max(1, damage - receiver.deffense()), mp_cost)
     }
 
+    pub fn max_hp(&self) -> i32 {
+        self.max_hp + self.equip.hp(self.max_hp)
+    }
+
+    pub fn max_mp(&self) -> i32 {
+        self.max_mp + self.equip.mp(self.max_mp)
+    }
+
+    pub fn speed(&self) -> i32 {
+        self.speed + self.equip.speed(self.speed)
+    }
+
     pub fn physical_attack(&self) -> i32 {
+        let attack = self.strength + self.equip.attack(self.strength);
         if self.class.is_magic() {
-            self.strength / 3
+            attack / 3
         } else {
-            self.strength + self.equip.attack()
+            attack
         }
     }
 
     pub fn magic_attack(&self) -> i32 {
         if self.class.is_magic() {
-            self.strength * 3
+            let base = self.strength * 3;
+            base + self.equip.magic(base)
         } else {
             0
         }
@@ -255,7 +270,7 @@ impl Character {
     }
 
     pub fn deffense(&self) -> i32 {
-        self.equip.deffense()
+        self.equip.deffense(self.strength)
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
@@ -306,6 +321,61 @@ impl Character {
     pub fn rounded_level(self: &Character) -> i32 {
         // allow level 1 or level 5n
         std::cmp::max(1, (self.level / 5) * 5)
+    }
+
+    /// Equip the given ring and apply its side-effects.
+    /// If already carrying two rings, the least recently equipped one is
+    /// removed, undoing its side-effects.
+    pub fn equip_ring(&mut self, ring: Ring) -> Option<Ring> {
+        let removed = if let Some(removed) = self.equip.put_ring(ring.clone()) {
+            self.unequip_ring_side_effect(&removed);
+            Some(removed)
+        } else {
+            None
+        };
+        self.equip_ring_side_effect(&ring);
+
+        removed
+    }
+
+    /// Remove the ring by the given name from the equipment (if any),
+    /// unapplying its side-effects.
+    pub fn unequip_ring(&mut self, name: &str) -> Option<Ring> {
+        if let Some(removed) = self.equip.remove_ring(name) {
+            self.unequip_ring_side_effect(&removed);
+            Some(removed)
+        } else {
+            None
+        }
+    }
+
+    /// Apply any side-effects of the ring over the character stats, e.g.
+    /// increasing its max hp for an HP ring.
+    fn equip_ring_side_effect(&mut self, ring: &Ring) {
+        match ring {
+            Ring::HP => {
+                self.current_hp += (ring.factor() * self.max_hp as f64) as i32;
+            }
+            Ring::MP => {
+                self.current_mp += (ring.factor() * self.max_mp as f64) as i32;
+            }
+            _ => {}
+        }
+    }
+
+    /// Unapply the side-effects of the ring on the character.
+    fn unequip_ring_side_effect(&mut self, ring: &Ring) {
+        match ring {
+            Ring::HP => {
+                let to_remove = (ring.factor() * self.max_hp as f64) as i32;
+                self.current_hp = std::cmp::max(1, self.current_hp - to_remove);
+            }
+            Ring::MP => {
+                let to_remove = (ring.factor() * self.max_mp as f64) as i32;
+                self.current_mp = std::cmp::max(1, self.current_mp - to_remove);
+            }
+            _ => {}
+        }
     }
 }
 
@@ -656,13 +726,133 @@ mod tests {
         assert!(mage.can_magic_attack());
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
-        // same with sword
+        // with sword, it affects the physical attacks
         mage.equip.sword = Some(equipment::Weapon::Sword(hero.level));
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // mage without enough mp, 0 mp, /3
         mage.current_mp = mage.max_mp / 3 - 1;
         assert!(!mage.can_magic_attack());
-        assert_eq!((base_strength / 3, 0), mage.damage(&foe));
+        assert_eq!(((base_strength + sword_strength) / 3, 0), mage.damage(&foe));
+    }
+
+    #[test]
+    fn test_hp_ring() {
+        let mut char = test_character();
+        assert_eq!(10, char.current_hp);
+        assert_eq!(10, char.max_hp());
+
+        char.equip_ring(Ring::HP);
+        assert_eq!(15, char.max_hp());
+        assert_eq!(15, char.current_hp);
+
+        char.equip_ring(Ring::HP);
+        assert_eq!(20, char.max_hp());
+        assert_eq!(20, char.current_hp);
+
+        // push out to unequip
+        char.unequip_ring("hp-rng");
+        assert_eq!(15, char.max_hp());
+        assert_eq!(15, char.current_hp);
+
+        char.unequip_ring("hp-rng");
+        assert_eq!(10, char.max_hp());
+        assert_eq!(10, char.current_hp);
+
+        // preserve taken damage
+        char.current_hp -= 3;
+
+        char.equip_ring(Ring::HP);
+        assert_eq!(15, char.max_hp());
+        assert_eq!(12, char.current_hp);
+
+        char.unequip_ring("hp-rng");
+        assert_eq!(10, char.max_hp());
+        assert_eq!(7, char.current_hp);
+    }
+
+    #[test]
+    fn test_mp_ring() {
+        let mut char = test_character();
+        assert_eq!(10, char.current_mp);
+        assert_eq!(10, char.max_mp());
+
+        char.equip_ring(Ring::MP);
+        assert_eq!(15, char.max_mp());
+        assert_eq!(15, char.current_mp);
+
+        char.equip_ring(Ring::MP);
+        assert_eq!(20, char.max_mp());
+        assert_eq!(20, char.current_mp);
+
+        // push out to unequip
+        char.unequip_ring("mp-rng");
+        assert_eq!(15, char.max_mp());
+        assert_eq!(15, char.current_mp);
+
+        char.unequip_ring("mp-rng");
+        assert_eq!(10, char.max_mp());
+        assert_eq!(10, char.current_mp);
+
+        // preserve taken damage
+        char.current_mp -= 3;
+
+        char.equip_ring(Ring::MP);
+        assert_eq!(15, char.max_mp());
+        assert_eq!(12, char.current_mp);
+
+        char.unequip_ring("mp-rng");
+        assert_eq!(10, char.max_mp());
+        assert_eq!(7, char.current_mp);
+    }
+
+    #[test]
+    fn test_attack_ring() {
+        let mut char = test_character();
+        char.class.mp = None;
+        assert_eq!(10, char.physical_attack());
+
+        char.equip_ring(Ring::Attack);
+        assert_eq!(15, char.physical_attack());
+    }
+
+    #[test]
+    fn test_deffense_ring() {
+        let mut char = test_character();
+        assert_eq!(0, char.deffense());
+
+        char.equip_ring(Ring::Deffense);
+        assert_eq!(5, char.deffense());
+    }
+
+    #[test]
+    fn test_magic_ring() {
+        let mut char = test_character();
+        assert_eq!(30, char.magic_attack());
+
+        char.equip_ring(Ring::Magic);
+        assert_eq!(45, char.magic_attack());
+    }
+
+    #[test]
+    fn test_speed_ring() {
+        let mut char = test_character();
+        assert_eq!(10, char.speed());
+
+        char.equip_ring(Ring::Speed);
+        assert_eq!(15, char.speed());
+    }
+
+    fn test_character() -> Character {
+        Character {
+            max_hp: 10,
+            current_hp: 10,
+            max_mp: 10,
+            current_mp: 10,
+            strength: 10,
+            speed: 10,
+            class: Class::player_by_name("mage").unwrap().clone(),
+            ..Character::default()
+        }
     }
 }

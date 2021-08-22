@@ -1,10 +1,11 @@
 use crate::game;
 use crate::item::equipment::{Equipment, Weapon};
+use crate::item::ring;
 use crate::item::stone;
 use crate::item::{Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
-use rand::prelude::SliceRandom;
+use rand::prelude::{IteratorRandom, SliceRandom};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -20,7 +21,7 @@ pub struct Chest {
 
 impl Chest {
     /// Randomly generate a chest at the current location.
-    pub fn generate(game: &game::Game) -> Option<Self> {
+    pub fn generate(game: &mut game::Game) -> Option<Self> {
         // To give the impression of "dynamic" chest contents, each content type
         // is randomized separately, and what's found is combined into a single
         // chest at the end
@@ -28,6 +29,7 @@ impl Chest {
         let gold_chest = random().gold_chest(distance);
         let equipment_chest = random().equipment_chest(distance);
         let item_chest = random().item_chest(distance);
+        let ring_chest = random().ring_chest(distance);
 
         let mut chest = Self::default();
 
@@ -43,6 +45,13 @@ impl Chest {
             chest.items = random_items(game.player.rounded_level());
         }
 
+        if ring_chest {
+            if let Some(ring) = random_ring(game) {
+                let key = ring.to_string();
+                chest.items.insert(key, vec![Box::new(ring)]);
+            }
+        }
+
         // Return None instead of an empty chest if none was found
         if gold_chest || equipment_chest || item_chest {
             Some(chest)
@@ -51,7 +60,7 @@ impl Chest {
         }
     }
 
-    pub fn battle_loot(game: &game::Game) -> Option<Self> {
+    pub fn battle_loot(game: &mut game::Game) -> Option<Self> {
         // reuse item % from chests, but don't add extra gold
         // kind of hacky but does for now
         Self::generate(game).map(|mut c| {
@@ -62,9 +71,20 @@ impl Chest {
 
     /// Remove the gold, items and equipment from a hero and return them as a new chest.
     pub fn drop(game: &mut game::Game) -> Self {
-        let equip = std::mem::take(&mut game.player.equip);
-        let items = game.inventory.drain().collect();
+        let mut items: HashMap<String, Vec<Box<dyn Item>>> = game.inventory.drain().collect();
+        let mut equip = std::mem::take(&mut game.player.equip);
+
+        // equipped rings should be dropped as items
+        if let Some(ring) = equip.left_ring.take() {
+            let key = ring.to_string();
+            items.insert(key, vec![Box::new(ring)]);
+        }
+        if let Some(ring) = equip.right_ring.take() {
+            let key = ring.to_string();
+            items.insert(key, vec![Box::new(ring)]);
+        }
         let gold = game.gold;
+
         game.gold = 0;
 
         Self { items, equip, gold }
@@ -80,7 +100,7 @@ impl Chest {
             to_log.push(game.player.equip.sword.as_ref().unwrap().to_string());
         }
         if upgraded_shield {
-            to_log.push(game.player.equip.sword.as_ref().unwrap().to_string());
+            to_log.push(game.player.equip.shield.as_ref().unwrap().to_string());
         }
 
         // items and gold are always picked up
@@ -127,7 +147,12 @@ fn random_equipment(level: i32) -> Equipment {
     .to_owned()
     .1;
 
-    Equipment { sword, shield }
+    Equipment {
+        sword,
+        shield,
+        left_ring: None,
+        right_ring: None,
+    }
 }
 
 type WeightedItems = (i32, &'static str, Vec<Box<dyn Item>>);
@@ -155,6 +180,15 @@ fn random_items(level: i32) -> HashMap<String, Vec<Box<dyn Item>>> {
     let mut map = HashMap::new();
     map.insert(key.to_string(), items);
     map
+}
+
+fn random_ring(game: &mut game::Game) -> Option<ring::Ring> {
+    let mut rng = rand::thread_rng();
+    if let Some(ring) = game.ring_pool.iter().choose(&mut rng).cloned() {
+        game.ring_pool.take(&ring)
+    } else {
+        None
+    }
 }
 
 impl Default for Chest {
@@ -258,6 +292,8 @@ mod tests {
             equip: Equipment {
                 sword: Some(Weapon::Sword(1)),
                 shield: Some(Weapon::Shield(10)),
+                left_ring: None,
+                right_ring: None,
             },
             gold: 100,
         };
@@ -272,6 +308,8 @@ mod tests {
             equip: Equipment {
                 sword: Some(Weapon::Sword(10)),
                 shield: Some(Weapon::Shield(1)),
+                left_ring: None,
+                right_ring: None,
             },
             gold: 100,
         };
@@ -282,5 +320,38 @@ mod tests {
         assert_eq!(10, chest1.equip.shield.as_ref().unwrap().level());
         assert_eq!(3, chest1.items.get("potion").unwrap().len());
         assert_eq!(1, chest1.items.get("escape").unwrap().len());
+    }
+
+    #[test]
+    fn test_take_random_ring() {
+        let mut game = game::Game::new();
+        let total = game.ring_pool.len();
+        assert!(total > 0);
+
+        for i in 0..total {
+            assert_eq!(total - i, game.ring_pool.len());
+            assert!(random_ring(&mut game).is_some());
+        }
+
+        assert!(game.ring_pool.is_empty());
+        assert!(random_ring(&mut game).is_none());
+    }
+
+    #[test]
+    fn test_drop_equipped_rings() {
+        let mut game = game::Game::new();
+        game.add_item("potion", Box::new(Potion::new(1)));
+        game.player.equip.left_ring = Some(ring::Ring::Speed);
+        game.player.equip.right_ring = Some(ring::Ring::Magic);
+
+        let mut chest = Chest::drop(&mut game);
+        assert!(game.player.equip.left_ring.is_none());
+        assert!(game.player.equip.right_ring.is_none());
+        assert!(chest.items.get("spd-rng").is_some());
+        assert!(chest.items.get("mag-rng").is_some());
+
+        chest.pick_up(&mut game);
+        assert!(game.inventory.contains_key("spd-rng"));
+        assert!(game.inventory.contains_key("mag-rng"));
     }
 }

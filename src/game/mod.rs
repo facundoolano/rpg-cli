@@ -3,6 +3,7 @@ extern crate dirs;
 use crate::character;
 use crate::character::Character;
 use crate::event::Event;
+use crate::item::ring::Ring;
 use crate::item::Item;
 use crate::location::Location;
 use crate::quest::QuestList;
@@ -24,7 +25,17 @@ pub struct Game {
     pub gold: i32,
     pub quests: QuestList,
     pub inventory: HashMap<String, Vec<Box<dyn Item>>>,
+
+    /// Chest left at the location where the player dies.
     pub tombstones: HashMap<String, Chest>,
+
+    /// There's one instance of each type of ring in the game.
+    /// This set starts with all rings and they are moved to the inventory as
+    /// they are found in chests.
+    pub ring_pool: HashSet<Ring>,
+
+    /// Locations where chest have already been looked for, and therefore
+    /// can't be found again.
     inspected: HashSet<Location>,
 }
 
@@ -39,6 +50,7 @@ impl Game {
             tombstones: HashMap::new(),
             inspected: HashSet::new(),
             quests,
+            ring_pool: Ring::set(),
         }
     }
 
@@ -49,6 +61,7 @@ impl Game {
         // preserve tombstones and quests across hero's lifes
         std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
         std::mem::swap(&mut new_game.quests, &mut self.quests);
+        std::mem::swap(&mut new_game.ring_pool, &mut self.ring_pool);
 
         // remember last selected class
         new_game
@@ -90,7 +103,8 @@ impl Game {
 
         if !self.inspected.contains(&self.location) {
             self.inspected.insert(self.location.clone());
-            self.pick_up_chest(Chest::generate(self), false);
+            let chest = Chest::generate(self);
+            self.pick_up_chest(chest, false);
         }
     }
 
@@ -157,7 +171,7 @@ impl Game {
         // get all items of that type and use one
         // if there are no remaining, drop the type from the inventory
         if let Some(mut items) = self.inventory.remove(&name) {
-            if let Some(item) = items.pop() {
+            if let Some(mut item) = items.pop() {
                 item.apply(self);
                 Event::emit(self, Event::ItemUsed { item: name.clone() });
             }
@@ -166,6 +180,13 @@ impl Game {
                 self.inventory.insert(name, items);
             }
 
+            Ok(())
+        } else if let Some(ring) = self.player.unequip_ring(&name) {
+            // Rings are a special case of item in that they can be "used" while being
+            // equipped, that is, while not being in the inventory.
+            // The effect of using them is unequipping them.
+            // This bit of complexity enables a cleaner command api.
+            self.add_item(ring.key(), Box::new(ring));
             Ok(())
         } else {
             bail!("Item not found.")
@@ -191,6 +212,10 @@ impl Game {
     }
 
     pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {
+        if self.player.equip.enemies_evaded() {
+            return None;
+        }
+
         let distance = self.location.distance_from_home();
         if random().should_enemy_appear(&distance) {
             let enemy = character::enemy::at(&self.location, &self.player);
@@ -213,7 +238,7 @@ impl Game {
             if self.bribe(enemy) {
                 return Ok(());
             }
-        } else if run && self.run_away(&enemy) {
+        } else if run && self.run_away(enemy) {
             return Ok(());
         }
 
@@ -236,8 +261,8 @@ impl Game {
         let success = random().run_away_succeeds(
             self.player.level,
             enemy.level,
-            self.player.speed,
-            enemy.speed,
+            self.player.speed(),
+            enemy.speed(),
         );
         Event::emit(self, Event::RunAway { success });
         success
@@ -256,7 +281,7 @@ impl Game {
                 Event::emit(
                     self,
                     Event::BattleWon {
-                        enemy: &enemy,
+                        enemy,
                         location: self.location.clone(),
                         xp,
                         levels_up,
@@ -328,12 +353,12 @@ mod tests {
         assert_eq!(2, *game.inventory().get("potion").unwrap());
 
         game.player.current_hp -= 3;
-        assert_ne!(game.player.max_hp, game.player.current_hp);
+        assert_ne!(game.player.max_hp(), game.player.current_hp);
 
         assert!(game.use_item("potion").is_ok());
 
         // check it actually restores the hp
-        assert_eq!(game.player.max_hp, game.player.current_hp);
+        assert_eq!(game.player.max_hp(), game.player.current_hp);
 
         // check item was consumed
         assert_eq!(1, game.inventory().len());
@@ -342,5 +367,84 @@ mod tests {
         assert!(game.use_item("potion").is_ok());
         assert_eq!(0, game.inventory().len());
         assert!(game.use_item("potion").is_err());
+    }
+
+    #[test]
+    fn test_ring_equip() {
+        let mut game = Game::new();
+
+        assert!(game.player.equip.left_ring.is_none());
+        assert!(game.player.equip.right_ring.is_none());
+
+        game.add_item("void-rng", Box::new(Ring::Void));
+        game.add_item("void-rng", Box::new(Ring::Void));
+        game.add_item("void-rng", Box::new(Ring::Void));
+        assert_eq!(3, *game.inventory().get("void-rng").unwrap());
+
+        game.use_item("void-rng").unwrap();
+        assert_eq!(2, *game.inventory().get("void-rng").unwrap());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert!(game.player.equip.right_ring.is_none());
+
+        game.use_item("void-rng").unwrap();
+        assert_eq!(1, *game.inventory().get("void-rng").unwrap());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
+
+        game.use_item("void-rng").unwrap();
+        assert_eq!(1, *game.inventory().get("void-rng").unwrap());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
+
+        game.add_item("spd-rng", Box::new(Ring::Speed));
+        game.use_item("spd-rng").unwrap();
+        assert_eq!(2, *game.inventory().get("void-rng").unwrap());
+        assert_eq!(Some(Ring::Speed), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
+    }
+
+    #[test]
+    fn test_ring_unequip() {
+        let mut game = Game::new();
+
+        game.add_item("void-rng", Box::new(Ring::Void));
+        game.add_item("hp-rng", Box::new(Ring::HP));
+        game.use_item("void-rng").unwrap();
+        assert!(game.inventory().get("void-rng").is_none());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+
+        game.use_item("void-rng").unwrap();
+        assert!(game.inventory().get("void-rng").is_some());
+        assert!(game.player.equip.left_ring.is_none());
+
+        let base_hp = game.player.max_hp();
+        game.use_item("void-rng").unwrap();
+        game.use_item("hp-rng").unwrap();
+        assert!(game.inventory().get("void-rng").is_none());
+        assert!(game.inventory().get("hp-rng").is_none());
+        assert_eq!(Some(Ring::HP), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
+        assert!(game.player.max_hp() > base_hp);
+
+        game.use_item("hp-rng").unwrap();
+        assert!(game.inventory().get("hp-rng").is_some());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert!(game.player.equip.right_ring.is_none());
+        assert_eq!(base_hp, game.player.max_hp());
+    }
+
+    #[test]
+    fn test_run_ring() {
+        let mut game = Game::new();
+        assert!(game.maybe_spawn_enemy().is_some());
+
+        game.player.equip_ring(Ring::Evade);
+        assert!(game.maybe_spawn_enemy().is_none());
+
+        game.player.equip_ring(Ring::Void);
+        assert!(game.maybe_spawn_enemy().is_none());
+
+        game.player.equip_ring(Ring::Void);
+        assert!(game.maybe_spawn_enemy().is_some());
     }
 }

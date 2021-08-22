@@ -42,6 +42,7 @@ pub trait Randomizer {
 
     fn gold_chest(&self, distance: &location::Distance) -> bool;
     fn equipment_chest(&self, distance: &location::Distance) -> bool;
+    fn ring_chest(&self, distance: &location::Distance) -> bool;
     fn item_chest(&self, distance: &location::Distance) -> bool;
 }
 
@@ -164,6 +165,16 @@ impl Randomizer for DefaultRandomizer {
         }
     }
 
+    fn ring_chest(&self, distance: &location::Distance) -> bool {
+        let mut rng = rand::thread_rng();
+
+        match distance {
+            location::Distance::Near(_) => rng.gen_ratio(1, 20),
+            location::Distance::Mid(_) => rng.gen_ratio(5, 20),
+            location::Distance::Far(_) => rng.gen_ratio(10, 20),
+        }
+    }
+
     fn item_chest(&self, distance: &location::Distance) -> bool {
         let mut rng = rand::thread_rng();
 
@@ -260,6 +271,10 @@ impl Randomizer for TestRandomizer {
     }
 
     fn item_chest(&self, _distance: &location::Distance) -> bool {
+        false
+    }
+
+    fn ring_chest(&self, _distance: &location::Distance) -> bool {
         false
     }
 }

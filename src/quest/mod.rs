@@ -300,7 +300,7 @@ mod tests {
         assert_eq!(Status::Completed, game.quests.quests[0].0);
         assert_eq!(Status::Unlocked, game.quests.quests[1].0);
 
-        let stone = item::stone::Level;
+        let mut stone = item::stone::Level;
         stone.apply(&mut game);
         assert_eq!(Status::Completed, game.quests.quests[0].0);
         assert_eq!(Status::Completed, game.quests.quests[1].0);

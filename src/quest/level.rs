@@ -53,7 +53,7 @@ impl Quest for RaiseClassLevels {
         } else if let Event::GameReset = event {
             self.remaining = TOTAL_LEVELS
         }
-        self.remaining == 0
+        self.remaining <= 0
     }
 }
 

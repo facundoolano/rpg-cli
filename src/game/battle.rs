@@ -22,8 +22,8 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     let mut xp = 0;
 
     while !enemy.is_dead() {
-        pl_accum += game.player.speed;
-        en_accum += enemy.speed;
+        pl_accum += game.player.speed();
+        en_accum += enemy.speed();
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) && !autoether(game, enemy) {
@@ -98,8 +98,8 @@ fn generate_attack(
 
     let attack_type = random.attack_type(
         attacker.inflicted_status_effect(),
-        attacker.speed,
-        receiver.speed,
+        attacker.speed(),
+        receiver.speed(),
     );
 
     match attack_type {
@@ -117,7 +117,7 @@ fn generate_attack(
 /// If the player is low on hp and has a potion available use it
 /// instead of attacking in the current turn.
 fn autopotion(game: &mut Game, enemy: &Character) -> bool {
-    if game.player.current_hp > game.player.max_hp / 3 {
+    if game.player.current_hp > game.player.max_hp() / 3 {
         return false;
     }
 
@@ -151,23 +151,27 @@ mod tests {
     use super::*;
     use crate::character;
     use crate::character::class;
-    use crate::character::enemy;
     use crate::randomizer::random;
 
     #[test]
     fn won() {
-        let mut game = Game::new();
-        // same level as player
-        let enemy_class = class::Class::random(class::Category::Common);
+        let enemy_base = class::Class::random(class::Category::Common);
+        let enemy_class = class::Class {
+            speed: class::Stat(1, 1),
+            hp: class::Stat(15, 1),
+            strength: class::Stat(5, 1),
+            ..enemy_base.clone()
+        };
         let mut enemy = character::Character::new(enemy_class.clone(), 1);
 
-        game.player.speed = 2;
-        game.player.current_hp = 20;
-        game.player.strength = 10; // each hit will take 10hp
-
-        enemy.speed = 1;
-        enemy.current_hp = 15;
-        enemy.strength = 5;
+        let mut game = Game::new();
+        let player_class = class::Class {
+            speed: class::Stat(2, 1),
+            hp: class::Stat(20, 1),
+            strength: class::Stat(10, 1), // each hit will take 10hp
+            ..game.player.class.clone()
+        };
+        game.player = character::Character::new(player_class, 1);
 
         // expected turns
         // enemy - 10hp
@@ -183,11 +187,7 @@ mod tests {
         // extra 100g for the completed quest
         assert_eq!(150, game.gold);
 
-        let enemy_class = class::Class::random(class::Category::Common);
         let mut enemy = character::Character::new(enemy_class.clone(), 1);
-        enemy.speed = 1;
-        enemy.current_hp = 15;
-        enemy.strength = 5;
 
         // same turns, added xp increases level
 
@@ -211,14 +211,24 @@ mod tests {
     #[test]
     fn magic_attacks() {
         let mut game = Game::new();
-        let mut enemy = enemy::at(&game.location, &game.player);
-        enemy.max_hp = 100;
-        enemy.current_hp = 100;
+        let enemy_base = class::Class::random(class::Category::Common);
+        let enemy_class = class::Class {
+            speed: class::Stat(1, 1),
+            hp: class::Stat(100, 1),
+            strength: class::Stat(5, 1),
+            ..enemy_base.clone()
+        };
+        let mut enemy = character::Character::new(enemy_class, 1);
 
         game.player.change_class("mage").unwrap_or_default();
-        game.player.max_mp = 10;
-        game.player.current_mp = 10;
-        game.player.strength = 10;
+        let player_class = class::Class {
+            speed: class::Stat(2, 1),
+            hp: class::Stat(20, 1),
+            strength: class::Stat(10, 1), // each hit will take 10hp
+            mp: Some(class::Stat(10, 1)),
+            ..game.player.class.clone()
+        };
+        game.player = character::Character::new(player_class, 1);
 
         // mage -mp with enough mp
         player_attack(&mut game, &mut enemy, &random());
