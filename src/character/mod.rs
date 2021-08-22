@@ -223,6 +223,7 @@ impl Character {
         (self.heal(self.max_hp()), self.restore_mp(self.max_mp()))
     }
 
+    /// Return true if an evade ring is equipped, i.e. no enemies should appear.
     pub fn enemies_evaded(&self) -> bool {
         self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
     }
@@ -259,6 +260,8 @@ impl Character {
         self.modify_stat(self.speed, Ring::Speed)
     }
 
+    /// Amount of damage the character can inflict with physical atacks, given
+    /// its strength and equipment. Magic using characters' strength is dimmed.
     pub fn physical_attack(&self) -> i32 {
         let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
         let attack = self.modify_stat(self.strength, Ring::Attack) + sword_str;
@@ -269,6 +272,8 @@ impl Character {
         }
     }
 
+    /// Amount of damage the character can inflict with magical attacks.
+    /// Zero if the current character class is not magic.
     pub fn magic_attack(&self) -> i32 {
         if self.class.is_magic() {
             let base = self.strength * 3;
@@ -404,6 +409,8 @@ impl Character {
         }
     }
 
+    /// If either ring matches the given one, apply the ring effect
+    /// to the given base stat, e.g. for an HP ring increase the base HP.
     fn modify_stat(&self, base: i32, ring: Ring) -> i32 {
         let mut factor = 1.0;
         if self.left_ring.as_ref() == Some(&ring) {
@@ -909,5 +916,4 @@ mod tests {
             ..Character::default()
         }
     }
-
 }

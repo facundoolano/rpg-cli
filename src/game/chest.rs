@@ -141,6 +141,8 @@ impl Chest {
     }
 }
 
+/// Upgrades current with the other equipment if it has a better level (or current is None).
+/// Return whether there was an upgrade.
 fn maybe_upgrade(current: &mut Option<Equipment>, other: &mut Option<Equipment>) -> bool {
     if let Some(shield) = other.take() {
         if shield.is_upgrade_from(current) {
