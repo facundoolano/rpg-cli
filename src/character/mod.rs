@@ -735,4 +735,124 @@ mod tests {
         assert!(!mage.can_magic_attack());
         assert_eq!(((base_strength + sword_strength) / 3, 0), mage.damage(&foe));
     }
+
+    #[test]
+    fn test_hp_ring() {
+        let mut char = test_character();
+        assert_eq!(10, char.current_hp);
+        assert_eq!(10, char.max_hp());
+
+        char.equip_ring(Ring::HP);
+        assert_eq!(15, char.max_hp());
+        assert_eq!(15, char.current_hp);
+
+        char.equip_ring(Ring::HP);
+        assert_eq!(20, char.max_hp());
+        assert_eq!(20, char.current_hp);
+
+        // push out to unequip
+        char.unequip_ring("hp-rng");
+        assert_eq!(15, char.max_hp());
+        assert_eq!(15, char.current_hp);
+
+        char.unequip_ring("hp-rng");
+        assert_eq!(10, char.max_hp());
+        assert_eq!(10, char.current_hp);
+
+        // preserve taken damage
+        char.current_hp -= 3;
+
+        char.equip_ring(Ring::HP);
+        assert_eq!(15, char.max_hp());
+        assert_eq!(12, char.current_hp);
+
+        char.unequip_ring("hp-rng");
+        assert_eq!(10, char.max_hp());
+        assert_eq!(7, char.current_hp);
+    }
+
+    #[test]
+    fn test_mp_ring() {
+        let mut char = test_character();
+        assert_eq!(10, char.current_mp);
+        assert_eq!(10, char.max_mp());
+
+        char.equip_ring(Ring::MP);
+        assert_eq!(15, char.max_mp());
+        assert_eq!(15, char.current_mp);
+
+        char.equip_ring(Ring::MP);
+        assert_eq!(20, char.max_mp());
+        assert_eq!(20, char.current_mp);
+
+        // push out to unequip
+        char.unequip_ring("mp-rng");
+        assert_eq!(15, char.max_mp());
+        assert_eq!(15, char.current_mp);
+
+        char.unequip_ring("mp-rng");
+        assert_eq!(10, char.max_mp());
+        assert_eq!(10, char.current_mp);
+
+        // preserve taken damage
+        char.current_mp -= 3;
+
+        char.equip_ring(Ring::MP);
+        assert_eq!(15, char.max_mp());
+        assert_eq!(12, char.current_mp);
+
+        char.unequip_ring("mp-rng");
+        assert_eq!(10, char.max_mp());
+        assert_eq!(7, char.current_mp);
+    }
+
+    #[test]
+    fn test_attack_ring() {
+        let mut char = test_character();
+        char.class.mp = None;
+        assert_eq!(10, char.physical_attack());
+
+        char.equip_ring(Ring::Attack);
+        assert_eq!(15, char.physical_attack());
+    }
+
+    #[test]
+    fn test_deffense_ring() {
+        let mut char = test_character();
+        assert_eq!(0, char.deffense());
+
+        char.equip_ring(Ring::Deffense);
+        assert_eq!(5, char.deffense());
+    }
+
+    #[test]
+    fn test_magic_ring() {
+        let mut char = test_character();
+        assert_eq!(30, char.magic_attack());
+
+        char.equip_ring(Ring::Magic);
+        assert_eq!(45, char.magic_attack());
+    }
+
+    #[test]
+    fn test_speed_ring() {
+        let mut char = test_character();
+        assert_eq!(10, char.speed());
+
+        char.equip_ring(Ring::Speed);
+        assert_eq!(15, char.speed());
+    }
+
+    fn test_character() -> Character {
+        Character {
+            max_hp: 10,
+            current_hp: 10,
+            max_mp: 10,
+            current_mp: 10,
+            strength: 10,
+            speed: 10,
+            class: Class::player_by_name("mage").unwrap().clone(),
+            ..Character::default()
+        }
+    }
 }

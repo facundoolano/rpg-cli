@@ -368,4 +368,83 @@ mod tests {
         assert_eq!(0, game.inventory().len());
         assert!(game.use_item("potion").is_err());
     }
+
+    #[test]
+    fn test_ring_equip() {
+        let mut game = Game::new();
+
+        assert!(game.player.equip.left_ring.is_none());
+        assert!(game.player.equip.right_ring.is_none());
+
+        game.add_item("void-rng", Box::new(Ring::Void));
+        game.add_item("void-rng", Box::new(Ring::Void));
+        game.add_item("void-rng", Box::new(Ring::Void));
+        assert_eq!(3, *game.inventory().get("void-rng").unwrap());
+
+        game.use_item("void-rng").unwrap();
+        assert_eq!(2, *game.inventory().get("void-rng").unwrap());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert!(game.player.equip.right_ring.is_none());
+
+        game.use_item("void-rng").unwrap();
+        assert_eq!(1, *game.inventory().get("void-rng").unwrap());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
+
+        game.use_item("void-rng").unwrap();
+        assert_eq!(1, *game.inventory().get("void-rng").unwrap());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
+
+        game.add_item("spd-rng", Box::new(Ring::Speed));
+        game.use_item("spd-rng").unwrap();
+        assert_eq!(2, *game.inventory().get("void-rng").unwrap());
+        assert_eq!(Some(Ring::Speed), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
+    }
+
+    #[test]
+    fn test_ring_unequip() {
+        let mut game = Game::new();
+
+        game.add_item("void-rng", Box::new(Ring::Void));
+        game.add_item("hp-rng", Box::new(Ring::HP));
+        game.use_item("void-rng").unwrap();
+        assert!(game.inventory().get("void-rng").is_none());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+
+        game.use_item("void-rng").unwrap();
+        assert!(game.inventory().get("void-rng").is_some());
+        assert!(game.player.equip.left_ring.is_none());
+
+        let base_hp = game.player.max_hp();
+        game.use_item("void-rng").unwrap();
+        game.use_item("hp-rng").unwrap();
+        assert!(game.inventory().get("void-rng").is_none());
+        assert!(game.inventory().get("hp-rng").is_none());
+        assert_eq!(Some(Ring::HP), game.player.equip.left_ring);
+        assert_eq!(Some(Ring::Void), game.player.equip.right_ring);
+        assert!(game.player.max_hp() > base_hp);
+
+        game.use_item("hp-rng").unwrap();
+        assert!(game.inventory().get("hp-rng").is_some());
+        assert_eq!(Some(Ring::Void), game.player.equip.left_ring);
+        assert!(game.player.equip.right_ring.is_none());
+        assert_eq!(base_hp, game.player.max_hp());
+    }
+
+    #[test]
+    fn test_run_ring() {
+        let mut game = Game::new();
+        assert!(game.maybe_spawn_enemy().is_some());
+
+        game.player.equip_ring(Ring::Evade);
+        assert!(game.maybe_spawn_enemy().is_none());
+
+        game.player.equip_ring(Ring::Void);
+        assert!(game.maybe_spawn_enemy().is_none());
+
+        game.player.equip_ring(Ring::Void);
+        assert!(game.maybe_spawn_enemy().is_some());
+    }
 }
