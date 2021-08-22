@@ -421,35 +421,6 @@ mod tests {
     use super::*;
     use class::Stat;
 
-    fn new_char() -> Character {
-        Character::new(
-            Class {
-                name: "test".to_string(),
-                category: class::Category::Player,
-                hp: Stat(25, 7),
-                mp: None,
-                strength: Stat(10, 3),
-                speed: Stat(10, 2),
-                inflicts: None,
-            },
-            1,
-        )
-    }
-
-    // FIXME rename or merge with the helper above
-    fn test_character() -> Character {
-        Character {
-            max_hp: 10,
-            current_hp: 10,
-            max_mp: 10,
-            current_mp: 10,
-            strength: 10,
-            speed: 10,
-            class: Class::player_by_name("mage").unwrap().clone(),
-            ..Character::default()
-        }
-    }
-
     #[test]
     fn test_new() {
         let hero = new_char();
@@ -789,7 +760,7 @@ mod tests {
 
     #[test]
     fn test_hp_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(10, char.current_hp);
         assert_eq!(10, char.max_hp());
 
@@ -824,7 +795,7 @@ mod tests {
 
     #[test]
     fn test_mp_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(10, char.current_mp);
         assert_eq!(10, char.max_mp());
 
@@ -859,7 +830,7 @@ mod tests {
 
     #[test]
     fn test_attack_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         char.class.mp = None;
         assert_eq!(10, char.physical_attack());
 
@@ -869,7 +840,7 @@ mod tests {
 
     #[test]
     fn test_deffense_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(0, char.deffense());
 
         char.equip_ring(Ring::Deffense);
@@ -878,7 +849,7 @@ mod tests {
 
     #[test]
     fn test_magic_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(30, char.magic_attack());
 
         char.equip_ring(Ring::Magic);
@@ -887,7 +858,7 @@ mod tests {
 
     #[test]
     fn test_speed_ring() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(10, char.speed());
 
         char.equip_ring(Ring::Speed);
@@ -896,7 +867,7 @@ mod tests {
 
     #[test]
     fn modify_stat() {
-        let mut char = test_character();
+        let mut char = new_plain_stats_char();
         assert_eq!(10, char.modify_stat(10, Ring::HP));
         char.left_ring = Some(Ring::Void);
         char.right_ring = Some(Ring::Void);
@@ -908,4 +879,35 @@ mod tests {
         char.right_ring = Some(Ring::HP);
         assert_eq!(20, char.modify_stat(10, Ring::HP));
     }
+
+    // HELPERS
+
+    fn new_char() -> Character {
+        Character::new(
+            Class {
+                name: "test".to_string(),
+                category: class::Category::Player,
+                hp: Stat(25, 7),
+                mp: None,
+                strength: Stat(10, 3),
+                speed: Stat(10, 2),
+                inflicts: None,
+            },
+            1,
+        )
+    }
+
+    fn new_plain_stats_char() -> Character {
+        Character {
+            max_hp: 10,
+            current_hp: 10,
+            max_mp: 10,
+            current_mp: 10,
+            strength: 10,
+            speed: 10,
+            class: Class::player_by_name("mage").unwrap().clone(),
+            ..Character::default()
+        }
+    }
+
 }
