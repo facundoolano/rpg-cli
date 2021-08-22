@@ -71,9 +71,20 @@ impl Chest {
 
     /// Remove the gold, items and equipment from a hero and return them as a new chest.
     pub fn drop(game: &mut game::Game) -> Self {
-        let equip = std::mem::take(&mut game.player.equip);
-        let items = game.inventory.drain().collect();
+        let mut items: HashMap<String, Vec<Box<dyn Item>>> = game.inventory.drain().collect();
+        let mut equip = std::mem::take(&mut game.player.equip);
+
+        // equipped rings should be dropped as items
+        if let Some(ring) = equip.left_ring.take() {
+            let key = ring.to_string();
+            items.insert(key, vec![Box::new(ring)]);
+        }
+        if let Some(ring) = equip.right_ring.take() {
+            let key = ring.to_string();
+            items.insert(key, vec![Box::new(ring)]);
+        }
         let gold = game.gold;
+
         game.gold = 0;
 
         Self { items, equip, gold }
@@ -324,5 +335,23 @@ mod tests {
 
         assert!(game.ring_pool.is_empty());
         assert!(random_ring(&mut game).is_none());
+    }
+
+    #[test]
+    fn test_drop_equipped_rings() {
+        let mut game = game::Game::new();
+        game.add_item("potion", Box::new(Potion::new(1)));
+        game.player.equip.left_ring = Some(ring::Ring::Speed);
+        game.player.equip.right_ring = Some(ring::Ring::Magic);
+
+        let mut chest = Chest::drop(&mut game);
+        assert!(game.player.equip.left_ring.is_none());
+        assert!(game.player.equip.right_ring.is_none());
+        assert!(chest.items.get("spd-rng").is_some());
+        assert!(chest.items.get("mag-rng").is_some());
+
+        chest.pick_up(&mut game);
+        assert!(game.inventory.contains_key("spd-rng"));
+        assert!(game.inventory.contains_key("mag-rng"));
     }
 }
