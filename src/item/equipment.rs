@@ -1,32 +1,7 @@
 use core::fmt;
 
-use super::ring::Ring;
 use crate::character::class::Class;
 use serde::{Deserialize, Serialize};
-
-/// Packages together different equipment pieces that can be worn by characters
-/// or found in chests.
-/// Provides a unified interface for stat contributions to the base stats of a
-/// characters, e.g. the increased attack contributed by a sword and the
-/// deffense contributed by a shield.
-#[derive(Serialize, Deserialize, Default)]
-pub struct Equipment {
-    pub sword: Option<Weapon>,
-    pub shield: Option<Weapon>,
-    pub left_ring: Option<Ring>,
-    pub right_ring: Option<Ring>,
-}
-
-impl Equipment {
-    pub fn new() -> Self {
-        Self {
-            sword: None,
-            shield: None,
-            left_ring: None,
-            right_ring: None,
-        }
-    }
-}
 
 /// Equipment piece with a strength contribution based on
 /// a level. Used to generically represent swords and shields.

@@ -1,5 +1,5 @@
 use crate::game;
-use crate::item::equipment::{Equipment, Weapon};
+use crate::item::equipment::Weapon;
 use crate::item::ring;
 use crate::item::stone;
 use crate::item::{Escape, Ether, Item, Potion, Remedy};
@@ -15,7 +15,8 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize)]
 pub struct Chest {
     items: HashMap<String, Vec<Box<dyn Item>>>,
-    equip: Equipment,
+    sword: Option<Weapon>,
+    shield: Option<Weapon>,
     gold: i32,
 }
 
@@ -38,7 +39,9 @@ impl Chest {
         }
 
         if equipment_chest {
-            chest.equip = random_equipment(game.player.rounded_level());
+            let (sword, shield) = random_equipment(game.player.rounded_level());
+            chest.sword = sword;
+            chest.shield = shield;
         }
 
         if item_chest {
@@ -90,12 +93,8 @@ impl Chest {
 
         Self {
             items,
-            equip: Equipment {
-                sword,
-                shield,
-                left_ring: None,
-                right_ring: None,
-            },
+            sword,
+            shield,
             gold,
         }
     }
@@ -105,10 +104,10 @@ impl Chest {
         let mut to_log = Vec::new();
 
         // the equipment is picked up only if it's better than the current one
-        if maybe_upgrade(&mut game.player.sword, &mut self.equip.sword) {
+        if maybe_upgrade(&mut game.player.sword, &mut self.sword) {
             to_log.push(game.player.sword.as_ref().unwrap().to_string());
         }
-        if maybe_upgrade(&mut game.player.shield, &mut self.equip.shield) {
+        if maybe_upgrade(&mut game.player.shield, &mut self.shield) {
             to_log.push(game.player.sword.as_ref().unwrap().to_string());
         }
 
@@ -129,8 +128,8 @@ impl Chest {
     /// Add the elements of `other` to this chest
     pub fn extend(&mut self, mut other: Self) {
         // keep the best of each equipment
-        maybe_upgrade(&mut self.equip.sword, &mut other.equip.sword);
-        maybe_upgrade(&mut self.equip.shield, &mut other.equip.shield);
+        maybe_upgrade(&mut self.sword, &mut other.sword);
+        maybe_upgrade(&mut self.shield, &mut other.shield);
 
         // merge both item maps
         for (key, other_items) in other.items.drain() {
@@ -152,10 +151,10 @@ fn maybe_upgrade(current: &mut Option<Weapon>, other: &mut Option<Weapon>) -> bo
     false
 }
 
-fn random_equipment(level: i32) -> Equipment {
+fn random_equipment(level: i32) -> (Option<Weapon>, Option<Weapon>) {
     let mut rng = rand::thread_rng();
 
-    let (sword, shield) = vec![
+    vec![
         (100, (Some(Weapon::Sword(level)), None)),
         (80, (None, Some(Weapon::Shield(level)))),
         (30, (Some(Weapon::Sword(level + 5)), None)),
@@ -165,14 +164,7 @@ fn random_equipment(level: i32) -> Equipment {
     .choose_weighted_mut(&mut rng, |c| c.0)
     .unwrap()
     .to_owned()
-    .1;
-
-    Equipment {
-        sword,
-        shield,
-        left_ring: None,
-        right_ring: None,
-    }
+    .1
 }
 
 type WeightedItems = (i32, &'static str, Vec<Box<dyn Item>>);
@@ -215,7 +207,8 @@ impl Default for Chest {
     fn default() -> Self {
         Self {
             gold: 0,
-            equip: Equipment::new(),
+            sword: None,
+            shield: None,
             items: HashMap::new(),
         }
     }
