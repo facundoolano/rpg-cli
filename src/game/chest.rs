@@ -1,5 +1,5 @@
 use crate::game;
-use crate::item::equipment::Weapon;
+use crate::item::equipment::Equipment;
 use crate::item::ring;
 use crate::item::stone;
 use crate::item::{Escape, Ether, Item, Potion, Remedy};
@@ -15,8 +15,8 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize)]
 pub struct Chest {
     items: HashMap<String, Vec<Box<dyn Item>>>,
-    sword: Option<Weapon>,
-    shield: Option<Weapon>,
+    sword: Option<Equipment>,
+    shield: Option<Equipment>,
     gold: i32,
 }
 
@@ -141,7 +141,7 @@ impl Chest {
     }
 }
 
-fn maybe_upgrade(current: &mut Option<Weapon>, other: &mut Option<Weapon>) -> bool {
+fn maybe_upgrade(current: &mut Option<Equipment>, other: &mut Option<Equipment>) -> bool {
     if let Some(shield) = other.take() {
         if shield.is_upgrade_from(current) {
             current.replace(shield);
@@ -151,15 +151,15 @@ fn maybe_upgrade(current: &mut Option<Weapon>, other: &mut Option<Weapon>) -> bo
     false
 }
 
-fn random_equipment(level: i32) -> (Option<Weapon>, Option<Weapon>) {
+fn random_equipment(level: i32) -> (Option<Equipment>, Option<Equipment>) {
     let mut rng = rand::thread_rng();
 
     vec![
-        (100, (Some(Weapon::Sword(level)), None)),
-        (80, (None, Some(Weapon::Shield(level)))),
-        (30, (Some(Weapon::Sword(level + 5)), None)),
-        (20, (None, Some(Weapon::Shield(level + 5)))),
-        (1, (Some(Weapon::Sword(100)), None)),
+        (100, (Some(Equipment::Sword(level)), None)),
+        (80, (None, Some(Equipment::Shield(level)))),
+        (30, (Some(Equipment::Sword(level + 5)), None)),
+        (20, (None, Some(Equipment::Shield(level + 5)))),
+        (1, (Some(Equipment::Sword(100)), None)),
     ]
     .choose_weighted_mut(&mut rng, |c| c.0)
     .unwrap()
@@ -217,7 +217,7 @@ impl Default for Chest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::item::equipment::Weapon;
+    use crate::item::equipment::Equipment;
     use crate::item::{Escape, Potion};
 
     #[test]
@@ -244,8 +244,8 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.sword = Some(Weapon::Sword(1));
-        game.player.shield = Some(Weapon::Shield(1));
+        game.player.sword = Some(Equipment::Sword(1));
+        game.player.shield = Some(Equipment::Shield(1));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
@@ -269,8 +269,8 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.sword = Some(Weapon::Sword(1));
-        game.player.shield = Some(Weapon::Shield(10));
+        game.player.sword = Some(Equipment::Sword(1));
+        game.player.shield = Some(Equipment::Shield(10));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
@@ -278,8 +278,8 @@ mod tests {
         // set some defaults for the new game before picking up
         let mut game = game::Game::new();
         game.add_item("potion", Box::new(Potion::new(1)));
-        game.player.sword = Some(Weapon::Sword(5));
-        game.player.shield = Some(Weapon::Shield(5));
+        game.player.sword = Some(Equipment::Sword(5));
+        game.player.shield = Some(Equipment::Shield(5));
         game.gold = 50;
 
         tomb.pick_up(&mut game);
@@ -302,8 +302,8 @@ mod tests {
         items.insert("potion".to_string(), potions);
         let mut chest1 = Chest {
             items,
-            sword: Some(Weapon::Sword(1)),
-            shield: Some(Weapon::Shield(10)),
+            sword: Some(Equipment::Sword(1)),
+            shield: Some(Equipment::Shield(10)),
             gold: 100,
         };
 
@@ -314,8 +314,8 @@ mod tests {
         items.insert("escape".to_string(), escapes);
         let chest2 = Chest {
             items,
-            sword: Some(Weapon::Sword(10)),
-            shield: Some(Weapon::Shield(1)),
+            sword: Some(Equipment::Sword(10)),
+            shield: Some(Equipment::Shield(1)),
             gold: 100,
         };
 

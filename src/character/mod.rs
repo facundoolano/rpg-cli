@@ -24,8 +24,8 @@ pub struct Character {
     strength: i32,
     speed: i32,
 
-    pub sword: Option<equipment::Weapon>,
-    pub shield: Option<equipment::Weapon>,
+    pub sword: Option<equipment::Equipment>,
+    pub shield: Option<equipment::Equipment>,
     pub left_ring: Option<Ring>,
     pub right_ring: Option<Ring>,
 
@@ -615,7 +615,7 @@ mod tests {
 
         while hero.level < 500 {
             hero.add_experience(hero.xp_for_next());
-            hero.sword = Some(equipment::Weapon::Sword(hero.level));
+            hero.sword = Some(equipment::Equipment::Sword(hero.level));
             let turns_unarmed = hero.max_hp / hero.strength;
             let turns_armed = hero.max_hp / hero.physical_attack();
             println!(
@@ -670,7 +670,7 @@ mod tests {
     fn test_class_change() {
         let mut player = Character::player();
         player.xp = 20;
-        player.sword = Some(equipment::Weapon::Sword(1));
+        player.sword = Some(equipment::Equipment::Sword(1));
 
         let warrior_class = Class::player_by_name("warrior").unwrap();
         let thief_class = Class::player_by_name("thief").unwrap();
@@ -758,7 +758,7 @@ mod tests {
         assert_eq!((base_strength, 0), hero.damage(&foe));
 
         // warrior + sword, increased damage + mp = 0
-        let sword = equipment::Weapon::Sword(hero.level);
+        let sword = equipment::Equipment::Sword(hero.level);
         let sword_strength = sword.strength();
         hero.sword = Some(sword);
         assert_eq!((base_strength + sword_strength, 0), hero.damage(&foe));
@@ -778,7 +778,7 @@ mod tests {
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // with sword, it affects the physical attacks
-        mage.sword = Some(equipment::Weapon::Sword(hero.level));
+        mage.sword = Some(equipment::Equipment::Sword(hero.level));
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // mage without enough mp, 0 mp, /3

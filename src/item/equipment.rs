@@ -3,20 +3,19 @@ use core::fmt;
 use crate::character::class::Class;
 use serde::{Deserialize, Serialize};
 
-// FIXME rename module or struct to match
 /// Equipment piece with a strength contribution based on
 /// a level. Used to generically represent swords and shields.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum Weapon {
+pub enum Equipment {
     Sword(i32),
     Shield(i32),
 }
 
-impl Weapon {
+impl Equipment {
     pub fn level(&self) -> i32 {
         match self {
-            Weapon::Sword(level) => *level,
-            Weapon::Shield(level) => *level,
+            Equipment::Sword(level) => *level,
+            Equipment::Shield(level) => *level,
         }
     }
 
@@ -40,11 +39,11 @@ impl Weapon {
     }
 }
 
-impl fmt::Display for Weapon {
+impl fmt::Display for Equipment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
-            Weapon::Sword(_) => "sword",
-            Weapon::Shield(_) => "shield",
+            Equipment::Sword(_) => "sword",
+            Equipment::Shield(_) => "shield",
         };
         write!(f, "{}[{}]", name, self.level())
     }
