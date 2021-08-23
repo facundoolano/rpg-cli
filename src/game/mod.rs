@@ -5,6 +5,7 @@ use crate::character::Character;
 use crate::event::Event;
 use crate::item::ring::Ring;
 use crate::item::Item;
+use crate::item::key::Key;
 use crate::location::Location;
 use crate::quest::QuestList;
 use crate::randomizer::random;
@@ -24,7 +25,7 @@ pub struct Game {
     pub location: Location,
     pub gold: i32,
     pub quests: QuestList,
-    pub inventory: HashMap<String, Vec<Box<dyn Item>>>,
+    pub inventory: HashMap<Key, Vec<Box<dyn Item>>>,
 
     /// Chest left at the location where the player dies.
     pub tombstones: HashMap<String, Chest>,
@@ -158,22 +159,21 @@ impl Game {
 
     // TODO consider introducing an item "bag" wrapper over these types of hashmaps
     // (same is used in chests and in tests)
-    pub fn add_item(&mut self, name: &str, item: Box<dyn Item>) {
+    pub fn add_item(&mut self, item: Box<dyn Item>) {
         let entry = self
             .inventory
-            .entry(name.to_string())
+            .entry(item.key())
             .or_insert_with(Vec::new);
         entry.push(item);
     }
 
-    pub fn use_item(&mut self, name: &str) -> Result<()> {
-        let name = name.to_string();
+    pub fn use_item(&mut self, name: Key) -> Result<()> {
         // get all items of that type and use one
         // if there are no remaining, drop the type from the inventory
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(mut item) = items.pop() {
                 item.apply(self);
-                Event::emit(self, Event::ItemUsed { item: name.clone() });
+                Event::emit(self, Event::ItemUsed { item: name.to_string() });
             }
 
             if !items.is_empty() {
@@ -186,18 +186,18 @@ impl Game {
             // equipped, that is, while not being in the inventory.
             // The effect of using them is unequipping them.
             // This bit of complexity enables a cleaner command api.
-            self.add_item(ring.key(), Box::new(ring));
+            self.add_item(Box::new(ring));
             Ok(())
         } else {
             bail!("Item not found.")
         }
     }
 
-    pub fn inventory(&self) -> HashMap<&str, usize> {
+    pub fn inventory(&self) -> HashMap<&Key, usize> {
         self.inventory
             .iter()
-            .map(|(k, v)| (k.as_ref(), v.len()))
-            .collect::<HashMap<&str, usize>>()
+            .map(|(k, v)| (k, v.len()))
+            .collect::<HashMap<&Key, usize>>()
     }
 
     pub fn change_class(&mut self, name: &str) -> Result<()> {

@@ -1,4 +1,6 @@
 use crate::item::equipment;
+use crate::item::Item;
+use crate::item::key::Key;
 use crate::item::ring::Ring;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
@@ -363,15 +365,15 @@ impl Character {
 
     /// Remove the ring by the given name from the equipment (if any),
     /// unapplying its side-effects.
-    pub fn unequip_ring(&mut self, name: &str) -> Option<Ring> {
+    pub fn unequip_ring(&mut self, name: &Key) -> Option<Ring> {
         match (self.left_ring.clone(), self.right_ring.clone()) {
-            (Some(ring), _) if ring.key() == name => {
+            (Some(ring), _) if ring.key() == *name => {
                 let removed = self.left_ring.take();
                 self.unequip_ring_side_effect(&removed);
                 self.left_ring = self.right_ring.take();
                 removed
             }
-            (_, Some(ring)) if ring.key() == name => {
+            (_, Some(ring)) if ring.key() == *name => {
                 let removed = self.right_ring.take();
                 self.unequip_ring_side_effect(&removed);
                 removed

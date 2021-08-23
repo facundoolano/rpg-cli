@@ -40,20 +40,6 @@ impl Ring {
         Ring::iter().collect()
     }
 
-    // FIXME consider this key to be a standard item thing
-    pub fn key(&self) -> &'static str {
-        match self {
-            Ring::Void => "void-rng",
-            Ring::Attack => "att-rng",
-            Ring::Deffense => "def-rng",
-            Ring::Speed => "spd-rng",
-            Ring::Magic => "mag-rng",
-            Ring::MP => "mp-rng",
-            Ring::HP => "hp-rng",
-            Ring::Evade => "evade-rng",
-        }
-    }
-
     /// For stat modifying stats, return the factor that should be
     /// applied to the base character stat.
     pub fn factor(&self) -> f64 {
@@ -81,7 +67,7 @@ impl Item for Ring {
     /// wearing two rings, move the second one back to the inventory.
     fn apply(&mut self, game: &mut game::Game) {
         if let Some(removed) = game.player.equip_ring(self.clone()) {
-            game.add_item(&removed.to_string(), Box::new(removed));
+            game.add_item(Box::new(removed));
         }
     }
 

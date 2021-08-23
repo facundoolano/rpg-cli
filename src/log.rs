@@ -2,7 +2,6 @@ use crate::character::{Character, StatusEffect};
 use crate::event::Event;
 use crate::game::battle::AttackType;
 use crate::game::Game;
-use crate::item::shop;
 use crate::location::Location;
 use colored::*;
 use once_cell::sync::OnceCell;
@@ -125,10 +124,9 @@ pub fn status(game: &Game) {
     }
 }
 
-pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
-    for item in items {
-        let display = format!("{}", item);
-        println!("    {:<10}  {}", display, format_gold(item.cost()));
+pub fn shop_list(game: &Game, items: Vec<(i32, String)>) {
+    for (cost, item) in items {
+        println!("    {:<10}  {}", item, format_gold(cost));
     }
 
     println!("\n    funds: {}", format_gold(game.gold));

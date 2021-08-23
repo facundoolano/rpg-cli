@@ -1,4 +1,5 @@
 use super::Game;
+use crate::item::key::Key;
 use crate::character::{Character, Dead, StatusEffect};
 use crate::event::Event;
 use crate::randomizer::Randomizer;
@@ -128,7 +129,7 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
         return false;
     }
 
-    game.use_item("potion").is_ok()
+    game.use_item(Key::Potion).is_ok()
 }
 
 fn autoether(game: &mut Game, enemy: &Character) -> bool {
@@ -143,7 +144,7 @@ fn autoether(game: &mut Game, enemy: &Character) -> bool {
         return false;
     }
 
-    game.use_item("ether").is_ok()
+    game.use_item(Key::Ether).is_ok()
 }
 
 #[cfg(test)]

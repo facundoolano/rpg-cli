@@ -1,6 +1,7 @@
 use crate::game;
 use crate::item::equipment::Equipment;
 use crate::item::ring;
+use crate::item::key::Key;
 use crate::item::stone;
 use crate::item::{Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
@@ -14,7 +15,7 @@ use std::collections::HashMap;
 /// by the hero when they die.
 #[derive(Serialize, Deserialize)]
 pub struct Chest {
-    items: HashMap<String, Vec<Box<dyn Item>>>,
+    items: HashMap<Key, Vec<Box<dyn Item>>>,
     sword: Option<Equipment>,
     shield: Option<Equipment>,
     gold: i32,
@@ -44,14 +45,15 @@ impl Chest {
             chest.shield = shield;
         }
 
+        // TODO maybe do a for of this for the multipotion scenario
         if item_chest {
-            chest.items = random_items(game.player.rounded_level());
+            let item = random_items(game.player.rounded_level());
+            chest.items.insert(item.key(), vec![item]);
         }
 
         if ring_chest {
             if let Some(ring) = random_ring(game) {
-                let key = ring.to_string();
-                chest.items.insert(key, vec![Box::new(ring)]);
+                chest.items.insert(ring.key(), vec![Box::new(ring)]);
             }
         }
 
@@ -74,18 +76,17 @@ impl Chest {
 
     /// Remove the gold, items and equipment from a hero and return them as a new chest.
     pub fn drop(game: &mut game::Game) -> Self {
-        let mut items: HashMap<String, Vec<Box<dyn Item>>> = game.inventory.drain().collect();
+        // FIXME key is useless here
+        let mut items: HashMap<Key, Vec<Box<dyn Item>>> = game.inventory.drain().collect();
         let sword = game.player.sword.take();
         let shield = game.player.shield.take();
 
         // equipped rings should be dropped as items
         if let Some(ring) = game.player.left_ring.take() {
-            let key = ring.to_string();
-            items.insert(key, vec![Box::new(ring)]);
+            items.insert(ring.key(), vec![Box::new(ring)]);
         }
         if let Some(ring) = game.player.right_ring.take() {
-            let key = ring.to_string();
-            items.insert(key, vec![Box::new(ring)]);
+            items.insert(ring.key(), vec![Box::new(ring)]);
         }
         let gold = game.gold;
 
@@ -117,7 +118,7 @@ impl Chest {
             to_log.push(format!("{}x{}", name, items.len()));
 
             for item in items {
-                game.add_item(&name, item);
+                game.add_item(item);
             }
         }
 
@@ -169,31 +170,24 @@ fn random_equipment(level: i32) -> (Option<Equipment>, Option<Equipment>) {
     .1
 }
 
-type WeightedItems = (i32, &'static str, Vec<Box<dyn Item>>);
-
-fn random_items(level: i32) -> HashMap<String, Vec<Box<dyn Item>>> {
-    let potion = || Box::new(Potion::new(level));
-
-    let mut choices: Vec<WeightedItems> = vec![
-        (100, "potion", vec![potion()]),
-        (30, "potion", vec![potion(), potion()]),
-        (10, "potion", vec![potion(), potion(), potion()]),
-        (10, "remedy", vec![Box::new(Remedy::new())]),
-        (10, "escape", vec![Box::new(Escape::new())]),
-        (50, "ether", vec![Box::new(Ether::new(level))]),
-        (10, "hp-stone", vec![Box::new(stone::Health)]),
-        (10, "mp-stone", vec![Box::new(stone::Magic)]),
-        (10, "str-stone", vec![Box::new(stone::Power)]),
-        (10, "spd-stone", vec![Box::new(stone::Speed)]),
-        (5, "lvl-stone", vec![Box::new(stone::Level)]),
+// FIXME document this crap
+fn random_items(level: i32) -> Box<dyn Item> {
+    let mut choices: Vec<(i32, Box<dyn Item>)> = vec![
+        (100,Box::new(Potion::new(level))),
+        (10,Box::new(Remedy::new())),
+        (10,Box::new(Escape::new())),
+        (50,Box::new(Ether::new(level))),
+        (10,Box::new(stone::Health)),
+        (10,Box::new(stone::Magic)),
+        (10,Box::new(stone::Power)),
+        (10,Box::new(stone::Speed)),
+        (5, Box::new(stone::Level)),
     ];
+    let weights: Vec<_> = choices.iter().map(|(w, _)| w).enumerate().collect();
 
     let mut rng = rand::thread_rng();
-    let (_, key, items) = choices.choose_weighted_mut(&mut rng, |c| c.0).unwrap();
-    let items = items.drain(..).collect();
-    let mut map = HashMap::new();
-    map.insert(key.to_string(), items);
-    map
+    let index = weights.choose_weighted(&mut rng, |c| c.1).unwrap().0;
+    choices.remove(index).1
 }
 
 fn random_ring(game: &mut game::Game) -> Option<ring::Ring> {
