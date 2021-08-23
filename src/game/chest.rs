@@ -1,7 +1,7 @@
 use crate::game;
 use crate::item::equipment::Equipment;
-use crate::item::ring;
 use crate::item::key::Key;
+use crate::item::ring;
 use crate::item::stone;
 use crate::item::{Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
@@ -173,14 +173,14 @@ fn random_equipment(level: i32) -> (Option<Equipment>, Option<Equipment>) {
 // FIXME document this crap
 fn random_items(level: i32) -> Box<dyn Item> {
     let mut choices: Vec<(i32, Box<dyn Item>)> = vec![
-        (100,Box::new(Potion::new(level))),
-        (10,Box::new(Remedy::new())),
-        (10,Box::new(Escape::new())),
-        (50,Box::new(Ether::new(level))),
-        (10,Box::new(stone::Health)),
-        (10,Box::new(stone::Magic)),
-        (10,Box::new(stone::Power)),
-        (10,Box::new(stone::Speed)),
+        (100, Box::new(Potion::new(level))),
+        (10, Box::new(Remedy::new())),
+        (10, Box::new(Escape::new())),
+        (50, Box::new(Ether::new(level))),
+        (10, Box::new(stone::Health)),
+        (10, Box::new(stone::Magic)),
+        (10, Box::new(stone::Power)),
+        (10, Box::new(stone::Speed)),
         (5, Box::new(stone::Level)),
     ];
     let weights: Vec<_> = choices.iter().map(|(w, _)| w).enumerate().collect();
@@ -238,8 +238,8 @@ mod tests {
     #[test]
     fn test_full_drop_pickup() {
         let mut game = game::Game::new();
-        game.add_item("potion", Box::new(Potion::new(1)));
-        game.add_item("potion", Box::new(Potion::new(1)));
+        game.add_item(Box::new(Potion::new(1)));
+        game.add_item(Box::new(Potion::new(1)));
         game.player.sword = Some(Equipment::Sword(1));
         game.player.shield = Some(Equipment::Shield(1));
         game.gold = 100;
@@ -249,7 +249,7 @@ mod tests {
         assert_eq!(100, tomb.gold);
         assert!(tomb.sword.is_some());
         assert!(tomb.shield.is_some());
-        assert_eq!(2, tomb.items.get("potion").unwrap().len());
+        assert_eq!(2, tomb.items.get(&Key::Potion).unwrap().len());
 
         let mut game = game::Game::new();
         tomb.pick_up(&mut game);
@@ -257,14 +257,14 @@ mod tests {
         assert_eq!(100, game.gold);
         assert!(game.player.sword.is_some());
         assert!(game.player.shield.is_some());
-        assert_eq!(2, *game.inventory().get("potion").unwrap());
+        assert_eq!(2, *game.inventory().get(&Key::Potion).unwrap());
     }
 
     #[test]
     fn test_pickup_extends() {
         let mut game = game::Game::new();
-        game.add_item("potion", Box::new(Potion::new(1)));
-        game.add_item("potion", Box::new(Potion::new(1)));
+        game.add_item(Box::new(Potion::new(1)));
+        game.add_item(Box::new(Potion::new(1)));
         game.player.sword = Some(Equipment::Sword(1));
         game.player.shield = Some(Equipment::Shield(10));
         game.gold = 100;
@@ -273,7 +273,7 @@ mod tests {
 
         // set some defaults for the new game before picking up
         let mut game = game::Game::new();
-        game.add_item("potion", Box::new(Potion::new(1)));
+        game.add_item(Box::new(Potion::new(1)));
         game.player.sword = Some(Equipment::Sword(5));
         game.player.shield = Some(Equipment::Shield(5));
         game.gold = 50;
@@ -288,14 +288,14 @@ mod tests {
         // the shield was downgrade, kept the current one
         assert_eq!(10, game.player.shield.as_ref().unwrap().level());
 
-        assert_eq!(3, *game.inventory().get("potion").unwrap());
+        assert_eq!(3, *game.inventory().get(&Key::Potion).unwrap());
     }
 
     #[test]
     fn test_merge() {
         let potions: Vec<Box<dyn Item>> = vec![Box::new(Potion::new(1)), Box::new(Potion::new(1))];
         let mut items = HashMap::new();
-        items.insert("potion".to_string(), potions);
+        items.insert(Key::Potion, potions);
         let mut chest1 = Chest {
             items,
             sword: Some(Equipment::Sword(1)),
@@ -306,8 +306,8 @@ mod tests {
         let potions: Vec<Box<dyn Item>> = vec![Box::new(Potion::new(1))];
         let escapes: Vec<Box<dyn Item>> = vec![Box::new(Escape::new())];
         let mut items = HashMap::new();
-        items.insert("potion".to_string(), potions);
-        items.insert("escape".to_string(), escapes);
+        items.insert(Key::Potion, potions);
+        items.insert(Key::Escape, escapes);
         let chest2 = Chest {
             items,
             sword: Some(Equipment::Sword(10)),
@@ -319,8 +319,8 @@ mod tests {
         assert_eq!(200, chest1.gold);
         assert_eq!(10, chest1.sword.as_ref().unwrap().level());
         assert_eq!(10, chest1.shield.as_ref().unwrap().level());
-        assert_eq!(3, chest1.items.get("potion").unwrap().len());
-        assert_eq!(1, chest1.items.get("escape").unwrap().len());
+        assert_eq!(3, chest1.items.get(&Key::Potion).unwrap().len());
+        assert_eq!(1, chest1.items.get(&Key::Escape).unwrap().len());
     }
 
     #[test]
@@ -341,18 +341,18 @@ mod tests {
     #[test]
     fn test_drop_equipped_rings() {
         let mut game = game::Game::new();
-        game.add_item("potion", Box::new(Potion::new(1)));
+        game.add_item(Box::new(Potion::new(1)));
         game.player.left_ring = Some(ring::Ring::Speed);
         game.player.right_ring = Some(ring::Ring::Magic);
 
         let mut chest = Chest::drop(&mut game);
         assert!(game.player.left_ring.is_none());
         assert!(game.player.right_ring.is_none());
-        assert!(chest.items.get("spd-rng").is_some());
-        assert!(chest.items.get("mag-rng").is_some());
+        assert!(chest.items.get(&Key::Ring(ring::Ring::Speed)).is_some());
+        assert!(chest.items.get(&Key::Ring(ring::Ring::Magic)).is_some());
 
         chest.pick_up(&mut game);
-        assert!(game.inventory.contains_key("spd-rng"));
-        assert!(game.inventory.contains_key("mag-rng"));
+        assert!(game.inventory.contains_key(&Key::Ring(ring::Ring::Speed)));
+        assert!(game.inventory.contains_key(&Key::Ring(ring::Ring::Magic)));
     }
 }

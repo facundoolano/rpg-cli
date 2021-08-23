@@ -1,7 +1,7 @@
 use crate::item::equipment;
-use crate::item::Item;
 use crate::item::key::Key;
 use crate::item::ring::Ring;
+use crate::item::Item;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -782,11 +782,11 @@ mod tests {
         assert_eq!(20, char.current_hp);
 
         // push out to unequip
-        char.unequip_ring("hp-rng");
+        char.unequip_ring(&Key::Ring(Ring::HP));
         assert_eq!(15, char.max_hp());
         assert_eq!(15, char.current_hp);
 
-        char.unequip_ring("hp-rng");
+        char.unequip_ring(&Key::Ring(Ring::HP));
         assert_eq!(10, char.max_hp());
         assert_eq!(10, char.current_hp);
 
@@ -797,7 +797,7 @@ mod tests {
         assert_eq!(15, char.max_hp());
         assert_eq!(12, char.current_hp);
 
-        char.unequip_ring("hp-rng");
+        char.unequip_ring(&Key::Ring(Ring::HP));
         assert_eq!(10, char.max_hp());
         assert_eq!(7, char.current_hp);
     }
@@ -817,11 +817,11 @@ mod tests {
         assert_eq!(20, char.current_mp);
 
         // push out to unequip
-        char.unequip_ring("mp-rng");
+        char.unequip_ring(&Key::Ring(Ring::MP));
         assert_eq!(15, char.max_mp());
         assert_eq!(15, char.current_mp);
 
-        char.unequip_ring("mp-rng");
+        char.unequip_ring(&Key::Ring(Ring::MP));
         assert_eq!(10, char.max_mp());
         assert_eq!(10, char.current_mp);
 
@@ -832,7 +832,7 @@ mod tests {
         assert_eq!(15, char.max_mp());
         assert_eq!(12, char.current_mp);
 
-        char.unequip_ring("mp-rng");
+        char.unequip_ring(&Key::Ring(Ring::MP));
         assert_eq!(10, char.max_mp());
         assert_eq!(7, char.current_mp);
     }

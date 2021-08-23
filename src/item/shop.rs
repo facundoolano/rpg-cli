@@ -1,12 +1,12 @@
 use std::{collections::HashMap, fmt::Display};
 
 use super::equipment::Equipment;
+use super::key::Key;
+use super::Item;
 use crate::character::Character;
 use crate::event::Event;
 use crate::game::Game;
-use super::key::Key;
 use crate::log;
-use super::Item;
 use anyhow::{bail, Result};
 
 /// Print the list of available items and their price.
@@ -15,7 +15,10 @@ pub fn list(game: &Game) -> Result<()> {
         bail!("Shop is only allowed at home.");
     }
 
-    let items = available_items(&game.player).iter().map(|s| (s.cost(), s.to_string())).collect();
+    let items = available_items(&game.player)
+        .iter()
+        .map(|s| (s.cost(), s.to_string()))
+        .collect();
     log::shop_list(game, items);
     Ok(())
 }
@@ -60,7 +63,7 @@ fn available_items(player: &Character) -> Vec<Box<dyn Shoppable>> {
     items.push(Box::new(potion));
 
     let ether = super::Ether::new(level);
-    items.push( Box::new(ether));
+    items.push(Box::new(ether));
 
     let remedy = super::Remedy::new();
     items.push(Box::new(remedy));

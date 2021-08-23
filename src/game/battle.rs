@@ -1,7 +1,7 @@
 use super::Game;
-use crate::item::key::Key;
 use crate::character::{Character, Dead, StatusEffect};
 use crate::event::Event;
+use crate::item::key::Key;
 use crate::randomizer::Randomizer;
 
 /// Outcome of an attack attempt.

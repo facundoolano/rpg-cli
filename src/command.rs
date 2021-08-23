@@ -171,8 +171,6 @@ fn use_item(game: &mut Game, items: &[String]) -> Result<()> {
     Ok(())
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
