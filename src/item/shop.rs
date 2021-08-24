@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 
 use super::equipment::Equipment;
 use super::key::Key;
@@ -24,18 +24,17 @@ pub fn list(game: &Game) -> Result<()> {
 }
 
 /// Buy an item and add it to the game.
-pub fn buy(game: &mut Game, item: Key) -> Result<()> {
+pub fn buy(game: &mut Game, key: Key) -> Result<()> {
     if !game.location.is_home() {
         bail!("Shop is only allowed at home.");
     }
 
     let player = &mut game.player;
-    let mut items = available_items(player)
+    let item = available_items(player)
         .into_iter()
-        .map(|s| (s.to_key(), s))
-        .collect::<HashMap<Key, Box<dyn Shoppable>>>();
+        .find(|s| s.to_key() == key);
 
-    if let Some(item) = items.remove(&item) {
+    if let Some(item) = item {
         item.buy(game)?;
         Ok(())
     } else {
@@ -43,7 +42,6 @@ pub fn buy(game: &mut Game, item: Key) -> Result<()> {
     }
 }
 
-// FIXME remove superfluous maps
 /// Build a list of items currently available at the shop
 fn available_items(player: &Character) -> Vec<Box<dyn Shoppable>> {
     let mut items = Vec::<Box<dyn Shoppable>>::new();
