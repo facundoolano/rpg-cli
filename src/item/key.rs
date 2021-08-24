@@ -3,7 +3,7 @@ use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum Key {
     Potion,
     Escape,

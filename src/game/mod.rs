@@ -115,7 +115,7 @@ impl Game {
             Event::emit(
                 self,
                 Event::ChestFound {
-                    items: &items,
+                    items,
                     gold,
                     is_tombstone,
                 },
@@ -277,8 +277,8 @@ impl Game {
                 self.gold += gold;
                 let levels_up = self.player.add_experience(xp);
 
-                let reward_items =
-                    Chest::battle_loot(self).map_or(Vec::new(), |mut chest| chest.pick_up(self).0);
+                let reward_items = Chest::battle_loot(self)
+                    .map_or(HashMap::new(), |mut chest| chest.pick_up(self).0);
 
                 Event::emit(
                     self,
@@ -288,7 +288,7 @@ impl Game {
                         xp,
                         levels_up,
                         gold,
-                        items: &reward_items,
+                        items: reward_items,
                     },
                 );
 

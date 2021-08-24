@@ -1,9 +1,11 @@
 use crate::character::Character;
 use crate::game;
 use crate::game::battle;
+use crate::item::key::Key;
 use crate::location::Location;
 use crate::log;
 use crate::quest;
+use std::collections::HashMap;
 
 /// This module implements basic event management. It's static: the events are
 /// not subscribed at runtime, but it serves the purpose of decoupling logging
@@ -42,7 +44,7 @@ pub enum Event<'a> {
         xp: i32,
         levels_up: i32,
         gold: i32,
-        items: &'a [String],
+        items: HashMap<Key, i32>,
     },
     BattleLost,
     LevelUp {
@@ -67,7 +69,7 @@ pub enum Event<'a> {
         item: String,
     },
     ChestFound {
-        items: &'a [String],
+        items: HashMap<Key, i32>,
         gold: i32,
         is_tombstone: bool,
     },
