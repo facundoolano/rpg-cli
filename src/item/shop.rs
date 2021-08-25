@@ -47,12 +47,12 @@ fn available_items(player: &Character) -> Vec<Box<dyn Shoppable>> {
     let mut items = Vec::<Box<dyn Shoppable>>::new();
     let level = player.rounded_level();
 
-    let sword = Equipment::Sword(level);
+    let sword = Equipment::sword(level);
     if sword.is_upgrade_from(&player.sword) {
         items.push(Box::new(sword));
     }
 
-    let shield = Equipment::Shield(level);
+    let shield = Equipment::shield(level);
     if shield.is_upgrade_from(&player.shield) {
         items.push(Box::new(shield));
     }
@@ -101,17 +101,15 @@ impl Shoppable for Equipment {
     }
 
     fn add_to(&self, game: &mut Game) {
-        match self {
-            Equipment::Sword(_) => game.player.sword = Some(self.clone()),
-            Equipment::Shield(_) => game.player.shield = Some(self.clone()),
+        match self.key() {
+            Key::Sword => game.player.sword = Some(self.clone()),
+            Key::Shield => game.player.shield = Some(self.clone()),
+            _ => {}
         }
     }
 
     fn to_key(&self) -> Key {
-        match self {
-            Equipment::Sword(_) => Key::Sword,
-            Equipment::Shield(_) => Key::Shield,
-        }
+        self.key()
     }
 }
 

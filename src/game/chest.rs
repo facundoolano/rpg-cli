@@ -153,11 +153,11 @@ fn random_equipment(level: i32) -> (Option<Equipment>, Option<Equipment>) {
     let mut rng = rand::thread_rng();
 
     vec![
-        (100, (Some(Equipment::Sword(level)), None)),
-        (80, (None, Some(Equipment::Shield(level)))),
-        (30, (Some(Equipment::Sword(level + 5)), None)),
-        (20, (None, Some(Equipment::Shield(level + 5)))),
-        (1, (Some(Equipment::Sword(100)), None)),
+        (100, (Some(Equipment::sword(level)), None)),
+        (80, (None, Some(Equipment::shield(level)))),
+        (30, (Some(Equipment::sword(level + 5)), None)),
+        (20, (None, Some(Equipment::shield(level + 5)))),
+        (1, (Some(Equipment::sword(100)), None)),
     ]
     .choose_weighted_mut(&mut rng, |c| c.0)
     .unwrap()
@@ -235,8 +235,8 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item(Box::new(Potion::new(1)));
         game.add_item(Box::new(Potion::new(1)));
-        game.player.sword = Some(Equipment::Sword(1));
-        game.player.shield = Some(Equipment::Shield(1));
+        game.player.sword = Some(Equipment::sword(1));
+        game.player.shield = Some(Equipment::shield(1));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
@@ -260,8 +260,8 @@ mod tests {
         let mut game = game::Game::new();
         game.add_item(Box::new(Potion::new(1)));
         game.add_item(Box::new(Potion::new(1)));
-        game.player.sword = Some(Equipment::Sword(1));
-        game.player.shield = Some(Equipment::Shield(10));
+        game.player.sword = Some(Equipment::sword(1));
+        game.player.shield = Some(Equipment::shield(10));
         game.gold = 100;
 
         let mut tomb = Chest::drop(&mut game);
@@ -269,8 +269,8 @@ mod tests {
         // set some defaults for the new game before picking up
         let mut game = game::Game::new();
         game.add_item(Box::new(Potion::new(1)));
-        game.player.sword = Some(Equipment::Sword(5));
-        game.player.shield = Some(Equipment::Shield(5));
+        game.player.sword = Some(Equipment::sword(5));
+        game.player.shield = Some(Equipment::shield(5));
         game.gold = 50;
 
         tomb.pick_up(&mut game);
@@ -291,16 +291,16 @@ mod tests {
         let items: Vec<Box<dyn Item>> = vec![Box::new(Potion::new(1)), Box::new(Potion::new(1))];
         let mut chest1 = Chest {
             items,
-            sword: Some(Equipment::Sword(1)),
-            shield: Some(Equipment::Shield(10)),
+            sword: Some(Equipment::sword(1)),
+            shield: Some(Equipment::shield(10)),
             gold: 100,
         };
 
         let items: Vec<Box<dyn Item>> = vec![Box::new(Potion::new(1)), Box::new(Escape::new())];
         let chest2 = Chest {
             items,
-            sword: Some(Equipment::Sword(10)),
-            shield: Some(Equipment::Shield(1)),
+            sword: Some(Equipment::sword(10)),
+            shield: Some(Equipment::shield(1)),
             gold: 100,
         };
 
