@@ -30,7 +30,6 @@ impl Chest {
         let distance = &game.location.distance_from_home();
         let gold_chest = random().gold_chest(distance);
         let equipment_chest = random().equipment_chest(distance);
-        let item_chest = random().item_chest(distance);
         let ring_chest = random().ring_chest(distance);
 
         let mut chest = Self::default();
@@ -45,12 +44,6 @@ impl Chest {
             chest.shield = shield;
         }
 
-        // TODO maybe do a for of this for the multipotion scenario
-        if item_chest {
-            let item = random_item(game.player.rounded_level());
-            chest.items.push(item);
-        }
-
         if ring_chest {
             // Because of the ring pool (only one instance per ring type), it's
             // easier to handle this case separate from the rest of the items
@@ -58,6 +51,16 @@ impl Chest {
             // be included in the chest
             if let Some(ring) = random_ring(game) {
                 chest.items.push(Box::new(ring));
+            }
+        }
+
+        // Items should be more frequent and can be multiple
+        let mut item_chest = false;
+        for _ in 0..3 {
+            if random().item_chest(distance) {
+                item_chest = true;
+                let item = random_item(game.player.rounded_level());
+                chest.items.push(item);
             }
         }
 
@@ -168,7 +171,7 @@ fn random_equipment(level: i32) -> (Option<Equipment>, Option<Equipment>) {
 /// Return a weigthed random item.
 fn random_item(level: i32) -> Box<dyn Item> {
     let mut choices: Vec<(i32, Box<dyn Item>)> = vec![
-        (100, Box::new(Potion::new(level))),
+        (150, Box::new(Potion::new(level))),
         (10, Box::new(Remedy::new())),
         (10, Box::new(Escape::new())),
         (50, Box::new(Ether::new(level))),
@@ -182,7 +185,10 @@ fn random_item(level: i32) -> Box<dyn Item> {
     let indexed_weights: Vec<_> = choices.iter().map(|(w, _)| w).enumerate().collect();
 
     let mut rng = rand::thread_rng();
-    let index = indexed_weights.choose_weighted(&mut rng, |c| c.1).unwrap().0;
+    let index = indexed_weights
+        .choose_weighted(&mut rng, |c| c.1)
+        .unwrap()
+        .0;
     choices.remove(index).1
 }
 
