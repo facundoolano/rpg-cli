@@ -3,8 +3,6 @@ use crate::event::Event;
 use crate::game;
 use serde::{Deserialize, Serialize};
 
-// TODO these look suspiciously like an enum
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Health;
 

@@ -47,7 +47,7 @@ impl Chest {
 
         // TODO maybe do a for of this for the multipotion scenario
         if item_chest {
-            let item = random_items(game.player.rounded_level());
+            let item = random_item(game.player.rounded_level());
             chest.items.push(item);
         }
 
@@ -165,8 +165,8 @@ fn random_equipment(level: i32) -> (Option<Equipment>, Option<Equipment>) {
     .1
 }
 
-// FIXME document this crap
-fn random_items(level: i32) -> Box<dyn Item> {
+/// Return a weigthed random item.
+fn random_item(level: i32) -> Box<dyn Item> {
     let mut choices: Vec<(i32, Box<dyn Item>)> = vec![
         (100, Box::new(Potion::new(level))),
         (10, Box::new(Remedy::new())),
@@ -178,10 +178,11 @@ fn random_items(level: i32) -> Box<dyn Item> {
         (10, Box::new(stone::Speed)),
         (5, Box::new(stone::Level)),
     ];
-    let weights: Vec<_> = choices.iter().map(|(w, _)| w).enumerate().collect();
+
+    let indexed_weights: Vec<_> = choices.iter().map(|(w, _)| w).enumerate().collect();
 
     let mut rng = rand::thread_rng();
-    let index = weights.choose_weighted(&mut rng, |c| c.1).unwrap().0;
+    let index = indexed_weights.choose_weighted(&mut rng, |c| c.1).unwrap().0;
     choices.remove(index).1
 }
 

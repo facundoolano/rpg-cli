@@ -72,7 +72,6 @@ fn available_items(player: &Character) -> Vec<Box<dyn Shoppable>> {
     items
 }
 
-// FIXME remove trait or implement generically for item
 trait Shoppable: Display {
     fn cost(&self) -> i32;
     fn buy(&self, game: &mut Game) -> Result<()> {
@@ -113,7 +112,6 @@ impl Shoppable for Equipment {
     }
 }
 
-// FIXME see if the add_to/key repetition can be removed
 impl Shoppable for super::Potion {
     fn cost(&self) -> i32 {
         self.level * 200
