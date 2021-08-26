@@ -3,8 +3,9 @@ use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use std::convert::From;
 use std::fmt;
+use strum_macros::EnumIter;
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, EnumIter)]
 #[serde(try_from = "String", into = "String")]
 pub enum Key {
     Potion,
@@ -26,6 +27,7 @@ impl Key {
         let key = match name.to_lowercase().as_str() {
             "potion" | "p" => Key::Potion,
             "ether" | "e" => Key::Ether,
+            "remedy" | "r" => Key::Remedy,
             "escape" | "es" => Key::Escape,
             "sword" | "sw" => Key::Sword,
             "shield" | "sh" => Key::Shield,
@@ -46,7 +48,7 @@ impl Key {
             "mp-rng" | "mp-ring" => Key::Ring(Ring::MP),
             "hp-rng" | "hp-ring" => Key::Ring(Ring::HP),
             "evade-rng" | "evade" | "evade-ring" => Key::Ring(Ring::Evade),
-            _ => bail!("Item not found"),
+            key => bail!("item {} not found", key),
         };
         Ok(key)
     }
@@ -91,5 +93,36 @@ impl From<String> for Key {
 impl From<Key> for String {
     fn from(key_str: Key) -> Self {
         key_str.to_string()
+    }
+}
+
+// Needed to implement EnumIter for tests
+impl Default for Ring {
+    fn default() -> Self {
+        Ring::Void
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn from_into() {
+        // verify that all existing keys can be parsed from strings
+        // otherwise deserialization wouldn't be possible
+        for key in Key::iter() {
+            if let Key::Ring(_) = key {
+                for ring in Ring::iter() {
+                    let ring_key = Key::Ring(ring);
+                    let parsed = Key::from(String::from(ring_key.clone()).as_str()).unwrap();
+                    assert_eq!(ring_key, parsed);
+                }
+            } else {
+                let parsed = Key::from(String::from(key.clone()).as_str()).unwrap();
+                assert_eq!(key, parsed);
+            }
+        }
     }
 }

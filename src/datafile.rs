@@ -59,7 +59,7 @@ mod tests {
     use crate::item::ring;
 
     #[test]
-    fn test_serialize_ring() {
+    fn serialize_ring() {
         // rings have a compound enum variant Key::Ring(Ring::_)
         // that doesn't work with the default enum serialization setup
         // this verifies the try_from = String workaround
