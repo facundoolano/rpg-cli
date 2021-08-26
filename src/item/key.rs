@@ -1,9 +1,11 @@
 use super::ring::Ring;
 use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
+use std::convert::From;
 use std::fmt;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
+#[serde(try_from = "String", into = "String")]
 pub enum Key {
     Potion,
     Escape,
@@ -75,5 +77,19 @@ impl fmt::Display for Key {
         };
 
         write!(f, "{}", name)
+    }
+}
+
+// these From impls together with the serde try_from/into config
+// allow Key variants to be used as keys in JSON objects for serialization
+impl From<String> for Key {
+    fn from(key: String) -> Self {
+        Key::from(&key).unwrap()
+    }
+}
+
+impl From<Key> for String {
+    fn from(key_str: Key) -> Self {
+        key_str.to_string()
     }
 }

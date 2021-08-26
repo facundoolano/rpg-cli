@@ -51,3 +51,22 @@ fn data_file() -> path::PathBuf {
 fn classes_file() -> path::PathBuf {
     rpg_dir().join("classes.yaml")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::item::key;
+    use crate::item::ring;
+
+    #[test]
+    fn test_serialize_ring() {
+        // rings have a compound enum variant Key::Ring(Ring::_)
+        // that doesn't work with the default enum serialization setup
+        // this verifies the try_from = String workaround
+        let mut game = game::Game::new();
+        game.add_item(Box::new(ring::Ring::Void));
+        let data = serde_json::to_vec(&game).unwrap();
+        let mut game: game::Game = serde_json::from_slice(&data).unwrap();
+        assert!(game.use_item(key::Key::Ring(ring::Ring::Void)).is_ok());
+    }
+}
