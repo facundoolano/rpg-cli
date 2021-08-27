@@ -19,6 +19,7 @@
 * When a magic-using character runs out of mp, its physical attacks incorporate the weapon contribution 39c5e01
 * Changed internal representation of items #105
 * Fail gracefully on data breaking changes #107
+* Show items bought and money spent in the buy command output #108
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
