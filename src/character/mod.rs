@@ -342,10 +342,12 @@ impl Character {
         let mut hp_effect = 0;
         let mut mp_effect = 0;
 
+        // statuses have a (randomized) +/-5% effect on the base stat
         let hp_unit = || random().damage(std::cmp::max(1, self.max_hp / 20));
         let mp_unit = || random().damage(std::cmp::max(1, self.max_mp / 20));
 
         // TODO consider a helper here. check if modify_stat+ring factor wouldbe appropriate
+
         // is the regen hp ring equipped?
         match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
             (Some(Ring::RegenHP), _) | (_, Some(Ring::RegenHP)) => {
@@ -355,11 +357,13 @@ impl Character {
         }
 
         // is the regen mp ring equipped?
-        match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
-            (Some(Ring::RegenMP), _) | (_, Some(Ring::RegenMP)) => {
-                mp_effect += mp_unit();
+        if self.class.is_magic() {
+            match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
+                (Some(Ring::RegenMP), _) | (_, Some(Ring::RegenMP)) => {
+                    mp_effect += mp_unit();
+                }
+                _ => {}
             }
-            _ => {}
         }
 
         // does the character suffer from status ailments?
@@ -656,7 +660,7 @@ mod tests {
     }
 
     #[test]
-    fn test_receive_status_effect_damage() {
+    fn apply_status_effect() {
         let mut hero = new_char();
         assert_eq!(25, hero.current_hp);
 
@@ -679,6 +683,84 @@ mod tests {
         hero.current_hp = 1;
         assert!(hero.apply_status_effects().is_err());
         assert!(hero.is_dead());
+    }
+
+    #[test]
+    fn apply_ring_status() {
+        let mut hero = new_char();
+        assert_eq!(25, hero.current_hp);
+
+        // hp ring already full
+        hero.left_ring = Some(Ring::RegenHP);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(1, hp);
+        assert_eq!(0, mp);
+        assert_eq!(25, hero.current_hp);
+
+        // hp ring recover
+        hero.current_hp = 20;
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(1, hp);
+        assert_eq!(0, mp);
+        assert_eq!(21, hero.current_hp);
+
+        // mp ring non magic
+        hero.left_ring = Some(Ring::RegenMP);
+        assert_eq!(0, hero.current_mp);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(0, mp);
+        assert_eq!(0, hero.current_mp);
+
+        // force into a magic class
+        hero.class.mp = Some(class::Stat(10, 1));
+        hero.max_mp = 10;
+        hero.current_mp = 10;
+
+        // mp ring magic already full
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(1, mp);
+        assert_eq!(10, hero.current_mp);
+
+        // mp ring magic recover
+        hero.current_mp = 7;
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(1, mp);
+        assert_eq!(8, hero.current_mp);
+
+        // hp + mp
+        hero.right_ring = Some(Ring::RegenHP);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(1, hp);
+        assert_eq!(1, mp);
+        assert_eq!(22, hero.current_hp);
+        assert_eq!(9, hero.current_mp);
+
+        // mp + hp
+        hero.left_ring = Some(Ring::RegenHP);
+        hero.right_ring = Some(Ring::RegenMP);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(1, hp);
+        assert_eq!(1, mp);
+        assert_eq!(23, hero.current_hp);
+        assert_eq!(10, hero.current_mp);
+
+        // hp - burn cancel each other
+        hero.right_ring = None;
+        hero.status_effect = Some(StatusEffect::Burn);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(0, mp);
+        assert_eq!(23, hero.current_hp);
+        assert_eq!(10, hero.current_mp);
+
+        // hp - burn prevent dead
+        hero.current_hp = 1;
+        let (hp, _) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(1, hero.current_hp);
     }
 
     #[test]
