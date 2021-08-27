@@ -182,6 +182,8 @@ fn random_item(level: i32) -> Box<dyn Item> {
         (5, Box::new(stone::Level)),
     ];
 
+    // make a separate vec with enumerated weights, then remove from the item vec
+    // with the resulting index
     let indexed_weights: Vec<_> = choices.iter().map(|(w, _)| w).enumerate().collect();
 
     let mut rng = rand::thread_rng();
