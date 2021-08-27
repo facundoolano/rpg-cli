@@ -88,7 +88,7 @@ impl Character {
         };
 
         for _ in 1..level {
-            character.increase_level();
+            character.raise_level();
         }
 
         character
@@ -138,27 +138,27 @@ impl Character {
     }
 
     /// Raise the level and all the character stats.
-    pub fn increase_level(&mut self) {
+    pub fn raise_level(&mut self) {
         self.level += 1;
-        self.increase_strength();
-        self.increase_speed();
-        self.increase_hp();
-        self.increase_mp();
+        self.raise_strength();
+        self.raise_speed();
+        self.raise_hp();
+        self.raise_mp();
     }
 
-    pub fn increase_strength(&mut self) -> i32 {
+    pub fn raise_strength(&mut self) -> i32 {
         let inc = self.class.strength.increase();
         self.strength += inc;
         inc
     }
 
-    pub fn increase_speed(&mut self) -> i32 {
+    pub fn raise_speed(&mut self) -> i32 {
         let inc = self.class.speed.increase();
         self.speed += inc;
         inc
     }
 
-    pub fn increase_hp(&mut self) -> i32 {
+    pub fn raise_hp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp() - self.current_hp;
@@ -168,7 +168,7 @@ impl Character {
         inc
     }
 
-    pub fn increase_mp(&mut self) -> i32 {
+    pub fn raise_mp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous mp consumption
         let previous_used_mp = self.max_mp() - self.current_mp;
@@ -185,7 +185,7 @@ impl Character {
         let mut increased_levels = 0;
         let mut for_next = self.xp_for_next();
         while self.xp >= for_next {
-            self.increase_level();
+            self.raise_level();
             self.xp -= for_next;
             increased_levels += 1;
             for_next = self.xp_for_next();
@@ -240,7 +240,7 @@ impl Character {
     /// The second element is the mp cost of the attack, if any.
     pub fn damage(&self, receiver: &Self) -> (i32, i32) {
         let (damage, mp_cost) = if self.can_magic_attack() {
-            (self.magic_attack(), self.mp_cost())
+            (self.magic_attack(), self.attack_mp_cost())
         } else {
             (self.physical_attack(), 0)
         };
@@ -285,10 +285,10 @@ impl Character {
 
     /// The character's class enables magic and there's enough mp left
     pub fn can_magic_attack(&self) -> bool {
-        self.class.is_magic() && self.current_mp >= self.mp_cost()
+        self.class.is_magic() && self.current_mp >= self.attack_mp_cost()
     }
 
-    fn mp_cost(&self) -> i32 {
+    fn attack_mp_cost(&self) -> i32 {
         // each magic attack costs one third of the "canonical" mp total for this level
         self.class.mp.as_ref().map_or(0, |mp| mp.at(self.level) / 3)
     }
@@ -476,7 +476,7 @@ mod tests {
         hero.strength = 10;
         hero.speed = 5;
 
-        hero.increase_level();
+        hero.raise_level();
         assert_eq!(2, hero.level);
         assert_eq!(27, hero.max_hp);
         assert_eq!(13, hero.strength);
@@ -485,7 +485,7 @@ mod tests {
         let damage = 7;
         hero.current_hp -= damage;
 
-        hero.increase_level();
+        hero.raise_level();
         assert_eq!(3, hero.level);
         assert_eq!(hero.current_hp, hero.max_hp - damage);
     }
@@ -550,9 +550,9 @@ mod tests {
     fn test_xp_for_next() {
         let mut hero = new_char();
         assert_eq!(30, hero.xp_for_next());
-        hero.increase_level();
+        hero.raise_level();
         assert_eq!(84, hero.xp_for_next());
-        hero.increase_level();
+        hero.raise_level();
         assert_eq!(155, hero.xp_for_next());
     }
 
@@ -803,8 +803,8 @@ mod tests {
         assert_eq!(0, player.max_mp);
         assert_eq!(0, player.current_mp);
 
-        player.increase_level();
-        player.increase_level();
+        player.raise_level();
+        player.raise_level();
         assert_eq!(0, player.max_mp);
         assert_eq!(0, player.current_mp);
 
