@@ -33,10 +33,11 @@ pub fn buy(game: &mut Game, item_keys: &[Key]) -> Result<()> {
         bail!("Shop is only allowed at home.");
     }
 
-    // Buy as many as possible and break on first error
     let mut item_counts = HashMap::new();
     let mut total_cost = 0;
     let mut error = String::from("");
+
+    // Buy one at a time and break on first error
     for key in item_keys {
         // get list every time to prevent e.g. buying the sword twice
         let item = available_items(&game.player)

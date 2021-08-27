@@ -156,9 +156,7 @@ fn shop(game: &mut Game, items: &[String]) -> Result<()> {
             keys.push(Key::from(item)?);
         }
 
-        // buy as many as possible
-        item::shop::buy(game, &keys)?;
-        Ok(())
+        item::shop::buy(game, &keys)
     }
 }
 
