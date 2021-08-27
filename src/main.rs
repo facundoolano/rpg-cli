@@ -58,8 +58,12 @@ fn run_game() -> Result<()> {
 
     let mut game = datafile::load()?.unwrap_or_else(Game::new);
 
-    command::run(opts.cmd, &mut game)?;
+    let result = command::run(opts.cmd, &mut game);
 
+    // save the file regardless of the success of the command.
+    // E.g. if the player dies it's an error / exit code 1
+    // and that needs to be reflected in the game state.
     datafile::save(&game).unwrap();
-    Ok(())
+
+    result
 }
