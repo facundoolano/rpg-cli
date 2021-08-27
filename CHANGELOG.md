@@ -20,6 +20,7 @@
 * Changed internal representation of items #105
 * Fail gracefully on data breaking changes #107
 * Show items bought and money spent in the buy command output #108
+* Show mp cost in magic attacks 9f92efc
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
