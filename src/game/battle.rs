@@ -22,7 +22,7 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     let (mut pl_accum, mut en_accum) = (0, 0);
     let mut xp = 0;
 
-    while !enemy.is_dead() {
+    while enemy.current_hp > 0 {
         pl_accum += game.player.speed();
         en_accum += enemy.speed();
 

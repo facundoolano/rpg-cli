@@ -212,11 +212,6 @@ impl Character {
         self.current_mp - previous
     }
 
-    // FIXME is this necessary?
-    pub fn is_dead(&self) -> bool {
-        self.current_hp == 0
-    }
-
     /// Restore all health and magic points to their max and remove status effects
     pub fn restore(&mut self) -> (i32, i32, bool) {
         let healed = self.status_effect.is_some();
@@ -666,7 +661,7 @@ mod tests {
         hero.status_effect = Some(StatusEffect::Burn);
         hero.current_hp = 1;
         assert!(hero.apply_status_effects().is_err());
-        assert!(hero.is_dead());
+        assert_eq!(0, hero.current_hp);
     }
 
     #[test]
