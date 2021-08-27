@@ -32,7 +32,7 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
                 xp += new_xp;
             }
 
-            game.maybe_receive_status_damage()?;
+            game.apply_status_effects()?;
             pl_accum = -1;
         } else {
             enemy_attack(game, enemy, random)?;

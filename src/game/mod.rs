@@ -141,14 +141,13 @@ impl Game {
         }
 
         // In location is home, already healed of negative status
-        self.maybe_receive_status_damage()
+        self.apply_status_effects()
     }
 
     /// Player takes damage from status_effects, if any.
-    fn maybe_receive_status_damage(&mut self) -> Result<(), character::Dead> {
-        if let Some(damage) = self.player.receive_status_effect_damage()? {
-            Event::emit(self, Event::StatusEffectDamage { damage });
-        }
+    fn apply_status_effects(&mut self) -> Result<(), character::Dead> {
+        let (hp, mp) = self.player.apply_status_effects()?;
+        Event::emit(self, Event::StatusEffect { hp, mp });
         Ok(())
     }
 

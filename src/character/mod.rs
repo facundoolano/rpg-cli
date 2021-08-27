@@ -192,6 +192,7 @@ impl Character {
         increased_levels
     }
 
+    // FIXME change for a general purpose change damage
     pub fn receive_damage(&mut self, damage: i32) -> Result<(), Dead> {
         if damage >= self.current_hp {
             self.current_hp = 0;
@@ -202,10 +203,7 @@ impl Character {
         }
     }
 
-    pub fn is_dead(&self) -> bool {
-        self.current_hp == 0
-    }
-
+    // FIXME merge with the above
     /// Restore up to the given amount of health points (not exceeding the max_hp).
     /// Return the amount actually restored.
     pub fn heal(&mut self, amount: i32) -> i32 {
@@ -214,12 +212,19 @@ impl Character {
         self.current_hp - previous
     }
 
+    pub fn is_dead(&self) -> bool {
+        self.current_hp == 0
+    }
+
+    // FIXME change for a general purpose one
     pub fn restore_mp(&mut self, amount: i32) -> i32 {
         let previous = self.current_mp;
         self.current_mp = min(self.max_mp(), self.current_mp + amount);
         self.current_mp - previous
     }
 
+    // FIXME this one should also remove status effect
+    // call it "restore"
     /// Restore all health and magic points to their max
     pub fn heal_full(&mut self) -> (i32, i32) {
         (self.heal(self.max_hp()), self.restore_mp(self.max_mp()))
@@ -322,6 +327,7 @@ impl Character {
         self.class.inflicts
     }
 
+    // FIXME kill this method
     pub fn maybe_remove_status_effect(&mut self) -> bool {
         if self.status_effect.is_some() {
             self.status_effect = None;
@@ -330,18 +336,47 @@ impl Character {
         false
     }
 
-    /// If the character suffers from a damage-producing status effect, apply it.
-    pub fn receive_status_effect_damage(&mut self) -> Result<Option<i32>, Dead> {
-        // NOTE: in the future we could have a positive status that e.g. regen hp
-        match self.status_effect {
-            Some(StatusEffect::Burn) | Some(StatusEffect::Poison) => {
-                let damage = std::cmp::max(1, self.max_hp / 20);
-                let damage = random().damage(damage);
-                self.receive_damage(damage)?;
-                Ok(Some(damage))
+    /// If the character has a status condition (e.g. poison) or an equipped
+    /// ring that produces one (e.g. regen hp), apply its effects.
+    pub fn apply_status_effects(&mut self) -> Result<(i32, i32), Dead> {
+        let mut hp_effect = 0;
+        let mut mp_effect = 0;
+
+        let hp_unit = || random().damage(std::cmp::max(1, self.max_hp / 20));
+        let mp_unit = || random().damage(std::cmp::max(1, self.max_mp / 20));
+
+        // TODO consider a helper here. check if modify_stat+ring factor wouldbe appropriate
+        // is the regen hp ring equipped?
+        match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
+            (Some(Ring::RegenHP), _) | (_, Some(Ring::RegenHP)) => {
+                hp_effect += hp_unit();
             }
-            _ => Ok(None),
+            _ => {}
         }
+
+        // is the regen mp ring equipped?
+        match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
+            (Some(Ring::RegenMP), _) | (_, Some(Ring::RegenMP)) => {
+                mp_effect += mp_unit();
+            }
+            _ => {}
+        }
+
+        // does the character suffer from status ailments?
+        match self.status_effect {
+            Some(StatusEffect::Burn) | Some(StatusEffect::Poison) => hp_effect -= hp_unit(),
+            _ => {}
+        }
+
+        // FIXME this one is not ready to handle arbitrary +/- changes, fix
+        if hp_effect > 0 {
+            self.heal(hp_effect);
+        } else if hp_effect < 0 {
+            self.receive_damage(-hp_effect)?;
+        }
+        self.restore_mp(mp_effect);
+
+        Ok((hp_effect, mp_effect))
     }
 
     /// Return the player level rounded to offer items at "pretty levels", e.g.
@@ -625,24 +660,24 @@ mod tests {
         let mut hero = new_char();
         assert_eq!(25, hero.current_hp);
 
-        hero.receive_status_effect_damage().unwrap_or_default();
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(25, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Burn);
-        hero.receive_status_effect_damage().unwrap_or_default();
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(24, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Poison);
-        hero.receive_status_effect_damage().unwrap_or_default();
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 
         hero.maybe_remove_status_effect();
-        hero.receive_status_effect_damage().unwrap_or_default();
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Burn);
         hero.current_hp = 1;
-        assert!(hero.receive_status_effect_damage().is_err());
+        assert!(hero.apply_status_effects().is_err());
         assert!(hero.is_dead());
     }
 

@@ -47,8 +47,8 @@ pub fn handle(game: &Game, event: &Event) {
         } => {
             attack(&game.player, kind, *damage, *mp_cost);
         }
-        Event::StatusEffectDamage { damage } => {
-            status_effect_damage(&game.player, *damage);
+        Event::StatusEffect { hp, mp } => {
+            status_effect(&game.player, *hp, *mp);
         }
         Event::BattleWon {
             xp,
@@ -245,9 +245,22 @@ fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32)
     }
 }
 
-fn status_effect_damage(character: &Character, damage: i32) {
-    let (_, emoji) = status_effect_params(character.status_effect.unwrap());
-    battle_log(character, &format_damage(character, damage, emoji));
+// FIXME try to come up with a generic helper to cover this and the heal item and full restore scenarios
+// this is already halfway there
+fn status_effect(character: &Character, hp: i32, mp: i32) {
+    if hp != 0 && mp != 0 {
+        let emoji = character
+            .status_effect
+            .map_or("", |s| status_effect_params(s).1);
+        let hp_contrib = format_damage(character, -hp, emoji);
+        let mp_contrib = if mp != 0 {
+            format!("+{}mp ", mp).purple().to_string()
+        } else {
+            String::from("")
+        };
+
+        battle_log(character, &format!("{} {}", hp_contrib, mp_contrib));
+    }
 }
 
 fn battle_lost(player: &Character) {
@@ -483,13 +496,22 @@ fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost
     }
 }
 
+// FIXME rename and inverse the amount interpretation
 fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
-    let color = if receiver.is_player() {
-        "bright red".to_string()
+    if amount != 0 {
+        let color = if receiver.is_player() {
+            if amount >= 0 {
+                "bright red"
+            } else {
+                "green"
+            }
+        } else {
+            "white"
+        };
+        format!("-{}hp {}", amount, suffix).color(color).to_string()
     } else {
-        "white".to_string()
-    };
-    format!("-{}hp {}", amount, suffix).color(color).to_string()
+        String::from("")
+    }
 }
 
 fn format_status_effect(status_effect: StatusEffect) -> String {
