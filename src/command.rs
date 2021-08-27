@@ -150,10 +150,14 @@ fn shop(game: &mut Game, items: &[String]) -> Result<()> {
     if items.is_empty() {
         item::shop::list(game)
     } else {
-        for item_name in items {
-            let item_name = Key::from(item_name)?;
-            item::shop::buy(game, item_name)?
+        // parse items and break if any is invalid/unknown
+        let mut keys = Vec::new();
+        for item in items {
+            keys.push(Key::from(item)?);
         }
+
+        // buy as many as possible
+        item::shop::buy(game, &keys)?;
         Ok(())
     }
 }

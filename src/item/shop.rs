@@ -24,22 +24,23 @@ pub fn list(game: &Game) -> Result<()> {
 }
 
 /// Buy an item and add it to the game.
-pub fn buy(game: &mut Game, key: Key) -> Result<()> {
+pub fn buy(game: &mut Game, item_keys: &[Key]) -> Result<()> {
     if !game.location.is_home() {
         bail!("Shop is only allowed at home.");
     }
 
-    let player = &mut game.player;
-    let item = available_items(player)
-        .into_iter()
-        .find(|s| s.to_key() == key);
+    for key in item_keys {
+        let item = available_items(&game.player)
+            .into_iter()
+            .find(|s| s.to_key() == *key);
 
-    if let Some(item) = item {
-        item.buy(game)?;
-        Ok(())
-    } else {
-        bail!("Item not available.")
+        if let Some(item) = item {
+            item.buy(game)?;
+        } else {
+            bail!("Item not available.")
+        }
     }
+    Ok(())
 }
 
 /// Build a list of items currently available at the shop
