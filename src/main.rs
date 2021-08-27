@@ -11,6 +11,7 @@ mod log;
 mod quest;
 mod randomizer;
 
+use anyhow::Result;
 use clap::{crate_version, AppSettings, Clap};
 
 /// Your filesystem as a dungeon!
@@ -31,8 +32,22 @@ struct Opts {
 }
 
 fn main() {
+    if let Err(err) = run_game() {
+        // don't print a new line if error message is empty
+        if !err.to_string().is_empty() {
+            println!("{}", err);
+        };
+
+        std::process::exit(1);
+    }
+}
+
+/// Loads or creates a new game, executes the received command and saves.
+/// Inner errors are bubbled up.
+fn run_game() -> Result<()> {
     let opts: Opts = Opts::parse();
     log::init(opts.quiet, opts.plain);
+    datafile::load_classes();
 
     // reset --hard is a special case, it needs to work when we
     // fail to deserialize the game data -- e.g. on backward
@@ -41,20 +56,10 @@ fn main() {
         datafile::remove();
     }
 
-    datafile::load_classes();
+    let mut game = datafile::load()?.unwrap_or_else(Game::new);
 
-    let mut game = datafile::load().unwrap_or_else(|_| Game::new());
-
-    let mut exit_code = 0;
-    if let Err(err) = command::run(opts.cmd, &mut game) {
-        exit_code = 1;
-
-        // don't print a new line if error message is empty
-        if !err.to_string().is_empty() {
-            println!("{}", err);
-        };
-    }
+    command::run(opts.cmd, &mut game)?;
 
     datafile::save(&game).unwrap();
-    std::process::exit(exit_code);
+    Ok(())
 }
