@@ -465,10 +465,14 @@ pub fn format_inventory(game: &Game) -> String {
 }
 
 fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost: i32) -> String {
-    let magic_effect = if mp_cost > 0 { "\u{2728}" } else { "" };
+    let magic_effect = if mp_cost > 0 {
+        format!("\u{2728} -{}mp", mp_cost).purple().to_string()
+    } else {
+        String::from("")
+    };
 
     match attack {
-        AttackType::Regular => format_damage(receiver, damage, magic_effect),
+        AttackType::Regular => format_damage(receiver, damage, &magic_effect),
         AttackType::Critical => {
             format_damage(receiver, damage, &format!("{} critical!", magic_effect))
         }
