@@ -11,8 +11,8 @@ mod log;
 mod quest;
 mod randomizer;
 
-use clap::{crate_version, AppSettings, Clap};
 use anyhow::Result;
+use clap::{crate_version, AppSettings, Clap};
 
 /// Your filesystem as a dungeon!
 #[derive(Clap)]
@@ -43,7 +43,7 @@ fn main() {
 }
 
 /// Loads or creates a new game, executes the received command and saves.
-/// All inner errors are bubbled up.
+/// Inner errors are bubbled up.
 fn run_game() -> Result<()> {
     let opts: Opts = Opts::parse();
     log::init(opts.quiet, opts.plain);
@@ -56,11 +56,10 @@ fn run_game() -> Result<()> {
         datafile::remove();
     }
 
-    let mut game = datafile::load().unwrap_or_else(|_| Game::new());
+    let mut game = datafile::load()?.unwrap_or_else(Game::new);
 
     command::run(opts.cmd, &mut game)?;
 
-    // FIXME bubble?
     datafile::save(&game).unwrap();
     Ok(())
 }

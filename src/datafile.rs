@@ -1,13 +1,21 @@
 use crate::character::class;
 use crate::game;
+use anyhow::{bail, Result};
 use std::{fs, io, path};
 
-pub struct NotFound;
+struct NotFound;
 
-pub fn load() -> Result<game::Game, NotFound> {
-    let data: Vec<u8> = read(data_file())?;
-    let game = serde_json::from_slice(&data).unwrap();
-    Ok(game)
+pub fn load() -> Result<Option<game::Game>> {
+    match read(data_file()) {
+        Err(NotFound) => Ok(None),
+        Ok(data) => {
+            if let Ok(game) = serde_json::from_slice(&data) {
+                Ok(Some(game))
+            } else {
+                bail!("Invalid game data file. If it was generated with a previous version please run `reset --hard` to restart.");
+            }
+        }
+    }
 }
 
 pub fn save(game: &game::Game) -> Result<(), io::Error> {
