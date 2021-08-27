@@ -1,4 +1,4 @@
-use super::Item;
+use super::{key, Item};
 use crate::event::Event;
 use crate::game;
 use serde::{Deserialize, Serialize};
@@ -24,6 +24,10 @@ impl Item for Health {
         let inc = game.player.increase_hp();
         event(game, "hp", inc);
     }
+
+    fn key(&self) -> key::Key {
+        key::Key::HealthStone
+    }
 }
 
 #[typetag::serde]
@@ -31,6 +35,10 @@ impl Item for Magic {
     fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.increase_mp();
         event(game, "mp", inc);
+    }
+
+    fn key(&self) -> key::Key {
+        key::Key::MagicStone
     }
 }
 
@@ -40,6 +48,10 @@ impl Item for Power {
         let inc = game.player.increase_strength();
         event(game, "str", inc);
     }
+
+    fn key(&self) -> key::Key {
+        key::Key::PowerStone
+    }
 }
 
 #[typetag::serde]
@@ -47,6 +59,10 @@ impl Item for Speed {
     fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.increase_speed();
         event(game, "spd", inc);
+    }
+
+    fn key(&self) -> key::Key {
+        key::Key::SpeedStone
     }
 }
 
@@ -63,6 +79,10 @@ impl Item for Level {
                 class: game.player.name(),
             },
         )
+    }
+
+    fn key(&self) -> key::Key {
+        key::Key::LevelStone
     }
 }
 

@@ -1,5 +1,7 @@
 use crate::item::equipment;
+use crate::item::key::Key;
 use crate::item::ring::Ring;
+use crate::item::Item;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -363,15 +365,15 @@ impl Character {
 
     /// Remove the ring by the given name from the equipment (if any),
     /// unapplying its side-effects.
-    pub fn unequip_ring(&mut self, name: &str) -> Option<Ring> {
+    pub fn unequip_ring(&mut self, name: &Key) -> Option<Ring> {
         match (self.left_ring.clone(), self.right_ring.clone()) {
-            (Some(ring), _) if ring.key() == name => {
+            (Some(ring), _) if ring.key() == *name => {
                 let removed = self.left_ring.take();
                 self.unequip_ring_side_effect(&removed);
                 self.left_ring = self.right_ring.take();
                 removed
             }
-            (_, Some(ring)) if ring.key() == name => {
+            (_, Some(ring)) if ring.key() == *name => {
                 let removed = self.right_ring.take();
                 self.unequip_ring_side_effect(&removed);
                 removed
@@ -593,7 +595,7 @@ mod tests {
 
         while hero.level < 500 {
             hero.add_experience(hero.xp_for_next());
-            hero.sword = Some(equipment::Equipment::Sword(hero.level));
+            hero.sword = Some(equipment::Equipment::sword(hero.level));
             let turns_unarmed = hero.max_hp / hero.strength;
             let turns_armed = hero.max_hp / hero.physical_attack();
             println!(
@@ -648,7 +650,7 @@ mod tests {
     fn test_class_change() {
         let mut player = Character::player();
         player.xp = 20;
-        player.sword = Some(equipment::Equipment::Sword(1));
+        player.sword = Some(equipment::Equipment::sword(1));
 
         let warrior_class = Class::player_by_name("warrior").unwrap();
         let thief_class = Class::player_by_name("thief").unwrap();
@@ -736,7 +738,7 @@ mod tests {
         assert_eq!((base_strength, 0), hero.damage(&foe));
 
         // warrior + sword, increased damage + mp = 0
-        let sword = equipment::Equipment::Sword(hero.level);
+        let sword = equipment::Equipment::sword(hero.level);
         let sword_strength = sword.strength();
         hero.sword = Some(sword);
         assert_eq!((base_strength + sword_strength, 0), hero.damage(&foe));
@@ -756,7 +758,7 @@ mod tests {
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // with sword, it affects the physical attacks
-        mage.sword = Some(equipment::Equipment::Sword(hero.level));
+        mage.sword = Some(equipment::Equipment::sword(hero.level));
         assert_eq!((base_strength * 3, mage.max_mp / 3), mage.damage(&foe));
 
         // mage without enough mp, 0 mp, /3
@@ -780,11 +782,11 @@ mod tests {
         assert_eq!(20, char.current_hp);
 
         // push out to unequip
-        char.unequip_ring("hp-rng");
+        char.unequip_ring(&Key::Ring(Ring::HP));
         assert_eq!(15, char.max_hp());
         assert_eq!(15, char.current_hp);
 
-        char.unequip_ring("hp-rng");
+        char.unequip_ring(&Key::Ring(Ring::HP));
         assert_eq!(10, char.max_hp());
         assert_eq!(10, char.current_hp);
 
@@ -795,7 +797,7 @@ mod tests {
         assert_eq!(15, char.max_hp());
         assert_eq!(12, char.current_hp);
 
-        char.unequip_ring("hp-rng");
+        char.unequip_ring(&Key::Ring(Ring::HP));
         assert_eq!(10, char.max_hp());
         assert_eq!(7, char.current_hp);
     }
@@ -815,11 +817,11 @@ mod tests {
         assert_eq!(20, char.current_mp);
 
         // push out to unequip
-        char.unequip_ring("mp-rng");
+        char.unequip_ring(&Key::Ring(Ring::MP));
         assert_eq!(15, char.max_mp());
         assert_eq!(15, char.current_mp);
 
-        char.unequip_ring("mp-rng");
+        char.unequip_ring(&Key::Ring(Ring::MP));
         assert_eq!(10, char.max_mp());
         assert_eq!(10, char.current_mp);
 
@@ -830,7 +832,7 @@ mod tests {
         assert_eq!(15, char.max_mp());
         assert_eq!(12, char.current_mp);
 
-        char.unequip_ring("mp-rng");
+        char.unequip_ring(&Key::Ring(Ring::MP));
         assert_eq!(10, char.max_mp());
         assert_eq!(7, char.current_mp);
     }

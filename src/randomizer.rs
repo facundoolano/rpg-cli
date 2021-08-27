@@ -179,9 +179,9 @@ impl Randomizer for DefaultRandomizer {
         let mut rng = rand::thread_rng();
 
         match distance {
-            location::Distance::Near(_) => rng.gen_ratio(5, 20),
-            location::Distance::Mid(_) => rng.gen_ratio(10, 20),
-            location::Distance::Far(_) => rng.gen_ratio(16, 20),
+            location::Distance::Near(_) => rng.gen_ratio(5, 50),
+            location::Distance::Mid(_) => rng.gen_ratio(10, 50),
+            location::Distance::Far(_) => rng.gen_ratio(16, 50),
         }
     }
 }

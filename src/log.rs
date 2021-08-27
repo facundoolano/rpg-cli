@@ -2,10 +2,11 @@ use crate::character::{Character, StatusEffect};
 use crate::event::Event;
 use crate::game::battle::AttackType;
 use crate::game::Game;
-use crate::item::shop;
+use crate::item::key::Key;
 use crate::location::Location;
 use colored::*;
 use once_cell::sync::OnceCell;
+use std::collections::HashMap;
 
 // This are initialized based on input args and then act as constants
 // this prevents having to pass around the flags or lazily parsing the opts
@@ -125,10 +126,9 @@ pub fn status(game: &Game) {
     }
 }
 
-pub fn shop_list(game: &Game, items: Vec<Box<dyn shop::Shoppable>>) {
-    for item in items {
-        let display = format!("{}", item);
-        println!("    {:<10}  {}", display, format_gold(item.cost()));
+pub fn shop_list(game: &Game, items: Vec<(i32, String)>) {
+    for (cost, item) in items {
+        println!("    {:<10}  {}", item, format_gold(cost));
     }
 
     println!("\n    funds: {}", format_gold(game.gold));
@@ -250,7 +250,7 @@ fn battle_lost(player: &Character) {
     battle_log(player, "\u{1F480}");
 }
 
-fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32, items: &[String]) {
+fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32, items: &HashMap<Key, i32>) {
     battle_log(
         &game.player,
         &format!(
@@ -370,22 +370,22 @@ fn plain_status(game: &Game) {
     );
 }
 
-fn chest(items: &[String], gold: i32) {
+fn chest(items: &HashMap<Key, i32>, gold: i32) {
     println!("{}", format_ls("\u{1F4E6}", items, gold));
 }
 
-fn tombstone(items: &[String], gold: i32) {
+fn tombstone(items: &HashMap<Key, i32>, gold: i32) {
     println!("{}", format_ls("\u{1FAA6} ", items, gold));
 }
 
-fn format_ls(emoji: &str, items: &[String], gold: i32) -> String {
+fn format_ls(emoji: &str, items: &HashMap<Key, i32>, gold: i32) -> String {
     let mut string = format!("{} ", emoji);
 
     if gold > 0 {
         string.push_str(&format!("{} ", format_gold_plus(gold)));
     }
-    for item in items {
-        string.push_str(&format!("+{} ", item));
+    for (key, count) in items {
+        string.push_str(&format!("+{}x{} ", key, count));
     }
     string
 }

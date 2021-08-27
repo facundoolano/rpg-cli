@@ -3,6 +3,7 @@ extern crate dirs;
 use crate::character;
 use crate::character::Character;
 use crate::event::Event;
+use crate::item::key::Key;
 use crate::item::ring::Ring;
 use crate::item::Item;
 use crate::location::Location;
@@ -24,7 +25,7 @@ pub struct Game {
     pub location: Location,
     pub gold: i32,
     pub quests: QuestList,
-    pub inventory: HashMap<String, Vec<Box<dyn Item>>>,
+    pub inventory: HashMap<Key, Vec<Box<dyn Item>>>,
 
     /// Chest left at the location where the player dies.
     pub tombstones: HashMap<String, Chest>,
@@ -114,7 +115,7 @@ impl Game {
             Event::emit(
                 self,
                 Event::ChestFound {
-                    items: &items,
+                    items,
                     gold,
                     is_tombstone,
                 },
@@ -156,24 +157,23 @@ impl Game {
         self.visit(Location::home()).unwrap_or_default();
     }
 
-    // TODO consider introducing an item "bag" wrapper over these types of hashmaps
-    // (same is used in chests and in tests)
-    pub fn add_item(&mut self, name: &str, item: Box<dyn Item>) {
-        let entry = self
-            .inventory
-            .entry(name.to_string())
-            .or_insert_with(Vec::new);
+    pub fn add_item(&mut self, item: Box<dyn Item>) {
+        let entry = self.inventory.entry(item.key()).or_insert_with(Vec::new);
         entry.push(item);
     }
 
-    pub fn use_item(&mut self, name: &str) -> Result<()> {
-        let name = name.to_string();
+    pub fn use_item(&mut self, name: Key) -> Result<()> {
         // get all items of that type and use one
         // if there are no remaining, drop the type from the inventory
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(mut item) = items.pop() {
                 item.apply(self);
-                Event::emit(self, Event::ItemUsed { item: name.clone() });
+                Event::emit(
+                    self,
+                    Event::ItemUsed {
+                        item: name.to_string(),
+                    },
+                );
             }
 
             if !items.is_empty() {
@@ -186,18 +186,18 @@ impl Game {
             // equipped, that is, while not being in the inventory.
             // The effect of using them is unequipping them.
             // This bit of complexity enables a cleaner command api.
-            self.add_item(ring.key(), Box::new(ring));
+            self.add_item(Box::new(ring));
             Ok(())
         } else {
             bail!("Item not found.")
         }
     }
 
-    pub fn inventory(&self) -> HashMap<&str, usize> {
+    pub fn inventory(&self) -> HashMap<&Key, usize> {
         self.inventory
             .iter()
-            .map(|(k, v)| (k.as_ref(), v.len()))
-            .collect::<HashMap<&str, usize>>()
+            .map(|(k, v)| (k, v.len()))
+            .collect::<HashMap<&Key, usize>>()
     }
 
     pub fn change_class(&mut self, name: &str) -> Result<()> {
@@ -275,8 +275,8 @@ impl Game {
                 self.gold += gold;
                 let levels_up = self.player.add_experience(xp);
 
-                let reward_items =
-                    Chest::battle_loot(self).map_or(Vec::new(), |mut chest| chest.pick_up(self).0);
+                let reward_items = Chest::battle_loot(self)
+                    .map_or(HashMap::new(), |mut chest| chest.pick_up(self).0);
 
                 Event::emit(
                     self,
@@ -286,7 +286,7 @@ impl Game {
                         xp,
                         levels_up,
                         gold,
-                        items: &reward_items,
+                        items: reward_items,
                     },
                 );
 
@@ -343,30 +343,30 @@ mod tests {
         assert_eq!(0, game.inventory().len());
 
         let potion = item::Potion::new(1);
-        game.add_item("potion", Box::new(potion));
+        game.add_item(Box::new(potion));
         assert_eq!(1, game.inventory().len());
-        assert_eq!(1, *game.inventory().get("potion").unwrap());
+        assert_eq!(1, *game.inventory().get(&Key::Potion).unwrap());
 
         let potion = item::Potion::new(1);
-        game.add_item("potion", Box::new(potion));
+        game.add_item(Box::new(potion));
         assert_eq!(1, game.inventory().len());
-        assert_eq!(2, *game.inventory().get("potion").unwrap());
+        assert_eq!(2, *game.inventory().get(&Key::Potion).unwrap());
 
         game.player.current_hp -= 3;
         assert_ne!(game.player.max_hp(), game.player.current_hp);
 
-        assert!(game.use_item("potion").is_ok());
+        assert!(game.use_item(Key::Potion).is_ok());
 
         // check it actually restores the hp
         assert_eq!(game.player.max_hp(), game.player.current_hp);
 
         // check item was consumed
         assert_eq!(1, game.inventory().len());
-        assert_eq!(1, *game.inventory().get("potion").unwrap());
+        assert_eq!(1, *game.inventory().get(&Key::Potion).unwrap());
 
-        assert!(game.use_item("potion").is_ok());
+        assert!(game.use_item(Key::Potion).is_ok());
         assert_eq!(0, game.inventory().len());
-        assert!(game.use_item("potion").is_err());
+        assert!(game.use_item(Key::Potion).is_err());
     }
 
     #[test]
@@ -376,29 +376,29 @@ mod tests {
         assert!(game.player.left_ring.is_none());
         assert!(game.player.right_ring.is_none());
 
-        game.add_item("void-rng", Box::new(Ring::Void));
-        game.add_item("void-rng", Box::new(Ring::Void));
-        game.add_item("void-rng", Box::new(Ring::Void));
-        assert_eq!(3, *game.inventory().get("void-rng").unwrap());
+        game.add_item(Box::new(Ring::Void));
+        game.add_item(Box::new(Ring::Void));
+        game.add_item(Box::new(Ring::Void));
+        assert_eq!(3, *game.inventory().get(&Key::Ring(Ring::Void)).unwrap());
 
-        game.use_item("void-rng").unwrap();
-        assert_eq!(2, *game.inventory().get("void-rng").unwrap());
+        game.use_item(Key::Ring(Ring::Void)).unwrap();
+        assert_eq!(2, *game.inventory().get(&Key::Ring(Ring::Void)).unwrap());
         assert_eq!(Some(Ring::Void), game.player.left_ring);
         assert!(game.player.right_ring.is_none());
 
-        game.use_item("void-rng").unwrap();
-        assert_eq!(1, *game.inventory().get("void-rng").unwrap());
+        game.use_item(Key::Ring(Ring::Void)).unwrap();
+        assert_eq!(1, *game.inventory().get(&Key::Ring(Ring::Void)).unwrap());
         assert_eq!(Some(Ring::Void), game.player.left_ring);
         assert_eq!(Some(Ring::Void), game.player.right_ring);
 
-        game.use_item("void-rng").unwrap();
-        assert_eq!(1, *game.inventory().get("void-rng").unwrap());
+        game.use_item(Key::Ring(Ring::Void)).unwrap();
+        assert_eq!(1, *game.inventory().get(&Key::Ring(Ring::Void)).unwrap());
         assert_eq!(Some(Ring::Void), game.player.left_ring);
         assert_eq!(Some(Ring::Void), game.player.right_ring);
 
-        game.add_item("spd-rng", Box::new(Ring::Speed));
-        game.use_item("spd-rng").unwrap();
-        assert_eq!(2, *game.inventory().get("void-rng").unwrap());
+        game.add_item(Box::new(Ring::Speed));
+        game.use_item(Key::Ring(Ring::Speed)).unwrap();
+        assert_eq!(2, *game.inventory().get(&Key::Ring(Ring::Void)).unwrap());
         assert_eq!(Some(Ring::Speed), game.player.left_ring);
         assert_eq!(Some(Ring::Void), game.player.right_ring);
     }
@@ -407,27 +407,27 @@ mod tests {
     fn test_ring_unequip() {
         let mut game = Game::new();
 
-        game.add_item("void-rng", Box::new(Ring::Void));
-        game.add_item("hp-rng", Box::new(Ring::HP));
-        game.use_item("void-rng").unwrap();
-        assert!(game.inventory().get("void-rng").is_none());
+        game.add_item(Box::new(Ring::Void));
+        game.add_item(Box::new(Ring::HP));
+        game.use_item(Key::Ring(Ring::Void)).unwrap();
+        assert!(game.inventory().get(&Key::Ring(Ring::Void)).is_none());
         assert_eq!(Some(Ring::Void), game.player.left_ring);
 
-        game.use_item("void-rng").unwrap();
-        assert!(game.inventory().get("void-rng").is_some());
+        game.use_item(Key::Ring(Ring::Void)).unwrap();
+        assert!(game.inventory().get(&Key::Ring(Ring::Void)).is_some());
         assert!(game.player.left_ring.is_none());
 
         let base_hp = game.player.max_hp();
-        game.use_item("void-rng").unwrap();
-        game.use_item("hp-rng").unwrap();
-        assert!(game.inventory().get("void-rng").is_none());
-        assert!(game.inventory().get("hp-rng").is_none());
+        game.use_item(Key::Ring(Ring::Void)).unwrap();
+        game.use_item(Key::Ring(Ring::HP)).unwrap();
+        assert!(game.inventory().get(&Key::Ring(Ring::Void)).is_none());
+        assert!(game.inventory().get(&Key::Ring(Ring::HP)).is_none());
         assert_eq!(Some(Ring::HP), game.player.left_ring);
         assert_eq!(Some(Ring::Void), game.player.right_ring);
         assert!(game.player.max_hp() > base_hp);
 
-        game.use_item("hp-rng").unwrap();
-        assert!(game.inventory().get("hp-rng").is_some());
+        game.use_item(Key::Ring(Ring::HP)).unwrap();
+        assert!(game.inventory().get(&Key::Ring(Ring::HP)).is_some());
         assert_eq!(Some(Ring::Void), game.player.left_ring);
         assert!(game.player.right_ring.is_none());
         assert_eq!(base_hp, game.player.max_hp());

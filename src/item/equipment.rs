@@ -1,22 +1,29 @@
 use core::fmt;
 
+use super::key::Key;
 use crate::character::class::Class;
 use serde::{Deserialize, Serialize};
 
 /// Equipment piece with a strength contribution based on
 /// a level. Used to generically represent swords and shields.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum Equipment {
-    Sword(i32),
-    Shield(i32),
-}
+pub struct Equipment(Key, i32);
 
 impl Equipment {
+    pub fn sword(level: i32) -> Self {
+        Self(Key::Sword, level)
+    }
+
+    pub fn shield(level: i32) -> Self {
+        Self(Key::Shield, level)
+    }
+
     pub fn level(&self) -> i32 {
-        match self {
-            Equipment::Sword(level) => *level,
-            Equipment::Shield(level) => *level,
-        }
+        self.1
+    }
+
+    pub fn key(&self) -> Key {
+        self.0.clone()
     }
 
     /// How many strength points get added to the player when
@@ -41,10 +48,6 @@ impl Equipment {
 
 impl fmt::Display for Equipment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let name = match self {
-            Equipment::Sword(_) => "sword",
-            Equipment::Shield(_) => "shield",
-        };
-        write!(f, "{}[{}]", name, self.level())
+        write!(f, "{}[{}]", self.key(), self.level())
     }
 }

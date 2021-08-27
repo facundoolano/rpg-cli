@@ -179,6 +179,7 @@ mod tests {
     use crate::character::Character;
     use crate::item;
     use crate::item::Item;
+    use std::collections::HashMap;
 
     #[test]
     fn test_quest_status() {
@@ -237,7 +238,7 @@ mod tests {
                 xp: 100,
                 levels_up: 0,
                 gold: 100,
-                items: &[],
+                items: HashMap::new(),
             },
         );
         assert_eq!(
@@ -268,7 +269,7 @@ mod tests {
                 xp: 100,
                 levels_up: 0,
                 gold: 100,
-                items: &[],
+                items: HashMap::new(),
             },
         );
         assert_eq!(0, game.gold);

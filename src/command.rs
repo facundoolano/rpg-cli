@@ -1,6 +1,7 @@
 use crate::character;
 use crate::game::Game;
 use crate::item;
+use crate::item::key::Key;
 use crate::location::Location;
 use crate::log;
 use anyhow::{bail, Result};
@@ -130,7 +131,7 @@ fn battle(game: &mut Game, run: bool, bribe: bool) -> Result<()> {
 /// Set the class for the player character
 fn class(game: &mut Game, class_name: &Option<String>) -> Result<()> {
     if let Some(class_name) = class_name {
-        let class_name = sanitize(class_name);
+        let class_name = class_name.to_lowercase();
         game.change_class(&class_name)
     } else {
         let player_classes: Vec<String> =
@@ -150,8 +151,8 @@ fn shop(game: &mut Game, items: &[String]) -> Result<()> {
         item::shop::list(game)
     } else {
         for item_name in items {
-            let item_name = sanitize(item_name);
-            item::shop::buy(game, &item_name)?
+            let item_name = Key::from(item_name)?;
+            item::shop::buy(game, item_name)?
         }
         Ok(())
     }
@@ -163,38 +164,11 @@ fn use_item(game: &mut Game, items: &[String]) -> Result<()> {
         println!("{}", log::format_inventory(game));
     } else {
         for item_name in items {
-            let item_name = sanitize(item_name);
-            game.use_item(&item_name)?
+            let item_name = Key::from(item_name)?;
+            game.use_item(item_name)?
         }
     }
     Ok(())
-}
-
-/// Return a clean version of an item/equipment name, including aliases
-fn sanitize(name: &str) -> String {
-    let name = name.to_lowercase();
-    let name = match name.as_str() {
-        "p" => "potion",
-        "e" => "ether",
-        "es" => "escape",
-        "sw" => "sword",
-        "sh" => "shield",
-        "hp" => "hp-stone",
-        "mp" => "mp-stone",
-        "str" | "strength" => "str-stone",
-        "spd" | "speed" => "spd-stone",
-        "level" | "lv" | "lvl" => "lvl-stone",
-        "void" => "void-rng",
-        "att-ring" | "att" | "attack" | "attack-ring" | "attack-rng" => "att-rng",
-        "def-ring" | "def" | "deffense" | "deffense-ring" | "deffense-rng" => "def-rng",
-        "spd-ring" | "speed-ring" | "speed-rng" => "spd-rng",
-        "mag-ring" | "mag" | "magic-ring" | "magic-rng" => "mag-rng",
-        "mp-ring" => "mp-rng",
-        "hp-ring" => "hp-rng",
-        "evade" | "evade-ring" => "evade-rng",
-        n => n,
-    };
-    name.to_string()
 }
 
 #[cfg(test)]
