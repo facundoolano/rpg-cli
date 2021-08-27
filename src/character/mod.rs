@@ -223,11 +223,15 @@ impl Character {
         self.current_mp - previous
     }
 
-    // FIXME this one should also remove status effect
-    // call it "restore"
-    /// Restore all health and magic points to their max
-    pub fn heal_full(&mut self) -> (i32, i32) {
-        (self.heal(self.max_hp()), self.restore_mp(self.max_mp()))
+    /// Restore all health and magic points to their max and remove status effects
+    pub fn restore(&mut self) -> (i32, i32, bool) {
+        let healed = self.status_effect.is_some();
+        self.status_effect = None;
+        (
+            self.heal(self.max_hp()),
+            self.restore_mp(self.max_mp()),
+            healed,
+        )
     }
 
     /// Return true if an evade ring is equipped, i.e. no enemies should appear.
@@ -325,15 +329,6 @@ impl Character {
     pub fn inflicted_status_effect(&self) -> Option<(StatusEffect, u32)> {
         // at some point the player could generate it depending on the equipment
         self.class.inflicts
-    }
-
-    // FIXME kill this method
-    pub fn maybe_remove_status_effect(&mut self) -> bool {
-        if self.status_effect.is_some() {
-            self.status_effect = None;
-            return true;
-        }
-        false
     }
 
     /// If the character has a status condition (e.g. poison) or an equipped
@@ -609,7 +604,7 @@ mod tests {
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
-        assert_eq!(0, hero.heal_full().0);
+        assert_eq!(0, hero.restore().0);
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
@@ -623,7 +618,7 @@ mod tests {
         assert_eq!(25, hero.current_hp);
 
         hero.current_hp = 10;
-        assert_eq!(15, hero.heal_full().0);
+        assert_eq!(15, hero.restore().0);
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
     }
@@ -675,7 +670,7 @@ mod tests {
         hero.apply_status_effects().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 
-        hero.maybe_remove_status_effect();
+        hero.status_effect = None;
         hero.apply_status_effects().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 

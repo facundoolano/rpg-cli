@@ -94,7 +94,7 @@ impl Remedy {
 #[typetag::serde]
 impl Item for Remedy {
     fn apply(&mut self, game: &mut game::Game) {
-        let healed = game.player.maybe_remove_status_effect();
+        let healed = game.player.status_effect.take().is_some();
         Event::emit(
             game,
             Event::Heal {
