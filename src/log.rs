@@ -134,6 +134,10 @@ pub fn shop_list(game: &Game, items: Vec<(i32, String)>) {
     println!("\n    funds: {}", format_gold(game.gold));
 }
 
+pub fn shop_buy(cost: i32, items: &HashMap<Key, i32>) {
+    println!("{}", format_ls("", items, -cost));
+}
+
 pub fn quest_list(quests: Vec<(bool, String)>) {
     for (completed, quest) in quests {
         if completed {
@@ -146,7 +150,7 @@ pub fn quest_list(quests: Vec<(bool, String)>) {
 
 pub fn quest_done(reward: i32) {
     if !quiet() {
-        println!("   {} quest completed!", format_gold_plus(reward));
+        println!("   {} quest completed!", format_gold_signed(reward));
     }
 }
 
@@ -156,7 +160,7 @@ fn enemy_appears(enemy: &Character, location: &Location) {
 
 fn bribe(player: &Character, amount: i32) {
     if amount > 0 {
-        let suffix = format!("bribed {}", format!("-{}g", amount).yellow());
+        let suffix = format!("bribed {}", format_gold_signed(-amount));
         battle_log(player, &suffix);
     } else {
         battle_log(player, "can't bribe!");
@@ -381,8 +385,8 @@ fn tombstone(items: &HashMap<Key, i32>, gold: i32) {
 fn format_ls(emoji: &str, items: &HashMap<Key, i32>, gold: i32) -> String {
     let mut string = format!("{} ", emoji);
 
-    if gold > 0 {
-        string.push_str(&format!("{} ", format_gold_plus(gold)));
+    if gold != 0 {
+        string.push_str(&format!("{} ", format_gold_signed(gold)));
     }
     for (key, count) in items {
         string.push_str(&format!("+{}x{} ", key, count));
@@ -565,8 +569,8 @@ fn format_gold(gold: i32) -> ColoredString {
     format!("{}g", gold).yellow()
 }
 
-fn format_gold_plus(gold: i32) -> ColoredString {
-    format!("+{}g", gold).yellow()
+fn format_gold_signed(gold: i32) -> ColoredString {
+    format!("{:+}g", gold).yellow()
 }
 
 #[cfg(test)]

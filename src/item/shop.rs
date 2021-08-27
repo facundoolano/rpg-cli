@@ -8,6 +8,7 @@ use crate::event::Event;
 use crate::game::Game;
 use crate::log;
 use anyhow::{bail, Result};
+use std::collections::HashMap;
 
 /// Print the list of available items and their price.
 pub fn list(game: &Game) -> Result<()> {
@@ -23,22 +24,53 @@ pub fn list(game: &Game) -> Result<()> {
     Ok(())
 }
 
-/// Buy an item and add it to the game.
+/// Buy as much as possible from the given item list.
+/// Will stop buying if there's an error (ran out of money or requested item is
+/// not available), but will keep the shopped items so far.
+/// Will bail on error only after reporting what was bought.
 pub fn buy(game: &mut Game, item_keys: &[Key]) -> Result<()> {
     if !game.location.is_home() {
         bail!("Shop is only allowed at home.");
     }
 
+    // Buy as many as possible and break on first error
+    let mut item_counts = HashMap::new();
+    let mut total_cost = 0;
+    let mut error = String::from("");
     for key in item_keys {
+        // get list every time to prevent e.g. buying the sword twice
         let item = available_items(&game.player)
             .into_iter()
             .find(|s| s.to_key() == *key);
 
         if let Some(item) = item {
-            item.buy(game)?;
+            let item_cost = item.cost();
+
+            if game.gold < item_cost {
+                error = "Not enough gold.".to_string();
+                break;
+            }
+            game.gold -= item_cost;
+            item.add_to(game);
+
+            total_cost += item_cost;
+            *item_counts.entry(key.clone()).or_insert(0) += 1;
+            Event::emit(
+                game,
+                Event::ItemBought {
+                    item: item.to_string(),
+                },
+            );
         } else {
-            bail!("Item not available.")
+            error = format!("{} not available.", key);
+            break;
         }
+    }
+
+    // log what could be bought, and the interrupting error, if any
+    log::shop_buy(total_cost, &item_counts);
+    if !error.is_empty() {
+        bail!(error);
     }
     Ok(())
 }
@@ -75,22 +107,6 @@ fn available_items(player: &Character) -> Vec<Box<dyn Shoppable>> {
 
 trait Shoppable: Display {
     fn cost(&self) -> i32;
-    fn buy(&self, game: &mut Game) -> Result<()> {
-        if game.gold < self.cost() {
-            bail!("Not enough gold.");
-        }
-        game.gold -= self.cost();
-        self.add_to(game);
-
-        Event::emit(
-            game,
-            Event::ItemBought {
-                item: self.to_string(),
-            },
-        );
-
-        Ok(())
-    }
     fn add_to(&self, game: &mut Game);
     fn to_key(&self) -> Key;
 }
@@ -166,5 +182,72 @@ impl Shoppable for super::Ether {
 
     fn to_key(&self) -> Key {
         self.key()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::Potion;
+    use super::*;
+
+    #[test]
+    fn buy_one() {
+        let potion = Potion::new(1);
+        assert_eq!(200, potion.cost());
+
+        let mut game = Game::new();
+        game.gold = 1000;
+
+        let result = buy(&mut game, &vec![Key::Potion]);
+        assert!(result.is_ok());
+        assert_eq!(800, game.gold);
+        assert_eq!(1, *game.inventory().get(&Key::Potion).unwrap());
+    }
+
+    #[test]
+    fn buy_multiple() {
+        let mut game = Game::new();
+        game.gold = 1000;
+
+        let result = buy(&mut game, &vec![Key::Potion, Key::Potion, Key::Potion]);
+        assert!(result.is_ok());
+        assert_eq!(400, game.gold);
+        assert_eq!(3, *game.inventory().get(&Key::Potion).unwrap());
+    }
+
+    #[test]
+    fn buy_until_no_money() {
+        let mut game = Game::new();
+        game.gold = 500;
+
+        let result = buy(&mut game, &vec![Key::Potion, Key::Potion, Key::Potion]);
+        assert!(result.is_err());
+        assert_eq!(100, game.gold);
+        assert_eq!(2, *game.inventory().get(&Key::Potion).unwrap());
+    }
+
+    #[test]
+    fn buy_until_not_available() {
+        let mut game = Game::new();
+        game.gold = 1000;
+
+        // not sellable
+        let result = buy(&mut game, &vec![Key::Potion, Key::MagicStone, Key::Potion]);
+        assert!(result.is_err());
+        assert_eq!(800, game.gold);
+        assert_eq!(1, *game.inventory().get(&Key::Potion).unwrap());
+
+        // sellable once, then unavailable
+        let mut game = Game::new();
+        game.gold = 2000;
+        let result = buy(
+            &mut game,
+            &vec![Key::Potion, Key::Shield, Key::Shield, Key::Potion],
+        );
+        assert!(result.is_err());
+        // 200 from potion - 500 from shield (once)
+        assert_eq!(1300, game.gold);
+        assert_eq!(1, *game.inventory().get(&Key::Potion).unwrap());
+        assert!(game.player.shield.is_some());
     }
 }
