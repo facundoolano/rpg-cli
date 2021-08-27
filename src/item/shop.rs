@@ -68,7 +68,7 @@ pub fn buy(game: &mut Game, item_keys: &[Key]) -> Result<()> {
         }
     }
 
-    // log what could be bought, and the interrupting error, if any
+    // log what could be bought even if there was an error
     log::shop_buy(total_cost, &item_counts);
     if !error.is_empty() {
         bail!(error);
