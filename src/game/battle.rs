@@ -47,8 +47,8 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 /// Attack enemy, returning the gained experience
 fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
     let (attack_type, damage, mp_cost, new_xp) = generate_attack(&game.player, enemy, random);
-    enemy.receive_damage(damage).unwrap_or_default();
-    game.player.current_mp -= mp_cost;
+    enemy.update_hp(-damage).unwrap_or_default();
+    game.player.update_mp(-mp_cost);
 
     Event::emit(
         game,
@@ -69,8 +69,8 @@ fn enemy_attack(
     random: &dyn Randomizer,
 ) -> Result<(), Dead> {
     let (attack_type, damage, mp_cost, _xp) = generate_attack(enemy, &game.player, random);
-    let result = game.player.receive_damage(damage);
-    enemy.current_mp -= mp_cost;
+    let result = game.player.update_hp(-damage).map(|_| ());
+    enemy.update_mp(-mp_cost);
 
     if let AttackType::Effect(status) = attack_type {
         game.player.status_effect = Some(status);

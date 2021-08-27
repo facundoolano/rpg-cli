@@ -41,6 +41,7 @@ pub enum StatusEffect {
     Poison,
 }
 
+#[derive(Debug)]
 pub struct Dead;
 pub struct ClassNotFound;
 
@@ -192,35 +193,28 @@ impl Character {
         increased_levels
     }
 
-    // FIXME change for a general purpose change damage
-    pub fn receive_damage(&mut self, damage: i32) -> Result<(), Dead> {
-        if damage >= self.current_hp {
-            self.current_hp = 0;
+    /// TODO document
+    pub fn update_hp(&mut self, amount: i32) -> Result<i32, Dead> {
+        let previous = self.current_hp;
+        self.current_hp = max(0, min(self.max_hp(), self.current_hp + amount));
+
+        if self.current_hp == 0 {
             Err(Dead)
         } else {
-            self.current_hp -= damage;
-            Ok(())
+            Ok(self.current_hp - previous)
         }
     }
 
-    // FIXME merge with the above
-    /// Restore up to the given amount of health points (not exceeding the max_hp).
-    /// Return the amount actually restored.
-    pub fn heal(&mut self, amount: i32) -> i32 {
-        let previous = self.current_hp;
-        self.current_hp = min(self.max_hp(), self.current_hp + amount);
-        self.current_hp - previous
+    /// TODO document
+    pub fn update_mp(&mut self, amount: i32) -> i32 {
+        let previous = self.current_mp;
+        self.current_mp = max(0, min(self.max_mp(), self.current_mp + amount));
+        self.current_mp - previous
     }
 
+    // FIXME is this necessary?
     pub fn is_dead(&self) -> bool {
         self.current_hp == 0
-    }
-
-    // FIXME change for a general purpose one
-    pub fn restore_mp(&mut self, amount: i32) -> i32 {
-        let previous = self.current_mp;
-        self.current_mp = min(self.max_mp(), self.current_mp + amount);
-        self.current_mp - previous
     }
 
     /// Restore all health and magic points to their max and remove status effects
@@ -228,8 +222,8 @@ impl Character {
         let healed = self.status_effect.is_some();
         self.status_effect = None;
         (
-            self.heal(self.max_hp()),
-            self.restore_mp(self.max_mp()),
+            self.update_hp(self.max_hp()).unwrap(),
+            self.update_mp(self.max_mp()),
             healed,
         )
     }
@@ -367,13 +361,8 @@ impl Character {
             _ => {}
         }
 
-        // FIXME this one is not ready to handle arbitrary +/- changes, fix
-        if hp_effect > 0 {
-            self.heal(hp_effect);
-        } else if hp_effect < 0 {
-            self.receive_damage(-hp_effect)?;
-        }
-        self.restore_mp(mp_effect);
+        self.update_hp(hp_effect)?;
+        self.update_mp(mp_effect);
 
         Ok((hp_effect, mp_effect))
     }
@@ -600,7 +589,7 @@ mod tests {
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
-        assert_eq!(0, hero.heal(100));
+        assert_eq!(0, hero.update_hp(100).unwrap());
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
@@ -609,11 +598,11 @@ mod tests {
         assert_eq!(25, hero.current_hp);
 
         hero.current_hp = 10;
-        assert_eq!(5, hero.heal(5));
+        assert_eq!(5, hero.update_hp(5).unwrap());
         assert_eq!(25, hero.max_hp);
         assert_eq!(15, hero.current_hp);
 
-        assert_eq!(10, hero.heal(100));
+        assert_eq!(10, hero.update_hp(100).unwrap());
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
