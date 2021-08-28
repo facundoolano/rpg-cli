@@ -186,7 +186,7 @@ fn heal(
         log(
             player,
             location,
-            &format_heal(recovered_hp, recovered_mp, healed, ""),
+            &format_hp_mp_change(player, recovered_hp, recovered_mp, healed, ""),
         );
     }
 }
@@ -195,7 +195,7 @@ fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i3
     if recovered_hp > 0 || recovered_mp > 0 || healed {
         battle_log(
             player,
-            &format_heal(recovered_hp, recovered_mp, healed, item),
+            &format_hp_mp_change(player, recovered_hp, recovered_mp, healed, item),
         );
     }
 }
@@ -217,21 +217,16 @@ fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32)
     }
 }
 
-// FIXME try to come up with a generic helper to cover this and the heal item and full restore scenarios
-// this is already halfway there
 fn status_effect(character: &Character, hp: i32, mp: i32) {
     if hp != 0 || mp != 0 {
         let emoji = character
             .status_effect
             .map_or("", |s| status_effect_params(s).1);
-        let hp_contrib = format_damage(character, -hp, emoji);
-        let mp_contrib = if mp != 0 {
-            format!("+{}mp ", mp).purple().to_string()
-        } else {
-            String::from("")
-        };
 
-        battle_log(character, &format!("{} {}", hp_contrib, mp_contrib));
+        battle_log(
+            character,
+            &format_hp_mp_change(character, hp, mp, false, emoji),
+        );
     }
 }
 
@@ -468,17 +463,18 @@ fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost
     }
 }
 
-// TODO can this coexist with format damage?
-fn format_heal(recovered_hp: i32, recovered_mp: i32, healed: bool, suffix: &str) -> String {
-    let mut recovered_text = String::new();
+fn format_hp_mp_change(
+    receiver: &Character,
+    hp: i32,
+    mp: i32,
+    healed: bool,
+    suffix: &str,
+) -> String {
     let mut healed_text = String::new();
     let mut mp_text = String::new();
 
-    if recovered_hp > 0 {
-        recovered_text = format!("+{}hp ", recovered_hp);
-    }
-    if recovered_mp > 0 {
-        mp_text = format!("+{}mp ", recovered_mp);
+    if mp != 0 {
+        mp_text = format!("{:+}mp ", mp);
     }
     if healed {
         healed_text = String::from("+healed ");
@@ -486,14 +482,13 @@ fn format_heal(recovered_hp: i32, recovered_mp: i32, healed: bool, suffix: &str)
 
     format!(
         "{}{}{}{}",
-        recovered_text.green(),
+        &format_damage(receiver, -hp, ""),
         mp_text.purple(),
         healed_text.green(),
         suffix
     )
 }
 
-// FIXME rename and inverse the amount interpretation
 fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
     if amount != 0 {
         let color = if receiver.is_player() {
