@@ -202,7 +202,7 @@ fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i3
                 recovered_hp,
                 recovered_mp,
                 healed,
-                &item.green().to_string(),
+                item,
             ),
         );
     }
