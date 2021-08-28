@@ -175,7 +175,6 @@ fn run_away(player: &Character, success: bool) {
     }
 }
 
-// TODO reduce duplication between heal and heal_item
 fn heal(
     player: &Character,
     location: &Location,
@@ -183,48 +182,21 @@ fn heal(
     recovered_mp: i32,
     healed: bool,
 ) {
-    let mut recovered_text = String::new();
-    let mut healed_text = String::new();
-    let mut mp_text = String::new();
-
-    if recovered_hp > 0 {
-        recovered_text = format!("+{}hp ", recovered_hp);
-    }
-    if recovered_mp > 0 {
-        mp_text = format!("+{}mp ", recovered_mp);
-    }
-    if healed {
-        healed_text = String::from("+healed ");
-    }
     if recovered_hp > 0 || recovered_mp > 0 || healed {
         log(
             player,
             location,
-            &format!(
-                "{}{}{}",
-                recovered_text.green(),
-                mp_text.purple(),
-                healed_text.green()
-            ),
+            &format_heal(recovered_hp, recovered_mp, healed, ""),
         );
     }
 }
 
 fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i32, healed: bool) {
-    if recovered_hp > 0 {
+    if recovered_hp > 0 || recovered_mp > 0 || healed {
         battle_log(
             player,
-            &format!("+{}hp {}", recovered_hp, item).green().to_string(),
+            &format_heal(recovered_hp, recovered_mp, healed, item),
         );
-    }
-    if recovered_mp > 0 {
-        battle_log(
-            player,
-            &format!("+{}mp {}", recovered_mp, item).purple().to_string(),
-        );
-    }
-    if healed {
-        battle_log(player, &format!("+healed {}", item).green().to_string());
     }
 }
 
@@ -494,6 +466,31 @@ fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost
         }
         AttackType::Miss => format!("{} dodged!", magic_effect),
     }
+}
+
+// TODO can this coexist with format damage?
+fn format_heal(recovered_hp: i32, recovered_mp: i32, healed: bool, suffix: &str) -> String {
+    let mut recovered_text = String::new();
+    let mut healed_text = String::new();
+    let mut mp_text = String::new();
+
+    if recovered_hp > 0 {
+        recovered_text = format!("+{}hp ", recovered_hp);
+    }
+    if recovered_mp > 0 {
+        mp_text = format!("+{}mp ", recovered_mp);
+    }
+    if healed {
+        healed_text = String::from("+healed ");
+    }
+
+    format!(
+        "{}{}{}{}",
+        recovered_text.green(),
+        mp_text.purple(),
+        healed_text.green(),
+        suffix
+    )
 }
 
 // FIXME rename and inverse the amount interpretation
