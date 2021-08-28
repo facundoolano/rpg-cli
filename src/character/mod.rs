@@ -328,7 +328,15 @@ impl Character {
             (Some(Ring::Fire), _) | (_, Some(Ring::Fire)) => Some((StatusEffect::Burn, 3)),
             _ => None,
         };
-        self.class.inflicts.or(ring_status)
+
+        let result = self.class.inflicts.or(ring_status);
+        if let Some((status, _)) = result {
+            // don't double-inflict if already has the same status
+            if receiver.status_effect == Some(status) {
+                return None;
+            }
+        }
+        result
     }
 
     /// If the character has a status condition (e.g. poison) or an equipped

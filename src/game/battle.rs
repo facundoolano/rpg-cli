@@ -106,13 +106,9 @@ fn generate_attack(
 
     match attack_type {
         AttackType::Miss => (attack_type, 0, mp_cost, 0),
-        AttackType::Regular => (AttackType::Regular, damage, mp_cost, xp),
+        AttackType::Regular => (attack_type, damage, mp_cost, xp),
         AttackType::Critical => (attack_type, damage * 2, mp_cost, xp),
-        AttackType::Effect(status) if Some(status) != receiver.status_effect => {
-            (attack_type, damage, mp_cost, xp)
-        }
-        // don't double-inflict if already has the same status
-        AttackType::Effect(_) => (AttackType::Regular, damage, mp_cost, xp),
+        AttackType::Effect(_) => (attack_type, damage, mp_cost, xp),
     }
 }
 
