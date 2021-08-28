@@ -248,7 +248,7 @@ fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32)
 // FIXME try to come up with a generic helper to cover this and the heal item and full restore scenarios
 // this is already halfway there
 fn status_effect(character: &Character, hp: i32, mp: i32) {
-    if hp != 0 && mp != 0 {
+    if hp != 0 || mp != 0 {
         let emoji = character
             .status_effect
             .map_or("", |s| status_effect_params(s).1);
