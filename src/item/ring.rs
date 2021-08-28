@@ -39,6 +39,9 @@ pub enum Ring {
 
     /// Recover mp on every turn
     RegenMP,
+
+    /// One ring to rule them all
+    Ruling,
 }
 
 impl Ring {

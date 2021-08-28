@@ -353,6 +353,14 @@ impl Character {
             }
         }
 
+        // is the ruling ring equipped?
+        match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
+            (Some(Ring::Ruling), _) | (_, Some(Ring::Ruling)) => {
+                hp_effect -= hp_unit();
+            }
+            _ => {}
+        }
+
         // does the character suffer from status ailments?
         match self.status_effect {
             Some(StatusEffect::Burn) | Some(StatusEffect::Poison) => hp_effect -= hp_unit(),
