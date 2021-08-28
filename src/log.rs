@@ -135,7 +135,9 @@ pub fn shop_list(game: &Game, items: Vec<(i32, String)>) {
 }
 
 pub fn shop_buy(cost: i32, items: &HashMap<Key, i32>) {
-    println!("{}", format_ls("", items, -cost));
+    if !items.is_empty() {
+        println!("  {}", format_ls("", items, -cost));
+    }
 }
 
 pub fn quest_list(quests: Vec<(bool, String)>) {
@@ -195,7 +197,13 @@ fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i3
     if recovered_hp > 0 || recovered_mp > 0 || healed {
         battle_log(
             player,
-            &format_hp_mp_change(player, recovered_hp, recovered_mp, healed, item),
+            &format_hp_mp_change(
+                player,
+                recovered_hp,
+                recovered_mp,
+                healed,
+                &item.green().to_string(),
+            ),
         );
     }
 }
@@ -489,6 +497,7 @@ fn format_hp_mp_change(
     )
 }
 
+// FIXME inverse and revert sign
 fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
     if amount != 0 {
         let color = if receiver.is_player() {
@@ -500,7 +509,9 @@ fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
         } else {
             "white"
         };
-        format!("-{}hp {}", amount, suffix).color(color).to_string()
+        format!("{:+}hp {}", -amount, suffix)
+            .color(color)
+            .to_string()
     } else {
         String::from("")
     }
