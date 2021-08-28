@@ -194,6 +194,8 @@ fn heal(
 }
 
 fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i32, healed: bool) {
+    let color = if recovered_mp > 0 { "purple" } else { "green" };
+
     if recovered_hp > 0 || recovered_mp > 0 || healed {
         battle_log(
             player,
@@ -202,7 +204,7 @@ fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i3
                 recovered_hp,
                 recovered_mp,
                 healed,
-                item,
+                &item.color(color),
             ),
         );
     }
