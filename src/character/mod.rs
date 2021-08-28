@@ -319,8 +319,12 @@ impl Character {
 
     /// Return the status that this character's attack should inflict on the receiver.
     pub fn inflicted_status_effect(&self) -> Option<(StatusEffect, u32)> {
-        // at some point the player could generate it depending on the equipment
-        self.class.inflicts
+        let ring_status = match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
+            (Some(Ring::Poison), _) | (_, Some(Ring::Poison)) => Some((StatusEffect::Poison, 3)),
+            (Some(Ring::Fire), _) | (_, Some(Ring::Fire)) => Some((StatusEffect::Burn, 3)),
+            _ => None,
+        };
+        self.class.inflicts.or(ring_status)
     }
 
     /// If the character has a status condition (e.g. poison) or an equipped
@@ -965,6 +969,39 @@ mod tests {
 
         char.equip_ring(Ring::Speed);
         assert_eq!(15, char.speed());
+    }
+
+    #[test]
+    fn test_status_rings() {
+        let mut char = new_plain_stats_char();
+        assert!(char.inflicted_status_effect().is_none());
+
+        char.left_ring = Some(Ring::Fire);
+        assert_eq!(
+            Some((StatusEffect::Burn, 3)),
+            char.inflicted_status_effect()
+        );
+
+        char.left_ring = None;
+        char.right_ring = Some(Ring::Fire);
+        assert_eq!(
+            Some((StatusEffect::Burn, 3)),
+            char.inflicted_status_effect()
+        );
+
+        char.left_ring = Some(Ring::Poison);
+        char.right_ring = None;
+        assert_eq!(
+            Some((StatusEffect::Poison, 3)),
+            char.inflicted_status_effect()
+        );
+
+        char.left_ring = None;
+        char.right_ring = Some(Ring::Poison);
+        assert_eq!(
+            Some((StatusEffect::Poison, 3)),
+            char.inflicted_status_effect()
+        );
     }
 
     #[test]
