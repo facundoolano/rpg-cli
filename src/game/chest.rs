@@ -51,9 +51,9 @@ impl Chest {
             // be included in the chest
             if let Some(ring) = random_ring(game) {
                 chest.items.push(Box::new(ring));
-
+            } else {
                 // only show chest found if there are rings left to be found
-                ring_chest = true;
+                ring_chest = false;
             }
         }
 
