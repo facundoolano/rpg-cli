@@ -337,8 +337,8 @@ impl Character {
             hp_effect += hp_unit();
         }
 
-        if self.class.is_magic() && self.left_ring == Some(Ring::RegenMP)
-            || self.right_ring == Some(Ring::RegenMP)
+        if self.class.is_magic()
+            && (self.left_ring == Some(Ring::RegenMP) || self.right_ring == Some(Ring::RegenMP))
         {
             mp_effect += mp_unit();
         }

@@ -30,7 +30,7 @@ impl Chest {
         let distance = &game.location.distance_from_home();
         let gold_chest = random().gold_chest(distance);
         let equipment_chest = random().equipment_chest(distance);
-        let ring_chest = random().ring_chest(distance);
+        let mut ring_chest = random().ring_chest(distance);
 
         let mut chest = Self::default();
 
@@ -51,6 +51,9 @@ impl Chest {
             // be included in the chest
             if let Some(ring) = random_ring(game) {
                 chest.items.push(Box::new(ring));
+
+                // only show chest found if there are rings left to be found
+                ring_chest = true;
             }
         }
 
@@ -65,7 +68,7 @@ impl Chest {
         }
 
         // Return None instead of an empty chest if none was found
-        if gold_chest || equipment_chest || item_chest {
+        if gold_chest || equipment_chest || item_chest || ring_chest {
             Some(chest)
         } else {
             None
