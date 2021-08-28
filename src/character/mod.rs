@@ -193,7 +193,9 @@ impl Character {
         increased_levels
     }
 
-    /// TODO document
+    /// Add or subtract the given amount of current hp, keeping it between
+    /// 0 and max_hp. Return the effectively changed amount, or Err(Dead)
+    /// if the character dies as a consequence of the damage.
     pub fn update_hp(&mut self, amount: i32) -> Result<i32, Dead> {
         let previous = self.current_hp;
         self.current_hp = max(0, min(self.max_hp(), self.current_hp + amount));
@@ -205,7 +207,8 @@ impl Character {
         }
     }
 
-    /// TODO document
+    /// Add or subtract the given amount of current mp, keeping it between
+    /// 0 and max_mp.
     pub fn update_mp(&mut self, amount: i32) -> i32 {
         let previous = self.current_mp;
         self.current_mp = max(0, min(self.max_mp(), self.current_mp + amount));
