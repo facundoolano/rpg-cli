@@ -8,6 +8,7 @@
 * Sorcerer enemy class  #88
 * Stat increasing stones #95
 * Effect rings as items and equipment, initial set of stat-based rings #98
+* RegenHP and RegenMP rings #109
 
 ### Changed
 * Remember unlocked quests and todo list order #89
@@ -28,6 +29,7 @@
 * Reach level quests rewarded when multiple levels raised in a single event 60f5fb2
 * Give base mp when switching to a magic class from a non base level 96c2de6
 * Missed levels with class quest completion 1ec760
+* Reduce gold found in chests 0317979
 
 ## [0.6.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.6.0) - 2021-08-04
 ### Added

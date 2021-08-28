@@ -47,8 +47,8 @@ pub fn handle(game: &Game, event: &Event) {
         } => {
             attack(&game.player, kind, *damage, *mp_cost);
         }
-        Event::StatusEffectDamage { damage } => {
-            status_effect_damage(&game.player, *damage);
+        Event::StatusEffect { hp, mp } => {
+            status_effect(&game.player, *hp, *mp);
         }
         Event::BattleWon {
             xp,
@@ -135,7 +135,9 @@ pub fn shop_list(game: &Game, items: Vec<(i32, String)>) {
 }
 
 pub fn shop_buy(cost: i32, items: &HashMap<Key, i32>) {
-    println!("{}", format_ls("", items, -cost));
+    if !items.is_empty() {
+        println!("  {}", format_ls("", items, -cost));
+    }
 }
 
 pub fn quest_list(quests: Vec<(bool, String)>) {
@@ -175,7 +177,6 @@ fn run_away(player: &Character, success: bool) {
     }
 }
 
-// TODO reduce duplication between heal and heal_item
 fn heal(
     player: &Character,
     location: &Location,
@@ -183,48 +184,29 @@ fn heal(
     recovered_mp: i32,
     healed: bool,
 ) {
-    let mut recovered_text = String::new();
-    let mut healed_text = String::new();
-    let mut mp_text = String::new();
-
-    if recovered_hp > 0 {
-        recovered_text = format!("+{}hp ", recovered_hp);
-    }
-    if recovered_mp > 0 {
-        mp_text = format!("+{}mp ", recovered_mp);
-    }
-    if healed {
-        healed_text = String::from("+healed ");
-    }
     if recovered_hp > 0 || recovered_mp > 0 || healed {
         log(
             player,
             location,
-            &format!(
-                "{}{}{}",
-                recovered_text.green(),
-                mp_text.purple(),
-                healed_text.green()
-            ),
+            &format_stat_change(player, recovered_hp, recovered_mp, healed, ""),
         );
     }
 }
 
 fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i32, healed: bool) {
-    if recovered_hp > 0 {
+    let color = if recovered_mp > 0 { "purple" } else { "green" };
+
+    if recovered_hp > 0 || recovered_mp > 0 || healed {
         battle_log(
             player,
-            &format!("+{}hp {}", recovered_hp, item).green().to_string(),
+            &format_stat_change(
+                player,
+                recovered_hp,
+                recovered_mp,
+                healed,
+                &item.color(color),
+            ),
         );
-    }
-    if recovered_mp > 0 {
-        battle_log(
-            player,
-            &format!("+{}mp {}", recovered_mp, item).purple().to_string(),
-        );
-    }
-    if healed {
-        battle_log(player, &format!("+healed {}", item).green().to_string());
     }
 }
 
@@ -245,9 +227,17 @@ fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32)
     }
 }
 
-fn status_effect_damage(character: &Character, damage: i32) {
-    let (_, emoji) = status_effect_params(character.status_effect.unwrap());
-    battle_log(character, &format_damage(character, damage, emoji));
+fn status_effect(character: &Character, hp: i32, mp: i32) {
+    if hp != 0 || mp != 0 {
+        let emoji = character
+            .status_effect
+            .map_or("", |s| status_effect_params(s).1);
+
+        battle_log(
+            character,
+            &format_stat_change(character, hp, mp, false, emoji),
+        );
+    }
 }
 
 fn battle_lost(player: &Character) {
@@ -472,24 +462,60 @@ fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost
     };
 
     match attack {
-        AttackType::Regular => format_damage(receiver, damage, &magic_effect),
+        AttackType::Regular => format_hp_change(receiver, -damage, &magic_effect),
         AttackType::Critical => {
-            format_damage(receiver, damage, &format!("{} critical!", magic_effect))
+            format_hp_change(receiver, -damage, &format!("{} critical!", magic_effect))
         }
         AttackType::Effect(status_effect) => {
-            format_damage(receiver, damage, &format_status_effect(*status_effect))
+            format_hp_change(receiver, -damage, &format_status_effect(*status_effect))
         }
         AttackType::Miss => format!("{} dodged!", magic_effect),
     }
 }
 
-fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
-    let color = if receiver.is_player() {
-        "bright red".to_string()
+fn format_stat_change(
+    receiver: &Character,
+    hp: i32,
+    mp: i32,
+    healed: bool,
+    suffix: &str,
+) -> String {
+    let mut healed_text = String::new();
+    let mut mp_text = String::new();
+
+    if mp != 0 {
+        mp_text = format!("{:+}mp ", mp);
+    }
+    if healed {
+        healed_text = String::from("+healed ");
+    }
+
+    format!(
+        "{}{}{}{}",
+        &format_hp_change(receiver, hp, ""),
+        mp_text.purple(),
+        healed_text.green(),
+        suffix
+    )
+}
+
+fn format_hp_change(receiver: &Character, amount: i32, suffix: &str) -> String {
+    if amount != 0 {
+        let color = if receiver.is_player() {
+            if amount < 0 {
+                "bright red"
+            } else {
+                "green"
+            }
+        } else {
+            "white"
+        };
+        format!("{:+}hp {}", amount, suffix)
+            .color(color)
+            .to_string()
     } else {
-        "white".to_string()
-    };
-    format!("-{}hp {}", amount, suffix).color(color).to_string()
+        String::from("")
+    }
 }
 
 fn format_status_effect(status_effect: StatusEffect) -> String {

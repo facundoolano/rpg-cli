@@ -41,6 +41,7 @@ pub enum StatusEffect {
     Poison,
 }
 
+#[derive(Debug)]
 pub struct Dead;
 pub struct ClassNotFound;
 
@@ -87,7 +88,7 @@ impl Character {
         };
 
         for _ in 1..level {
-            character.increase_level();
+            character.raise_level();
         }
 
         character
@@ -137,27 +138,27 @@ impl Character {
     }
 
     /// Raise the level and all the character stats.
-    pub fn increase_level(&mut self) {
+    pub fn raise_level(&mut self) {
         self.level += 1;
-        self.increase_strength();
-        self.increase_speed();
-        self.increase_hp();
-        self.increase_mp();
+        self.raise_strength();
+        self.raise_speed();
+        self.raise_hp();
+        self.raise_mp();
     }
 
-    pub fn increase_strength(&mut self) -> i32 {
+    pub fn raise_strength(&mut self) -> i32 {
         let inc = self.class.strength.increase();
         self.strength += inc;
         inc
     }
 
-    pub fn increase_speed(&mut self) -> i32 {
+    pub fn raise_speed(&mut self) -> i32 {
         let inc = self.class.speed.increase();
         self.speed += inc;
         inc
     }
 
-    pub fn increase_hp(&mut self) -> i32 {
+    pub fn raise_hp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous damage
         let previous_damage = self.max_hp() - self.current_hp;
@@ -167,7 +168,7 @@ impl Character {
         inc
     }
 
-    pub fn increase_mp(&mut self) -> i32 {
+    pub fn raise_mp(&mut self) -> i32 {
         // the current should increase proportionally but not
         // erase previous mp consumption
         let previous_used_mp = self.max_mp() - self.current_mp;
@@ -184,7 +185,7 @@ impl Character {
         let mut increased_levels = 0;
         let mut for_next = self.xp_for_next();
         while self.xp >= for_next {
-            self.increase_level();
+            self.raise_level();
             self.xp -= for_next;
             increased_levels += 1;
             for_next = self.xp_for_next();
@@ -192,37 +193,37 @@ impl Character {
         increased_levels
     }
 
-    pub fn receive_damage(&mut self, damage: i32) -> Result<(), Dead> {
-        if damage >= self.current_hp {
-            self.current_hp = 0;
+    /// Add or subtract the given amount of current hp, keeping it between
+    /// 0 and max_hp. Return the effectively changed amount, or Err(Dead)
+    /// if the character dies as a consequence of the damage.
+    pub fn update_hp(&mut self, amount: i32) -> Result<i32, Dead> {
+        let previous = self.current_hp;
+        self.current_hp = max(0, min(self.max_hp(), self.current_hp + amount));
+
+        if self.current_hp == 0 {
             Err(Dead)
         } else {
-            self.current_hp -= damage;
-            Ok(())
+            Ok(self.current_hp - previous)
         }
     }
 
-    pub fn is_dead(&self) -> bool {
-        self.current_hp == 0
-    }
-
-    /// Restore up to the given amount of health points (not exceeding the max_hp).
-    /// Return the amount actually restored.
-    pub fn heal(&mut self, amount: i32) -> i32 {
-        let previous = self.current_hp;
-        self.current_hp = min(self.max_hp(), self.current_hp + amount);
-        self.current_hp - previous
-    }
-
-    pub fn restore_mp(&mut self, amount: i32) -> i32 {
+    /// Add or subtract the given amount of current mp, keeping it between
+    /// 0 and max_mp.
+    pub fn update_mp(&mut self, amount: i32) -> i32 {
         let previous = self.current_mp;
-        self.current_mp = min(self.max_mp(), self.current_mp + amount);
+        self.current_mp = max(0, min(self.max_mp(), self.current_mp + amount));
         self.current_mp - previous
     }
 
-    /// Restore all health and magic points to their max
-    pub fn heal_full(&mut self) -> (i32, i32) {
-        (self.heal(self.max_hp()), self.restore_mp(self.max_mp()))
+    /// Restore all health and magic points to their max and remove status effects
+    pub fn restore(&mut self) -> (i32, i32, bool) {
+        let healed = self.status_effect.is_some();
+        self.status_effect = None;
+        (
+            self.update_hp(self.max_hp()).unwrap(),
+            self.update_mp(self.max_mp()),
+            healed,
+        )
     }
 
     /// Return true if an evade ring is equipped, i.e. no enemies should appear.
@@ -242,7 +243,7 @@ impl Character {
     /// The second element is the mp cost of the attack, if any.
     pub fn damage(&self, receiver: &Self) -> (i32, i32) {
         let (damage, mp_cost) = if self.can_magic_attack() {
-            (self.magic_attack(), self.mp_cost())
+            (self.magic_attack(), self.attack_mp_cost())
         } else {
             (self.physical_attack(), 0)
         };
@@ -287,10 +288,10 @@ impl Character {
 
     /// The character's class enables magic and there's enough mp left
     pub fn can_magic_attack(&self) -> bool {
-        self.class.is_magic() && self.current_mp >= self.mp_cost()
+        self.class.is_magic() && self.current_mp >= self.attack_mp_cost()
     }
 
-    fn mp_cost(&self) -> i32 {
+    fn attack_mp_cost(&self) -> i32 {
         // each magic attack costs one third of the "canonical" mp total for this level
         self.class.mp.as_ref().map_or(0, |mp| mp.at(self.level) / 3)
     }
@@ -322,26 +323,40 @@ impl Character {
         self.class.inflicts
     }
 
-    pub fn maybe_remove_status_effect(&mut self) -> bool {
-        if self.status_effect.is_some() {
-            self.status_effect = None;
-            return true;
-        }
-        false
-    }
+    /// If the character has a status condition (e.g. poison) or an equipped
+    /// ring that produces one (e.g. regen hp), apply its effects.
+    pub fn apply_status_effects(&mut self) -> Result<(i32, i32), Dead> {
+        let mut hp_effect = 0;
+        let mut mp_effect = 0;
 
-    /// If the character suffers from a damage-producing status effect, apply it.
-    pub fn receive_status_effect_damage(&mut self) -> Result<Option<i32>, Dead> {
-        // NOTE: in the future we could have a positive status that e.g. regen hp
-        match self.status_effect {
-            Some(StatusEffect::Burn) | Some(StatusEffect::Poison) => {
-                let damage = std::cmp::max(1, self.max_hp / 20);
-                let damage = random().damage(damage);
-                self.receive_damage(damage)?;
-                Ok(Some(damage))
-            }
-            _ => Ok(None),
+        // statuses have a (randomized) +/-5% effect on the base stat
+        let hp_unit = || random().damage(std::cmp::max(1, self.max_hp / 20));
+        let mp_unit = || random().damage(std::cmp::max(1, self.max_mp / 20));
+
+        if self.left_ring == Some(Ring::RegenHP) || self.right_ring == Some(Ring::RegenHP) {
+            hp_effect += hp_unit();
         }
+
+        if self.class.is_magic()
+            && (self.left_ring == Some(Ring::RegenMP) || self.right_ring == Some(Ring::RegenMP))
+        {
+            mp_effect += mp_unit();
+        }
+
+        if self.left_ring == Some(Ring::Ruling) || self.right_ring == Some(Ring::Ruling) {
+            hp_effect -= hp_unit();
+        }
+
+        if self.status_effect == Some(StatusEffect::Burn)
+            || self.status_effect == Some(StatusEffect::Poison)
+        {
+            hp_effect -= hp_unit();
+        }
+
+        self.update_hp(hp_effect)?;
+        self.update_mp(mp_effect);
+
+        Ok((hp_effect, mp_effect))
     }
 
     /// Return the player level rounded to offer items at "pretty levels", e.g.
@@ -458,7 +473,7 @@ mod tests {
         hero.strength = 10;
         hero.speed = 5;
 
-        hero.increase_level();
+        hero.raise_level();
         assert_eq!(2, hero.level);
         assert_eq!(27, hero.max_hp);
         assert_eq!(13, hero.strength);
@@ -467,7 +482,7 @@ mod tests {
         let damage = 7;
         hero.current_hp -= damage;
 
-        hero.increase_level();
+        hero.raise_level();
         assert_eq!(3, hero.level);
         assert_eq!(hero.current_hp, hero.max_hp - damage);
     }
@@ -532,9 +547,9 @@ mod tests {
     fn test_xp_for_next() {
         let mut hero = new_char();
         assert_eq!(30, hero.xp_for_next());
-        hero.increase_level();
+        hero.raise_level();
         assert_eq!(84, hero.xp_for_next());
-        hero.increase_level();
+        hero.raise_level();
         assert_eq!(155, hero.xp_for_next());
     }
 
@@ -566,25 +581,25 @@ mod tests {
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
-        assert_eq!(0, hero.heal(100));
+        assert_eq!(0, hero.update_hp(100).unwrap());
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
-        assert_eq!(0, hero.heal_full().0);
+        assert_eq!(0, hero.restore().0);
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
         hero.current_hp = 10;
-        assert_eq!(5, hero.heal(5));
+        assert_eq!(5, hero.update_hp(5).unwrap());
         assert_eq!(25, hero.max_hp);
         assert_eq!(15, hero.current_hp);
 
-        assert_eq!(10, hero.heal(100));
+        assert_eq!(10, hero.update_hp(100).unwrap());
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
 
         hero.current_hp = 10;
-        assert_eq!(15, hero.heal_full().0);
+        assert_eq!(15, hero.restore().0);
         assert_eq!(25, hero.max_hp);
         assert_eq!(25, hero.current_hp);
     }
@@ -621,29 +636,107 @@ mod tests {
     }
 
     #[test]
-    fn test_receive_status_effect_damage() {
+    fn apply_status_effect() {
         let mut hero = new_char();
         assert_eq!(25, hero.current_hp);
 
-        hero.receive_status_effect_damage().unwrap_or_default();
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(25, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Burn);
-        hero.receive_status_effect_damage().unwrap_or_default();
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(24, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Poison);
-        hero.receive_status_effect_damage().unwrap_or_default();
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 
-        hero.maybe_remove_status_effect();
-        hero.receive_status_effect_damage().unwrap_or_default();
+        hero.status_effect = None;
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
 
         hero.status_effect = Some(StatusEffect::Burn);
         hero.current_hp = 1;
-        assert!(hero.receive_status_effect_damage().is_err());
-        assert!(hero.is_dead());
+        assert!(hero.apply_status_effects().is_err());
+        assert_eq!(0, hero.current_hp);
+    }
+
+    #[test]
+    fn apply_ring_status() {
+        let mut hero = new_char();
+        assert_eq!(25, hero.current_hp);
+
+        // hp ring already full
+        hero.left_ring = Some(Ring::RegenHP);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(1, hp);
+        assert_eq!(0, mp);
+        assert_eq!(25, hero.current_hp);
+
+        // hp ring recover
+        hero.current_hp = 20;
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(1, hp);
+        assert_eq!(0, mp);
+        assert_eq!(21, hero.current_hp);
+
+        // mp ring non magic
+        hero.left_ring = Some(Ring::RegenMP);
+        assert_eq!(0, hero.current_mp);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(0, mp);
+        assert_eq!(0, hero.current_mp);
+
+        // force into a magic class
+        hero.class.mp = Some(class::Stat(10, 1));
+        hero.max_mp = 10;
+        hero.current_mp = 10;
+
+        // mp ring magic already full
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(1, mp);
+        assert_eq!(10, hero.current_mp);
+
+        // mp ring magic recover
+        hero.current_mp = 7;
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(1, mp);
+        assert_eq!(8, hero.current_mp);
+
+        // hp + mp
+        hero.right_ring = Some(Ring::RegenHP);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(1, hp);
+        assert_eq!(1, mp);
+        assert_eq!(22, hero.current_hp);
+        assert_eq!(9, hero.current_mp);
+
+        // mp + hp
+        hero.left_ring = Some(Ring::RegenHP);
+        hero.right_ring = Some(Ring::RegenMP);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(1, hp);
+        assert_eq!(1, mp);
+        assert_eq!(23, hero.current_hp);
+        assert_eq!(10, hero.current_mp);
+
+        // hp - burn cancel each other
+        hero.right_ring = None;
+        hero.status_effect = Some(StatusEffect::Burn);
+        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(0, mp);
+        assert_eq!(23, hero.current_hp);
+        assert_eq!(10, hero.current_mp);
+
+        // hp - burn prevent dead
+        hero.current_hp = 1;
+        let (hp, _) = hero.apply_status_effects().unwrap_or_default();
+        assert_eq!(0, hp);
+        assert_eq!(1, hero.current_hp);
     }
 
     #[test]
@@ -707,8 +800,8 @@ mod tests {
         assert_eq!(0, player.max_mp);
         assert_eq!(0, player.current_mp);
 
-        player.increase_level();
-        player.increase_level();
+        player.raise_level();
+        player.raise_level();
         assert_eq!(0, player.max_mp);
         assert_eq!(0, player.current_mp);
 

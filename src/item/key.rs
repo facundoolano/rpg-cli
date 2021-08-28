@@ -48,6 +48,9 @@ impl Key {
             "mp-rng" | "mp-ring" => Key::Ring(Ring::MP),
             "hp-rng" | "hp-ring" => Key::Ring(Ring::HP),
             "evade-rng" | "evade" | "evade-ring" => Key::Ring(Ring::Evade),
+            "hgen-rng" | "hgen" | "hgen-ring" => Key::Ring(Ring::RegenHP),
+            "mgen-rng" | "mgen" | "mgen-ring" => Key::Ring(Ring::RegenMP),
+            "ruling-rng" | "ruling" | "ruling-ring" => Key::Ring(Ring::Ruling),
             key => bail!("item {} not found", key),
         };
         Ok(key)
@@ -76,6 +79,9 @@ impl fmt::Display for Key {
             Key::Ring(Ring::MP) => "mp-rng",
             Key::Ring(Ring::HP) => "hp-rng",
             Key::Ring(Ring::Evade) => "evade-rng",
+            Key::Ring(Ring::RegenHP) => "hgen-rng",
+            Key::Ring(Ring::RegenMP) => "mgen-rng",
+            Key::Ring(Ring::Ruling) => "ruling-rng",
         };
 
         write!(f, "{}", name)

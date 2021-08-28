@@ -33,6 +33,15 @@ pub enum Ring {
 
     /// Enemies don't appear while wearing this ring
     Evade,
+
+    /// Recover hp on every turn
+    RegenHP,
+
+    /// Recover mp on every turn
+    RegenMP,
+
+    /// One ring to rule them all
+    Ruling,
 }
 
 impl Ring {

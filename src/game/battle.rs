@@ -22,7 +22,7 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
     let (mut pl_accum, mut en_accum) = (0, 0);
     let mut xp = 0;
 
-    while !enemy.is_dead() {
+    while enemy.current_hp > 0 {
         pl_accum += game.player.speed();
         en_accum += enemy.speed();
 
@@ -32,7 +32,7 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
                 xp += new_xp;
             }
 
-            game.maybe_receive_status_damage()?;
+            game.apply_status_effects()?;
             pl_accum = -1;
         } else {
             enemy_attack(game, enemy, random)?;
@@ -47,8 +47,8 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 /// Attack enemy, returning the gained experience
 fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
     let (attack_type, damage, mp_cost, new_xp) = generate_attack(&game.player, enemy, random);
-    enemy.receive_damage(damage).unwrap_or_default();
-    game.player.current_mp -= mp_cost;
+    enemy.update_hp(-damage).unwrap_or_default();
+    game.player.update_mp(-mp_cost);
 
     Event::emit(
         game,
@@ -69,8 +69,8 @@ fn enemy_attack(
     random: &dyn Randomizer,
 ) -> Result<(), Dead> {
     let (attack_type, damage, mp_cost, _xp) = generate_attack(enemy, &game.player, random);
-    let result = game.player.receive_damage(damage);
-    enemy.current_mp -= mp_cost;
+    let result = game.player.update_hp(-damage).map(|_| ());
+    enemy.update_mp(-mp_cost);
 
     if let AttackType::Effect(status) = attack_type {
         game.player.status_effect = Some(status);

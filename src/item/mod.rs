@@ -38,7 +38,7 @@ impl fmt::Display for Potion {
 impl Item for Potion {
     fn apply(&mut self, game: &mut game::Game) {
         let to_restore = character::Class::player_first().hp.at(self.level) / 2;
-        let recovered = game.player.heal(to_restore);
+        let recovered = game.player.update_hp(to_restore).unwrap();
 
         Event::emit(
             game,
@@ -94,7 +94,7 @@ impl Remedy {
 #[typetag::serde]
 impl Item for Remedy {
     fn apply(&mut self, game: &mut game::Game) {
-        let healed = game.player.maybe_remove_status_effect();
+        let healed = game.player.status_effect.take().is_some();
         Event::emit(
             game,
             Event::Heal {
@@ -143,7 +143,7 @@ impl Item for Ether {
             .mp
             .as_ref()
             .map_or(0, |mp| mp.at(self.level));
-        let recovered_mp = game.player.restore_mp(to_restore);
+        let recovered_mp = game.player.update_mp(to_restore);
 
         Event::emit(
             game,

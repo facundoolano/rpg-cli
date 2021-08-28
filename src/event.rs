@@ -35,8 +35,9 @@ pub enum Event<'a> {
         damage: i32,
         mp_cost: i32,
     },
-    StatusEffectDamage {
-        damage: i32,
+    StatusEffect {
+        hp: i32,
+        mp: i32,
     },
     BattleWon {
         enemy: &'a Character,
