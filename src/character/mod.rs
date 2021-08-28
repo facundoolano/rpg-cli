@@ -333,38 +333,24 @@ impl Character {
         let hp_unit = || random().damage(std::cmp::max(1, self.max_hp / 20));
         let mp_unit = || random().damage(std::cmp::max(1, self.max_mp / 20));
 
-        // TODO consider a helper here. check if modify_stat+ring factor wouldbe appropriate
-
-        // is the regen hp ring equipped?
-        match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
-            (Some(Ring::RegenHP), _) | (_, Some(Ring::RegenHP)) => {
-                hp_effect += hp_unit();
-            }
-            _ => {}
+        if self.left_ring == Some(Ring::RegenHP) || self.right_ring == Some(Ring::RegenHP) {
+            hp_effect += hp_unit();
         }
 
-        // is the regen mp ring equipped?
-        if self.class.is_magic() {
-            match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
-                (Some(Ring::RegenMP), _) | (_, Some(Ring::RegenMP)) => {
-                    mp_effect += mp_unit();
-                }
-                _ => {}
-            }
+        if self.class.is_magic() && self.left_ring == Some(Ring::RegenMP)
+            || self.right_ring == Some(Ring::RegenMP)
+        {
+            mp_effect += mp_unit();
         }
 
-        // is the ruling ring equipped?
-        match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
-            (Some(Ring::Ruling), _) | (_, Some(Ring::Ruling)) => {
-                hp_effect -= hp_unit();
-            }
-            _ => {}
+        if self.left_ring == Some(Ring::Ruling) || self.right_ring == Some(Ring::Ruling) {
+            hp_effect -= hp_unit();
         }
 
-        // does the character suffer from status ailments?
-        match self.status_effect {
-            Some(StatusEffect::Burn) | Some(StatusEffect::Poison) => hp_effect -= hp_unit(),
-            _ => {}
+        if self.status_effect == Some(StatusEffect::Burn)
+            || self.status_effect == Some(StatusEffect::Poison)
+        {
+            hp_effect -= hp_unit();
         }
 
         self.update_hp(hp_effect)?;
