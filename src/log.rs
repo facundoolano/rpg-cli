@@ -188,7 +188,7 @@ fn heal(
         log(
             player,
             location,
-            &format_hp_mp_change(player, recovered_hp, recovered_mp, healed, ""),
+            &format_stat_change(player, recovered_hp, recovered_mp, healed, ""),
         );
     }
 }
@@ -197,7 +197,7 @@ fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i3
     if recovered_hp > 0 || recovered_mp > 0 || healed {
         battle_log(
             player,
-            &format_hp_mp_change(
+            &format_stat_change(
                 player,
                 recovered_hp,
                 recovered_mp,
@@ -233,7 +233,7 @@ fn status_effect(character: &Character, hp: i32, mp: i32) {
 
         battle_log(
             character,
-            &format_hp_mp_change(character, hp, mp, false, emoji),
+            &format_stat_change(character, hp, mp, false, emoji),
         );
     }
 }
@@ -460,18 +460,18 @@ fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost
     };
 
     match attack {
-        AttackType::Regular => format_damage(receiver, damage, &magic_effect),
+        AttackType::Regular => format_hp_change(receiver, -damage, &magic_effect),
         AttackType::Critical => {
-            format_damage(receiver, damage, &format!("{} critical!", magic_effect))
+            format_hp_change(receiver, -damage, &format!("{} critical!", magic_effect))
         }
         AttackType::Effect(status_effect) => {
-            format_damage(receiver, damage, &format_status_effect(*status_effect))
+            format_hp_change(receiver, -damage, &format_status_effect(*status_effect))
         }
         AttackType::Miss => format!("{} dodged!", magic_effect),
     }
 }
 
-fn format_hp_mp_change(
+fn format_stat_change(
     receiver: &Character,
     hp: i32,
     mp: i32,
@@ -490,18 +490,17 @@ fn format_hp_mp_change(
 
     format!(
         "{}{}{}{}",
-        &format_damage(receiver, -hp, ""),
+        &format_hp_change(receiver, hp, ""),
         mp_text.purple(),
         healed_text.green(),
         suffix
     )
 }
 
-// FIXME inverse and revert sign
-fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
+fn format_hp_change(receiver: &Character, amount: i32, suffix: &str) -> String {
     if amount != 0 {
         let color = if receiver.is_player() {
-            if amount >= 0 {
+            if amount < 0 {
                 "bright red"
             } else {
                 "green"
@@ -509,7 +508,7 @@ fn format_damage(receiver: &Character, amount: i32, suffix: &str) -> String {
         } else {
             "white"
         };
-        format!("{:+}hp {}", -amount, suffix)
+        format!("{:+}hp {}", amount, suffix)
             .color(color)
             .to_string()
     } else {
