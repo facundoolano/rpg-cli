@@ -87,6 +87,7 @@ fn enemy_attack(
     result
 }
 
+// TODO shouldn't this be in the character struct? and then remove some of the published methods
 /// Return randomized attack parameters according to the character attributes.
 fn generate_attack(
     attacker: &Character,
@@ -98,7 +99,7 @@ fn generate_attack(
     let xp = attacker.xp_gained(receiver, damage);
 
     let attack_type = random.attack_type(
-        attacker.inflicted_status_effect(),
+        attacker.inflicted_status_effect(receiver),
         attacker.speed(),
         receiver.speed(),
     );

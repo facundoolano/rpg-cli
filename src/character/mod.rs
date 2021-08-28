@@ -318,7 +318,11 @@ impl Character {
     }
 
     /// Return the status that this character's attack should inflict on the receiver.
-    pub fn inflicted_status_effect(&self) -> Option<(StatusEffect, u32)> {
+    pub fn inflicted_status_effect(&self, receiver: &Self) -> Option<(StatusEffect, u32)> {
+        if receiver.left_ring == Some(Ring::Protect) || receiver.right_ring == Some(Ring::Protect) {
+            return None;
+        }
+
         let ring_status = match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
             (Some(Ring::Poison), _) | (_, Some(Ring::Poison)) => Some((StatusEffect::Poison, 3)),
             (Some(Ring::Fire), _) | (_, Some(Ring::Fire)) => Some((StatusEffect::Burn, 3)),
@@ -974,34 +978,42 @@ mod tests {
     #[test]
     fn test_status_rings() {
         let mut char = new_plain_stats_char();
-        assert!(char.inflicted_status_effect().is_none());
+        let mut another = new_plain_stats_char();
+        assert!(char.inflicted_status_effect(&another).is_none());
 
         char.left_ring = Some(Ring::Fire);
         assert_eq!(
             Some((StatusEffect::Burn, 3)),
-            char.inflicted_status_effect()
+            char.inflicted_status_effect(&another)
         );
 
         char.left_ring = None;
         char.right_ring = Some(Ring::Fire);
         assert_eq!(
             Some((StatusEffect::Burn, 3)),
-            char.inflicted_status_effect()
+            char.inflicted_status_effect(&another)
         );
 
         char.left_ring = Some(Ring::Poison);
         char.right_ring = None;
         assert_eq!(
             Some((StatusEffect::Poison, 3)),
-            char.inflicted_status_effect()
+            char.inflicted_status_effect(&another)
         );
 
         char.left_ring = None;
         char.right_ring = Some(Ring::Poison);
         assert_eq!(
             Some((StatusEffect::Poison, 3)),
-            char.inflicted_status_effect()
+            char.inflicted_status_effect(&another)
         );
+
+        another.left_ring = Some(Ring::Protect);
+        assert!(char.inflicted_status_effect(&another).is_none());
+
+        another.right_ring = Some(Ring::Protect);
+        another.left_ring = None;
+        assert!(char.inflicted_status_effect(&another).is_none());
     }
 
     #[test]
