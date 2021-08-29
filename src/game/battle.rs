@@ -45,11 +45,17 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
     Ok(xp)
 }
 
+// FIXME remove duplication between these two functions,
+// move char-specific logic to char module
 /// Attack enemy, returning the gained experience
 fn player_attack(game: &mut Game, enemy: &mut Character) -> i32 {
     let (attack_type, damage, mp_cost, new_xp) = game.player.generate_attack(enemy);
     game.player.update_mp(-mp_cost);
     enemy.update_hp(-damage).unwrap_or_default();
+
+    if let AttackType::Effect(status) = attack_type {
+        enemy.status_effect = Some(status);
+    }
 
     Event::emit(
         game,
