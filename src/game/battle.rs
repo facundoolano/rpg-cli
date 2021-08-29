@@ -91,7 +91,7 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
 }
 
 fn autoether(game: &mut Game, enemy: &Character) -> bool {
-    if game.player.can_magic_attack() {
+    if !game.player.class.is_magic() || game.player.can_magic_attack() {
         return false;
     }
 
