@@ -1,5 +1,5 @@
 use super::Game;
-use crate::character::{AttackType, Character, Dead};
+use crate::character::{Character, Dead};
 use crate::event::Event;
 use crate::item::key::Key;
 
@@ -50,12 +50,9 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
 /// Attack enemy, returning the gained experience
 fn player_attack(game: &mut Game, enemy: &mut Character) -> i32 {
     let (attack_type, damage, mp_cost, new_xp) = game.player.generate_attack(enemy);
-    game.player.update_mp(-mp_cost);
-    enemy.update_hp(-damage).unwrap_or_default();
-
-    if let AttackType::Effect(status) = attack_type {
-        enemy.status_effect = Some(status);
-    }
+    game.player
+        .apply_attack(enemy, &attack_type, damage, mp_cost)
+        .unwrap_or_default();
 
     Event::emit(
         game,
@@ -72,12 +69,7 @@ fn player_attack(game: &mut Game, enemy: &mut Character) -> i32 {
 /// Attack player, returning Err(Dead) if the player dies.
 fn enemy_attack(game: &mut Game, enemy: &mut Character) -> Result<(), Dead> {
     let (attack_type, damage, mp_cost, _xp) = enemy.generate_attack(&game.player);
-    enemy.update_mp(-mp_cost);
-    let result = game.player.update_hp(-damage).map(|_| ());
-
-    if let AttackType::Effect(status) = attack_type {
-        game.player.status_effect = Some(status);
-    }
+    let result = enemy.apply_attack(&mut game.player, &attack_type, damage, mp_cost);
 
     Event::emit(
         game,

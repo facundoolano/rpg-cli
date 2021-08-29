@@ -259,24 +259,55 @@ impl Character {
         self.modify_stat(self.speed, Ring::Speed)
     }
 
-    /// Return randomized attack parameters according to the character attributes.
-    /// Returns a tupple with type of attack (regular/miss/critical/status effect),
-    /// inflicted damage, mp cost, gained xp.
+    /// TODO
+    // FIXME merge/rearrange both methods where it makes sense
+    // e.g. gen_attack should only decide the type
+    // FIXME consider attack struct/enum instead of tuple
     pub fn generate_attack(&self, receiver: &Self) -> (AttackType, i32, i32, i32) {
         let (damage, mp_cost) = self.damage(receiver);
         let damage = random().damage(damage);
         let xp = self.xp_gained(receiver, damage);
 
+        let attack_type = self.attack_type(receiver);
+        match attack_type {
+            AttackType::Regular => (attack_type, damage, mp_cost, xp),
+            AttackType::Critical => (attack_type, damage * 2, mp_cost, xp),
+            AttackType::Effect(_) => (attack_type, damage, mp_cost, xp),
+            AttackType::Miss => (attack_type, 0, mp_cost, 0),
+        }
+    }
+
+    // FIXME try to merge ?
+    // FIXME should the xp be added here?
+    pub fn apply_attack(
+        &mut self,
+        receiver: &mut Self,
+        attack_type: &AttackType,
+        hp: i32,
+        mp: i32,
+    ) -> Result<(), Dead> {
+        self.update_mp(-mp);
+        receiver.update_hp(-hp).map(|_| ())?;
+        if let AttackType::Effect(status) = attack_type {
+            receiver.status_effect = Some(*status);
+        }
+        Ok(())
+    }
+
+    /// Return randomized attack parameters according to the character attributes.
+    /// Returns a tupple with type of attack (regular/miss/critical/status effect),
+    /// inflicted damage, mp cost, gained xp.
+    fn attack_type(&self, receiver: &Self) -> AttackType {
         let inflicted_status = random().inflicted(self.inflicted_status_effect(receiver));
 
         if random().is_miss(self.speed(), receiver.speed()) {
-            (AttackType::Miss, 0, mp_cost, 0)
+            AttackType::Miss
         } else if random().is_critical() {
-            (AttackType::Critical, damage * 2, mp_cost, xp)
+            AttackType::Critical
         } else if let Some(status) = inflicted_status {
-            (AttackType::Effect(status), damage, mp_cost, xp)
+            AttackType::Effect(status)
         } else {
-            (AttackType::Regular, damage, mp_cost, xp)
+            AttackType::Regular
         }
     }
 
