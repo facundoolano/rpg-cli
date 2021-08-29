@@ -299,7 +299,8 @@ impl Character {
     }
 
     /// Return randomized attack parameters according to the character attributes.
-    /// TODO document return values
+    /// Returns a tupple with type of attack (regular/miss/critical/status effect),
+    /// inflicted damage, mp cost, gained xp.
     pub fn generate_attack(&self, receiver: &Self) -> (AttackType, i32, i32, i32) {
         let (damage, mp_cost) = self.damage(receiver);
         let damage = random().damage(damage);
