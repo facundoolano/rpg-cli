@@ -305,18 +305,16 @@ impl Character {
         let damage = random().damage(damage);
         let xp = self.xp_gained(receiver, damage);
 
-        // FIXME this should be simplified and logic moved over here
-        let attack_type = random().attack_type(
-            self.inflicted_status_effect(receiver),
-            self.speed(),
-            receiver.speed(),
-        );
+        let inflicted_status = random().inflicted(self.inflicted_status_effect(receiver));
 
-        match attack_type {
-            AttackType::Miss => (attack_type, 0, mp_cost, 0),
-            AttackType::Regular => (attack_type, damage, mp_cost, xp),
-            AttackType::Critical => (attack_type, damage * 2, mp_cost, xp),
-            AttackType::Effect(_) => (attack_type, damage, mp_cost, xp),
+        if random().is_miss(self.speed(), receiver.speed()) {
+            (AttackType::Miss, 0, mp_cost, 0)
+        } else if random().is_critical() {
+            (AttackType::Critical, damage * 2, mp_cost, xp)
+        } else if let Some(status) = inflicted_status {
+            (AttackType::Effect(status), damage, mp_cost, xp)
+        } else {
+            (AttackType::Regular, damage, mp_cost, xp)
         }
     }
 
