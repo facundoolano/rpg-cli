@@ -259,45 +259,6 @@ impl Character {
         self.modify_stat(self.speed, Ring::Speed)
     }
 
-    /// Amount of damage the character can inflict with physical atacks, given
-    /// its strength and equipment. Magic using characters' strength is dimmed.
-    pub fn physical_attack(&self) -> i32 {
-        let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
-        let attack = self.modify_stat(self.strength, Ring::Attack) + sword_str;
-        if self.class.is_magic() {
-            attack / 3
-        } else {
-            attack
-        }
-    }
-
-    /// Amount of damage the character can inflict with magical attacks.
-    /// Zero if the current character class is not magic.
-    pub fn magic_attack(&self) -> i32 {
-        if self.class.is_magic() {
-            let base = self.strength * 3;
-            self.modify_stat(base, Ring::Magic)
-        } else {
-            0
-        }
-    }
-
-    /// The character's class enables magic and there's enough mp left
-    pub fn can_magic_attack(&self) -> bool {
-        self.class.is_magic() && self.current_mp >= self.attack_mp_cost()
-    }
-
-    fn attack_mp_cost(&self) -> i32 {
-        // each magic attack costs one third of the "canonical" mp total for this level
-        self.class.mp.as_ref().map_or(0, |mp| mp.at(self.level) / 3)
-    }
-
-    pub fn deffense(&self) -> i32 {
-        let shield_str = self.shield.as_ref().map_or(0, |s| s.strength());
-        // base strength should be zero, subtract it from ring calculation
-        shield_str + self.modify_stat(self.strength, Ring::Deffense) - self.strength
-    }
-
     /// Return randomized attack parameters according to the character attributes.
     /// Returns a tupple with type of attack (regular/miss/critical/status effect),
     /// inflicted damage, mp cost, gained xp.
@@ -330,6 +291,45 @@ impl Character {
         };
 
         (max(1, damage - receiver.deffense()), mp_cost)
+    }
+
+    /// The character's class enables magic and there's enough mp left
+    pub fn can_magic_attack(&self) -> bool {
+        self.class.is_magic() && self.current_mp >= self.attack_mp_cost()
+    }
+
+    fn attack_mp_cost(&self) -> i32 {
+        // each magic attack costs one third of the "canonical" mp total for this level
+        self.class.mp.as_ref().map_or(0, |mp| mp.at(self.level) / 3)
+    }
+
+    /// Amount of damage the character can inflict with physical atacks, given
+    /// its strength and equipment. Magic using characters' strength is dimmed.
+    pub fn physical_attack(&self) -> i32 {
+        let sword_str = self.sword.as_ref().map_or(0, |s| s.strength());
+        let attack = self.modify_stat(self.strength, Ring::Attack) + sword_str;
+        if self.class.is_magic() {
+            attack / 3
+        } else {
+            attack
+        }
+    }
+
+    /// Amount of damage the character can inflict with magical attacks.
+    /// Zero if the current character class is not magic.
+    pub fn magic_attack(&self) -> i32 {
+        if self.class.is_magic() {
+            let base = self.strength * 3;
+            self.modify_stat(base, Ring::Magic)
+        } else {
+            0
+        }
+    }
+
+    pub fn deffense(&self) -> i32 {
+        let shield_str = self.shield.as_ref().map_or(0, |s| s.strength());
+        // base strength should be zero, subtract it from ring calculation
+        shield_str + self.modify_stat(self.strength, Ring::Deffense) - self.strength
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
