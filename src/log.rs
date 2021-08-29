@@ -47,8 +47,9 @@ pub fn handle(game: &Game, event: &Event) {
         } => {
             attack(&game.player, kind, *damage, *mp_cost);
         }
-        Event::StatusEffect { hp, mp } => {
-            status_effect(&game.player, *hp, *mp);
+        Event::StatusEffect { enemy, hp, mp } => {
+            let character = enemy.unwrap_or(&game.player);
+            status_effect(character, *hp, *mp);
         }
         Event::BattleWon {
             xp,

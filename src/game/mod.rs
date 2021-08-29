@@ -146,7 +146,14 @@ impl Game {
     /// Player takes damage from status_effects, if any.
     fn apply_status_effects(&mut self) -> Result<(), character::Dead> {
         let (hp, mp) = self.player.apply_status_effects()?;
-        Event::emit(self, Event::StatusEffect { hp, mp });
+        Event::emit(
+            self,
+            Event::StatusEffect {
+                enemy: None,
+                hp,
+                mp,
+            },
+        );
         Ok(())
     }
 

@@ -26,7 +26,18 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
             pl_accum = -1;
         } else {
             enemy_attack(game, enemy)?;
-            // FIXME enemy receive status effect
+
+            // some duplication with game mod
+            let (hp, mp) = enemy.apply_status_effects().unwrap_or_default();
+            Event::emit(
+                game,
+                Event::StatusEffect {
+                    enemy: Some(enemy),
+                    hp,
+                    mp,
+                },
+            );
+
             en_accum = -1;
         }
     }

@@ -36,6 +36,7 @@ pub enum Event<'a> {
         mp_cost: i32,
     },
     StatusEffect {
+        enemy: Option<&'a Character>,
         hp: i32,
         mp: i32,
     },
