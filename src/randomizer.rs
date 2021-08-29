@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
+use crate::character::AttackType;
 use crate::character::StatusEffect;
-use crate::game::battle::AttackType;
 use crate::location;
 use rand::Rng;
 use std::cmp::max;

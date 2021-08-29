@@ -1,6 +1,6 @@
+use crate::character::AttackType;
 use crate::character::{Character, StatusEffect};
 use crate::event::Event;
-use crate::game::battle::AttackType;
 use crate::game::Game;
 use crate::item::key::Key;
 use crate::location::Location;

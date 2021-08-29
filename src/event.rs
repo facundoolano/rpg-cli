@@ -1,6 +1,6 @@
+use crate::character;
 use crate::character::Character;
 use crate::game;
-use crate::game::battle;
 use crate::item::key::Key;
 use crate::location::Location;
 use crate::log;
@@ -26,12 +26,12 @@ pub enum Event<'a> {
     },
     PlayerAttack {
         enemy: &'a Character,
-        kind: battle::AttackType,
+        kind: character::AttackType,
         damage: i32,
         mp_cost: i32,
     },
     EnemyAttack {
-        kind: battle::AttackType,
+        kind: character::AttackType,
         damage: i32,
         mp_cost: i32,
     },

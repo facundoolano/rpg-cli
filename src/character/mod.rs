@@ -41,6 +41,15 @@ pub enum StatusEffect {
     Poison,
 }
 
+/// Outcome of an attack attempt.
+/// This affects primarily how the attack is displayed.
+pub enum AttackType {
+    Regular,
+    Critical,
+    Effect(StatusEffect),
+    Miss,
+}
+
 #[derive(Debug)]
 pub struct Dead;
 pub struct ClassNotFound;
@@ -238,19 +247,6 @@ impl Character {
         (base_xp * (self.level as f64).powf(exp)) as i32
     }
 
-    /// Generate a randomized damage number based on the attacker strength
-    /// and the receiver strength.
-    /// The second element is the mp cost of the attack, if any.
-    pub fn damage(&self, receiver: &Self) -> (i32, i32) {
-        let (damage, mp_cost) = if self.can_magic_attack() {
-            (self.magic_attack(), self.attack_mp_cost())
-        } else {
-            (self.physical_attack(), 0)
-        };
-
-        (max(1, damage - receiver.deffense()), mp_cost)
-    }
-
     pub fn max_hp(&self) -> i32 {
         self.modify_stat(self.max_hp, Ring::HP)
     }
@@ -302,8 +298,43 @@ impl Character {
         shield_str + self.modify_stat(self.strength, Ring::Deffense) - self.strength
     }
 
+    /// Return randomized attack parameters according to the character attributes.
+    pub fn generate_attack(&self, receiver: &Self) -> (AttackType, i32, i32, i32) {
+        let (damage, mp_cost) = self.damage(receiver);
+        let damage = random().damage(damage);
+        let xp = self.xp_gained(receiver, damage);
+
+        // FIXME this should be simplified and logic moved over here
+        let attack_type = random().attack_type(
+            self.inflicted_status_effect(receiver),
+            self.speed(),
+            receiver.speed(),
+        );
+
+        match attack_type {
+            AttackType::Miss => (attack_type, 0, mp_cost, 0),
+            AttackType::Regular => (attack_type, damage, mp_cost, xp),
+            AttackType::Critical => (attack_type, damage * 2, mp_cost, xp),
+            AttackType::Effect(_) => (attack_type, damage, mp_cost, xp),
+        }
+    }
+
+    /// Generate a damage number based on the attacker strength and the receiver
+    /// deffense.
+    /// The second element is the mp cost of the attack, if any.
+    // TODO should this be private?
+    pub fn damage(&self, receiver: &Self) -> (i32, i32) {
+        let (damage, mp_cost) = if self.can_magic_attack() {
+            (self.magic_attack(), self.attack_mp_cost())
+        } else {
+            (self.physical_attack(), 0)
+        };
+
+        (max(1, damage - receiver.deffense()), mp_cost)
+    }
+
     /// How many experience points are gained by inflicting damage to an enemy.
-    pub fn xp_gained(&self, receiver: &Self, damage: i32) -> i32 {
+    fn xp_gained(&self, receiver: &Self, damage: i32) -> i32 {
         let class_multiplier = match receiver.class.category {
             class::Category::Rare => 3,
             class::Category::Legendary => 5,
@@ -318,7 +349,7 @@ impl Character {
     }
 
     /// Return the status that this character's attack should inflict on the receiver.
-    pub fn inflicted_status_effect(&self, receiver: &Self) -> Option<(StatusEffect, u32)> {
+    fn inflicted_status_effect(&self, receiver: &Self) -> Option<(StatusEffect, u32)> {
         if receiver.left_ring == Some(Ring::Protect) || receiver.right_ring == Some(Ring::Protect) {
             return None;
         }

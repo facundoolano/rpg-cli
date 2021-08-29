@@ -1,21 +1,11 @@
 use super::Game;
-use crate::character::{Character, Dead, StatusEffect};
+use crate::character::{AttackType, Character, Dead};
 use crate::event::Event;
 use crate::item::key::Key;
-use crate::randomizer::Randomizer;
-
-/// Outcome of an attack attempt.
-/// This affects primarily how the attack is displayed.
-pub enum AttackType {
-    Regular,
-    Critical,
-    Effect(StatusEffect),
-    Miss,
-}
 
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
-pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> Result<i32, Dead> {
+pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
     // These accumulators get increased based on the characters speed:
     // the faster will get more frequent turns.
     // This could be generalized to player vs enemy parties
@@ -28,15 +18,15 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) && !autoether(game, enemy) {
-                let new_xp = player_attack(game, enemy, random);
+                let new_xp = player_attack(game, enemy);
                 xp += new_xp;
             }
 
             game.apply_status_effects()?;
             pl_accum = -1;
         } else {
-            enemy_attack(game, enemy, random)?;
-            // TODO enemy receive status effect
+            enemy_attack(game, enemy)?;
+            // FIXME enemy receive status effect
             en_accum = -1;
         }
     }
@@ -45,8 +35,8 @@ pub fn run(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> R
 }
 
 /// Attack enemy, returning the gained experience
-fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer) -> i32 {
-    let (attack_type, damage, mp_cost, new_xp) = generate_attack(&game.player, enemy, random);
+fn player_attack(game: &mut Game, enemy: &mut Character) -> i32 {
+    let (attack_type, damage, mp_cost, new_xp) = game.player.generate_attack(enemy);
     enemy.update_hp(-damage).unwrap_or_default();
     game.player.update_mp(-mp_cost);
 
@@ -63,12 +53,8 @@ fn player_attack(game: &mut Game, enemy: &mut Character, random: &dyn Randomizer
 }
 
 /// Attack player, returning Err(Dead) if the player dies.
-fn enemy_attack(
-    game: &mut Game,
-    enemy: &mut Character,
-    random: &dyn Randomizer,
-) -> Result<(), Dead> {
-    let (attack_type, damage, mp_cost, _xp) = generate_attack(enemy, &game.player, random);
+fn enemy_attack(game: &mut Game, enemy: &mut Character) -> Result<(), Dead> {
+    let (attack_type, damage, mp_cost, _xp) = enemy.generate_attack(&game.player);
     let result = game.player.update_hp(-damage).map(|_| ());
     enemy.update_mp(-mp_cost);
 
@@ -85,31 +71,6 @@ fn enemy_attack(
         },
     );
     result
-}
-
-// TODO shouldn't this be in the character struct? and then remove some of the published methods
-/// Return randomized attack parameters according to the character attributes.
-fn generate_attack(
-    attacker: &Character,
-    receiver: &Character,
-    random: &dyn Randomizer,
-) -> (AttackType, i32, i32, i32) {
-    let (damage, mp_cost) = attacker.damage(receiver);
-    let damage = random.damage(damage);
-    let xp = attacker.xp_gained(receiver, damage);
-
-    let attack_type = random.attack_type(
-        attacker.inflicted_status_effect(receiver),
-        attacker.speed(),
-        receiver.speed(),
-    );
-
-    match attack_type {
-        AttackType::Miss => (attack_type, 0, mp_cost, 0),
-        AttackType::Regular => (attack_type, damage, mp_cost, xp),
-        AttackType::Critical => (attack_type, damage * 2, mp_cost, xp),
-        AttackType::Effect(_) => (attack_type, damage, mp_cost, xp),
-    }
 }
 
 /// If the player is low on hp and has a potion available use it
@@ -130,7 +91,7 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
 }
 
 fn autoether(game: &mut Game, enemy: &Character) -> bool {
-    if !game.player.class.is_magic() || game.player.can_magic_attack() {
+    if game.player.can_magic_attack() {
         return false;
     }
 
@@ -149,7 +110,6 @@ mod tests {
     use super::*;
     use crate::character;
     use crate::character::class;
-    use crate::randomizer::random;
 
     #[test]
     fn won() {
@@ -229,17 +189,17 @@ mod tests {
         game.player = character::Character::new(player_class, 1);
 
         // mage -mp with enough mp
-        player_attack(&mut game, &mut enemy, &random());
+        player_attack(&mut game, &mut enemy);
         assert_eq!(7, game.player.current_mp);
         assert_eq!(70, enemy.current_hp);
 
-        player_attack(&mut game, &mut enemy, &random());
-        player_attack(&mut game, &mut enemy, &random());
+        player_attack(&mut game, &mut enemy);
+        player_attack(&mut game, &mut enemy);
         assert_eq!(1, game.player.current_mp);
         assert_eq!(10, enemy.current_hp);
 
         // mage -mp=0 without enough mp
-        player_attack(&mut game, &mut enemy, &random());
+        player_attack(&mut game, &mut enemy);
         assert_eq!(1, game.player.current_mp);
         assert_eq!(7, enemy.current_hp);
     }

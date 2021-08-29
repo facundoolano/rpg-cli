@@ -267,7 +267,7 @@ impl Game {
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), character::Dead> {
-        match battle::run(self, enemy, &random()) {
+        match battle::run(self, enemy) {
             Ok(xp) => {
                 let gold = gold_gained(self.player.level, enemy.level);
                 self.gold += gold;
