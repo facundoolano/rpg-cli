@@ -59,8 +59,8 @@ fn player_attack(game: &mut Game, enemy: &mut Character) -> i32 {
 
     Event::emit(
         game,
-        Event::PlayerAttack {
-            enemy,
+        Event::Attack {
+            enemy: None,
             kind: attack_type,
             damage,
             mp_cost,
@@ -81,7 +81,8 @@ fn enemy_attack(game: &mut Game, enemy: &mut Character) -> Result<(), Dead> {
 
     Event::emit(
         game,
-        Event::EnemyAttack {
+        Event::Attack {
+            enemy: Some(enemy),
             kind: attack_type,
             damage,
             mp_cost,

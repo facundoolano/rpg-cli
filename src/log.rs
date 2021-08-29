@@ -32,20 +32,14 @@ pub fn handle(game: &Game, event: &Event) {
         Event::EnemyAppears { enemy } => {
             enemy_appears(enemy, &game.location);
         }
-        Event::PlayerAttack {
+        Event::Attack {
             enemy,
             kind,
             damage,
             mp_cost,
         } => {
-            attack(enemy, kind, *damage, *mp_cost);
-        }
-        Event::EnemyAttack {
-            kind,
-            damage,
-            mp_cost,
-        } => {
-            attack(&game.player, kind, *damage, *mp_cost);
+            let character = enemy.unwrap_or(&game.player);
+            attack(character, kind, *damage, *mp_cost);
         }
         Event::StatusEffect { enemy, hp, mp } => {
             let character = enemy.unwrap_or(&game.player);

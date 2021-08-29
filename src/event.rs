@@ -24,13 +24,8 @@ pub enum Event<'a> {
     RunAway {
         success: bool,
     },
-    PlayerAttack {
-        enemy: &'a Character,
-        kind: character::AttackType,
-        damage: i32,
-        mp_cost: i32,
-    },
-    EnemyAttack {
+    Attack {
+        enemy: Option<&'a Character>,
         kind: character::AttackType,
         damage: i32,
         mp_cost: i32,
