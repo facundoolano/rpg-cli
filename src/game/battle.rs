@@ -18,14 +18,15 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) && !autoether(game, enemy) {
-                let new_xp = player_attack(game, enemy);
+                let (new_xp, _) = game.player.attack(enemy);
                 xp += new_xp;
             }
 
             game.apply_status_effects()?;
             pl_accum = -1;
         } else {
-            enemy_attack(game, enemy)?;
+            let (_, dead) = enemy.attack(&mut game.player);
+            dead?;
 
             // some duplication with game mod
             let (hp, mp) = enemy.apply_status_effects().unwrap_or_default();
@@ -45,44 +46,6 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
     Ok(xp)
 }
 
-// FIXME remove duplication between these two functions,
-// move char-specific logic to char module
-/// Attack enemy, returning the gained experience
-fn player_attack(game: &mut Game, enemy: &mut Character) -> i32 {
-    let (attack_type, damage, mp_cost, new_xp) = game.player.generate_attack(enemy);
-    game.player
-        .apply_attack(enemy, &attack_type, damage, mp_cost)
-        .unwrap_or_default();
-
-    Event::emit(
-        game,
-        Event::Attack {
-            enemy: None,
-            kind: attack_type,
-            damage,
-            mp_cost,
-        },
-    );
-    new_xp
-}
-
-/// Attack player, returning Err(Dead) if the player dies.
-fn enemy_attack(game: &mut Game, enemy: &mut Character) -> Result<(), Dead> {
-    let (attack_type, damage, mp_cost, _xp) = enemy.generate_attack(&game.player);
-    let result = enemy.apply_attack(&mut game.player, &attack_type, damage, mp_cost);
-
-    Event::emit(
-        game,
-        Event::Attack {
-            enemy: Some(enemy),
-            kind: attack_type,
-            damage,
-            mp_cost,
-        },
-    );
-    result
-}
-
 /// If the player is low on hp and has a potion available use it
 /// instead of attacking in the current turn.
 fn autopotion(game: &mut Game, enemy: &Character) -> bool {
@@ -92,7 +55,7 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
 
     // If there's a good chance of winning the battle on the next attack,
     // don't use the potion.
-    let (_, potential_damage, _, _) = game.player.generate_attack(enemy);
+    let (potential_damage, _) = game.player.damage(enemy);
     if potential_damage >= enemy.current_hp {
         return false;
     }
@@ -107,7 +70,7 @@ fn autoether(game: &mut Game, enemy: &Character) -> bool {
 
     // If there's a good chance of winning the battle on the next attack,
     // don't use the ether.
-    let (_, potential_damage, _, _) = game.player.generate_attack(enemy);
+    let (potential_damage, _) = game.player.damage(enemy);
     if potential_damage >= enemy.current_hp {
         return false;
     }

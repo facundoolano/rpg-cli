@@ -213,7 +213,8 @@ fn change_class(player: &Character, location: &Location, lost_xp: i32) {
     log(player, location, &lost_text);
 }
 
-fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32) {
+// FIXME experiment
+pub fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32) {
     if !quiet() {
         battle_log(
             character,

@@ -2,6 +2,7 @@ use crate::item::equipment;
 use crate::item::key::Key;
 use crate::item::ring::Ring;
 use crate::item::Item;
+use crate::log;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -260,43 +261,30 @@ impl Character {
     }
 
     /// TODO
-    // FIXME merge/rearrange both methods where it makes sense
-    // e.g. gen_attack should only decide the type
-    // FIXME consider attack struct/enum instead of tuple
-    pub fn generate_attack(&self, receiver: &Self) -> (AttackType, i32, i32, i32) {
+    pub fn attack(&mut self, receiver: &mut Self) -> (i32, Result<(), Dead>) {
         let (damage, mp_cost) = self.damage(receiver);
         let damage = random().damage(damage);
         let xp = self.xp_gained(receiver, damage);
 
         let attack_type = self.attack_type(receiver);
-        match attack_type {
-            AttackType::Regular => (attack_type, damage, mp_cost, xp),
-            AttackType::Critical => (attack_type, damage * 2, mp_cost, xp),
-            AttackType::Effect(_) => (attack_type, damage, mp_cost, xp),
-            AttackType::Miss => (attack_type, 0, mp_cost, 0),
-        }
-    }
+        let (damage, xp) = match attack_type {
+            AttackType::Regular => (damage, xp),
+            AttackType::Critical => (damage * 2, xp),
+            AttackType::Effect(_) => (damage, xp),
+            AttackType::Miss => (0, 0),
+        };
 
-    // FIXME try to merge ?
-    // FIXME should the xp be added here?
-    pub fn apply_attack(
-        &mut self,
-        receiver: &mut Self,
-        attack_type: &AttackType,
-        hp: i32,
-        mp: i32,
-    ) -> Result<(), Dead> {
-        self.update_mp(-mp);
-        receiver.update_hp(-hp).map(|_| ())?;
+        log::attack(receiver, &attack_type, damage, mp_cost);
+
+        self.update_mp(-mp_cost);
+        let result = receiver.update_hp(-damage).map(|_| ());
         if let AttackType::Effect(status) = attack_type {
-            receiver.status_effect = Some(*status);
+            receiver.status_effect = Some(status);
         }
-        Ok(())
+        (xp, result)
     }
 
-    /// Return randomized attack parameters according to the character attributes.
-    /// Returns a tupple with type of attack (regular/miss/critical/status effect),
-    /// inflicted damage, mp cost, gained xp.
+    /// TODO
     fn attack_type(&self, receiver: &Self) -> AttackType {
         let inflicted_status = random().inflicted(self.inflicted_status_effect(receiver));
 
@@ -314,7 +302,7 @@ impl Character {
     /// Generate a damage number based on the attacker strength and the receiver
     /// deffense.
     /// The second element is the mp cost of the attack, if any.
-    fn damage(&self, receiver: &Self) -> (i32, i32) {
+    pub fn damage(&self, receiver: &Self) -> (i32, i32) {
         let (damage, mp_cost) = if self.can_magic_attack() {
             (self.magic_attack(), self.attack_mp_cost())
         } else {
