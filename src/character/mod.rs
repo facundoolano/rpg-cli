@@ -41,6 +41,15 @@ pub enum StatusEffect {
     Poison,
 }
 
+/// Outcome of an attack attempt.
+/// This affects primarily how the attack is displayed.
+pub enum AttackType {
+    Regular,
+    Critical,
+    Effect(StatusEffect),
+    Miss,
+}
+
 #[derive(Debug)]
 pub struct Dead;
 pub struct ClassNotFound;
@@ -238,19 +247,6 @@ impl Character {
         (base_xp * (self.level as f64).powf(exp)) as i32
     }
 
-    /// Generate a randomized damage number based on the attacker strength
-    /// and the receiver strength.
-    /// The second element is the mp cost of the attack, if any.
-    pub fn damage(&self, receiver: &Self) -> (i32, i32) {
-        let (damage, mp_cost) = if self.can_magic_attack() {
-            (self.magic_attack(), self.attack_mp_cost())
-        } else {
-            (self.physical_attack(), 0)
-        };
-
-        (max(1, damage - receiver.deffense()), mp_cost)
-    }
-
     pub fn max_hp(&self) -> i32 {
         self.modify_stat(self.max_hp, Ring::HP)
     }
@@ -261,6 +257,50 @@ impl Character {
 
     pub fn speed(&self) -> i32 {
         self.modify_stat(self.speed, Ring::Speed)
+    }
+
+    /// Return randomized attack parameters according to the character attributes.
+    /// Returns a tupple with type of attack (regular/miss/critical/status effect),
+    /// inflicted damage, mp cost, gained xp.
+    pub fn generate_attack(&self, receiver: &Self) -> (AttackType, i32, i32, i32) {
+        let (damage, mp_cost) = self.damage(receiver);
+        let damage = random().damage(damage);
+        let xp = self.xp_gained(receiver, damage);
+
+        let inflicted_status = random().inflicted(self.inflicted_status_effect(receiver));
+
+        if random().is_miss(self.speed(), receiver.speed()) {
+            (AttackType::Miss, 0, mp_cost, 0)
+        } else if random().is_critical() {
+            (AttackType::Critical, damage * 2, mp_cost, xp)
+        } else if let Some(status) = inflicted_status {
+            (AttackType::Effect(status), damage, mp_cost, xp)
+        } else {
+            (AttackType::Regular, damage, mp_cost, xp)
+        }
+    }
+
+    /// Generate a damage number based on the attacker strength and the receiver
+    /// deffense.
+    /// The second element is the mp cost of the attack, if any.
+    fn damage(&self, receiver: &Self) -> (i32, i32) {
+        let (damage, mp_cost) = if self.can_magic_attack() {
+            (self.magic_attack(), self.attack_mp_cost())
+        } else {
+            (self.physical_attack(), 0)
+        };
+
+        (max(1, damage - receiver.deffense()), mp_cost)
+    }
+
+    /// The character's class enables magic and there's enough mp left
+    pub fn can_magic_attack(&self) -> bool {
+        self.class.is_magic() && self.current_mp >= self.attack_mp_cost()
+    }
+
+    fn attack_mp_cost(&self) -> i32 {
+        // each magic attack costs one third of the "canonical" mp total for this level
+        self.class.mp.as_ref().map_or(0, |mp| mp.at(self.level) / 3)
     }
 
     /// Amount of damage the character can inflict with physical atacks, given
@@ -286,16 +326,6 @@ impl Character {
         }
     }
 
-    /// The character's class enables magic and there's enough mp left
-    pub fn can_magic_attack(&self) -> bool {
-        self.class.is_magic() && self.current_mp >= self.attack_mp_cost()
-    }
-
-    fn attack_mp_cost(&self) -> i32 {
-        // each magic attack costs one third of the "canonical" mp total for this level
-        self.class.mp.as_ref().map_or(0, |mp| mp.at(self.level) / 3)
-    }
-
     pub fn deffense(&self) -> i32 {
         let shield_str = self.shield.as_ref().map_or(0, |s| s.strength());
         // base strength should be zero, subtract it from ring calculation
@@ -303,7 +333,7 @@ impl Character {
     }
 
     /// How many experience points are gained by inflicting damage to an enemy.
-    pub fn xp_gained(&self, receiver: &Self, damage: i32) -> i32 {
+    fn xp_gained(&self, receiver: &Self, damage: i32) -> i32 {
         let class_multiplier = match receiver.class.category {
             class::Category::Rare => 3,
             class::Category::Legendary => 5,
@@ -318,9 +348,25 @@ impl Character {
     }
 
     /// Return the status that this character's attack should inflict on the receiver.
-    pub fn inflicted_status_effect(&self) -> Option<(StatusEffect, u32)> {
-        // at some point the player could generate it depending on the equipment
-        self.class.inflicts
+    fn inflicted_status_effect(&self, receiver: &Self) -> Option<(StatusEffect, u32)> {
+        if receiver.left_ring == Some(Ring::Protect) || receiver.right_ring == Some(Ring::Protect) {
+            return None;
+        }
+
+        let ring_status = match (self.left_ring.as_ref(), self.right_ring.as_ref()) {
+            (Some(Ring::Poison), _) | (_, Some(Ring::Poison)) => Some((StatusEffect::Poison, 3)),
+            (Some(Ring::Fire), _) | (_, Some(Ring::Fire)) => Some((StatusEffect::Burn, 3)),
+            _ => None,
+        };
+
+        let result = self.class.inflicts.or(ring_status);
+        if let Some((status, _)) = result {
+            // don't double-inflict if already has the same status
+            if receiver.status_effect == Some(status) {
+                return None;
+            }
+        }
+        result
     }
 
     /// If the character has a status condition (e.g. poison) or an equipped
@@ -965,6 +1011,47 @@ mod tests {
 
         char.equip_ring(Ring::Speed);
         assert_eq!(15, char.speed());
+    }
+
+    #[test]
+    fn test_status_rings() {
+        let mut char = new_plain_stats_char();
+        let mut another = new_plain_stats_char();
+        assert!(char.inflicted_status_effect(&another).is_none());
+
+        char.left_ring = Some(Ring::Fire);
+        assert_eq!(
+            Some((StatusEffect::Burn, 3)),
+            char.inflicted_status_effect(&another)
+        );
+
+        char.left_ring = None;
+        char.right_ring = Some(Ring::Fire);
+        assert_eq!(
+            Some((StatusEffect::Burn, 3)),
+            char.inflicted_status_effect(&another)
+        );
+
+        char.left_ring = Some(Ring::Poison);
+        char.right_ring = None;
+        assert_eq!(
+            Some((StatusEffect::Poison, 3)),
+            char.inflicted_status_effect(&another)
+        );
+
+        char.left_ring = None;
+        char.right_ring = Some(Ring::Poison);
+        assert_eq!(
+            Some((StatusEffect::Poison, 3)),
+            char.inflicted_status_effect(&another)
+        );
+
+        another.left_ring = Some(Ring::Protect);
+        assert!(char.inflicted_status_effect(&another).is_none());
+
+        another.right_ring = Some(Ring::Protect);
+        another.left_ring = None;
+        assert!(char.inflicted_status_effect(&another).is_none());
     }
 
     #[test]

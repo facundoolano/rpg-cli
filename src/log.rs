@@ -1,6 +1,6 @@
+use crate::character::AttackType;
 use crate::character::{Character, StatusEffect};
 use crate::event::Event;
-use crate::game::battle::AttackType;
 use crate::game::Game;
 use crate::item::key::Key;
 use crate::location::Location;
@@ -47,8 +47,9 @@ pub fn handle(game: &Game, event: &Event) {
         } => {
             attack(&game.player, kind, *damage, *mp_cost);
         }
-        Event::StatusEffect { hp, mp } => {
-            status_effect(&game.player, *hp, *mp);
+        Event::StatusEffect { enemy, hp, mp } => {
+            let character = enemy.unwrap_or(&game.player);
+            status_effect(character, *hp, *mp);
         }
         Event::BattleWon {
             xp,
