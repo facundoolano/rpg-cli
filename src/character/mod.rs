@@ -299,6 +299,7 @@ impl Character {
     }
 
     /// Return randomized attack parameters according to the character attributes.
+    /// TODO document return values
     pub fn generate_attack(&self, receiver: &Self) -> (AttackType, i32, i32, i32) {
         let (damage, mp_cost) = self.damage(receiver);
         let damage = random().damage(damage);
@@ -322,8 +323,7 @@ impl Character {
     /// Generate a damage number based on the attacker strength and the receiver
     /// deffense.
     /// The second element is the mp cost of the attack, if any.
-    // TODO should this be private?
-    pub fn damage(&self, receiver: &Self) -> (i32, i32) {
+    fn damage(&self, receiver: &Self) -> (i32, i32) {
         let (damage, mp_cost) = if self.can_magic_attack() {
             (self.magic_attack(), self.attack_mp_cost())
         } else {

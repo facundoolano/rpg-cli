@@ -82,7 +82,7 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
 
     // If there's a good chance of winning the battle on the next attack,
     // don't use the potion.
-    let (potential_damage, _mp_cost) = game.player.damage(enemy);
+    let (_, potential_damage, _, _) = game.player.generate_attack(enemy);
     if potential_damage >= enemy.current_hp {
         return false;
     }
@@ -97,7 +97,7 @@ fn autoether(game: &mut Game, enemy: &Character) -> bool {
 
     // If there's a good chance of winning the battle on the next attack,
     // don't use the ether.
-    let (potential_damage, _mp_cost) = game.player.damage(enemy);
+    let (_, potential_damage, _, _) = game.player.generate_attack(enemy);
     if potential_damage >= enemy.current_hp {
         return false;
     }
