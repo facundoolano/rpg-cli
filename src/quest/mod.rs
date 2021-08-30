@@ -246,7 +246,6 @@ mod tests {
     use crate::character::Character;
     use crate::item;
     use crate::item::Item;
-    use std::collections::HashMap;
 
     #[test]
     fn test_quest_status() {
@@ -267,7 +266,7 @@ mod tests {
         assert_eq!(1, count_status(&quests, Status::Unlocked));
         assert_eq!(0, count_status(&quests, Status::Completed));
 
-        let reward = quests.handle(&event::Event::LevelUp {
+        let reward = quests.handle(&Event::LevelUp {
             count: 1,
             current: 2,
             class: "warrior".to_string(),
@@ -276,7 +275,7 @@ mod tests {
         assert_eq!(1, count_status(&quests, Status::Completed));
         assert_eq!(10, reward);
 
-        let reward = quests.handle(&event::Event::LevelUp {
+        let reward = quests.handle(&Event::LevelUp {
             count: 2,
             current: 4,
             class: "warrior".to_string(),
@@ -296,18 +295,7 @@ mod tests {
         assert_eq!(0, count_status(&game.quests, Status::Completed));
 
         // first quest is to win a battle
-        let location = game.location.clone();
-        event::Event::emit(
-            &mut game,
-            event::Event::BattleWon {
-                enemy: &fake_enemy,
-                location,
-                xp: 100,
-                levels_up: 0,
-                gold: 100,
-                items: HashMap::new(),
-            },
-        );
+        battle_won(&mut game, &fake_enemy, 0);
         assert_eq!(
             initial_quests - 1,
             count_status(&game.quests, Status::Unlocked)
@@ -327,18 +315,7 @@ mod tests {
         assert_eq!(1, count_status(&game.quests, Status::Completed));
 
         // verify that it doesn't reward twice
-        let location = game.location.clone();
-        event::Event::emit(
-            &mut game,
-            event::Event::BattleWon {
-                enemy: &fake_enemy,
-                location,
-                xp: 100,
-                levels_up: 0,
-                gold: 100,
-                items: HashMap::new(),
-            },
-        );
+        battle_won(&mut game, &fake_enemy, 0);
         assert_eq!(0, game.gold);
         assert_eq!(
             initial_quests - 1,
@@ -356,14 +333,7 @@ mod tests {
         ];
 
         game.player.level = 2;
-        event::Event::emit(
-            &mut game,
-            event::Event::LevelUp {
-                count: 1,
-                class: "warrior".to_string(),
-                current: 2,
-            },
-        );
+        level_up(&mut game, 1);
 
         assert_eq!(Status::Completed, game.quests.quests[0].0);
         assert_eq!(Status::Unlocked, game.quests.quests[1].0);
