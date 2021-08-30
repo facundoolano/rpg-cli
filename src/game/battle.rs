@@ -1,7 +1,7 @@
 use super::Game;
 use crate::character::{AttackType, Character, Dead};
-use crate::event::Event;
 use crate::item::key::Key;
+use crate::log;
 
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
@@ -29,14 +29,7 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
 
             // some duplication with game mod
             let (hp, mp) = enemy.apply_status_effects().unwrap_or_default();
-            Event::emit(
-                game,
-                Event::StatusEffect {
-                    enemy: Some(enemy),
-                    hp,
-                    mp,
-                },
-            );
+            log::status_effect(enemy, hp, mp);
 
             en_accum = -1;
         }
@@ -57,15 +50,7 @@ fn player_attack(game: &mut Game, enemy: &mut Character) -> i32 {
         enemy.status_effect = Some(status);
     }
 
-    Event::emit(
-        game,
-        Event::PlayerAttack {
-            enemy,
-            kind: attack_type,
-            damage,
-            mp_cost,
-        },
-    );
+    log::attack(enemy, &attack_type, damage, mp_cost);
     new_xp
 }
 
@@ -79,14 +64,7 @@ fn enemy_attack(game: &mut Game, enemy: &mut Character) -> Result<(), Dead> {
         game.player.status_effect = Some(status);
     }
 
-    Event::emit(
-        game,
-        Event::EnemyAttack {
-            kind: attack_type,
-            damage,
-            mp_cost,
-        },
-    );
+    log::attack(&game.player, &attack_type, damage, mp_cost);
     result
 }
 

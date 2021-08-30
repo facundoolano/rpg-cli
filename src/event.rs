@@ -3,7 +3,6 @@ use crate::character::Character;
 use crate::game;
 use crate::item::key::Key;
 use crate::location::Location;
-use crate::log;
 use crate::quest;
 use std::collections::HashMap;
 
@@ -83,7 +82,6 @@ pub enum Event<'a> {
 
 impl Event<'_> {
     pub fn emit(game: &mut game::Game, event: Event) {
-        log::handle(game, &event);
         quest::handle(game, &event);
     }
 }

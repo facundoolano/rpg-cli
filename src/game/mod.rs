@@ -7,6 +7,7 @@ use crate::item::key::Key;
 use crate::item::ring::Ring;
 use crate::item::Item;
 use crate::location::Location;
+use crate::log;
 use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
@@ -109,17 +110,15 @@ impl Game {
         }
     }
 
+    // FIXME absorb into the above method
     fn pick_up_chest(&mut self, maybe_chest: Option<Chest>, is_tombstone: bool) {
         if let Some(mut chest) = maybe_chest {
             let (items, gold) = chest.pick_up(self);
-            Event::emit(
-                self,
-                Event::ChestFound {
-                    items,
-                    gold,
-                    is_tombstone,
-                },
-            );
+            if is_tombstone {
+                log::tombstone(&items, gold);
+            } else {
+                log::chest(&items, gold);
+            }
         }
     }
 
@@ -128,14 +127,12 @@ impl Game {
         self.location = location;
         if self.location.is_home() {
             let (recovered_hp, recovered_mp, healed) = self.player.restore();
-            Event::emit(
-                self,
-                Event::Heal {
-                    item: None,
-                    recovered_hp,
-                    recovered_mp,
-                    healed,
-                },
+            log::heal(
+                &self.player,
+                &self.location,
+                recovered_hp,
+                recovered_mp,
+                healed,
             );
         }
 
@@ -146,14 +143,7 @@ impl Game {
     /// Player takes damage from status_effects, if any.
     fn apply_status_effects(&mut self) -> Result<(), character::Dead> {
         let (hp, mp) = self.player.apply_status_effects()?;
-        Event::emit(
-            self,
-            Event::StatusEffect {
-                enemy: None,
-                hp,
-                mp,
-            },
-        );
+        log::status_effect(&self.player, hp, mp);
         Ok(())
     }
 
@@ -209,7 +199,7 @@ impl Game {
         if !self.location.is_home() {
             bail!("Class change is only allowed at home.")
         } else if let Ok(lost_xp) = self.player.change_class(name) {
-            Event::emit(self, Event::ClassChanged { lost_xp });
+            log::change_class(&self.player, &self.location, lost_xp);
             Ok(())
         } else {
             bail!("Unknown class name.");
@@ -225,7 +215,7 @@ impl Game {
         if random().should_enemy_appear(&distance) {
             let enemy = character::enemy::at(&self.location, &self.player);
 
-            Event::emit(self, Event::EnemyAppears { enemy: &enemy });
+            log::enemy_appears(&enemy, &self.location);
             Some(enemy)
         } else {
             None
@@ -250,15 +240,16 @@ impl Game {
         self.battle(enemy)
     }
 
+    // FIXME absorbe above
     fn bribe(&mut self, enemy: &Character) -> bool {
         let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
 
         if self.gold >= bribe_cost && random().bribe_succeeds() {
             self.gold -= bribe_cost;
-            Event::emit(self, Event::Bribe { cost: bribe_cost });
+            log::bribe(&self.player, bribe_cost);
             return true;
         };
-        Event::emit(self, Event::Bribe { cost: 0 });
+        log::bribe(&self.player, 0);
         false
     }
 
@@ -269,7 +260,7 @@ impl Game {
             self.player.speed(),
             enemy.speed(),
         );
-        Event::emit(self, Event::RunAway { success });
+        log::run_away(&self.player, success);
         success
     }
 
@@ -283,17 +274,7 @@ impl Game {
                 let reward_items = Chest::battle_loot(self)
                     .map_or(HashMap::new(), |mut chest| chest.pick_up(self).0);
 
-                Event::emit(
-                    self,
-                    Event::BattleWon {
-                        enemy,
-                        location: self.location.clone(),
-                        xp,
-                        levels_up,
-                        gold,
-                        items: reward_items,
-                    },
-                );
+                log::battle_won(self, xp, levels_up, gold, &reward_items);
 
                 if levels_up > 0 {
                     Event::emit(
@@ -318,7 +299,7 @@ impl Game {
                 }
                 self.tombstones.insert(location, tombstone);
 
-                Event::emit(self, Event::BattleLost);
+                log::battle_lost(&self.player);
                 Err(character::Dead)
             }
         }
