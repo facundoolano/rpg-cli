@@ -219,6 +219,8 @@ impl Game {
         }
     }
 
+    /// Attempt to bribe or run away according to the given options,
+    /// and start a battle if that fails.
     pub fn maybe_battle(
         &mut self,
         enemy: &mut Character,
@@ -227,38 +229,27 @@ impl Game {
     ) -> Result<(), character::Dead> {
         // don't attempt bribe and run in the same turn
         if bribe {
-            if self.bribe(enemy) {
+            let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
+            if self.gold >= bribe_cost && random().bribe_succeeds() {
+                self.gold -= bribe_cost;
+                log::bribe(&self.player, bribe_cost);
+                return Ok(());
+            };
+            log::bribe(&self.player, 0);
+        } else if run {
+            let success = random().run_away_succeeds(
+                self.player.level,
+                enemy.level,
+                self.player.speed(),
+                enemy.speed(),
+            );
+            log::run_away(&self.player, success);
+            if success {
                 return Ok(());
             }
-        } else if run && self.run_away(enemy) {
-            return Ok(());
         }
 
         self.battle(enemy)
-    }
-
-    // FIXME absorbe above
-    fn bribe(&mut self, enemy: &Character) -> bool {
-        let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
-
-        if self.gold >= bribe_cost && random().bribe_succeeds() {
-            self.gold -= bribe_cost;
-            log::bribe(&self.player, bribe_cost);
-            return true;
-        };
-        log::bribe(&self.player, 0);
-        false
-    }
-
-    fn run_away(&mut self, enemy: &Character) -> bool {
-        let success = random().run_away_succeeds(
-            self.player.level,
-            enemy.level,
-            self.player.speed(),
-            enemy.speed(),
-        );
-        log::run_away(&self.player, success);
-        success
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), character::Dead> {
