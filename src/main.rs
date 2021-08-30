@@ -3,7 +3,6 @@ use game::Game;
 mod character;
 mod command;
 mod datafile;
-mod event;
 mod game;
 mod item;
 mod location;

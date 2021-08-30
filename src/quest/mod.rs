@@ -1,6 +1,7 @@
 use crate::character::class;
-use crate::event;
+use crate::character::Character;
 use crate::game;
+use crate::location::Location;
 use crate::log;
 use core::fmt;
 use serde::{Deserialize, Serialize};
@@ -9,10 +10,76 @@ mod beat_enemy;
 mod level;
 mod tutorial;
 
-pub fn handle(game: &mut game::Game, event: &event::Event) {
+pub fn battle_won(game: &mut game::Game, enemy: &Character, levels_up: i32) {
+    handle(
+        game,
+        Event::BattleWon {
+            enemy,
+            location: game.location.clone(),
+        },
+    );
+
+    if levels_up > 0 {
+        level_up(game, levels_up);
+    }
+}
+
+pub fn level_up(game: &mut game::Game, count: i32) {
+    handle(
+        game,
+        Event::LevelUp {
+            count,
+            current: game.player.level,
+            class: game.player.name(),
+        },
+    );
+}
+
+pub fn item_bought(game: &mut game::Game, item: String) {
+    handle(game, Event::ItemBought { item });
+}
+
+pub fn item_used(game: &mut game::Game, item: String) {
+    handle(game, Event::ItemUsed { item });
+}
+
+pub fn chest(game: &mut game::Game) {
+    handle(game, Event::ChestFound);
+}
+
+pub fn tombstone(game: &mut game::Game) {
+    handle(game, Event::TombtsoneFound);
+}
+
+pub fn game_reset(game: &mut game::Game) {
+    handle(game, Event::GameReset);
+}
+
+pub enum Event<'a> {
+    BattleWon {
+        enemy: &'a Character,
+        location: Location,
+    },
+    LevelUp {
+        count: i32,
+        current: i32,
+        class: String,
+    },
+    ItemBought {
+        item: String,
+    },
+    ItemUsed {
+        item: String,
+    },
+    ChestFound,
+    TombtsoneFound,
+    GameReset,
+}
+
+fn handle(game: &mut game::Game, event: Event) {
     // it would be preferable to have quests decoupled from the game struct
     // but that makes event handling much more complicated
-    game.gold += game.quests.handle(event);
+    game.gold += game.quests.handle(&event);
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -107,7 +174,7 @@ impl QuestList {
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
     /// The total gold reward is returned.
-    fn handle(&mut self, event: &event::Event) -> i32 {
+    fn handle(&mut self, event: &Event) -> i32 {
         self.unlock_quests(event);
 
         let mut total_reward = 0;
@@ -129,8 +196,8 @@ impl QuestList {
     }
 
     /// If the event is a level up, unlock quests for that level.
-    fn unlock_quests(&mut self, event: &event::Event) {
-        if let event::Event::LevelUp { current, .. } = event {
+    fn unlock_quests(&mut self, event: &Event) {
+        if let Event::LevelUp { current, .. } = event {
             for (status, _, _) in &mut self.quests {
                 if let Status::Locked(level) = status {
                     if *level <= *current {
@@ -164,7 +231,7 @@ pub trait Quest {
 
     /// Update the quest progress based on the given event and
     /// return whether the quest was finished.
-    fn handle(&mut self, event: &event::Event) -> bool;
+    fn handle(&mut self, event: &Event) -> bool;
 }
 
 impl fmt::Display for dyn Quest {

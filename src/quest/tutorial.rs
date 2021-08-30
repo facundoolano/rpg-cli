@@ -1,5 +1,4 @@
-use super::Quest;
-use crate::event::Event;
+use super::{Event, Quest};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -64,13 +63,7 @@ impl Quest for FindChest {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        matches!(
-            event,
-            Event::ChestFound {
-                is_tombstone: false,
-                ..
-            }
-        )
+        matches!(event, Event::ChestFound)
     }
 }
 
@@ -84,12 +77,6 @@ impl Quest for VisitTomb {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        matches!(
-            event,
-            Event::ChestFound {
-                is_tombstone: true,
-                ..
-            }
-        )
+        matches!(event, Event::TombtsoneFound)
     }
 }

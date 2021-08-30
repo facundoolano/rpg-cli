@@ -1,7 +1,7 @@
 use super::{key, Item};
-use crate::event::Event;
 use crate::game;
 use crate::log;
+use crate::quest;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -72,14 +72,7 @@ impl Item for Level {
     fn apply(&mut self, game: &mut game::Game) {
         game.player.raise_level();
         log(game, "level", 1);
-        Event::emit(
-            game,
-            Event::LevelUp {
-                count: 1,
-                current: game.player.level,
-                class: game.player.name(),
-            },
-        )
+        quest::level_up(game, 1);
     }
 
     fn key(&self) -> key::Key {

@@ -2,12 +2,12 @@ extern crate dirs;
 
 use crate::character;
 use crate::character::Character;
-use crate::event::Event;
 use crate::item::key::Key;
 use crate::item::ring::Ring;
 use crate::item::Item;
 use crate::location::Location;
 use crate::log;
+use crate::quest;
 use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
@@ -74,7 +74,7 @@ impl Game {
         // replace the current, finished game with the new one
         *self = new_game;
 
-        Event::emit(self, Event::GameReset);
+        quest::game_reset(self);
     }
 
     /// Move the hero's location towards the given destination, one directory
@@ -116,8 +116,10 @@ impl Game {
             let (items, gold) = chest.pick_up(self);
             if is_tombstone {
                 log::tombstone(&items, gold);
+                quest::tombstone(self);
             } else {
                 log::chest(&items, gold);
+                quest::chest(self);
             }
         }
     }
@@ -163,12 +165,7 @@ impl Game {
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(mut item) = items.pop() {
                 item.apply(self);
-                Event::emit(
-                    self,
-                    Event::ItemUsed {
-                        item: name.to_string(),
-                    },
-                );
+                quest::item_used(self, name.to_string());
             }
 
             if !items.is_empty() {
@@ -275,17 +272,7 @@ impl Game {
                     .map_or(HashMap::new(), |mut chest| chest.pick_up(self).0);
 
                 log::battle_won(self, xp, levels_up, gold, &reward_items);
-
-                if levels_up > 0 {
-                    Event::emit(
-                        self,
-                        Event::LevelUp {
-                            count: levels_up,
-                            current: self.player.level,
-                            class: self.player.name(),
-                        },
-                    )
-                }
+                quest::battle_won(self, enemy, levels_up);
 
                 Ok(())
             }
