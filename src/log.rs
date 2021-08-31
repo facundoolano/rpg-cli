@@ -1,6 +1,5 @@
 use crate::character::AttackType;
 use crate::character::{Character, StatusEffect};
-use crate::event::Event;
 use crate::game::Game;
 use crate::item::key::Key;
 use crate::location::Location;
@@ -27,87 +26,128 @@ fn plain() -> bool {
     *PLAIN.get().unwrap_or(&false)
 }
 
-pub fn handle(game: &Game, event: &Event) {
-    match event {
-        Event::EnemyAppears { enemy } => {
-            enemy_appears(enemy, &game.location);
-        }
-        Event::Attack {
-            enemy,
-            kind,
-            damage,
-            mp_cost,
-        } => {
-            let character = enemy.unwrap_or(&game.player);
-            attack(character, kind, *damage, *mp_cost);
-        }
-        Event::StatusEffect { enemy, hp, mp } => {
-            let character = enemy.unwrap_or(&game.player);
-            status_effect(character, *hp, *mp);
-        }
-        Event::BattleWon {
-            xp,
-            levels_up,
-            gold,
-            items,
-            ..
-        } => {
-            battle_won(game, *xp, *levels_up, *gold, items);
-        }
-        Event::BattleLost => {
-            battle_lost(&game.player);
-        }
-        Event::ChestFound {
-            is_tombstone: false,
-            items,
-            gold,
-        } => {
-            chest(items, *gold);
-        }
-        Event::ChestFound {
-            is_tombstone: true,
-            items,
-            gold,
-        } => {
-            tombstone(items, *gold);
-        }
-        Event::Bribe { cost } => {
-            bribe(&game.player, *cost);
-        }
-        Event::RunAway { success } => {
-            run_away(&game.player, *success);
-        }
-        Event::Heal {
-            item: Some(item),
-            recovered_hp,
-            recovered_mp,
-            healed,
-        } => {
-            heal_item(&game.player, item, *recovered_hp, *recovered_mp, *healed);
-        }
-        Event::Heal {
-            item: None,
-            recovered_hp,
-            recovered_mp,
-            healed,
-        } => {
-            heal(
-                &game.player,
-                &game.location,
-                *recovered_hp,
-                *recovered_mp,
-                *healed,
-            );
-        }
-        Event::ClassChanged { lost_xp } => change_class(&game.player, &game.location, *lost_xp),
-        Event::StoneUsed { stat, increase } => {
-            stat_increase(&game.player, *stat, *increase);
-        }
-        Event::LevelUp { .. } => {}
-        Event::ItemBought { .. } => {}
-        Event::ItemUsed { .. } => {}
-        Event::GameReset => {}
+pub fn enemy_appears(enemy: &Character, location: &Location) {
+    log(enemy, location, "");
+}
+
+pub fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32) {
+    if !quiet() {
+        battle_log(
+            character,
+            &format_attack(character, attack, damage, mp_cost),
+        );
     }
+}
+
+pub fn status_effect(character: &Character, hp: i32, mp: i32) {
+    if hp != 0 || mp != 0 {
+        let emoji = character
+            .status_effect
+            .map_or("", |s| status_effect_params(s).1);
+
+        battle_log(
+            character,
+            &format_stat_change(character, hp, mp, false, emoji),
+        );
+    }
+}
+
+pub fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32, items: &HashMap<Key, i32>) {
+    battle_log(
+        &game.player,
+        &format!(
+            "{}{}{}",
+            format!("+{}xp", xp).bold(),
+            level_up(levels_up),
+            format_ls("", items, gold)
+        ),
+    );
+    short_status(game);
+}
+
+pub fn battle_lost(player: &Character) {
+    battle_log(player, "\u{1F480}");
+}
+
+pub fn chest(items: &HashMap<Key, i32>, gold: i32) {
+    println!("{}", format_ls("\u{1F4E6}", items, gold));
+}
+
+pub fn tombstone(items: &HashMap<Key, i32>, gold: i32) {
+    println!("{}", format_ls("\u{1FAA6} ", items, gold));
+}
+
+pub fn bribe(player: &Character, amount: i32) {
+    if amount > 0 {
+        let suffix = format!("bribed {}", format_gold_signed(-amount));
+        battle_log(player, &suffix);
+    } else {
+        battle_log(player, "can't bribe!");
+    }
+}
+
+pub fn run_away(player: &Character, success: bool) {
+    if success {
+        battle_log(player, "fled!");
+    } else {
+        battle_log(player, "can't run!");
+    }
+}
+
+pub fn heal_item(
+    player: &Character,
+    item: &str,
+    recovered_hp: i32,
+    recovered_mp: i32,
+    healed: bool,
+) {
+    let color = if recovered_mp > 0 { "purple" } else { "green" };
+
+    if recovered_hp > 0 || recovered_mp > 0 || healed {
+        battle_log(
+            player,
+            &format_stat_change(
+                player,
+                recovered_hp,
+                recovered_mp,
+                healed,
+                &item.color(color),
+            ),
+        );
+    }
+}
+
+pub fn heal(
+    player: &Character,
+    location: &Location,
+    recovered_hp: i32,
+    recovered_mp: i32,
+    healed: bool,
+) {
+    if recovered_hp > 0 || recovered_mp > 0 || healed {
+        log(
+            player,
+            location,
+            &format_stat_change(player, recovered_hp, recovered_mp, healed, ""),
+        );
+    }
+}
+
+pub fn change_class(player: &Character, location: &Location, lost_xp: i32) {
+    let mut lost_text = String::new();
+    if lost_xp > 0 {
+        lost_text = format!("-{}xp", lost_xp).bright_red().to_string();
+    }
+    log(player, location, &lost_text);
+}
+
+pub fn stat_increase(player: &Character, stat: &str, increase: i32) {
+    let suffix = if stat == "level" {
+        level_up(increase)
+    } else {
+        format!("+{}{}", increase, stat).cyan().to_string()
+    };
+    battle_log(player, &suffix);
 }
 
 /// Print the hero status according to options
@@ -151,108 +191,6 @@ pub fn quest_done(reward: i32) {
     }
 }
 
-fn enemy_appears(enemy: &Character, location: &Location) {
-    log(enemy, location, "");
-}
-
-fn bribe(player: &Character, amount: i32) {
-    if amount > 0 {
-        let suffix = format!("bribed {}", format_gold_signed(-amount));
-        battle_log(player, &suffix);
-    } else {
-        battle_log(player, "can't bribe!");
-    }
-}
-
-fn run_away(player: &Character, success: bool) {
-    if success {
-        battle_log(player, "fled!");
-    } else {
-        battle_log(player, "can't run!");
-    }
-}
-
-fn heal(
-    player: &Character,
-    location: &Location,
-    recovered_hp: i32,
-    recovered_mp: i32,
-    healed: bool,
-) {
-    if recovered_hp > 0 || recovered_mp > 0 || healed {
-        log(
-            player,
-            location,
-            &format_stat_change(player, recovered_hp, recovered_mp, healed, ""),
-        );
-    }
-}
-
-fn heal_item(player: &Character, item: &str, recovered_hp: i32, recovered_mp: i32, healed: bool) {
-    let color = if recovered_mp > 0 { "purple" } else { "green" };
-
-    if recovered_hp > 0 || recovered_mp > 0 || healed {
-        battle_log(
-            player,
-            &format_stat_change(
-                player,
-                recovered_hp,
-                recovered_mp,
-                healed,
-                &item.color(color),
-            ),
-        );
-    }
-}
-
-fn change_class(player: &Character, location: &Location, lost_xp: i32) {
-    let mut lost_text = String::new();
-    if lost_xp > 0 {
-        lost_text = format!("-{}xp", lost_xp).bright_red().to_string();
-    }
-    log(player, location, &lost_text);
-}
-
-// FIXME experiment
-pub fn attack(character: &Character, attack: &AttackType, damage: i32, mp_cost: i32) {
-    if !quiet() {
-        battle_log(
-            character,
-            &format_attack(character, attack, damage, mp_cost),
-        );
-    }
-}
-
-fn status_effect(character: &Character, hp: i32, mp: i32) {
-    if hp != 0 || mp != 0 {
-        let emoji = character
-            .status_effect
-            .map_or("", |s| status_effect_params(s).1);
-
-        battle_log(
-            character,
-            &format_stat_change(character, hp, mp, false, emoji),
-        );
-    }
-}
-
-fn battle_lost(player: &Character) {
-    battle_log(player, "\u{1F480}");
-}
-
-fn battle_won(game: &Game, xp: i32, levels_up: i32, gold: i32, items: &HashMap<Key, i32>) {
-    battle_log(
-        &game.player,
-        &format!(
-            "{}{}{}",
-            format!("+{}xp", xp).bold(),
-            level_up(levels_up),
-            format_ls("", items, gold)
-        ),
-    );
-    short_status(game);
-}
-
 fn level_up(levels_up: i32) -> String {
     if levels_up > 0 {
         let plus = (0..levels_up).map(|_| "+").collect::<String>();
@@ -260,15 +198,6 @@ fn level_up(levels_up: i32) -> String {
     } else {
         "".to_string()
     }
-}
-
-fn stat_increase(player: &Character, stat: &str, increase: i32) {
-    let suffix = if stat == "level" {
-        level_up(increase)
-    } else {
-        format!("+{}{}", increase, stat).cyan().to_string()
-    };
-    battle_log(player, &suffix);
 }
 
 fn long_status(game: &Game) {
@@ -358,14 +287,6 @@ fn plain_status(game: &Game) {
         format_inventory(game),
         game.gold
     );
-}
-
-fn chest(items: &HashMap<Key, i32>, gold: i32) {
-    println!("{}", format_ls("\u{1F4E6}", items, gold));
-}
-
-fn tombstone(items: &HashMap<Key, i32>, gold: i32) {
-    println!("{}", format_ls("\u{1FAA6} ", items, gold));
 }
 
 fn format_ls(emoji: &str, items: &HashMap<Key, i32>, gold: i32) -> String {

@@ -1,8 +1,8 @@
 use core::fmt;
 
 use crate::character::class as character;
-use crate::event::Event;
 use crate::game;
+use crate::log;
 use serde::{Deserialize, Serialize};
 
 pub mod equipment;
@@ -39,16 +39,7 @@ impl Item for Potion {
     fn apply(&mut self, game: &mut game::Game) {
         let to_restore = character::Class::player_first().hp.at(self.level) / 2;
         let recovered = game.player.update_hp(to_restore).unwrap();
-
-        Event::emit(
-            game,
-            Event::Heal {
-                item: Some("potion"),
-                recovered_hp: recovered,
-                recovered_mp: 0,
-                healed: false,
-            },
-        );
+        log::heal_item(&game.player, "potion", recovered, 0, false);
     }
 
     fn key(&self) -> key::Key {
@@ -95,15 +86,7 @@ impl Remedy {
 impl Item for Remedy {
     fn apply(&mut self, game: &mut game::Game) {
         let healed = game.player.status_effect.take().is_some();
-        Event::emit(
-            game,
-            Event::Heal {
-                item: Some("remedy"),
-                recovered_hp: 0,
-                recovered_mp: 0,
-                healed,
-            },
-        );
+        log::heal_item(&game.player, "remedy", 0, 0, healed);
     }
 
     fn key(&self) -> key::Key {
@@ -145,15 +128,7 @@ impl Item for Ether {
             .map_or(0, |mp| mp.at(self.level));
         let recovered_mp = game.player.update_mp(to_restore);
 
-        Event::emit(
-            game,
-            Event::Heal {
-                item: Some("ether"),
-                recovered_hp: 0,
-                recovered_mp,
-                healed: false,
-            },
-        );
+        log::heal_item(&game.player, "ether", 0, recovered_mp, false);
     }
 
     fn key(&self) -> key::Key {

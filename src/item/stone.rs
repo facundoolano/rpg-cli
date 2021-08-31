@@ -1,6 +1,7 @@
 use super::{key, Item};
-use crate::event::Event;
 use crate::game;
+use crate::log;
+use crate::quest;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -22,7 +23,7 @@ pub struct Level;
 impl Item for Health {
     fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.raise_hp();
-        event(game, "hp", inc);
+        log(game, "hp", inc);
     }
 
     fn key(&self) -> key::Key {
@@ -34,7 +35,7 @@ impl Item for Health {
 impl Item for Magic {
     fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.raise_mp();
-        event(game, "mp", inc);
+        log(game, "mp", inc);
     }
 
     fn key(&self) -> key::Key {
@@ -46,7 +47,7 @@ impl Item for Magic {
 impl Item for Power {
     fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.raise_strength();
-        event(game, "str", inc);
+        log(game, "str", inc);
     }
 
     fn key(&self) -> key::Key {
@@ -58,7 +59,7 @@ impl Item for Power {
 impl Item for Speed {
     fn apply(&mut self, game: &mut game::Game) {
         let inc = game.player.raise_speed();
-        event(game, "spd", inc);
+        log(game, "spd", inc);
     }
 
     fn key(&self) -> key::Key {
@@ -70,15 +71,8 @@ impl Item for Speed {
 impl Item for Level {
     fn apply(&mut self, game: &mut game::Game) {
         game.player.raise_level();
-        event(game, "level", 1);
-        Event::emit(
-            game,
-            Event::LevelUp {
-                count: 1,
-                current: game.player.level,
-                class: game.player.name(),
-            },
-        )
+        log(game, "level", 1);
+        quest::level_up(game, 1);
     }
 
     fn key(&self) -> key::Key {
@@ -86,6 +80,6 @@ impl Item for Level {
     }
 }
 
-fn event(game: &mut game::Game, stat: &'static str, increase: i32) {
-    Event::emit(game, Event::StoneUsed { stat, increase });
+fn log(game: &mut game::Game, stat: &'static str, increase: i32) {
+    log::stat_increase(&game.player, stat, increase);
 }

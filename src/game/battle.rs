@@ -1,7 +1,7 @@
 use super::Game;
 use crate::character::{Character, Dead};
-use crate::event::Event;
 use crate::item::key::Key;
+use crate::log;
 
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
@@ -22,6 +22,7 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
                 xp += new_xp;
             }
 
+            // FIXME remove this method, call directly. maybe extract to helper
             game.apply_status_effects()?;
             pl_accum = -1;
         } else {
@@ -30,14 +31,7 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
 
             // some duplication with game mod
             let (hp, mp) = enemy.apply_status_effects().unwrap_or_default();
-            Event::emit(
-                game,
-                Event::StatusEffect {
-                    enemy: Some(enemy),
-                    hp,
-                    mp,
-                },
-            );
+            log::status_effect(enemy, hp, mp);
 
             en_accum = -1;
         }

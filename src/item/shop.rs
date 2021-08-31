@@ -4,9 +4,9 @@ use super::equipment::Equipment;
 use super::key::Key;
 use super::Item;
 use crate::character::Character;
-use crate::event::Event;
 use crate::game::Game;
 use crate::log;
+use crate::quest;
 use anyhow::{bail, Result};
 use std::collections::HashMap;
 
@@ -56,12 +56,7 @@ pub fn buy(game: &mut Game, item_keys: &[Key]) -> Result<()> {
 
             total_cost += item_cost;
             *item_counts.entry(key.clone()).or_insert(0) += 1;
-            Event::emit(
-                game,
-                Event::ItemBought {
-                    item: item.to_string(),
-                },
-            );
+            quest::item_bought(game, item.to_string());
         } else {
             error = format!("{} not available.", key);
             break;
