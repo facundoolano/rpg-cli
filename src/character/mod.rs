@@ -236,11 +236,6 @@ impl Character {
         )
     }
 
-    /// Return true if an evade ring is equipped, i.e. no enemies should appear.
-    pub fn enemies_evaded(&self) -> bool {
-        self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
-    }
-
     /// How many experience points are required to move to the next level.
     pub fn xp_for_next(&self) -> i32 {
         let exp = 1.5;
@@ -470,6 +465,26 @@ impl Character {
             }
             _ => None,
         }
+    }
+
+    /// Return true if an evade ring is equipped, i.e. no enemies should appear.
+    pub fn enemies_evaded(&self) -> bool {
+        self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
+    }
+
+    /// Return true if a double ring is equipped, i.e. should attack twice per turn.
+    pub fn double_beats(&self) -> bool {
+        self.left_ring == Some(Ring::Double) || self.right_ring == Some(Ring::Double)
+    }
+
+    /// Return true if a counter ring is equipped, i.e. should counter enemy attacks.
+    pub fn counter_attacks(&self) -> bool {
+        self.left_ring == Some(Ring::Counter) || self.right_ring == Some(Ring::Counter)
+    }
+
+    /// Return true if a revive ring is equipped, i.e. should come back from dead during battle.
+    pub fn revives(&self) -> bool {
+        self.left_ring == Some(Ring::Revive) || self.right_ring == Some(Ring::Revive)
     }
 
     /// Apply any side-effects of the ring over the character stats, e.g.
