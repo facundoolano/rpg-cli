@@ -1,6 +1,7 @@
 use crate::character::class;
-use crate::event;
+use crate::character::Character;
 use crate::game;
+use crate::location::Location;
 use crate::log;
 use core::fmt;
 use serde::{Deserialize, Serialize};
@@ -9,17 +10,22 @@ mod beat_enemy;
 mod level;
 mod tutorial;
 
-pub fn handle(game: &mut game::Game, event: &event::Event) {
-    // it would be preferable to have quests decoupled from the game struct
-    // but that makes event handling much more complicated
-    game.gold += game.quests.handle(event);
+/// A task that is assigned to the player when certain conditions are met.
+/// New quests should implement this trait and be added to QuestList.setup method.
+#[typetag::serde(tag = "type")]
+pub trait Quest {
+    /// What to show in the TODO quests list
+    fn description(&self) -> String;
+
+    /// Update the quest progress based on the given event and
+    /// return whether the quest was finished.
+    fn handle(&mut self, event: &Event) -> bool;
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-enum Status {
-    Locked(i32),
-    Unlocked,
-    Completed,
+impl fmt::Display for dyn Quest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.description())
+    }
 }
 
 /// Keeps a TODO list of quests for the game.
@@ -27,6 +33,92 @@ enum Status {
 #[derive(Serialize, Deserialize, Default)]
 pub struct QuestList {
     quests: Vec<(Status, i32, Box<dyn Quest>)>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+enum Status {
+    /// The quest won't be visible until the player reaches a specific level
+    Locked(i32),
+
+    /// The quest is visible
+    Unlocked,
+
+    /// The quest was finished
+    Completed,
+}
+
+// EVENT TRIGGERING FUNCTIONS
+
+pub fn battle_won(game: &mut game::Game, enemy: &Character, levels_up: i32) {
+    handle(
+        game,
+        Event::BattleWon {
+            enemy,
+            location: game.location.clone(),
+        },
+    );
+
+    if levels_up > 0 {
+        level_up(game, levels_up);
+    }
+}
+
+pub fn level_up(game: &mut game::Game, count: i32) {
+    handle(
+        game,
+        Event::LevelUp {
+            count,
+            current: game.player.level,
+            class: game.player.name(),
+        },
+    );
+}
+
+pub fn item_bought(game: &mut game::Game, item: String) {
+    handle(game, Event::ItemBought { item });
+}
+
+pub fn item_used(game: &mut game::Game, item: String) {
+    handle(game, Event::ItemUsed { item });
+}
+
+pub fn chest(game: &mut game::Game) {
+    handle(game, Event::ChestFound);
+}
+
+pub fn tombstone(game: &mut game::Game) {
+    handle(game, Event::TombtsoneFound);
+}
+
+pub fn game_reset(game: &mut game::Game) {
+    handle(game, Event::GameReset);
+}
+
+fn handle(game: &mut game::Game, event: Event) {
+    // it would be preferable to have quests decoupled from the game struct
+    // but that makes event handling much more complicated
+    game.gold += game.quests.handle(&event);
+}
+
+pub enum Event<'a> {
+    BattleWon {
+        enemy: &'a Character,
+        location: Location,
+    },
+    LevelUp {
+        count: i32,
+        current: i32,
+        class: String,
+    },
+    ItemBought {
+        item: String,
+    },
+    ItemUsed {
+        item: String,
+    },
+    ChestFound,
+    TombtsoneFound,
+    GameReset,
 }
 
 impl QuestList {
@@ -107,7 +199,7 @@ impl QuestList {
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
     /// The total gold reward is returned.
-    fn handle(&mut self, event: &event::Event) -> i32 {
+    fn handle(&mut self, event: &Event) -> i32 {
         self.unlock_quests(event);
 
         let mut total_reward = 0;
@@ -129,8 +221,8 @@ impl QuestList {
     }
 
     /// If the event is a level up, unlock quests for that level.
-    fn unlock_quests(&mut self, event: &event::Event) {
-        if let event::Event::LevelUp { current, .. } = event {
+    fn unlock_quests(&mut self, event: &Event) {
+        if let Event::LevelUp { current, .. } = event {
             for (status, _, _) in &mut self.quests {
                 if let Status::Locked(level) = status {
                     if *level <= *current {
@@ -155,31 +247,12 @@ impl QuestList {
     }
 }
 
-/// A task that is assigned to the player when certain conditions are met.
-/// New quests should implement this trait and be added to QuestList.setup method.
-#[typetag::serde(tag = "type")]
-pub trait Quest {
-    /// What to show in the TODO quests list
-    fn description(&self) -> String;
-
-    /// Update the quest progress based on the given event and
-    /// return whether the quest was finished.
-    fn handle(&mut self, event: &event::Event) -> bool;
-}
-
-impl fmt::Display for dyn Quest {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.description())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::character::Character;
     use crate::item;
     use crate::item::Item;
-    use std::collections::HashMap;
 
     #[test]
     fn test_quest_status() {
@@ -200,7 +273,7 @@ mod tests {
         assert_eq!(1, count_status(&quests, Status::Unlocked));
         assert_eq!(0, count_status(&quests, Status::Completed));
 
-        let reward = quests.handle(&event::Event::LevelUp {
+        let reward = quests.handle(&Event::LevelUp {
             count: 1,
             current: 2,
             class: "warrior".to_string(),
@@ -209,7 +282,7 @@ mod tests {
         assert_eq!(1, count_status(&quests, Status::Completed));
         assert_eq!(10, reward);
 
-        let reward = quests.handle(&event::Event::LevelUp {
+        let reward = quests.handle(&Event::LevelUp {
             count: 2,
             current: 4,
             class: "warrior".to_string(),
@@ -229,18 +302,7 @@ mod tests {
         assert_eq!(0, count_status(&game.quests, Status::Completed));
 
         // first quest is to win a battle
-        let location = game.location.clone();
-        event::Event::emit(
-            &mut game,
-            event::Event::BattleWon {
-                enemy: &fake_enemy,
-                location,
-                xp: 100,
-                levels_up: 0,
-                gold: 100,
-                items: HashMap::new(),
-            },
-        );
+        battle_won(&mut game, &fake_enemy, 0);
         assert_eq!(
             initial_quests - 1,
             count_status(&game.quests, Status::Unlocked)
@@ -260,18 +322,7 @@ mod tests {
         assert_eq!(1, count_status(&game.quests, Status::Completed));
 
         // verify that it doesn't reward twice
-        let location = game.location.clone();
-        event::Event::emit(
-            &mut game,
-            event::Event::BattleWon {
-                enemy: &fake_enemy,
-                location,
-                xp: 100,
-                levels_up: 0,
-                gold: 100,
-                items: HashMap::new(),
-            },
-        );
+        battle_won(&mut game, &fake_enemy, 0);
         assert_eq!(0, game.gold);
         assert_eq!(
             initial_quests - 1,
@@ -289,14 +340,7 @@ mod tests {
         ];
 
         game.player.level = 2;
-        event::Event::emit(
-            &mut game,
-            event::Event::LevelUp {
-                count: 1,
-                class: "warrior".to_string(),
-                current: 2,
-            },
-        );
+        level_up(&mut game, 1);
 
         assert_eq!(Status::Completed, game.quests.quests[0].0);
         assert_eq!(Status::Unlocked, game.quests.quests[1].0);

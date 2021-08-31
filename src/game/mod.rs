@@ -2,11 +2,12 @@ extern crate dirs;
 
 use crate::character;
 use crate::character::Character;
-use crate::event::Event;
 use crate::item::key::Key;
 use crate::item::ring::Ring;
 use crate::item::Item;
 use crate::location::Location;
+use crate::log;
+use crate::quest;
 use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
@@ -73,7 +74,7 @@ impl Game {
         // replace the current, finished game with the new one
         *self = new_game;
 
-        Event::emit(self, Event::GameReset);
+        quest::game_reset(self);
     }
 
     /// Move the hero's location towards the given destination, one directory
@@ -99,27 +100,19 @@ impl Game {
     /// Look for chests and tombstones at the current location.
     /// Remembers previously visited locations for consistency.
     pub fn inspect(&mut self) {
-        let maybe_tomb = self.tombstones.remove(&self.location.to_string());
-        self.pick_up_chest(maybe_tomb, true);
+        if let Some(mut chest) = self.tombstones.remove(&self.location.to_string()) {
+            let (items, gold) = chest.pick_up(self);
+            log::tombstone(&items, gold);
+            quest::tombstone(self);
+        }
 
         if !self.inspected.contains(&self.location) {
             self.inspected.insert(self.location.clone());
-            let chest = Chest::generate(self);
-            self.pick_up_chest(chest, false);
-        }
-    }
-
-    fn pick_up_chest(&mut self, maybe_chest: Option<Chest>, is_tombstone: bool) {
-        if let Some(mut chest) = maybe_chest {
-            let (items, gold) = chest.pick_up(self);
-            Event::emit(
-                self,
-                Event::ChestFound {
-                    items,
-                    gold,
-                    is_tombstone,
-                },
-            );
+            if let Some(mut chest) = Chest::generate(self) {
+                let (items, gold) = chest.pick_up(self);
+                log::chest(&items, gold);
+                quest::chest(self);
+            }
         }
     }
 
@@ -128,14 +121,12 @@ impl Game {
         self.location = location;
         if self.location.is_home() {
             let (recovered_hp, recovered_mp, healed) = self.player.restore();
-            Event::emit(
-                self,
-                Event::Heal {
-                    item: None,
-                    recovered_hp,
-                    recovered_mp,
-                    healed,
-                },
+            log::heal(
+                &self.player,
+                &self.location,
+                recovered_hp,
+                recovered_mp,
+                healed,
             );
         }
 
@@ -146,14 +137,7 @@ impl Game {
     /// Player takes damage from status_effects, if any.
     fn apply_status_effects(&mut self) -> Result<(), character::Dead> {
         let (hp, mp) = self.player.apply_status_effects()?;
-        Event::emit(
-            self,
-            Event::StatusEffect {
-                enemy: None,
-                hp,
-                mp,
-            },
-        );
+        log::status_effect(&self.player, hp, mp);
         Ok(())
     }
 
@@ -173,12 +157,7 @@ impl Game {
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(mut item) = items.pop() {
                 item.apply(self);
-                Event::emit(
-                    self,
-                    Event::ItemUsed {
-                        item: name.to_string(),
-                    },
-                );
+                quest::item_used(self, name.to_string());
             }
 
             if !items.is_empty() {
@@ -209,7 +188,7 @@ impl Game {
         if !self.location.is_home() {
             bail!("Class change is only allowed at home.")
         } else if let Ok(lost_xp) = self.player.change_class(name) {
-            Event::emit(self, Event::ClassChanged { lost_xp });
+            log::change_class(&self.player, &self.location, lost_xp);
             Ok(())
         } else {
             bail!("Unknown class name.");
@@ -225,13 +204,15 @@ impl Game {
         if random().should_enemy_appear(&distance) {
             let enemy = character::enemy::at(&self.location, &self.player);
 
-            Event::emit(self, Event::EnemyAppears { enemy: &enemy });
+            log::enemy_appears(&enemy, &self.location);
             Some(enemy)
         } else {
             None
         }
     }
 
+    /// Attempt to bribe or run away according to the given options,
+    /// and start a battle if that fails.
     pub fn maybe_battle(
         &mut self,
         enemy: &mut Character,
@@ -240,37 +221,27 @@ impl Game {
     ) -> Result<(), character::Dead> {
         // don't attempt bribe and run in the same turn
         if bribe {
-            if self.bribe(enemy) {
+            let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
+            if self.gold >= bribe_cost && random().bribe_succeeds() {
+                self.gold -= bribe_cost;
+                log::bribe(&self.player, bribe_cost);
+                return Ok(());
+            };
+            log::bribe(&self.player, 0);
+        } else if run {
+            let success = random().run_away_succeeds(
+                self.player.level,
+                enemy.level,
+                self.player.speed(),
+                enemy.speed(),
+            );
+            log::run_away(&self.player, success);
+            if success {
                 return Ok(());
             }
-        } else if run && self.run_away(enemy) {
-            return Ok(());
         }
 
         self.battle(enemy)
-    }
-
-    fn bribe(&mut self, enemy: &Character) -> bool {
-        let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
-
-        if self.gold >= bribe_cost && random().bribe_succeeds() {
-            self.gold -= bribe_cost;
-            Event::emit(self, Event::Bribe { cost: bribe_cost });
-            return true;
-        };
-        Event::emit(self, Event::Bribe { cost: 0 });
-        false
-    }
-
-    fn run_away(&mut self, enemy: &Character) -> bool {
-        let success = random().run_away_succeeds(
-            self.player.level,
-            enemy.level,
-            self.player.speed(),
-            enemy.speed(),
-        );
-        Event::emit(self, Event::RunAway { success });
-        success
     }
 
     fn battle(&mut self, enemy: &mut Character) -> Result<(), character::Dead> {
@@ -283,28 +254,8 @@ impl Game {
                 let reward_items = Chest::battle_loot(self)
                     .map_or(HashMap::new(), |mut chest| chest.pick_up(self).0);
 
-                Event::emit(
-                    self,
-                    Event::BattleWon {
-                        enemy,
-                        location: self.location.clone(),
-                        xp,
-                        levels_up,
-                        gold,
-                        items: reward_items,
-                    },
-                );
-
-                if levels_up > 0 {
-                    Event::emit(
-                        self,
-                        Event::LevelUp {
-                            count: levels_up,
-                            current: self.player.level,
-                            class: self.player.name(),
-                        },
-                    )
-                }
+                log::battle_won(self, xp, levels_up, gold, &reward_items);
+                quest::battle_won(self, enemy, levels_up);
 
                 Ok(())
             }
@@ -318,7 +269,7 @@ impl Game {
                 }
                 self.tombstones.insert(location, tombstone);
 
-                Event::emit(self, Event::BattleLost);
+                log::battle_lost(&self.player);
                 Err(character::Dead)
             }
         }
