@@ -10,6 +10,45 @@ mod beat_enemy;
 mod level;
 mod tutorial;
 
+/// A task that is assigned to the player when certain conditions are met.
+/// New quests should implement this trait and be added to QuestList.setup method.
+#[typetag::serde(tag = "type")]
+pub trait Quest {
+    /// What to show in the TODO quests list
+    fn description(&self) -> String;
+
+    /// Update the quest progress based on the given event and
+    /// return whether the quest was finished.
+    fn handle(&mut self, event: &Event) -> bool;
+}
+
+impl fmt::Display for dyn Quest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.description())
+    }
+}
+
+/// Keeps a TODO list of quests for the game.
+/// Each quest is unlocked at a certain level and has completion reward.
+#[derive(Serialize, Deserialize, Default)]
+pub struct QuestList {
+    quests: Vec<(Status, i32, Box<dyn Quest>)>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+enum Status {
+    /// The quest won't be visible until the player reaches a specific level
+    Locked(i32),
+
+    /// The quest is visible
+    Unlocked,
+
+    /// The quest was finished
+    Completed,
+}
+
+// EVENT TRIGGERING FUNCTIONS
+
 pub fn battle_won(game: &mut game::Game, enemy: &Character, levels_up: i32) {
     handle(
         game,
@@ -55,6 +94,12 @@ pub fn game_reset(game: &mut game::Game) {
     handle(game, Event::GameReset);
 }
 
+fn handle(game: &mut game::Game, event: Event) {
+    // it would be preferable to have quests decoupled from the game struct
+    // but that makes event handling much more complicated
+    game.gold += game.quests.handle(&event);
+}
+
 pub enum Event<'a> {
     BattleWon {
         enemy: &'a Character,
@@ -74,26 +119,6 @@ pub enum Event<'a> {
     ChestFound,
     TombtsoneFound,
     GameReset,
-}
-
-fn handle(game: &mut game::Game, event: Event) {
-    // it would be preferable to have quests decoupled from the game struct
-    // but that makes event handling much more complicated
-    game.gold += game.quests.handle(&event);
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-enum Status {
-    Locked(i32),
-    Unlocked,
-    Completed,
-}
-
-/// Keeps a TODO list of quests for the game.
-/// Each quest is unlocked at a certain level and has completion reward.
-#[derive(Serialize, Deserialize, Default)]
-pub struct QuestList {
-    quests: Vec<(Status, i32, Box<dyn Quest>)>,
 }
 
 impl QuestList {
@@ -219,24 +244,6 @@ impl QuestList {
             };
         }
         result
-    }
-}
-
-/// A task that is assigned to the player when certain conditions are met.
-/// New quests should implement this trait and be added to QuestList.setup method.
-#[typetag::serde(tag = "type")]
-pub trait Quest {
-    /// What to show in the TODO quests list
-    fn description(&self) -> String;
-
-    /// Update the quest progress based on the given event and
-    /// return whether the quest was finished.
-    fn handle(&mut self, event: &Event) -> bool;
-}
-
-impl fmt::Display for dyn Quest {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.description())
     }
 }
 
