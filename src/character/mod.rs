@@ -277,8 +277,6 @@ impl Character {
             AttackType::Miss => (0, 0),
         };
 
-        log::attack(receiver, &attack_type, damage, mp_cost);
-
         self.update_mp(-mp_cost);
 
         // The receiver can die from the damage. Return the result for
@@ -287,6 +285,9 @@ impl Character {
         if let AttackType::Effect(status) = attack_type {
             receiver.status_effect = Some(status);
         }
+
+        log::attack(receiver, &attack_type, damage, mp_cost);
+
         (xp, result)
     }
 
