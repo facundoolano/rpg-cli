@@ -134,6 +134,7 @@ mod tests {
     }
 
     #[test]
+    // FIXME move to character
     fn magic_attacks() {
         let mut game = Game::new();
         let enemy_base = class::Class::random(class::Category::Common);
@@ -156,17 +157,17 @@ mod tests {
         game.player = character::Character::new(player_class, 1);
 
         // mage -mp with enough mp
-        player_attack(&mut game, &mut enemy);
+        game.player.attack(&mut enemy).1.unwrap();
         assert_eq!(7, game.player.current_mp);
         assert_eq!(70, enemy.current_hp);
 
-        player_attack(&mut game, &mut enemy);
-        player_attack(&mut game, &mut enemy);
+        game.player.attack(&mut enemy).1.unwrap();
+        game.player.attack(&mut enemy).1.unwrap();
         assert_eq!(1, game.player.current_mp);
         assert_eq!(10, enemy.current_hp);
 
         // mage -mp=0 without enough mp
-        player_attack(&mut game, &mut enemy);
+        game.player.attack(&mut enemy).1.unwrap();
         assert_eq!(1, game.player.current_mp);
         assert_eq!(7, enemy.current_hp);
     }
