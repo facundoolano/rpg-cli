@@ -54,6 +54,9 @@ impl Key {
             "protect-rng" | "protect" | "protect-ring" => Key::Ring(Ring::Protect),
             "fire-rng" | "fire" | "fire-ring" => Key::Ring(Ring::Fire),
             "poison-rng" | "poison" | "poison-ring" => Key::Ring(Ring::Poison),
+            "double-rng" | "double" | "double-ring" => Key::Ring(Ring::Double),
+            "counter-rng" | "counter" | "counter-ring" => Key::Ring(Ring::Counter),
+            "revive-rng" | "revive" | "revive-ring" => Key::Ring(Ring::Revive),
             key => bail!("item {} not found", key),
         };
         Ok(key)
@@ -88,6 +91,9 @@ impl fmt::Display for Key {
             Key::Ring(Ring::Protect) => "protect-rng",
             Key::Ring(Ring::Fire) => "fire-rng",
             Key::Ring(Ring::Poison) => "poison-rng",
+            Key::Ring(Ring::Double) => "double-rng",
+            Key::Ring(Ring::Counter) => "counter-rng",
+            Key::Ring(Ring::Revive) => "revive-rng",
         };
 
         write!(f, "{}", name)
