@@ -2,6 +2,7 @@ use crate::item::equipment;
 use crate::item::key::Key;
 use crate::item::ring::Ring;
 use crate::item::Item;
+use crate::log;
 use crate::randomizer::{random, Randomizer};
 use class::Class;
 use serde::{Deserialize, Serialize};
@@ -259,31 +260,57 @@ impl Character {
         self.modify_stat(self.speed, Ring::Speed)
     }
 
-    /// Return randomized attack parameters according to the character attributes.
-    /// Returns a tupple with type of attack (regular/miss/critical/status effect),
-    /// inflicted damage, mp cost, gained xp.
-    pub fn generate_attack(&self, receiver: &Self) -> (AttackType, i32, i32, i32) {
+    /// Generate and log an attack of this character and apply its effects to
+    /// the given receiver.
+    /// Returns a tuple with the gained experience and a Err(Dead) result if
+    /// the receiver died from the inflicted damage.
+    pub fn attack(&mut self, receiver: &mut Self) -> (i32, Result<(), Dead>) {
         let (damage, mp_cost) = self.damage(receiver);
         let damage = random().damage(damage);
         let xp = self.xp_gained(receiver, damage);
 
+        let attack_type = self.attack_type(receiver);
+        let (damage, xp) = match attack_type {
+            AttackType::Regular => (damage, xp),
+            AttackType::Critical => (damage * 2, xp),
+            AttackType::Effect(_) => (damage, xp),
+            AttackType::Miss => (0, 0),
+        };
+
+        self.update_mp(-mp_cost);
+
+        // The receiver can die from the damage. Return the result for
+        // the caller to handle that scenario.
+        let result = receiver.update_hp(-damage).map(|_| ());
+        if let AttackType::Effect(status) = attack_type {
+            receiver.status_effect = Some(status);
+        }
+
+        log::attack(receiver, &attack_type, damage, mp_cost);
+
+        (xp, result)
+    }
+
+    /// Generate a randomized regular/miss/critical/status effect attack based
+    /// on the stats of both characters.
+    fn attack_type(&self, receiver: &Self) -> AttackType {
         let inflicted_status = random().inflicted(self.inflicted_status_effect(receiver));
 
         if random().is_miss(self.speed(), receiver.speed()) {
-            (AttackType::Miss, 0, mp_cost, 0)
+            AttackType::Miss
         } else if random().is_critical() {
-            (AttackType::Critical, damage * 2, mp_cost, xp)
+            AttackType::Critical
         } else if let Some(status) = inflicted_status {
-            (AttackType::Effect(status), damage, mp_cost, xp)
+            AttackType::Effect(status)
         } else {
-            (AttackType::Regular, damage, mp_cost, xp)
+            AttackType::Regular
         }
     }
 
     /// Generate a damage number based on the attacker strength and the receiver
     /// deffense.
     /// The second element is the mp cost of the attack, if any.
-    fn damage(&self, receiver: &Self) -> (i32, i32) {
+    pub fn damage(&self, receiver: &Self) -> (i32, i32) {
         let (damage, mp_cost) = if self.can_magic_attack() {
             (self.magic_attack(), self.attack_mp_cost())
         } else {
@@ -371,7 +398,7 @@ impl Character {
 
     /// If the character has a status condition (e.g. poison) or an equipped
     /// ring that produces one (e.g. regen hp), apply its effects.
-    pub fn apply_status_effects(&mut self) -> Result<(i32, i32), Dead> {
+    pub fn apply_status_effects(&mut self) -> Result<(), Dead> {
         let mut hp_effect = 0;
         let mut mp_effect = 0;
 
@@ -399,10 +426,12 @@ impl Character {
             hp_effect -= hp_unit();
         }
 
-        self.update_hp(hp_effect)?;
+        let result = self.update_hp(hp_effect).map(|_| ());
         self.update_mp(mp_effect);
 
-        Ok((hp_effect, mp_effect))
+        log::status_effect(self, hp_effect, mp_effect);
+
+        result
     }
 
     /// Return the player level rounded to offer items at "pretty levels", e.g.
@@ -714,24 +743,18 @@ mod tests {
 
         // hp ring already full
         hero.left_ring = Some(Ring::RegenHP);
-        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
-        assert_eq!(1, hp);
-        assert_eq!(0, mp);
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(25, hero.current_hp);
 
         // hp ring recover
         hero.current_hp = 20;
-        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
-        assert_eq!(1, hp);
-        assert_eq!(0, mp);
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(21, hero.current_hp);
 
         // mp ring non magic
         hero.left_ring = Some(Ring::RegenMP);
         assert_eq!(0, hero.current_mp);
-        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
-        assert_eq!(0, hp);
-        assert_eq!(0, mp);
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(0, hero.current_mp);
 
         // force into a magic class
@@ -740,48 +763,37 @@ mod tests {
         hero.current_mp = 10;
 
         // mp ring magic already full
-        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
-        assert_eq!(0, hp);
-        assert_eq!(1, mp);
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(10, hero.current_mp);
 
         // mp ring magic recover
         hero.current_mp = 7;
-        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
-        assert_eq!(0, hp);
-        assert_eq!(1, mp);
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(8, hero.current_mp);
 
         // hp + mp
         hero.right_ring = Some(Ring::RegenHP);
-        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
-        assert_eq!(1, hp);
-        assert_eq!(1, mp);
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(22, hero.current_hp);
         assert_eq!(9, hero.current_mp);
 
         // mp + hp
         hero.left_ring = Some(Ring::RegenHP);
         hero.right_ring = Some(Ring::RegenMP);
-        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
-        assert_eq!(1, hp);
-        assert_eq!(1, mp);
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
         assert_eq!(10, hero.current_mp);
 
         // hp - burn cancel each other
         hero.right_ring = None;
         hero.status_effect = Some(StatusEffect::Burn);
-        let (hp, mp) = hero.apply_status_effects().unwrap_or_default();
-        assert_eq!(0, hp);
-        assert_eq!(0, mp);
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(23, hero.current_hp);
         assert_eq!(10, hero.current_mp);
 
         // hp - burn prevent dead
         hero.current_hp = 1;
-        let (hp, _) = hero.apply_status_effects().unwrap_or_default();
-        assert_eq!(0, hp);
+        hero.apply_status_effects().unwrap_or_default();
         assert_eq!(1, hero.current_hp);
     }
 

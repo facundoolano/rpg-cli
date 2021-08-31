@@ -1,8 +1,6 @@
 use super::Game;
-use crate::character::{AttackType, Character, Dead};
+use crate::character::{Character, Dead};
 use crate::item::key::Key;
-use crate::log;
-
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
 pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
@@ -18,54 +16,22 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) && !autoether(game, enemy) {
-                let new_xp = player_attack(game, enemy);
+                let (new_xp, _) = game.player.attack(enemy);
                 xp += new_xp;
             }
 
-            game.apply_status_effects()?;
+            game.player.apply_status_effects()?;
             pl_accum = -1;
         } else {
-            enemy_attack(game, enemy)?;
+            let (_, dead) = enemy.attack(&mut game.player);
+            dead?;
 
-            // some duplication with game mod
-            let (hp, mp) = enemy.apply_status_effects().unwrap_or_default();
-            log::status_effect(enemy, hp, mp);
-
+            enemy.apply_status_effects().unwrap_or_default();
             en_accum = -1;
         }
     }
 
     Ok(xp)
-}
-
-// FIXME remove duplication between these two functions,
-// move char-specific logic to char module
-/// Attack enemy, returning the gained experience
-fn player_attack(game: &mut Game, enemy: &mut Character) -> i32 {
-    let (attack_type, damage, mp_cost, new_xp) = game.player.generate_attack(enemy);
-    game.player.update_mp(-mp_cost);
-    enemy.update_hp(-damage).unwrap_or_default();
-
-    if let AttackType::Effect(status) = attack_type {
-        enemy.status_effect = Some(status);
-    }
-
-    log::attack(enemy, &attack_type, damage, mp_cost);
-    new_xp
-}
-
-/// Attack player, returning Err(Dead) if the player dies.
-fn enemy_attack(game: &mut Game, enemy: &mut Character) -> Result<(), Dead> {
-    let (attack_type, damage, mp_cost, _xp) = enemy.generate_attack(&game.player);
-    enemy.update_mp(-mp_cost);
-    let result = game.player.update_hp(-damage).map(|_| ());
-
-    if let AttackType::Effect(status) = attack_type {
-        game.player.status_effect = Some(status);
-    }
-
-    log::attack(&game.player, &attack_type, damage, mp_cost);
-    result
 }
 
 /// If the player is low on hp and has a potion available use it
@@ -77,7 +43,7 @@ fn autopotion(game: &mut Game, enemy: &Character) -> bool {
 
     // If there's a good chance of winning the battle on the next attack,
     // don't use the potion.
-    let (_, potential_damage, _, _) = game.player.generate_attack(enemy);
+    let (potential_damage, _) = game.player.damage(enemy);
     if potential_damage >= enemy.current_hp {
         return false;
     }
@@ -92,7 +58,7 @@ fn autoether(game: &mut Game, enemy: &Character) -> bool {
 
     // If there's a good chance of winning the battle on the next attack,
     // don't use the ether.
-    let (_, potential_damage, _, _) = game.player.generate_attack(enemy);
+    let (potential_damage, _) = game.player.damage(enemy);
     if potential_damage >= enemy.current_hp {
         return false;
     }
@@ -162,6 +128,7 @@ mod tests {
     }
 
     #[test]
+    // FIXME move to character
     fn magic_attacks() {
         let mut game = Game::new();
         let enemy_base = class::Class::random(class::Category::Common);
@@ -184,17 +151,17 @@ mod tests {
         game.player = character::Character::new(player_class, 1);
 
         // mage -mp with enough mp
-        player_attack(&mut game, &mut enemy);
+        game.player.attack(&mut enemy).1.unwrap();
         assert_eq!(7, game.player.current_mp);
         assert_eq!(70, enemy.current_hp);
 
-        player_attack(&mut game, &mut enemy);
-        player_attack(&mut game, &mut enemy);
+        game.player.attack(&mut enemy).1.unwrap();
+        game.player.attack(&mut enemy).1.unwrap();
         assert_eq!(1, game.player.current_mp);
         assert_eq!(10, enemy.current_hp);
 
         // mage -mp=0 without enough mp
-        player_attack(&mut game, &mut enemy);
+        game.player.attack(&mut enemy).1.unwrap();
         assert_eq!(1, game.player.current_mp);
         assert_eq!(7, enemy.current_hp);
     }
