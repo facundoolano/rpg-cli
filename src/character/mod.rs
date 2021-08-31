@@ -260,7 +260,10 @@ impl Character {
         self.modify_stat(self.speed, Ring::Speed)
     }
 
-    /// TODO
+    /// Generate and log an attack of this character and apply its effects to
+    /// the given receiver.
+    /// Returns a tuple with the gained experience and a Err(Dead) result if
+    /// the receiver died from the inflicted damage.
     pub fn attack(&mut self, receiver: &mut Self) -> (i32, Result<(), Dead>) {
         let (damage, mp_cost) = self.damage(receiver);
         let damage = random().damage(damage);
@@ -277,6 +280,9 @@ impl Character {
         log::attack(receiver, &attack_type, damage, mp_cost);
 
         self.update_mp(-mp_cost);
+
+        // The receiver can die from the damage. Return the result for
+        // the caller to handle that scenario.
         let result = receiver.update_hp(-damage).map(|_| ());
         if let AttackType::Effect(status) = attack_type {
             receiver.status_effect = Some(status);
@@ -284,7 +290,8 @@ impl Character {
         (xp, result)
     }
 
-    /// TODO
+    /// Generate a randomized regular/miss/critical/status effect attack based
+    /// on the stats of both characters.
     fn attack_type(&self, receiver: &Self) -> AttackType {
         let inflicted_status = random().inflicted(self.inflicted_status_effect(receiver));
 

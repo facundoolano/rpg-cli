@@ -16,8 +16,6 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) && !autoether(game, enemy) {
-                // FIXME consider accumulating xp without actually raising levels
-                // to further simplify this interface
                 let (new_xp, _) = game.player.attack(enemy);
                 xp += new_xp;
             }
