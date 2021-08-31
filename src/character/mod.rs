@@ -390,7 +390,7 @@ impl Character {
 
     /// If the character has a status condition (e.g. poison) or an equipped
     /// ring that produces one (e.g. regen hp), apply its effects.
-    pub fn apply_status_effects(&mut self) -> Result<(i32, i32), Dead> {
+    pub fn apply_status_effects(&mut self) -> Result<(), Dead> {
         let mut hp_effect = 0;
         let mut mp_effect = 0;
 
@@ -418,10 +418,12 @@ impl Character {
             hp_effect -= hp_unit();
         }
 
-        self.update_hp(hp_effect)?;
+        let result = self.update_hp(hp_effect).map(|_| ());
         self.update_mp(mp_effect);
 
-        Ok((hp_effect, mp_effect))
+        log::status_effect(self, hp_effect, mp_effect);
+
+        result
     }
 
     /// Return the player level rounded to offer items at "pretty levels", e.g.

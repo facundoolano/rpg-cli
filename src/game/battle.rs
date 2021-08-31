@@ -1,8 +1,6 @@
 use super::Game;
 use crate::character::{Character, Dead};
 use crate::item::key::Key;
-use crate::log;
-
 /// Run a turn-based combat between the game's player and the given enemy.
 /// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
 pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
@@ -18,21 +16,19 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
 
         if pl_accum >= en_accum {
             if !autopotion(game, enemy) && !autoether(game, enemy) {
+                // FIXME consider accumulating xp without actually raising levels
+                // to further simplify this interface
                 let (new_xp, _) = game.player.attack(enemy);
                 xp += new_xp;
             }
 
-            // FIXME remove this method, call directly. maybe extract to helper
-            game.apply_status_effects()?;
+            game.player.apply_status_effects()?;
             pl_accum = -1;
         } else {
             let (_, dead) = enemy.attack(&mut game.player);
             dead?;
 
-            // some duplication with game mod
-            let (hp, mp) = enemy.apply_status_effects().unwrap_or_default();
-            log::status_effect(enemy, hp, mp);
-
+            enemy.apply_status_effects().unwrap_or_default();
             en_accum = -1;
         }
     }

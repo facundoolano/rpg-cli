@@ -131,14 +131,7 @@ impl Game {
         }
 
         // In location is home, already healed of negative status
-        self.apply_status_effects()
-    }
-
-    /// Player takes damage from status_effects, if any.
-    fn apply_status_effects(&mut self) -> Result<(), character::Dead> {
-        let (hp, mp) = self.player.apply_status_effects()?;
-        log::status_effect(&self.player, hp, mp);
-        Ok(())
+        self.player.apply_status_effects()
     }
 
     /// Set the current location to home, and apply related side-effects
