@@ -111,7 +111,7 @@ pub fn heal_item(
                 recovered_hp,
                 recovered_mp,
                 healed,
-                &item.color(color),
+                &item.color(color).to_string(),
             ),
         );
     }
@@ -373,7 +373,7 @@ pub fn format_inventory(game: &Game) -> String {
 
 fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost: i32) -> String {
     let magic_effect = if mp_cost > 0 {
-        format!("\u{2728} -{}mp", mp_cost).purple().to_string()
+        format!("\u{2728} -{}mp ", mp_cost).purple().to_string()
     } else {
         String::from("")
     };
@@ -381,12 +381,12 @@ fn format_attack(receiver: &Character, attack: &AttackType, damage: i32, mp_cost
     match attack {
         AttackType::Regular => format_hp_change(receiver, -damage, &magic_effect),
         AttackType::Critical => {
-            format_hp_change(receiver, -damage, &format!("{} critical!", magic_effect))
+            format_hp_change(receiver, -damage, &format!("{}critical!", magic_effect))
         }
         AttackType::Effect(status_effect) => {
             format_hp_change(receiver, -damage, &format_status_effect(*status_effect))
         }
-        AttackType::Miss => format!("{} dodged!", magic_effect),
+        AttackType::Miss => format!("{}dodged!", magic_effect),
     }
 }
 

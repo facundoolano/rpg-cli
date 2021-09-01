@@ -30,6 +30,8 @@ pub trait Randomizer {
 
     fn is_critical(&self) -> bool;
 
+    fn counter_attack(&self) -> bool;
+
     fn inflicted(&self, status: Option<(StatusEffect, u32)>) -> Option<StatusEffect>;
 
     fn gold_gained(&self, base: i32) -> i32;
@@ -117,6 +119,11 @@ impl Randomizer for DefaultRandomizer {
     fn is_critical(&self) -> bool {
         let mut rng = rand::thread_rng();
         rng.gen_ratio(1, 20)
+    }
+
+    fn counter_attack(&self) -> bool {
+        let mut rng = rand::thread_rng();
+        rng.gen_ratio(1, 2)
     }
 
     fn inflicted(&self, status: Option<(StatusEffect, u32)>) -> Option<StatusEffect> {
@@ -227,6 +234,10 @@ impl Randomizer for TestRandomizer {
 
     fn is_critical(&self) -> bool {
         false
+    }
+
+    fn counter_attack(&self) -> bool {
+        true
     }
 
     fn inflicted(&self, _status: Option<(StatusEffect, u32)>) -> Option<StatusEffect> {

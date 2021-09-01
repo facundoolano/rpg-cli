@@ -51,6 +51,15 @@ pub enum Ring {
 
     /// Inflicts poison status
     Poison,
+
+    /// Attack twice on each turn
+    Double,
+
+    /// Counter-attacks when receiving damage
+    Counter,
+
+    /// Come back from dead during battle
+    Revive,
 }
 
 impl Ring {

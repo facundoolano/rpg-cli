@@ -1,12 +1,21 @@
 use super::Game;
 use crate::character::{Character, Dead};
 use crate::item::key::Key;
-/// Run a turn-based combat between the game's player and the given enemy.
-/// Return Ok(xp gained) if the player wins, or Err(()) if it loses.
+
+/// Runs a turn-based combat between the game's player and the given enemy.
+/// The frequency of the turns is determined by the speed stat of each
+/// character.
+///
+/// Some special abilities are enabled by the player's equipped rings:
+/// Double-beat, counter-attack and revive.
+///
+/// Returns Ok(xp gained) if the player wins, or Err(()) if it loses.
 pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
-    // These accumulators get increased based on the characters speed:
+    // Player's using the revive ring can come back to life at most once per battle
+    let mut already_revived = false;
+
+    // These accumulators get increased based on the character's speed:
     // the faster will get more frequent turns.
-    // This could be generalized to player vs enemy parties
     let (mut pl_accum, mut en_accum) = (0, 0);
     let mut xp = 0;
 
@@ -15,18 +24,29 @@ pub fn run(game: &mut Game, enemy: &mut Character) -> Result<i32, Dead> {
         en_accum += enemy.speed();
 
         if pl_accum >= en_accum {
+            // In some urgent circumstances, it's preferable to use the turn to
+            // recover mp or hp than attacking
             if !autopotion(game, enemy) && !autoether(game, enemy) {
                 let (new_xp, _) = game.player.attack(enemy);
                 xp += new_xp;
+
+                game.player.maybe_double_beat(enemy);
             }
 
-            game.player.apply_status_effects()?;
+            // Status effects are applied after each turn. The player may die
+            // during its own turn because of status ailment damage
+            let died = game.player.apply_status_effects();
+            already_revived = game.player.maybe_revive(died, already_revived)?;
+
             pl_accum = -1;
         } else {
-            let (_, dead) = enemy.attack(&mut game.player);
-            dead?;
+            let (_, died) = enemy.attack(&mut game.player);
+            already_revived = game.player.maybe_revive(died, already_revived)?;
+
+            game.player.maybe_counter_attack(enemy);
 
             enemy.apply_status_effects().unwrap_or_default();
+
             en_accum = -1;
         }
     }
@@ -125,44 +145,5 @@ mod tests {
         let mut enemy = character::Character::new(enemy_class.clone(), 10);
         let result = game.battle(&mut enemy);
         assert!(result.is_err());
-    }
-
-    #[test]
-    // FIXME move to character
-    fn magic_attacks() {
-        let mut game = Game::new();
-        let enemy_base = class::Class::random(class::Category::Common);
-        let enemy_class = class::Class {
-            speed: class::Stat(1, 1),
-            hp: class::Stat(100, 1),
-            strength: class::Stat(5, 1),
-            ..enemy_base.clone()
-        };
-        let mut enemy = character::Character::new(enemy_class, 1);
-
-        game.player.change_class("mage").unwrap_or_default();
-        let player_class = class::Class {
-            speed: class::Stat(2, 1),
-            hp: class::Stat(20, 1),
-            strength: class::Stat(10, 1), // each hit will take 10hp
-            mp: Some(class::Stat(10, 1)),
-            ..game.player.class.clone()
-        };
-        game.player = character::Character::new(player_class, 1);
-
-        // mage -mp with enough mp
-        game.player.attack(&mut enemy).1.unwrap();
-        assert_eq!(7, game.player.current_mp);
-        assert_eq!(70, enemy.current_hp);
-
-        game.player.attack(&mut enemy).1.unwrap();
-        game.player.attack(&mut enemy).1.unwrap();
-        assert_eq!(1, game.player.current_mp);
-        assert_eq!(10, enemy.current_hp);
-
-        // mage -mp=0 without enough mp
-        game.player.attack(&mut enemy).1.unwrap();
-        assert_eq!(1, game.player.current_mp);
-        assert_eq!(7, enemy.current_hp);
     }
 }

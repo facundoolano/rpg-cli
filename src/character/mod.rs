@@ -236,11 +236,6 @@ impl Character {
         )
     }
 
-    /// Return true if an evade ring is equipped, i.e. no enemies should appear.
-    pub fn enemies_evaded(&self) -> bool {
-        self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
-    }
-
     /// How many experience points are required to move to the next level.
     pub fn xp_for_next(&self) -> i32 {
         let exp = 1.5;
@@ -289,6 +284,47 @@ impl Character {
         log::attack(receiver, &attack_type, damage, mp_cost);
 
         (xp, result)
+    }
+
+    /// If the double beat ring is equipped, attack the receiver.
+    pub fn maybe_double_beat(&mut self, receiver: &mut Self) {
+        if self.left_ring == Some(Ring::Double) || self.right_ring == Some(Ring::Double) {
+            // assuming it's always the player and we don't need to handle death
+            let _ = self.attack(receiver);
+        }
+    }
+
+    /// If the counter attack ring is equipped randomly counter attack the receiver.
+    pub fn maybe_counter_attack(&mut self, receiver: &mut Self) {
+        let wearing_counter =
+            self.left_ring == Some(Ring::Counter) || self.right_ring == Some(Ring::Counter);
+        if wearing_counter && random().counter_attack() {
+            // assuming it's always the player and we don't need to handle death
+            let _ = self.attack(receiver);
+        }
+    }
+
+    /// If the revive ring is equipped and the character died, restore 10% of its hp.
+    /// Intended to be used once per battle, with `already_revived` tracking whether
+    /// it was used before.
+    /// Returns Err(Dead) if can't be recovered from death, otherwise Ok(already_revived).
+    pub fn maybe_revive(
+        &mut self,
+        died: Result<(), Dead>,
+        already_revived: bool,
+    ) -> Result<bool, Dead> {
+        let wearing_revive =
+            self.left_ring == Some(Ring::Revive) || self.right_ring == Some(Ring::Revive);
+        match died {
+            Ok(()) => Ok(already_revived),
+            Err(Dead) if wearing_revive && !already_revived => {
+                let restored = max(1, self.max_hp() / 10);
+                self.current_hp = restored;
+                log::heal_item(self, "revive", restored, 0, false);
+                Ok(true)
+            }
+            Err(Dead) => Err(Dead),
+        }
     }
 
     /// Generate a randomized regular/miss/critical/status effect attack based
@@ -470,6 +506,11 @@ impl Character {
             }
             _ => None,
         }
+    }
+
+    /// Return true if an evade ring is equipped, i.e. no enemies should appear.
+    pub fn enemies_evaded(&self) -> bool {
+        self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
     }
 
     /// Apply any side-effects of the ring over the character stats, e.g.
@@ -1079,6 +1120,148 @@ mod tests {
 
         char.right_ring = Some(Ring::HP);
         assert_eq!(20, char.modify_stat(10, Ring::HP));
+    }
+
+    #[test]
+    fn magic_attacks() {
+        let mut player = Character::player();
+        let enemy_base = class::Class::random(class::Category::Common);
+        let enemy_class = class::Class {
+            speed: class::Stat(1, 1),
+            hp: class::Stat(100, 1),
+            strength: class::Stat(5, 1),
+            ..enemy_base.clone()
+        };
+        let mut enemy = Character::new(enemy_class, 1);
+
+        player.change_class("mage").unwrap_or_default();
+        let player_class = class::Class {
+            speed: class::Stat(2, 1),
+            hp: class::Stat(20, 1),
+            strength: class::Stat(10, 1), // each hit will take 10hp
+            mp: Some(class::Stat(10, 1)),
+            ..player.class.clone()
+        };
+        player = Character::new(player_class, 1);
+
+        // mage -mp with enough mp
+        player.attack(&mut enemy).1.unwrap();
+        assert_eq!(7, player.current_mp);
+        assert_eq!(70, enemy.current_hp);
+
+        player.attack(&mut enemy).1.unwrap();
+        player.attack(&mut enemy).1.unwrap();
+        assert_eq!(1, player.current_mp);
+        assert_eq!(10, enemy.current_hp);
+
+        // mage -mp=0 without enough mp
+        player.attack(&mut enemy).1.unwrap();
+        assert_eq!(1, player.current_mp);
+        assert_eq!(7, enemy.current_hp);
+    }
+
+    #[test]
+    fn test_counter() {
+        let mut player = new_char();
+        let mut enemy = new_char();
+
+        assert_eq!(25, player.max_hp());
+        assert_eq!(25, player.current_hp);
+
+        // basic attack
+        let _ = player.attack(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+
+        // shouldn't counter if no ring equipped
+        enemy.current_hp = 25;
+        let _ = player.maybe_counter_attack(&mut enemy);
+        assert_eq!(25, enemy.current_hp);
+
+        // counter when ring equipped
+        player.left_ring = Some(Ring::Counter);
+        let _ = player.maybe_counter_attack(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+
+        player.right_ring = Some(Ring::Counter);
+        player.left_ring = None;
+        enemy.current_hp = 25;
+        let _ = player.maybe_counter_attack(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+    }
+
+    #[test]
+    fn test_double_beat() {
+        let mut player = new_char();
+        let mut enemy = new_char();
+
+        // shouldn't counter if no ring equipped
+        enemy.current_hp = 25;
+        let _ = player.maybe_double_beat(&mut enemy);
+        assert_eq!(25, enemy.current_hp);
+
+        // counter when ring equipped
+        player.left_ring = Some(Ring::Double);
+        let _ = player.maybe_double_beat(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+
+        player.right_ring = Some(Ring::Double);
+        player.left_ring = None;
+        enemy.current_hp = 25;
+        let _ = player.maybe_double_beat(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+    }
+
+    #[test]
+    fn test_revive() {
+        let mut player = new_char();
+        let mut enemy = new_char();
+
+        // no ring -- alive = alive
+        let (_, result) = enemy.attack(&mut player);
+        assert!(result.is_ok());
+        let result = player.maybe_revive(result, false);
+        assert!(result.is_ok());
+
+        let (_, result) = enemy.attack(&mut player);
+        let result = player.maybe_revive(result, true);
+        assert!(result.is_ok());
+
+        // no ring -- dead = dead
+        player.current_hp = 5;
+        let (_, result) = enemy.attack(&mut player);
+        assert!(result.is_err());
+        let result = player.maybe_revive(result, false);
+        assert!(result.is_err());
+
+        player.current_hp = 5;
+        let (_, result) = enemy.attack(&mut player);
+        assert!(result.is_err());
+        let result = player.maybe_revive(result, true);
+        assert!(result.is_err());
+
+        // ring alive = alive
+        player.current_hp = 25;
+        player.left_ring = Some(Ring::Revive);
+        let (_, result) = enemy.attack(&mut player);
+        let result = player.maybe_revive(result, false);
+        assert!(result.is_ok());
+
+        let (_, result) = enemy.attack(&mut player);
+        let result = player.maybe_revive(result, true);
+        assert!(result.is_ok());
+
+        // ring dead once = alive
+        player.current_hp = 5;
+        let (_, result) = enemy.attack(&mut player);
+        assert!(result.is_err());
+        let result = player.maybe_revive(result, false);
+        assert!(result.is_ok());
+
+        // ring dead twice = dead
+        assert_eq!(2, player.current_hp);
+        let (_, result) = enemy.attack(&mut player);
+        let result = player.maybe_revive(result, true);
+        assert!(result.is_err());
     }
 
     // HELPERS
