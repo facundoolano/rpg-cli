@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 mod beat_enemy;
 mod level;
+mod ring;
 mod tutorial;
 
 /// A task that is assigned to the player when certain conditions are met.
@@ -152,6 +153,8 @@ impl QuestList {
 
         self.quests
             .push((Status::Locked(5), 200, Box::new(tutorial::VisitTomb)));
+        self.quests
+            .push((Status::Locked(5), 300, Box::new(ring::EquipRing)));
         self.quests.push((
             Status::Locked(5),
             1000,
@@ -185,6 +188,11 @@ impl QuestList {
             ));
         }
 
+        self.quests.push((
+            Status::Locked(15),
+            30000,
+            Box::new(ring::FindAllRings::new()),
+        ));
         self.quests
             .push((Status::Locked(15), 20000, beat_enemy::shadow()));
         self.quests
@@ -195,6 +203,8 @@ impl QuestList {
             100000,
             Box::new(level::ReachLevel::new(100)),
         ));
+        self.quests
+            .push((Status::Locked(50), 1000000, ring::gorthaur()));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.

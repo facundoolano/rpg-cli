@@ -43,16 +43,20 @@ pub fn at_distance(distance: i32) -> Box<dyn Quest> {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BeatEnemyClass {
-    to_beat: HashSet<String>,
-    total: usize,
-    description: String,
+    pub to_beat: HashSet<String>,
+    pub total: usize,
+    pub description: String,
 }
 
 #[typetag::serde]
 impl Quest for BeatEnemyClass {
     fn description(&self) -> String {
-        let already_beat = self.total - self.to_beat.len();
-        format!("{} {}/{}", self.description, already_beat, self.total)
+        if self.total == 1 {
+            self.description.to_string()
+        } else {
+            let already_beat = self.total - self.to_beat.len();
+            format!("{} {}/{}", self.description, already_beat, self.total)
+        }
     }
 
     fn handle(&mut self, event: &Event) -> bool {
