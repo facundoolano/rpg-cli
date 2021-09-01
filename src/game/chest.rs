@@ -24,6 +24,13 @@ pub struct Chest {
 impl Chest {
     /// Randomly generate a chest at the current location.
     pub fn generate(game: &mut game::Game) -> Option<Self> {
+        // if the evade ring is equipped, don't generate chests
+        // otherwise player can go arbitrarily deep and break the game
+        // by finding all treasure contents
+        if game.player.enemies_evaded() {
+            return None;
+        }
+
         // To give the impression of "dynamic" chest contents, each content type
         // is randomized separately, and what's found is combined into a single
         // chest at the end
