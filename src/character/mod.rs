@@ -294,7 +294,7 @@ impl Character {
         }
     }
 
-    /// If the counter attack ring is equipped randomlu counter attack the receiver.
+    /// If the counter attack ring is equipped randomly counter attack the receiver.
     pub fn maybe_counter_attack(&mut self, receiver: &mut Self) {
         let wearing_counter =
             self.left_ring == Some(Ring::Counter) || self.right_ring == Some(Ring::Counter);
