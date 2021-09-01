@@ -1155,6 +1155,110 @@ mod tests {
         assert_eq!(7, enemy.current_hp);
     }
 
+    #[test]
+    fn test_counter() {
+        let mut player = new_char();
+        let mut enemy = new_char();
+
+        assert_eq!(25, player.max_hp());
+        assert_eq!(25, player.current_hp);
+
+        // basic attack
+        let _ = player.attack(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+
+        // shouldn't counter if no ring equipped
+        enemy.current_hp = 25;
+        let _ = player.maybe_counter_attack(&mut enemy);
+        assert_eq!(25, enemy.current_hp);
+
+        // counter when ring equipped
+        player.left_ring = Some(Ring::Counter);
+        let _ = player.maybe_counter_attack(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+
+        player.right_ring = Some(Ring::Counter);
+        player.left_ring = None;
+        enemy.current_hp = 25;
+        let _ = player.maybe_counter_attack(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+    }
+
+    #[test]
+    fn test_double_beat() {
+        let mut player = new_char();
+        let mut enemy = new_char();
+
+        // shouldn't counter if no ring equipped
+        enemy.current_hp = 25;
+        let _ = player.maybe_double_beat(&mut enemy);
+        assert_eq!(25, enemy.current_hp);
+
+        // counter when ring equipped
+        player.left_ring = Some(Ring::Double);
+        let _ = player.maybe_double_beat(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+
+        player.right_ring = Some(Ring::Double);
+        player.left_ring = None;
+        enemy.current_hp = 25;
+        let _ = player.maybe_double_beat(&mut enemy);
+        assert_eq!(15, enemy.current_hp);
+    }
+
+    #[test]
+    fn test_revive() {
+        let mut player = new_char();
+        let mut enemy = new_char();
+
+        // no ring -- alive = alive
+        let (_, result) = enemy.attack(&mut player);
+        assert!(result.is_ok());
+        let result = player.maybe_revive(result, false);
+        assert!(result.is_ok());
+
+        let (_, result) = enemy.attack(&mut player);
+        let result = player.maybe_revive(result, true);
+        assert!(result.is_ok());
+
+        // no ring -- dead = dead
+        player.current_hp = 5;
+        let (_, result) = enemy.attack(&mut player);
+        assert!(result.is_err());
+        let result = player.maybe_revive(result, false);
+        assert!(result.is_err());
+
+        player.current_hp = 5;
+        let (_, result) = enemy.attack(&mut player);
+        assert!(result.is_err());
+        let result = player.maybe_revive(result, true);
+        assert!(result.is_err());
+
+        // ring alive = alive
+        player.current_hp = 25;
+        player.left_ring = Some(Ring::Revive);
+        let (_, result) = enemy.attack(&mut player);
+        let result = player.maybe_revive(result, false);
+        assert!(result.is_ok());
+
+        let (_, result) = enemy.attack(&mut player);
+        let result = player.maybe_revive(result, true);
+        assert!(result.is_ok());
+
+        // ring dead once = alive
+        player.current_hp = 5;
+        let (_, result) = enemy.attack(&mut player);
+        assert!(result.is_err());
+        let result = player.maybe_revive(result, false);
+        assert!(result.is_ok());
+
+        // ring dead twice = dead
+        assert_eq!(2, player.current_hp);
+        let (_, result) = enemy.attack(&mut player);
+        let result = player.maybe_revive(result, true);
+        assert!(result.is_err());
+    }
+
     // HELPERS
 
     fn new_char() -> Character {
