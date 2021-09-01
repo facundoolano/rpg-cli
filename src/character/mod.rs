@@ -286,6 +286,42 @@ impl Character {
         (xp, result)
     }
 
+    /// TODO
+    pub fn maybe_double_beat(&mut self, receiver: &mut Self) {
+        if self.left_ring == Some(Ring::Double) || self.right_ring == Some(Ring::Double) {
+            // assuming it's always the player and we don't need to handle death
+            let _ = self.attack(receiver);
+        }
+    }
+
+    /// TODO
+    pub fn maybe_counter_attack(&mut self, receiver: &mut Self) {
+        let wearing_counter =
+            self.left_ring == Some(Ring::Counter) || self.right_ring == Some(Ring::Counter);
+        if wearing_counter && random().counter_attack() {
+            // assuming it's always the player and we don't need to handle death
+            let _ = self.attack(receiver);
+        }
+    }
+
+    /// TODO
+    pub fn maybe_revive(
+        &mut self,
+        died: Result<(), Dead>,
+        already_revived: bool,
+    ) -> Result<bool, Dead> {
+        let wearing_revive =
+            self.left_ring == Some(Ring::Revive) || self.right_ring == Some(Ring::Revive);
+        match died {
+            Ok(()) => Ok(already_revived),
+            Err(Dead) if wearing_revive && !already_revived => {
+                self.current_hp = max(1, self.max_hp() / 10);
+                Ok(true)
+            }
+            Err(Dead) => Err(Dead),
+        }
+    }
+
     /// Generate a randomized regular/miss/critical/status effect attack based
     /// on the stats of both characters.
     fn attack_type(&self, receiver: &Self) -> AttackType {
@@ -470,21 +506,6 @@ impl Character {
     /// Return true if an evade ring is equipped, i.e. no enemies should appear.
     pub fn enemies_evaded(&self) -> bool {
         self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
-    }
-
-    /// Return true if a double ring is equipped, i.e. should attack twice per turn.
-    pub fn double_beats(&self) -> bool {
-        self.left_ring == Some(Ring::Double) || self.right_ring == Some(Ring::Double)
-    }
-
-    /// Return true if a counter ring is equipped, i.e. should counter enemy attacks.
-    pub fn counter_attacks(&self) -> bool {
-        self.left_ring == Some(Ring::Counter) || self.right_ring == Some(Ring::Counter)
-    }
-
-    /// Return true if a revive ring is equipped, i.e. should come back from dead during battle.
-    pub fn revives(&self) -> bool {
-        self.left_ring == Some(Ring::Revive) || self.right_ring == Some(Ring::Revive)
     }
 
     /// Apply any side-effects of the ring over the character stats, e.g.
