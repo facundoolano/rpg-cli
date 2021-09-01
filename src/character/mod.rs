@@ -513,6 +513,12 @@ impl Character {
         self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
     }
 
+    /// Return true if a chest ring is equipped, i.e. the character should have double
+    /// chance to find a chest.
+    pub fn double_chests(&self) -> bool {
+        self.left_ring == Some(Ring::Chest) || self.right_ring == Some(Ring::Chest)
+    }
+
     /// Return the gold that should be rewarded for beating an enemy of the given
     /// level. Doubled if the gold ring is equipped.
     pub fn gold_gained(&self, enemy_level: i32) -> i32 {
