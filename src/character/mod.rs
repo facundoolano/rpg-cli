@@ -286,7 +286,7 @@ impl Character {
         (xp, result)
     }
 
-    /// TODO
+    /// If the double beat ring is equipped, attack the receiver.
     pub fn maybe_double_beat(&mut self, receiver: &mut Self) {
         if self.left_ring == Some(Ring::Double) || self.right_ring == Some(Ring::Double) {
             // assuming it's always the player and we don't need to handle death
@@ -294,7 +294,7 @@ impl Character {
         }
     }
 
-    /// TODO
+    /// If the counter attack ring is equipped randomlu counter attack the receiver.
     pub fn maybe_counter_attack(&mut self, receiver: &mut Self) {
         let wearing_counter =
             self.left_ring == Some(Ring::Counter) || self.right_ring == Some(Ring::Counter);
@@ -304,7 +304,10 @@ impl Character {
         }
     }
 
-    /// TODO
+    /// If the revive ring is equipped and the character died, restore 10% of its hp.
+    /// Intended to be used once per battle, with `already_revived` tracking whether
+    /// it was used before.
+    /// Returns Err(Dead) if can't be recovered from death, otherwise Ok(already_revived).
     pub fn maybe_revive(
         &mut self,
         died: Result<(), Dead>,
