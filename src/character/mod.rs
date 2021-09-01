@@ -318,7 +318,9 @@ impl Character {
         match died {
             Ok(()) => Ok(already_revived),
             Err(Dead) if wearing_revive && !already_revived => {
-                self.current_hp = max(1, self.max_hp() / 10);
+                let restored = max(1, self.max_hp() / 10);
+                self.current_hp = restored;
+                log::heal_item(self, "revive", restored, 0, false);
                 Ok(true)
             }
             Err(Dead) => Err(Dead),
