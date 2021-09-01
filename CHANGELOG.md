@@ -12,6 +12,7 @@
 * Status effect rings #110
 * Battle related rings #113
 * Treasure related rings #114
+* Ring related quests #115
 
 ### Changed
 * Remember unlocked quests and todo list order #89
