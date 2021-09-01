@@ -1117,6 +1117,44 @@ mod tests {
         assert_eq!(20, char.modify_stat(10, Ring::HP));
     }
 
+    #[test]
+    fn magic_attacks() {
+        let mut player = Character::player();
+        let enemy_base = class::Class::random(class::Category::Common);
+        let enemy_class = class::Class {
+            speed: class::Stat(1, 1),
+            hp: class::Stat(100, 1),
+            strength: class::Stat(5, 1),
+            ..enemy_base.clone()
+        };
+        let mut enemy = Character::new(enemy_class, 1);
+
+        player.change_class("mage").unwrap_or_default();
+        let player_class = class::Class {
+            speed: class::Stat(2, 1),
+            hp: class::Stat(20, 1),
+            strength: class::Stat(10, 1), // each hit will take 10hp
+            mp: Some(class::Stat(10, 1)),
+            ..player.class.clone()
+        };
+        player = Character::new(player_class, 1);
+
+        // mage -mp with enough mp
+        player.attack(&mut enemy).1.unwrap();
+        assert_eq!(7, player.current_mp);
+        assert_eq!(70, enemy.current_hp);
+
+        player.attack(&mut enemy).1.unwrap();
+        player.attack(&mut enemy).1.unwrap();
+        assert_eq!(1, player.current_mp);
+        assert_eq!(10, enemy.current_hp);
+
+        // mage -mp=0 without enough mp
+        player.attack(&mut enemy).1.unwrap();
+        assert_eq!(1, player.current_mp);
+        assert_eq!(7, enemy.current_hp);
+    }
+
     // HELPERS
 
     fn new_char() -> Character {

@@ -146,43 +146,4 @@ mod tests {
         let result = game.battle(&mut enemy);
         assert!(result.is_err());
     }
-
-    #[test]
-    // FIXME move to character
-    fn magic_attacks() {
-        let mut game = Game::new();
-        let enemy_base = class::Class::random(class::Category::Common);
-        let enemy_class = class::Class {
-            speed: class::Stat(1, 1),
-            hp: class::Stat(100, 1),
-            strength: class::Stat(5, 1),
-            ..enemy_base.clone()
-        };
-        let mut enemy = character::Character::new(enemy_class, 1);
-
-        game.player.change_class("mage").unwrap_or_default();
-        let player_class = class::Class {
-            speed: class::Stat(2, 1),
-            hp: class::Stat(20, 1),
-            strength: class::Stat(10, 1), // each hit will take 10hp
-            mp: Some(class::Stat(10, 1)),
-            ..game.player.class.clone()
-        };
-        game.player = character::Character::new(player_class, 1);
-
-        // mage -mp with enough mp
-        game.player.attack(&mut enemy).1.unwrap();
-        assert_eq!(7, game.player.current_mp);
-        assert_eq!(70, enemy.current_hp);
-
-        game.player.attack(&mut enemy).1.unwrap();
-        game.player.attack(&mut enemy).1.unwrap();
-        assert_eq!(1, game.player.current_mp);
-        assert_eq!(10, enemy.current_hp);
-
-        // mage -mp=0 without enough mp
-        game.player.attack(&mut enemy).1.unwrap();
-        assert_eq!(1, game.player.current_mp);
-        assert_eq!(7, enemy.current_hp);
-    }
 }
