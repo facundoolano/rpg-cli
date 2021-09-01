@@ -1,6 +1,7 @@
 use crate::character::class;
 use crate::character::Character;
 use crate::game;
+use crate::item::key::Key;
 use crate::location::Location;
 use crate::log;
 use core::fmt;
@@ -75,12 +76,16 @@ pub fn level_up(game: &mut game::Game, count: i32) {
     );
 }
 
-pub fn item_bought(game: &mut game::Game, item: String) {
+pub fn item_bought(game: &mut game::Game, item: Key) {
     handle(game, Event::ItemBought { item });
 }
 
-pub fn item_used(game: &mut game::Game, item: String) {
+pub fn item_used(game: &mut game::Game, item: Key) {
     handle(game, Event::ItemUsed { item });
+}
+
+pub fn item_added(game: &mut game::Game, item: Key) {
+    handle(game, Event::ItemAdded { item });
 }
 
 pub fn chest(game: &mut game::Game) {
@@ -112,10 +117,13 @@ pub enum Event<'a> {
         class: String,
     },
     ItemBought {
-        item: String,
+        item: Key,
     },
     ItemUsed {
-        item: String,
+        item: Key,
+    },
+    ItemAdded {
+        item: Key,
     },
     ChestFound,
     TombtsoneFound,

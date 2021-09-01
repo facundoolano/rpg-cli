@@ -1,4 +1,5 @@
 use super::{Event, Quest};
+use crate::item::key::Key;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -25,10 +26,8 @@ impl Quest for BuySword {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        if let Event::ItemBought { item } = event {
-            if item.contains("sword") {
-                return true;
-            }
+        if let Event::ItemBought { item: Key::Sword } = event {
+            return true;
         }
         false
     }
@@ -44,10 +43,8 @@ impl Quest for UsePotion {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        if let Event::ItemUsed { item } = event {
-            if *item == "potion" {
-                return true;
-            }
+        if let Event::ItemUsed { item: Key::Potion } = event {
+            return true;
         }
         false
     }

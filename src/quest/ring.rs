@@ -1,5 +1,6 @@
 use super::beat_enemy;
 use super::{Event, Quest};
+use crate::item::key::Key;
 use crate::item::ring::Ring;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -14,7 +15,10 @@ impl Quest for EquipRing {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        todo!()
+        if let Event::ItemUsed { item: Key::Ring(_) } = event {
+            return true;
+        }
+        false
     }
 }
 
@@ -40,7 +44,13 @@ impl Quest for FindAllRings {
     }
 
     fn handle(&mut self, event: &Event) -> bool {
-        todo!()
+        if let Event::ItemAdded {
+            item: Key::Ring(ring),
+        } = event
+        {
+            self.to_find.remove(ring);
+        }
+        self.to_find.is_empty()
     }
 }
 
