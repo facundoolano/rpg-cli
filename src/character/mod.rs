@@ -1283,6 +1283,29 @@ mod tests {
         assert!(result.is_err());
     }
 
+    #[test]
+    fn gold_gained() {
+        let mut player = new_char();
+
+        assert_eq!(50, player.gold_gained(1));
+        assert_eq!(50, player.gold_gained(2));
+        assert_eq!(100, player.gold_gained(3));
+        assert_eq!(150, player.gold_gained(4));
+
+        player.left_ring = Some(Ring::Gold);
+        assert_eq!(100, player.gold_gained(1));
+        assert_eq!(100, player.gold_gained(2));
+        assert_eq!(200, player.gold_gained(3));
+        assert_eq!(300, player.gold_gained(4));
+
+        player.left_ring = None;
+        player.right_ring = Some(Ring::Gold);
+        assert_eq!(100, player.gold_gained(1));
+        assert_eq!(100, player.gold_gained(2));
+        assert_eq!(200, player.gold_gained(3));
+        assert_eq!(300, player.gold_gained(4));
+    }
+
     // HELPERS
 
     fn new_char() -> Character {
