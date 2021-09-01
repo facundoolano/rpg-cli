@@ -214,7 +214,7 @@ impl Game {
     ) -> Result<(), character::Dead> {
         // don't attempt bribe and run in the same turn
         if bribe {
-            let bribe_cost = gold_gained(self.player.level, enemy.level) / 2;
+            let bribe_cost = self.player.gold_gained(enemy.level) / 2;
             if self.gold >= bribe_cost && random().bribe_succeeds() {
                 self.gold -= bribe_cost;
                 log::bribe(&self.player, bribe_cost);
@@ -240,7 +240,7 @@ impl Game {
     fn battle(&mut self, enemy: &mut Character) -> Result<(), character::Dead> {
         match battle::run(self, enemy) {
             Ok(xp) => {
-                let gold = gold_gained(self.player.level, enemy.level);
+                let gold = self.player.gold_gained(enemy.level);
                 self.gold += gold;
                 let levels_up = self.player.add_experience(xp);
 
@@ -273,11 +273,6 @@ impl Default for Game {
     fn default() -> Self {
         Self::new()
     }
-}
-
-fn gold_gained(player_level: i32, enemy_level: i32) -> i32 {
-    let level = std::cmp::max(1, enemy_level - player_level);
-    random().gold_gained(level * 50)
 }
 
 #[cfg(test)]

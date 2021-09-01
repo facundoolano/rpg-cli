@@ -513,6 +513,19 @@ impl Character {
         self.left_ring == Some(Ring::Evade) || self.right_ring == Some(Ring::Evade)
     }
 
+    /// Return the gold that should be rewarded for beating an enemy of the given
+    /// level. Doubled if the gold ring is equipped.
+    pub fn gold_gained(&self, enemy_level: i32) -> i32 {
+        let level = std::cmp::max(1, enemy_level - self.level);
+        let gold = random().gold_gained(level * 50);
+
+        if self.left_ring == Some(Ring::Gold) || self.right_ring == Some(Ring::Gold) {
+            gold * 2
+        } else {
+            gold
+        }
+    }
+
     /// Apply any side-effects of the ring over the character stats, e.g.
     /// increasing its max hp for an HP ring.
     fn equip_ring_side_effect(&mut self, ring: &Ring) {

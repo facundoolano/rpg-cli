@@ -35,7 +35,7 @@ impl Chest {
         let mut chest = Self::default();
 
         if gold_chest {
-            chest.gold = random().gold_gained(game.player.level * 50)
+            chest.gold = game.player.gold_gained(game.player.level + 10);
         }
 
         if equipment_chest {
