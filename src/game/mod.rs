@@ -44,6 +44,13 @@ pub struct Game {
 impl Game {
     pub fn new() -> Self {
         let quests = QuestList::new();
+
+        // There's one instance of each ring exiting per game.
+        // The diamond ring is the only one that's found in the shop
+        // instead of chests
+        let mut ring_pool = Ring::set();
+        ring_pool.remove(&Ring::Diamond);
+
         Self {
             location: Location::home(),
             player: Character::player(),
@@ -52,7 +59,7 @@ impl Game {
             tombstones: HashMap::new(),
             inspected: HashSet::new(),
             quests,
-            ring_pool: Ring::set(),
+            ring_pool,
         }
     }
 
