@@ -1,11 +1,18 @@
 use super::{class::Category, class::Class, Character};
 use crate::location;
+use crate::item::ring::Ring;
 use crate::randomizer::{random, Randomizer};
 use rand::prelude::SliceRandom;
 use rand::Rng;
 
 pub fn at(location: &location::Location, player: &Character) -> Character {
-    let (class, level) = if should_find_shadow(location) {
+    let (class, level) = if should_find_gorthaur(player, location) {
+        let mut class = Class::player_first().clone();
+        class.name = String::from("gorthaur");
+        class.hp.0 *= 2;
+        class.strength.0 *= 2;
+        (class, 100)
+    } else if should_find_shadow(location) {
         let mut class = player.class.clone();
         class.name = String::from("shadow");
         (class, player.level + 3)
@@ -29,6 +36,11 @@ pub fn at(location: &location::Location, player: &Character) -> Character {
 fn level(player_level: i32, distance_from_home: i32) -> i32 {
     let level = std::cmp::max(player_level / 10 + distance_from_home - 1, 1);
     random().enemy_level(level)
+}
+
+fn should_find_gorthaur(player: &Character, location: &location::Location) -> bool {
+    let wearing_ring = player.left_ring == Some(Ring::Ruling) || player.right_ring == Some(Ring::Ruling);
+    wearing_ring && location.distance_from_home().len() >= 100
 }
 
 fn should_find_shadow(location: &location::Location) -> bool {
