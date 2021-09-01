@@ -2,6 +2,7 @@ use std::fmt::Display;
 
 use super::equipment::Equipment;
 use super::key::Key;
+use super::ring::Ring;
 use super::Item;
 use crate::character::Character;
 use crate::game::Game;
@@ -98,6 +99,10 @@ fn available_items(player: &Character) -> Vec<Box<dyn Shoppable>> {
     let escape = super::Escape::new();
     items.push(Box::new(escape));
 
+    if player.level >= 25 {
+        items.push(Box::new(Ring::Diamond));
+    }
+
     items
 }
 
@@ -170,6 +175,20 @@ impl Shoppable for super::Remedy {
 impl Shoppable for super::Ether {
     fn cost(&self) -> i32 {
         self.level * 250
+    }
+
+    fn add_to(&self, game: &mut Game) {
+        game.add_item(Box::new(self.clone()));
+    }
+
+    fn to_key(&self) -> Key {
+        self.key()
+    }
+}
+
+impl Shoppable for Ring {
+    fn cost(&self) -> i32 {
+        50_000
     }
 
     fn add_to(&self, game: &mut Game) {

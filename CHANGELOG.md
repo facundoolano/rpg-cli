@@ -11,6 +11,7 @@
 * RegenHP and RegenMP rings #109
 * Status effect rings #110
 * Battle related rings #113
+* Treasure related rings #114
 
 ### Changed
 * Remember unlocked quests and todo list order #89

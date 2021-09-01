@@ -60,6 +60,15 @@ pub enum Ring {
 
     /// Come back from dead during battle
     Revive,
+
+    /// Doubles chest finding frequency
+    Chest,
+
+    /// Doubles gold gained in battles and chests
+    Gold,
+
+    /// Looks expensive
+    Diamond,
 }
 
 impl Ring {

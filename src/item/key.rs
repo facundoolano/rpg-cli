@@ -57,6 +57,9 @@ impl Key {
             "double-rng" | "double" | "double-ring" => Key::Ring(Ring::Double),
             "counter-rng" | "counter" | "counter-ring" => Key::Ring(Ring::Counter),
             "revive-rng" | "revive" | "revive-ring" => Key::Ring(Ring::Revive),
+            "chest-rng" | "chest" | "chest-ring" => Key::Ring(Ring::Chest),
+            "gold-rng" | "gold" | "gold-ring" => Key::Ring(Ring::Gold),
+            "diamond-rng" | "diamond" | "diamond-ring" => Key::Ring(Ring::Diamond),
             key => bail!("item {} not found", key),
         };
         Ok(key)
@@ -94,6 +97,9 @@ impl fmt::Display for Key {
             Key::Ring(Ring::Double) => "double-rng",
             Key::Ring(Ring::Counter) => "counter-rng",
             Key::Ring(Ring::Revive) => "revive-rng",
+            Key::Ring(Ring::Chest) => "chest-rng",
+            Key::Ring(Ring::Gold) => "gold-rng",
+            Key::Ring(Ring::Diamond) => "diamond-rng",
         };
 
         write!(f, "{}", name)

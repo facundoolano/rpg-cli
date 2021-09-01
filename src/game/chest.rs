@@ -24,18 +24,34 @@ pub struct Chest {
 impl Chest {
     /// Randomly generate a chest at the current location.
     pub fn generate(game: &mut game::Game) -> Option<Self> {
+        // if the evade ring is equipped, don't generate chests
+        // otherwise player can go arbitrarily deep and break the game
+        // by finding all treasure contents
+        if game.player.enemies_evaded() {
+            return None;
+        }
+
         // To give the impression of "dynamic" chest contents, each content type
         // is randomized separately, and what's found is combined into a single
         // chest at the end
         let distance = &game.location.distance_from_home();
-        let gold_chest = random().gold_chest(distance);
-        let equipment_chest = random().equipment_chest(distance);
+        let mut gold_chest = random().gold_chest(distance);
+        let mut equipment_chest = random().equipment_chest(distance);
         let mut ring_chest = random().ring_chest(distance);
+        let mut item_chest_attempts = 3;
+
+        // If the chest ring is equipped, double the likelyhood of finding a chest
+        if game.player.double_chests() {
+            gold_chest = gold_chest || random().gold_chest(distance);
+            equipment_chest = equipment_chest || random().equipment_chest(distance);
+            ring_chest = ring_chest || random().ring_chest(distance);
+            item_chest_attempts *= 2;
+        }
 
         let mut chest = Self::default();
 
         if gold_chest {
-            chest.gold = random().gold_gained(game.player.level * 50)
+            chest.gold = game.player.gold_gained(game.player.level + 2);
         }
 
         if equipment_chest {
@@ -59,7 +75,7 @@ impl Chest {
 
         // Items should be more frequent and can be multiple
         let mut item_chest = false;
-        for _ in 0..3 {
+        for _ in 0..item_chest_attempts {
             if random().item_chest(distance) {
                 item_chest = true;
                 let item = random_item(game.player.rounded_level());
