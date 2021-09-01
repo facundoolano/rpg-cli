@@ -10,6 +10,7 @@
 * Effect rings as items and equipment, initial set of stat-based rings #98
 * RegenHP and RegenMP rings #109
 * Status effect rings #110
+* Battle related rings #113
 
 ### Changed
 * Remember unlocked quests and todo list order #89
