@@ -271,6 +271,7 @@ mod tests {
     use crate::character::Character;
     use crate::item;
     use crate::item::Item;
+    use crate::location::tests::location_from;
 
     #[test]
     fn test_quest_status() {
@@ -367,6 +368,57 @@ mod tests {
         stone.apply(&mut game);
         assert_eq!(Status::Completed, game.quests.quests[0].0);
         assert_eq!(Status::Completed, game.quests.quests[1].0);
+    }
+
+    #[test]
+    fn equip_ring() {
+        let mut game = game::Game::new();
+        game.quests.quests = vec![(Status::Unlocked, 1, Box::new(ring::EquipRing))];
+
+        game.add_item(Box::new(item::ring::Ring::Void));
+        game.use_item(Key::Ring(item::ring::Ring::Void)).unwrap();
+
+        assert_eq!(Status::Completed, game.quests.quests[0].0);
+    }
+
+    #[test]
+    fn find_all_rings() {
+        let mut game = game::Game::new();
+        game.quests.quests = vec![(Status::Unlocked, 1, Box::new(ring::FindAllRings::new()))];
+
+        for ring in item::ring::Ring::set() {
+            game.add_item(Box::new(ring));
+        }
+
+        assert_eq!(Status::Completed, game.quests.quests[0].0);
+    }
+
+    #[test]
+    fn gorthaur() {
+        let mut game = game::Game::new();
+        game.quests.quests = vec![(Status::Unlocked, 1, ring::gorthaur())];
+
+        // fake a +100 distance location
+        let mut fake_path = String::from("~");
+        for n in 0..103 {
+            fake_path += &format!("/{}", n);
+        }
+        game.location = location_from(&fake_path);
+
+        // ruling ring required to spawn the enemy
+        game.player.left_ring = Some(item::ring::Ring::Ruling);
+
+        let mut enemy = game.maybe_spawn_enemy().unwrap();
+
+        // increase many levels to force the player's victory
+        for _ in 0..200 {
+            game.player.add_experience(game.player.xp_for_next());
+        }
+        enemy.current_hp = 10;
+
+        game.maybe_battle(&mut enemy, false, false).unwrap();
+
+        assert_eq!(Status::Completed, game.quests.quests[0].0);
     }
 
     fn count_status(quests: &QuestList, status: Status) -> usize {

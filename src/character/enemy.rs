@@ -1,6 +1,6 @@
 use super::{class::Category, class::Class, Character};
-use crate::location;
 use crate::item::ring::Ring;
+use crate::location;
 use crate::randomizer::{random, Randomizer};
 use rand::prelude::SliceRandom;
 use rand::Rng;
@@ -39,7 +39,8 @@ fn level(player_level: i32, distance_from_home: i32) -> i32 {
 }
 
 fn should_find_gorthaur(player: &Character, location: &location::Location) -> bool {
-    let wearing_ring = player.left_ring == Some(Ring::Ruling) || player.right_ring == Some(Ring::Ruling);
+    let wearing_ring =
+        player.left_ring == Some(Ring::Ruling) || player.right_ring == Some(Ring::Ruling);
     wearing_ring && location.distance_from_home().len() >= 100
 }
 
