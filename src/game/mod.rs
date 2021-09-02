@@ -1,6 +1,7 @@
 extern crate dirs;
 
 use crate::character;
+use crate::character::enemy;
 use crate::character::Character;
 use crate::item::key::Key;
 use crate::item::ring::Ring;
@@ -95,10 +96,8 @@ impl Game {
         while self.location != *dest {
             self.visit(self.location.go_to(dest))?;
 
-            if !self.location.is_home() {
-                if let Some(mut enemy) = self.maybe_spawn_enemy() {
-                    return self.maybe_battle(&mut enemy, run, bribe);
-                }
+            if let Some(mut enemy) = enemy::spawn(&self.location, &self.player) {
+                return self.maybe_battle(&mut enemy, run, bribe);
             }
         }
         Ok(())
@@ -195,22 +194,6 @@ impl Game {
             Ok(())
         } else {
             bail!("Unknown class name.");
-        }
-    }
-
-    pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {
-        if self.player.enemies_evaded() {
-            return None;
-        }
-
-        let distance = self.location.distance_from_home();
-        if random().should_enemy_appear(&distance) {
-            let enemy = character::enemy::at(&self.location, &self.player);
-
-            log::enemy_appears(&enemy, &self.location);
-            Some(enemy)
-        } else {
-            None
         }
     }
 
