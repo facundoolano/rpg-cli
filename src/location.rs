@@ -138,7 +138,7 @@ impl Distance {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
 
     #[test]
@@ -205,7 +205,7 @@ mod tests {
 
     /// test-only equivalent for Location::from, specifically to bypass
     /// path existence checks.
-    fn location_from(path: &str) -> Location {
+    pub fn location_from(path: &str) -> Location {
         let path = path::Path::new(path);
         Location {
             path: path.to_path_buf(),

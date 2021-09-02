@@ -1,13 +1,23 @@
 use super::{class::Category, class::Class, Character};
+use crate::item::ring::Ring;
 use crate::location;
 use crate::randomizer::{random, Randomizer};
 use rand::prelude::SliceRandom;
 use rand::Rng;
 
 pub fn at(location: &location::Location, player: &Character) -> Character {
-    let (class, level) = if should_find_shadow(location) {
+    // TODO refactor, put the class details in the function that defines if it appears or not
+    let (class, level) = if should_find_gorthaur(player, location) {
+        let mut class = Class::player_first().clone();
+        class.name = String::from("gorthaur");
+        class.hp.0 *= 2;
+        class.strength.0 *= 2;
+        class.category = Category::Legendary;
+        (class, 100)
+    } else if should_find_shadow(location) {
         let mut class = player.class.clone();
         class.name = String::from("shadow");
+        class.category = Category::Rare;
         (class, player.level + 3)
     } else if should_find_dev(location) {
         let mut class = Class::player_first().clone();
@@ -15,6 +25,7 @@ pub fn at(location: &location::Location, player: &Character) -> Character {
         class.hp.0 /= 2;
         class.strength.0 /= 2;
         class.speed.0 /= 2;
+        class.category = Category::Rare;
         (class, player.level)
     } else {
         let distance = location.distance_from_home();
@@ -29,6 +40,12 @@ pub fn at(location: &location::Location, player: &Character) -> Character {
 fn level(player_level: i32, distance_from_home: i32) -> i32 {
     let level = std::cmp::max(player_level / 10 + distance_from_home - 1, 1);
     random().enemy_level(level)
+}
+
+fn should_find_gorthaur(player: &Character, location: &location::Location) -> bool {
+    let wearing_ring =
+        player.left_ring == Some(Ring::Ruling) || player.right_ring == Some(Ring::Ruling);
+    wearing_ring && location.distance_from_home().len() >= 100
 }
 
 fn should_find_shadow(location: &location::Location) -> bool {

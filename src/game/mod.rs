@@ -147,8 +147,10 @@ impl Game {
     }
 
     pub fn add_item(&mut self, item: Box<dyn Item>) {
+        let key = item.key();
         let entry = self.inventory.entry(item.key()).or_insert_with(Vec::new);
         entry.push(item);
+        quest::item_added(self, key);
     }
 
     pub fn use_item(&mut self, name: Key) -> Result<()> {
@@ -157,7 +159,7 @@ impl Game {
         if let Some(mut items) = self.inventory.remove(&name) {
             if let Some(mut item) = items.pop() {
                 item.apply(self);
-                quest::item_used(self, name.to_string());
+                quest::item_used(self, item.key());
             }
 
             if !items.is_empty() {
@@ -170,6 +172,7 @@ impl Game {
             // equipped, that is, while not being in the inventory.
             // The effect of using them is unequipping them.
             // This bit of complexity enables a cleaner command api.
+            quest::item_used(self, ring.key());
             self.add_item(Box::new(ring));
             Ok(())
         } else {

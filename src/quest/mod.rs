@@ -1,6 +1,7 @@
 use crate::character::class;
 use crate::character::Character;
 use crate::game;
+use crate::item::key::Key;
 use crate::location::Location;
 use crate::log;
 use core::fmt;
@@ -8,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 mod beat_enemy;
 mod level;
+mod ring;
 mod tutorial;
 
 /// A task that is assigned to the player when certain conditions are met.
@@ -74,12 +76,16 @@ pub fn level_up(game: &mut game::Game, count: i32) {
     );
 }
 
-pub fn item_bought(game: &mut game::Game, item: String) {
+pub fn item_bought(game: &mut game::Game, item: Key) {
     handle(game, Event::ItemBought { item });
 }
 
-pub fn item_used(game: &mut game::Game, item: String) {
+pub fn item_used(game: &mut game::Game, item: Key) {
     handle(game, Event::ItemUsed { item });
+}
+
+pub fn item_added(game: &mut game::Game, item: Key) {
+    handle(game, Event::ItemAdded { item });
 }
 
 pub fn chest(game: &mut game::Game) {
@@ -111,10 +117,13 @@ pub enum Event<'a> {
         class: String,
     },
     ItemBought {
-        item: String,
+        item: Key,
     },
     ItemUsed {
-        item: String,
+        item: Key,
+    },
+    ItemAdded {
+        item: Key,
     },
     ChestFound,
     TombtsoneFound,
@@ -152,6 +161,8 @@ impl QuestList {
 
         self.quests
             .push((Status::Locked(5), 200, Box::new(tutorial::VisitTomb)));
+        self.quests
+            .push((Status::Locked(5), 300, Box::new(ring::EquipRing)));
         self.quests.push((
             Status::Locked(5),
             1000,
@@ -185,6 +196,11 @@ impl QuestList {
             ));
         }
 
+        self.quests.push((
+            Status::Locked(15),
+            30000,
+            Box::new(ring::FindAllRings::new()),
+        ));
         self.quests
             .push((Status::Locked(15), 20000, beat_enemy::shadow()));
         self.quests
@@ -195,6 +211,8 @@ impl QuestList {
             100000,
             Box::new(level::ReachLevel::new(100)),
         ));
+        self.quests
+            .push((Status::Locked(50), 1000000, ring::gorthaur()));
     }
 
     /// Pass the event to each of the quests, moving the completed ones to DONE.
@@ -253,6 +271,7 @@ mod tests {
     use crate::character::Character;
     use crate::item;
     use crate::item::Item;
+    use crate::location::tests::location_from;
 
     #[test]
     fn test_quest_status() {
@@ -349,6 +368,57 @@ mod tests {
         stone.apply(&mut game);
         assert_eq!(Status::Completed, game.quests.quests[0].0);
         assert_eq!(Status::Completed, game.quests.quests[1].0);
+    }
+
+    #[test]
+    fn equip_ring() {
+        let mut game = game::Game::new();
+        game.quests.quests = vec![(Status::Unlocked, 1, Box::new(ring::EquipRing))];
+
+        game.add_item(Box::new(item::ring::Ring::Void));
+        game.use_item(Key::Ring(item::ring::Ring::Void)).unwrap();
+
+        assert_eq!(Status::Completed, game.quests.quests[0].0);
+    }
+
+    #[test]
+    fn find_all_rings() {
+        let mut game = game::Game::new();
+        game.quests.quests = vec![(Status::Unlocked, 1, Box::new(ring::FindAllRings::new()))];
+
+        for ring in item::ring::Ring::set() {
+            game.add_item(Box::new(ring));
+        }
+
+        assert_eq!(Status::Completed, game.quests.quests[0].0);
+    }
+
+    #[test]
+    fn gorthaur() {
+        let mut game = game::Game::new();
+        game.quests.quests = vec![(Status::Unlocked, 1, ring::gorthaur())];
+
+        // fake a +100 distance location
+        let mut fake_path = String::from("~");
+        for n in 0..103 {
+            fake_path += &format!("/{}", n);
+        }
+        game.location = location_from(&fake_path);
+
+        // ruling ring required to spawn the enemy
+        game.player.left_ring = Some(item::ring::Ring::Ruling);
+
+        let mut enemy = game.maybe_spawn_enemy().unwrap();
+
+        // increase many levels to force the player's victory
+        for _ in 0..200 {
+            game.player.add_experience(game.player.xp_for_next());
+        }
+        enemy.current_hp = 10;
+
+        game.maybe_battle(&mut enemy, false, false).unwrap();
+
+        assert_eq!(Status::Completed, game.quests.quests[0].0);
     }
 
     fn count_status(quests: &QuestList, status: Status) -> usize {
