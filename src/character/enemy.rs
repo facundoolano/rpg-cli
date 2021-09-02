@@ -16,7 +16,7 @@ pub fn at(location: &location::Location, player: &Character) -> Character {
         (class, 100)
     } else if should_find_shadow(location) {
         let mut class = player.class.clone();
-        class.name = String::from("");
+        class.name = String::from("shadow");
         class.category = Category::Rare;
         (class, player.level + 3)
     } else if should_find_dev(location) {
