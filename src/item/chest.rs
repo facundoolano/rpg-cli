@@ -1,9 +1,9 @@
+use super::equipment::Equipment;
+use super::key::Key;
+use super::ring;
+use super::stone;
+use super::{Escape, Ether, Item, Potion, Remedy};
 use crate::game;
-use crate::item::equipment::Equipment;
-use crate::item::key::Key;
-use crate::item::ring;
-use crate::item::stone;
-use crate::item::{Escape, Ether, Item, Potion, Remedy};
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use rand::prelude::{IteratorRandom, SliceRandom};
@@ -235,9 +235,9 @@ impl Default for Chest {
 
 #[cfg(test)]
 mod tests {
+    use super::equipment::Equipment;
     use super::*;
-    use crate::item::equipment::Equipment;
-    use crate::item::{Escape, Potion};
+    use super::{Escape, Potion};
 
     #[test]
     fn test_empty_drop_pickup() {

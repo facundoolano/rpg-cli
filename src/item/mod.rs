@@ -5,6 +5,7 @@ use crate::game;
 use crate::log;
 use serde::{Deserialize, Serialize};
 
+pub mod chest;
 pub mod equipment;
 pub mod key;
 pub mod ring;

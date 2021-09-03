@@ -13,12 +13,11 @@ use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use anyhow::{bail, Result};
-use chest::Chest;
+use crate::item::chest::Chest;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 pub mod battle;
-pub mod chest;
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
