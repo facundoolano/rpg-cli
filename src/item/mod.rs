@@ -2,6 +2,7 @@ use core::fmt;
 
 use crate::character::class as character;
 use crate::game;
+use crate::location;
 use crate::log;
 use serde::{Deserialize, Serialize};
 
@@ -60,7 +61,7 @@ impl Escape {
 #[typetag::serde]
 impl Item for Escape {
     fn apply(&mut self, game: &mut game::Game) {
-        game.visit_home();
+        game.visit(location::Location::home()).unwrap_or_default();
     }
 
     fn key(&self) -> key::Key {

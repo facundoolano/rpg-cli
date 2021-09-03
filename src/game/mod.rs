@@ -19,16 +19,24 @@ use std::collections::{HashMap, HashSet};
 
 pub mod battle;
 
+/// Carries all the game state that is saved between commands and exposes
+/// the high-level interface for gameplay: moving across directories and
+/// engaging in battles.
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct Game {
     pub player: Character,
     pub location: Location,
     pub gold: i32,
-    pub quests: QuestList,
+
+    /// Items currently carried and unequipped
     pub inventory: HashMap<Key, Vec<Box<dyn Item>>>,
 
-    /// Chest left at the location where the player dies.
+    /// Locations where chest have already been looked for, and therefore
+    /// can't be found again.
+    inspected: HashSet<Location>,
+
+    /// Chests left at the location where the player dies.
     pub tombstones: HashMap<String, Chest>,
 
     /// There's one instance of each type of ring in the game.
@@ -36,9 +44,7 @@ pub struct Game {
     /// they are found in chests.
     pub ring_pool: HashSet<Ring>,
 
-    /// Locations where chest have already been looked for, and therefore
-    /// can't be found again.
-    inspected: HashSet<Location>,
+    pub quests: QuestList,
 }
 
 impl Game {
@@ -102,13 +108,8 @@ impl Game {
         Ok(())
     }
 
-    /// Set the current location to home, and apply related side-effects
-    pub fn visit_home(&mut self) {
-        self.visit(Location::home()).unwrap_or_default();
-    }
-
     /// Set the hero's location to the one given, and apply related side effects.
-    fn visit(&mut self, location: Location) -> Result<(), character::Dead> {
+    pub fn visit(&mut self, location: Location) -> Result<(), character::Dead> {
         self.location = location;
         if self.location.is_home() {
             let (recovered_hp, recovered_mp, healed) = self.player.restore();
