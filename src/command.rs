@@ -121,7 +121,7 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
 /// the hero's movement.
 fn battle(game: &mut Game, run: bool, bribe: bool) -> Result<()> {
     if let Some(mut enemy) = enemy::spawn(&game.location, &game.player) {
-        if let Err(character::Dead) = game.maybe_battle(&mut enemy, run, bribe) {
+        if let Err(character::Dead) = game.battle(&mut enemy, run, bribe) {
             game.reset();
             bail!("");
         }

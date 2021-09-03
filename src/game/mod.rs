@@ -17,8 +17,6 @@ use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-pub mod battle;
-
 /// Carries all the game state that is saved between commands and exposes
 /// the high-level interface for gameplay: moving across directories and
 /// engaging in battles.
@@ -102,7 +100,7 @@ impl Game {
             self.visit(self.location.go_to(dest))?;
 
             if let Some(mut enemy) = enemy::spawn(&self.location, &self.player) {
-                return self.maybe_battle(&mut enemy, run, bribe);
+                return self.battle(&mut enemy, run, bribe);
             }
         }
         Ok(())
@@ -188,7 +186,7 @@ impl Game {
 
     /// Attempt to bribe or run away according to the given options,
     /// and start a battle if that fails.
-    pub fn maybe_battle(
+    pub fn battle(
         &mut self,
         enemy: &mut Character,
         run: bool,
@@ -216,39 +214,124 @@ impl Game {
             }
         }
 
-        self.battle(enemy)
-    }
-
-    fn battle(&mut self, enemy: &mut Character) -> Result<(), character::Dead> {
-        match battle::run(self, enemy) {
-            Ok(xp) => {
-                let gold = self.player.gold_gained(enemy.level);
-                self.gold += gold;
-                let levels_up = self.player.add_experience(xp);
-
-                let reward_items = Chest::battle_loot(self)
-                    .map_or(HashMap::new(), |mut chest| chest.pick_up(self).0);
-
-                log::battle_won(self, xp, levels_up, gold, &reward_items);
-                quest::battle_won(self, enemy, levels_up);
-
-                Ok(())
-            }
-            Err(character::Dead) => {
-                // Drop hero items in the location. If there was a previous tombstone
-                // merge the contents of both chests
-                let mut tombstone = Chest::drop(self);
-                let location = self.location.to_string();
-                if let Some(previous) = self.tombstones.remove(&location) {
-                    tombstone.extend(previous);
-                }
-                self.tombstones.insert(location, tombstone);
-
-                log::battle_lost(&self.player);
-                Err(character::Dead)
-            }
+        if let Ok(xp) = self.run_battle(enemy) {
+            self.battle_won(enemy, xp);
+            Ok(())
+        } else {
+            self.battle_lost();
+            Err(character::Dead)
         }
     }
+
+    /// Runs a turn-based combat between the game's player and the given enemy.
+    /// The frequency of the turns is determined by the speed stat of each
+    /// character.
+    ///
+    /// Some special abilities are enabled by the player's equipped rings:
+    /// Double-beat, counter-attack and revive.
+    ///
+    /// Returns Ok(xp gained) if the player wins, or Err(()) if it loses.
+    fn run_battle(&mut self, enemy: &mut Character) -> Result<i32, character::Dead> {
+        // Player's using the revive ring can come back to life at most once per battle
+        let mut already_revived = false;
+
+        // These accumulators get increased based on the character's speed:
+        // the faster will get more frequent turns.
+        let (mut pl_accum, mut en_accum) = (0, 0);
+        let mut xp = 0;
+
+        while enemy.current_hp > 0 {
+            pl_accum += self.player.speed();
+            en_accum += enemy.speed();
+
+            if pl_accum >= en_accum {
+                // In some urgent circumstances, it's preferable to use the turn to
+                // recover mp or hp than attacking
+                if !self.autopotion(enemy) && !self.autoether(enemy) {
+                    let (new_xp, _) = self.player.attack(enemy);
+                    xp += new_xp;
+
+                    self.player.maybe_double_beat(enemy);
+                }
+
+                // Status effects are applied after each turn. The player may die
+                // during its own turn because of status ailment damage
+                let died = self.player.apply_status_effects();
+                already_revived = self.player.maybe_revive(died, already_revived)?;
+
+                pl_accum = -1;
+            } else {
+                let (_, died) = enemy.attack(&mut self.player);
+                already_revived = self.player.maybe_revive(died, already_revived)?;
+
+                self.player.maybe_counter_attack(enemy);
+
+                enemy.apply_status_effects().unwrap_or_default();
+
+                en_accum = -1;
+            }
+        }
+
+        Ok(xp)
+    }
+
+    fn battle_won(&mut self, enemy: &Character, xp: i32) {
+        let gold = self.player.gold_gained(enemy.level);
+        self.gold += gold;
+        let levels_up = self.player.add_experience(xp);
+
+        let reward_items =
+            Chest::battle_loot(self).map_or(HashMap::new(), |mut chest| chest.pick_up(self).0);
+
+        log::battle_won(self, xp, levels_up, gold, &reward_items);
+        quest::battle_won(self, enemy, levels_up);
+    }
+
+    fn battle_lost(&mut self) {
+        // Drop hero items in the location. If there was a previous tombstone
+        // merge the contents of both chests
+        let mut tombstone = Chest::drop(self);
+        let location = self.location.to_string();
+        if let Some(previous) = self.tombstones.remove(&location) {
+            tombstone.extend(previous);
+        }
+        self.tombstones.insert(location, tombstone);
+
+        log::battle_lost(&self.player);
+    }
+
+    /// If the player is low on hp and has a potion available use it
+    /// instead of attacking in the current turn.
+    fn autopotion(&mut self, enemy: &Character) -> bool {
+        if self.player.current_hp > self.player.max_hp() / 3 {
+            return false;
+        }
+
+        // If there's a good chance of winning the battle on the next attack,
+        // don't use the potion.
+        let (potential_damage, _) = self.player.damage(enemy);
+        if potential_damage >= enemy.current_hp {
+            return false;
+        }
+
+        self.use_item(Key::Potion).is_ok()
+    }
+
+    fn autoether(&mut self, enemy: &Character) -> bool {
+        if !self.player.class.is_magic() || self.player.can_magic_attack() {
+            return false;
+        }
+
+        // If there's a good chance of winning the battle on the next attack,
+        // don't use the ether.
+        let (potential_damage, _) = self.player.damage(enemy);
+        if potential_damage >= enemy.current_hp {
+            return false;
+        }
+
+        self.use_item(Key::Ether).is_ok()
+    }
+
 }
 
 impl Default for Game {

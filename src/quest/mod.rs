@@ -417,7 +417,7 @@ mod tests {
         }
         enemy.current_hp = 10;
 
-        game.maybe_battle(&mut enemy, false, false).unwrap();
+        game.battle(&mut enemy, false, false).unwrap();
 
         assert_eq!(Status::Completed, game.quests.quests[0].0);
     }

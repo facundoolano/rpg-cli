@@ -235,7 +235,7 @@ impl Default for Chest {
 
 #[cfg(test)]
 mod tests {
-    use super::equipment::Equipment;
+    use super::super::equipment::Equipment;
     use super::*;
     use super::{Escape, Potion};
 
