@@ -1,7 +1,9 @@
 extern crate dirs;
 
 use crate::character;
+use crate::character::enemy;
 use crate::character::Character;
+use crate::item::chest::Chest;
 use crate::item::key::Key;
 use crate::item::ring::Ring;
 use crate::item::Item;
@@ -12,23 +14,27 @@ use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use anyhow::{bail, Result};
-use chest::Chest;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-pub mod battle;
-pub mod chest;
-
+/// Carries all the game state that is saved between commands and exposes
+/// the high-level interface for gameplay: moving across directories and
+/// engaging in battles.
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct Game {
     pub player: Character,
     pub location: Location,
     pub gold: i32,
-    pub quests: QuestList,
+
+    /// Items currently carried and unequipped
     pub inventory: HashMap<Key, Vec<Box<dyn Item>>>,
 
-    /// Chest left at the location where the player dies.
+    /// Locations where chest have already been looked for, and therefore
+    /// can't be found again.
+    inspected: HashSet<Location>,
+
+    /// Chests left at the location where the player dies.
     pub tombstones: HashMap<String, Chest>,
 
     /// There's one instance of each type of ring in the game.
@@ -36,9 +42,7 @@ pub struct Game {
     /// they are found in chests.
     pub ring_pool: HashSet<Ring>,
 
-    /// Locations where chest have already been looked for, and therefore
-    /// can't be found again.
-    inspected: HashSet<Location>,
+    pub quests: QuestList,
 }
 
 impl Game {
@@ -73,10 +77,7 @@ impl Game {
         std::mem::swap(&mut new_game.ring_pool, &mut self.ring_pool);
 
         // remember last selected class
-        new_game
-            .player
-            .change_class(&self.player.class.name)
-            .unwrap_or_default();
+        new_game.player = character::Character::new(self.player.class.clone(), 1);
 
         // replace the current, finished game with the new one
         *self = new_game;
@@ -95,32 +96,11 @@ impl Game {
         while self.location != *dest {
             self.visit(self.location.go_to(dest))?;
 
-            if !self.location.is_home() {
-                if let Some(mut enemy) = self.maybe_spawn_enemy() {
-                    return self.maybe_battle(&mut enemy, run, bribe);
-                }
+            if let Some(mut enemy) = enemy::spawn(&self.location, &self.player) {
+                return self.battle(&mut enemy, run, bribe);
             }
         }
         Ok(())
-    }
-
-    /// Look for chests and tombstones at the current location.
-    /// Remembers previously visited locations for consistency.
-    pub fn inspect(&mut self) {
-        if let Some(mut chest) = self.tombstones.remove(&self.location.to_string()) {
-            let (items, gold) = chest.pick_up(self);
-            log::tombstone(&items, gold);
-            quest::tombstone(self);
-        }
-
-        if !self.inspected.contains(&self.location) {
-            self.inspected.insert(self.location.clone());
-            if let Some(mut chest) = Chest::generate(self) {
-                let (items, gold) = chest.pick_up(self);
-                log::chest(&items, gold);
-                quest::chest(self);
-            }
-        }
     }
 
     /// Set the hero's location to the one given, and apply related side effects.
@@ -141,9 +121,23 @@ impl Game {
         self.player.apply_status_effects()
     }
 
-    /// Set the current location to home, and apply related side-effects
-    pub fn visit_home(&mut self) {
-        self.visit(Location::home()).unwrap_or_default();
+    /// Look for chests and tombstones at the current location.
+    /// Remembers previously visited locations for consistency.
+    pub fn inspect(&mut self) {
+        if let Some(mut chest) = self.tombstones.remove(&self.location.to_string()) {
+            let (items, gold) = chest.pick_up(self);
+            log::tombstone(&items, gold);
+            quest::tombstone(self);
+        }
+
+        if !self.inspected.contains(&self.location) {
+            self.inspected.insert(self.location.clone());
+            if let Some(mut chest) = Chest::generate(self) {
+                let (items, gold) = chest.pick_up(self);
+                log::chest(&items, gold);
+                quest::chest(self);
+            }
+        }
     }
 
     pub fn add_item(&mut self, item: Box<dyn Item>) {
@@ -187,36 +181,9 @@ impl Game {
             .collect::<HashMap<&Key, usize>>()
     }
 
-    pub fn change_class(&mut self, name: &str) -> Result<()> {
-        if !self.location.is_home() {
-            bail!("Class change is only allowed at home.")
-        } else if let Ok(lost_xp) = self.player.change_class(name) {
-            log::change_class(&self.player, &self.location, lost_xp);
-            Ok(())
-        } else {
-            bail!("Unknown class name.");
-        }
-    }
-
-    pub fn maybe_spawn_enemy(&mut self) -> Option<Character> {
-        if self.player.enemies_evaded() {
-            return None;
-        }
-
-        let distance = self.location.distance_from_home();
-        if random().should_enemy_appear(&distance) {
-            let enemy = character::enemy::at(&self.location, &self.player);
-
-            log::enemy_appears(&enemy, &self.location);
-            Some(enemy)
-        } else {
-            None
-        }
-    }
-
     /// Attempt to bribe or run away according to the given options,
     /// and start a battle if that fails.
-    pub fn maybe_battle(
+    pub fn battle(
         &mut self,
         enemy: &mut Character,
         run: bool,
@@ -244,38 +211,122 @@ impl Game {
             }
         }
 
-        self.battle(enemy)
+        if let Ok(xp) = self.run_battle(enemy) {
+            self.battle_won(enemy, xp);
+            Ok(())
+        } else {
+            self.battle_lost();
+            Err(character::Dead)
+        }
     }
 
-    fn battle(&mut self, enemy: &mut Character) -> Result<(), character::Dead> {
-        match battle::run(self, enemy) {
-            Ok(xp) => {
-                let gold = self.player.gold_gained(enemy.level);
-                self.gold += gold;
-                let levels_up = self.player.add_experience(xp);
+    /// Runs a turn-based combat between the game's player and the given enemy.
+    /// The frequency of the turns is determined by the speed stat of each
+    /// character.
+    ///
+    /// Some special abilities are enabled by the player's equipped rings:
+    /// Double-beat, counter-attack and revive.
+    ///
+    /// Returns Ok(xp gained) if the player wins, or Err(()) if it loses.
+    fn run_battle(&mut self, enemy: &mut Character) -> Result<i32, character::Dead> {
+        // Player's using the revive ring can come back to life at most once per battle
+        let mut already_revived = false;
 
-                let reward_items = Chest::battle_loot(self)
-                    .map_or(HashMap::new(), |mut chest| chest.pick_up(self).0);
+        // These accumulators get increased based on the character's speed:
+        // the faster will get more frequent turns.
+        let (mut pl_accum, mut en_accum) = (0, 0);
+        let mut xp = 0;
 
-                log::battle_won(self, xp, levels_up, gold, &reward_items);
-                quest::battle_won(self, enemy, levels_up);
+        while enemy.current_hp > 0 {
+            pl_accum += self.player.speed();
+            en_accum += enemy.speed();
 
-                Ok(())
-            }
-            Err(character::Dead) => {
-                // Drop hero items in the location. If there was a previous tombstone
-                // merge the contents of both chests
-                let mut tombstone = Chest::drop(self);
-                let location = self.location.to_string();
-                if let Some(previous) = self.tombstones.remove(&location) {
-                    tombstone.extend(previous);
+            if pl_accum >= en_accum {
+                // In some urgent circumstances, it's preferable to use the turn to
+                // recover mp or hp than attacking
+                if !self.autopotion(enemy) && !self.autoether(enemy) {
+                    let (new_xp, _) = self.player.attack(enemy);
+                    xp += new_xp;
+
+                    self.player.maybe_double_beat(enemy);
                 }
-                self.tombstones.insert(location, tombstone);
 
-                log::battle_lost(&self.player);
-                Err(character::Dead)
+                // Status effects are applied after each turn. The player may die
+                // during its own turn because of status ailment damage
+                let died = self.player.apply_status_effects();
+                already_revived = self.player.maybe_revive(died, already_revived)?;
+
+                pl_accum = -1;
+            } else {
+                let (_, died) = enemy.attack(&mut self.player);
+                already_revived = self.player.maybe_revive(died, already_revived)?;
+
+                self.player.maybe_counter_attack(enemy);
+
+                enemy.apply_status_effects().unwrap_or_default();
+
+                en_accum = -1;
             }
         }
+
+        Ok(xp)
+    }
+
+    fn battle_won(&mut self, enemy: &Character, xp: i32) {
+        let gold = self.player.gold_gained(enemy.level);
+        self.gold += gold;
+        let levels_up = self.player.add_experience(xp);
+
+        let reward_items =
+            Chest::battle_loot(self).map_or(HashMap::new(), |mut chest| chest.pick_up(self).0);
+
+        log::battle_won(self, xp, levels_up, gold, &reward_items);
+        quest::battle_won(self, enemy, levels_up);
+    }
+
+    fn battle_lost(&mut self) {
+        // Drop hero items in the location. If there was a previous tombstone
+        // merge the contents of both chests
+        let mut tombstone = Chest::drop(self);
+        let location = self.location.to_string();
+        if let Some(previous) = self.tombstones.remove(&location) {
+            tombstone.extend(previous);
+        }
+        self.tombstones.insert(location, tombstone);
+
+        log::battle_lost(&self.player);
+    }
+
+    /// If the player is low on hp and has a potion available use it
+    /// instead of attacking in the current turn.
+    fn autopotion(&mut self, enemy: &Character) -> bool {
+        if self.player.current_hp > self.player.max_hp() / 3 {
+            return false;
+        }
+
+        // If there's a good chance of winning the battle on the next attack,
+        // don't use the potion.
+        let (potential_damage, _) = self.player.damage(enemy);
+        if potential_damage >= enemy.current_hp {
+            return false;
+        }
+
+        self.use_item(Key::Potion).is_ok()
+    }
+
+    fn autoether(&mut self, enemy: &Character) -> bool {
+        if !self.player.class.is_magic() || self.player.can_magic_attack() {
+            return false;
+        }
+
+        // If there's a good chance of winning the battle on the next attack,
+        // don't use the ether.
+        let (potential_damage, _) = self.player.damage(enemy);
+        if potential_damage >= enemy.current_hp {
+            return false;
+        }
+
+        self.use_item(Key::Ether).is_ok()
     }
 }
 
@@ -288,6 +339,7 @@ impl Default for Game {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::character::class;
     use crate::item;
 
     #[test]
@@ -388,17 +440,57 @@ mod tests {
     }
 
     #[test]
-    fn test_run_ring() {
+    fn battle_won() {
+        let enemy_base = class::Class::random(class::Category::Common);
+        let enemy_class = class::Class {
+            speed: class::Stat(1, 1),
+            hp: class::Stat(15, 1),
+            strength: class::Stat(5, 1),
+            ..enemy_base.clone()
+        };
+        let mut enemy = character::Character::new(enemy_class.clone(), 1);
+
         let mut game = Game::new();
-        assert!(game.maybe_spawn_enemy().is_some());
+        let player_class = class::Class {
+            speed: class::Stat(2, 1),
+            hp: class::Stat(20, 1),
+            strength: class::Stat(10, 1), // each hit will take 10hp
+            ..game.player.class.clone()
+        };
+        game.player = character::Character::new(player_class, 1);
 
-        game.player.equip_ring(Ring::Evade);
-        assert!(game.maybe_spawn_enemy().is_none());
+        // expected turns
+        // enemy - 10hp
+        // player - 5 hp
+        // enemy - 10hp
 
-        game.player.equip_ring(Ring::Void);
-        assert!(game.maybe_spawn_enemy().is_none());
+        let result = game.battle(&mut enemy, false, false);
+        assert!(result.is_ok());
+        assert_eq!(15, game.player.current_hp);
+        assert_eq!(1, game.player.level);
+        assert_eq!(20, game.player.xp);
 
-        game.player.equip_ring(Ring::Void);
-        assert!(game.maybe_spawn_enemy().is_some());
+        // extra 100g for the completed quest
+        assert_eq!(150, game.gold);
+
+        let mut enemy = character::Character::new(enemy_class.clone(), 1);
+
+        // same turns, added xp increases level
+
+        let result = game.battle(&mut enemy, false, false);
+        assert!(result.is_ok());
+        assert_eq!(2, game.player.level);
+        assert_eq!(10, game.player.xp);
+        // extra 100g for level up quest
+        assert_eq!(300, game.gold);
+    }
+
+    #[test]
+    fn battle_lost() {
+        let mut game = Game::new();
+        let enemy_class = class::Class::random(class::Category::Common);
+        let mut enemy = character::Character::new(enemy_class.clone(), 10);
+        let result = game.battle(&mut enemy, false, false);
+        assert!(result.is_err());
     }
 }

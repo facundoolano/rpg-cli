@@ -107,9 +107,9 @@ impl Character {
     /// Replace the character class with the one given by name.
     /// XP is lost. If the character is at level 1, it works as a re-roll
     /// with the new class; at other levels the initial stats are preserved.
-    pub fn change_class(&mut self, name: &str) -> Result<i32, ClassNotFound> {
+    pub fn change_class(&mut self, name: &str) -> Result<(), ClassNotFound> {
         if name == self.class.name {
-            Ok(0)
+            Ok(())
         } else if let Some(class) = Class::player_by_name(name) {
             let lost_xp = self.xp;
 
@@ -141,7 +141,8 @@ impl Character {
             }
 
             self.xp = 0;
-            Ok(lost_xp)
+            log::change_class(self, lost_xp);
+            Ok(())
         } else {
             Err(ClassNotFound)
         }

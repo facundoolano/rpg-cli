@@ -1,10 +1,11 @@
 use crate::character;
+use crate::character::enemy;
 use crate::game::Game;
 use crate::item;
 use crate::item::key::Key;
 use crate::location::Location;
 use crate::log;
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 
 use clap::Clap;
 
@@ -119,8 +120,8 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
 /// Potentially run a battle at the current location, independently from
 /// the hero's movement.
 fn battle(game: &mut Game, run: bool, bribe: bool) -> Result<()> {
-    if let Some(mut enemy) = game.maybe_spawn_enemy() {
-        if let Err(character::Dead) = game.maybe_battle(&mut enemy, run, bribe) {
+    if let Some(mut enemy) = enemy::spawn(&game.location, &game.player) {
+        if let Err(character::Dead) = game.battle(&mut enemy, run, bribe) {
             game.reset();
             bail!("");
         }
@@ -130,9 +131,15 @@ fn battle(game: &mut Game, run: bool, bribe: bool) -> Result<()> {
 
 /// Set the class for the player character
 fn class(game: &mut Game, class_name: &Option<String>) -> Result<()> {
+    if !game.location.is_home() {
+        bail!("Class change is only allowed at home.")
+    }
+
     if let Some(class_name) = class_name {
         let class_name = class_name.to_lowercase();
-        game.change_class(&class_name)
+        game.player
+            .change_class(&class_name)
+            .map_err(|_| anyhow!("Unknown class name."))
     } else {
         let player_classes: Vec<String> =
             character::class::Class::names(character::class::Category::Player)
@@ -210,9 +217,12 @@ mod tests {
         };
 
         // reduce stats to ensure loss
-        // FIXME this is flaky now
-        game.player.current_hp = 1;
-
+        let weak_class = character::class::Class {
+            hp: character::class::Stat(1, 1),
+            speed: character::class::Stat(1, 1),
+            ..game.player.class
+        };
+        game.player = character::Character::new(weak_class, 1);
         game.gold = 100;
         game.player.xp = 100;
 
