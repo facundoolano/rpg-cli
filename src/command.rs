@@ -5,7 +5,7 @@ use crate::item;
 use crate::item::key::Key;
 use crate::location::Location;
 use crate::log;
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 
 use clap::Clap;
 
@@ -131,9 +131,15 @@ fn battle(game: &mut Game, run: bool, bribe: bool) -> Result<()> {
 
 /// Set the class for the player character
 fn class(game: &mut Game, class_name: &Option<String>) -> Result<()> {
+    if !game.location.is_home() {
+        bail!("Class change is only allowed at home.")
+    }
+
     if let Some(class_name) = class_name {
         let class_name = class_name.to_lowercase();
-        game.change_class(&class_name)
+        game.player
+            .change_class(&class_name)
+            .map_err(|_| anyhow!("Unknown class name."))
     } else {
         let player_classes: Vec<String> =
             character::class::Class::names(character::class::Category::Player)

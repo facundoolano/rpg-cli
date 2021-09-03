@@ -3,6 +3,7 @@ extern crate dirs;
 use crate::character;
 use crate::character::enemy;
 use crate::character::Character;
+use crate::item::chest::Chest;
 use crate::item::key::Key;
 use crate::item::ring::Ring;
 use crate::item::Item;
@@ -13,7 +14,6 @@ use crate::quest::QuestList;
 use crate::randomizer::random;
 use crate::randomizer::Randomizer;
 use anyhow::{bail, Result};
-use crate::item::chest::Chest;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -102,6 +102,29 @@ impl Game {
         Ok(())
     }
 
+    /// Set the current location to home, and apply related side-effects
+    pub fn visit_home(&mut self) {
+        self.visit(Location::home()).unwrap_or_default();
+    }
+
+    /// Set the hero's location to the one given, and apply related side effects.
+    fn visit(&mut self, location: Location) -> Result<(), character::Dead> {
+        self.location = location;
+        if self.location.is_home() {
+            let (recovered_hp, recovered_mp, healed) = self.player.restore();
+            log::heal(
+                &self.player,
+                &self.location,
+                recovered_hp,
+                recovered_mp,
+                healed,
+            );
+        }
+
+        // In location is home, already healed of negative status
+        self.player.apply_status_effects()
+    }
+
     /// Look for chests and tombstones at the current location.
     /// Remembers previously visited locations for consistency.
     pub fn inspect(&mut self) {
@@ -119,29 +142,6 @@ impl Game {
                 quest::chest(self);
             }
         }
-    }
-
-    /// Set the hero's location to the one given, and apply related side effects.
-    pub fn visit(&mut self, location: Location) -> Result<(), character::Dead> {
-        self.location = location;
-        if self.location.is_home() {
-            let (recovered_hp, recovered_mp, healed) = self.player.restore();
-            log::heal(
-                &self.player,
-                &self.location,
-                recovered_hp,
-                recovered_mp,
-                healed,
-            );
-        }
-
-        // In location is home, already healed of negative status
-        self.player.apply_status_effects()
-    }
-
-    /// Set the current location to home, and apply related side-effects
-    pub fn visit_home(&mut self) {
-        self.visit(Location::home()).unwrap_or_default();
     }
 
     pub fn add_item(&mut self, item: Box<dyn Item>) {
@@ -183,17 +183,6 @@ impl Game {
             .iter()
             .map(|(k, v)| (k, v.len()))
             .collect::<HashMap<&Key, usize>>()
-    }
-
-    pub fn change_class(&mut self, name: &str) -> Result<()> {
-        if !self.location.is_home() {
-            bail!("Class change is only allowed at home.")
-        } else if let Ok(lost_xp) = self.player.change_class(name) {
-            log::change_class(&self.player, &self.location, lost_xp);
-            Ok(())
-        } else {
-            bail!("Unknown class name.");
-        }
     }
 
     /// Attempt to bribe or run away according to the given options,
