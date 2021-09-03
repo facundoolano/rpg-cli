@@ -6,7 +6,10 @@ use crate::randomizer::{random, Randomizer};
 use rand::prelude::SliceRandom;
 use rand::Rng;
 
-/// TODO
+/// Randomly spawn an enemy character at the given location, based on the
+/// current character stats.
+/// The distance from home will influence the enemy frequency and level.
+/// Under certain conditions, special (quest-related) enemies may be spawned.
 pub fn spawn(location: &location::Location, player: &Character) -> Option<Character> {
     if location.is_home() || player.enemies_evaded() {
         return None;
