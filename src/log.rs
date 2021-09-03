@@ -134,11 +134,9 @@ pub fn heal(
 }
 
 pub fn change_class(player: &Character, lost_xp: i32) {
-    let mut lost_text = String::new();
     if lost_xp > 0 {
-        lost_text = format!("-{}xp", lost_xp).bright_red().to_string();
+        battle_log(player, &format!("-{}xp", lost_xp).bright_red().to_string());
     }
-    battle_log(player, &lost_text);
 }
 
 pub fn stat_increase(player: &Character, stat: &str, increase: i32) {

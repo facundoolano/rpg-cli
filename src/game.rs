@@ -77,10 +77,7 @@ impl Game {
         std::mem::swap(&mut new_game.ring_pool, &mut self.ring_pool);
 
         // remember last selected class
-        new_game
-            .player
-            .change_class(&self.player.class.name)
-            .unwrap_or_default();
+        new_game.player = character::Character::new(self.player.class.clone(), 1);
 
         // replace the current, finished game with the new one
         *self = new_game;
