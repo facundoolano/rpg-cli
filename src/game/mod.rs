@@ -331,7 +331,6 @@ impl Game {
 
         self.use_item(Key::Ether).is_ok()
     }
-
 }
 
 impl Default for Game {
@@ -343,6 +342,7 @@ impl Default for Game {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::character::class;
     use crate::item;
 
     #[test]
@@ -440,5 +440,60 @@ mod tests {
         assert_eq!(Some(Ring::Void), game.player.left_ring);
         assert!(game.player.right_ring.is_none());
         assert_eq!(base_hp, game.player.max_hp());
+    }
+
+    #[test]
+    fn battle_won() {
+        let enemy_base = class::Class::random(class::Category::Common);
+        let enemy_class = class::Class {
+            speed: class::Stat(1, 1),
+            hp: class::Stat(15, 1),
+            strength: class::Stat(5, 1),
+            ..enemy_base.clone()
+        };
+        let mut enemy = character::Character::new(enemy_class.clone(), 1);
+
+        let mut game = Game::new();
+        let player_class = class::Class {
+            speed: class::Stat(2, 1),
+            hp: class::Stat(20, 1),
+            strength: class::Stat(10, 1), // each hit will take 10hp
+            ..game.player.class.clone()
+        };
+        game.player = character::Character::new(player_class, 1);
+
+        // expected turns
+        // enemy - 10hp
+        // player - 5 hp
+        // enemy - 10hp
+
+        let result = game.battle(&mut enemy, false, false);
+        assert!(result.is_ok());
+        assert_eq!(15, game.player.current_hp);
+        assert_eq!(1, game.player.level);
+        assert_eq!(20, game.player.xp);
+
+        // extra 100g for the completed quest
+        assert_eq!(150, game.gold);
+
+        let mut enemy = character::Character::new(enemy_class.clone(), 1);
+
+        // same turns, added xp increases level
+
+        let result = game.battle(&mut enemy, false, false);
+        assert!(result.is_ok());
+        assert_eq!(2, game.player.level);
+        assert_eq!(10, game.player.xp);
+        // extra 100g for level up quest
+        assert_eq!(300, game.gold);
+    }
+
+    #[test]
+    fn battle_lost() {
+        let mut game = Game::new();
+        let enemy_class = class::Class::random(class::Category::Common);
+        let mut enemy = character::Character::new(enemy_class.clone(), 10);
+        let result = game.battle(&mut enemy, false, false);
+        assert!(result.is_err());
     }
 }
