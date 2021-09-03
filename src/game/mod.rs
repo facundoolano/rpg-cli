@@ -369,19 +369,4 @@ mod tests {
         assert!(game.player.right_ring.is_none());
         assert_eq!(base_hp, game.player.max_hp());
     }
-
-    #[test]
-    fn test_run_ring() {
-        let mut game = Game::new();
-        assert!(game.maybe_spawn_enemy().is_some());
-
-        game.player.equip_ring(Ring::Evade);
-        assert!(game.maybe_spawn_enemy().is_none());
-
-        game.player.equip_ring(Ring::Void);
-        assert!(game.maybe_spawn_enemy().is_none());
-
-        game.player.equip_ring(Ring::Void);
-        assert!(game.maybe_spawn_enemy().is_some());
-    }
 }

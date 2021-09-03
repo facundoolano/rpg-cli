@@ -268,6 +268,7 @@ impl QuestList {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::character::enemy;
     use crate::character::Character;
     use crate::item;
     use crate::item::Item;
@@ -408,7 +409,7 @@ mod tests {
         // ruling ring required to spawn the enemy
         game.player.left_ring = Some(item::ring::Ring::Ruling);
 
-        let mut enemy = game.maybe_spawn_enemy().unwrap();
+        let mut enemy = enemy::spawn(&game.location, &game.player).unwrap();
 
         // increase many levels to force the player's victory
         for _ in 0..200 {

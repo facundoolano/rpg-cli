@@ -211,9 +211,12 @@ mod tests {
         };
 
         // reduce stats to ensure loss
-        // FIXME this is flaky now
-        game.player.current_hp = 1;
-
+        let weak_class = character::class::Class {
+            hp: character::class::Stat(1, 1),
+            speed: character::class::Stat(1, 1),
+            ..game.player.class
+        };
+        game.player = character::Character::new(weak_class, 1);
         game.gold = 100;
         game.player.xp = 100;
 

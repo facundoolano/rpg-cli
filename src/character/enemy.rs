@@ -13,15 +13,13 @@ pub fn spawn(location: &location::Location, player: &Character) -> Option<Charac
     }
 
     let distance = location.distance_from_home();
-
     if random().should_enemy_appear(&distance) {
         // try spawning "special" enemies if conditions are met, otherwise
         // a random one for the current location
-
         let (class, level) = spawn_gorthaur(player, location)
             .or_else(|| spawn_shadow(player, location))
             .or_else(|| spawn_dev(player, location))
-            .unwrap_or_else(|| spawn_random(player, location));
+            .unwrap_or_else(|| spawn_random(player, &distance));
 
         let enemy = Character::new(class, level);
         log::enemy_appears(&enemy, location);
@@ -31,6 +29,7 @@ pub fn spawn(location: &location::Location, player: &Character) -> Option<Charac
     }
 }
 
+/// Final boss, only appears at level +100 when wearing the ruling ring
 fn spawn_gorthaur(player: &Character, location: &location::Location) -> Option<(Class, i32)> {
     let wearing_ring =
         player.left_ring == Some(Ring::Ruling) || player.right_ring == Some(Ring::Ruling);
@@ -47,6 +46,7 @@ fn spawn_gorthaur(player: &Character, location: &location::Location) -> Option<(
     }
 }
 
+/// Player shadow, appears at home directory
 fn spawn_shadow(player: &Character, location: &location::Location) -> Option<(Class, i32)> {
     let mut rng = rand::thread_rng();
     if location.is_home() && rng.gen_ratio(1, 10) {
@@ -59,6 +59,7 @@ fn spawn_shadow(player: &Character, location: &location::Location) -> Option<(Cl
     }
 }
 
+/// Easter egg, appears at rpg data dir
 fn spawn_dev(player: &Character, location: &location::Location) -> Option<(Class, i32)> {
     let mut rng = rand::thread_rng();
 
@@ -76,10 +77,9 @@ fn spawn_dev(player: &Character, location: &location::Location) -> Option<(Class
 }
 
 /// Choose an enemy randomly, with higher chance to difficult enemies the further from home.
-fn spawn_random(player: &Character, location: &location::Location) -> (Class, i32) {
+fn spawn_random(player: &Character, distance: &location::Distance) -> (Class, i32) {
     // the weights for each group of enemies are different depending on the distance
     // the further from home, the bigger the chance to find difficult enemies
-    let distance = location.distance_from_home();
     let (w_common, w_rare, w_legendary) = match distance {
         location::Distance::Near(_) => (10, 2, 0),
         location::Distance::Mid(_) => (8, 10, 1),
@@ -113,22 +113,43 @@ mod tests {
 
     #[test]
     fn test_enemy_level() {
-        // player level 1
-        assert_eq!(1, level(1, 1));
-        assert_eq!(1, level(1, 2));
-        assert_eq!(2, level(1, 3));
-        assert_eq!(9, level(1, 10));
+        let mut player = Character::player();
+        let d1 = location::Distance::from(1);
+        let d2 = location::Distance::from(2);
+        let d3 = location::Distance::from(3);
+        let d10 = location::Distance::from(10);
 
-        // Player level 5
-        assert_eq!(1, level(5, 1));
-        assert_eq!(1, level(5, 2));
-        assert_eq!(2, level(5, 3));
-        assert_eq!(9, level(5, 10));
+        assert_eq!(1, spawn_random(&player, &d1).1);
+        assert_eq!(1, spawn_random(&player, &d2).1);
+        assert_eq!(2, spawn_random(&player, &d3).1);
+        assert_eq!(9, spawn_random(&player, &d10).1);
 
-        // player level 10
-        assert_eq!(1, level(10, 1));
-        assert_eq!(2, level(10, 2));
-        assert_eq!(3, level(10, 3));
-        assert_eq!(10, level(10, 10));
+        player.level = 5;
+        assert_eq!(1, spawn_random(&player, &d1).1);
+        assert_eq!(1, spawn_random(&player, &d2).1);
+        assert_eq!(2, spawn_random(&player, &d3).1);
+        assert_eq!(9, spawn_random(&player, &d10).1);
+
+        player.level = 10;
+        assert_eq!(1, spawn_random(&player, &d1).1);
+        assert_eq!(2, spawn_random(&player, &d2).1);
+        assert_eq!(3, spawn_random(&player, &d3).1);
+        assert_eq!(10, spawn_random(&player, &d10).1);
+    }
+
+    #[test]
+    fn test_run_ring() {
+        let mut player = Character::player();
+        let location = location::tests::location_from("~/1/");
+        assert!(spawn(&location, &player).is_some());
+
+        player.equip_ring(Ring::Evade);
+        assert!(spawn(&location, &player).is_none());
+
+        player.equip_ring(Ring::Void);
+        assert!(spawn(&location, &player).is_none());
+
+        player.equip_ring(Ring::Void);
+        assert!(spawn(&location, &player).is_some());
     }
 }
