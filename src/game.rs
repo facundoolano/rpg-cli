@@ -98,7 +98,9 @@ impl Game {
 
             if !self.location.is_home() {
                 if let Some(mut enemy) = enemy::spawn(&self.location, &self.player) {
-                    return self.battle(&mut enemy, run, bribe);
+                    if self.battle(&mut enemy, run, bribe)? {
+                        return Ok(());
+                    }
                 }
             }
         }
@@ -218,19 +220,21 @@ impl Game {
 
     /// Attempt to bribe or run away according to the given options,
     /// and start a battle if that fails.
+    /// Return Ok(true) if a battle took place, Ok(false) if it was avoided,
+    /// Err<Dead> if the character dies.
     pub fn battle(
         &mut self,
         enemy: &mut Character,
         run: bool,
         bribe: bool,
-    ) -> Result<(), character::Dead> {
+    ) -> Result<bool, character::Dead> {
         // don't attempt bribe and run in the same turn
         if bribe {
             let bribe_cost = self.player.gold_gained(enemy.level) / 2;
             if self.gold >= bribe_cost && random().bribe_succeeds() {
                 self.gold -= bribe_cost;
                 log::bribe(&self.player, bribe_cost);
-                return Ok(());
+                return Ok(false);
             };
             log::bribe(&self.player, 0);
         } else if run {
@@ -242,13 +246,13 @@ impl Game {
             );
             log::run_away(&self.player, success);
             if success {
-                return Ok(());
+                return Ok(false);
             }
         }
 
         if let Ok(xp) = self.run_battle(enemy) {
             self.battle_won(enemy, xp);
-            Ok(())
+            Ok(true)
         } else {
             self.battle_lost();
             Err(character::Dead)
