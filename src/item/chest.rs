@@ -193,11 +193,11 @@ fn random_item(level: i32) -> Box<dyn Item> {
         (10, Box::new(Remedy::new())),
         (10, Box::new(Escape::new())),
         (50, Box::new(Ether::new(level))),
-        (10, Box::new(stone::Health)),
-        (10, Box::new(stone::Magic)),
-        (10, Box::new(stone::Power)),
-        (10, Box::new(stone::Speed)),
-        (5, Box::new(stone::Level)),
+        (5, Box::new(stone::Health)),
+        (5, Box::new(stone::Magic)),
+        (5, Box::new(stone::Power)),
+        (5, Box::new(stone::Speed)),
+        (1, Box::new(stone::Level)),
     ];
 
     // make a separate vec with enumerated weights, then remove from the item vec
