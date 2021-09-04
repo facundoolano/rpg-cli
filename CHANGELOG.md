@@ -26,6 +26,7 @@
 * Fail gracefully on data breaking changes #107
 * Show items bought and money spent in the buy command output #108
 * Show mp cost in magic attacks 9f92efc
+* The stat command can be used to describe items and equipment #117
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
