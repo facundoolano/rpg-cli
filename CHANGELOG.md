@@ -36,6 +36,7 @@
 * Missed levels with class quest completion 1ec760
 * Tweak gold found in chests 0317979 83691fa
 * Don't add xp beyond the actual inflicted damage (prevents high xp when beating weaker enemies) 812a5f1
+* Continue moving through dirs after successful bribe/run away 570a0de
 
 ## [0.6.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.6.0) - 2021-08-04
 ### Added
