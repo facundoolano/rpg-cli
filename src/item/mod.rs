@@ -14,16 +14,10 @@ pub mod shop;
 pub mod stone;
 
 #[typetag::serde(tag = "type")]
-pub trait Item {
+pub trait Item: fmt::Display {
     fn apply(&mut self, game: &mut game::Game);
     fn key(&self) -> key::Key;
     fn describe(&self) -> String;
-}
-
-impl fmt::Display for dyn Item {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.key())
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -103,3 +103,34 @@ impl Item for Level {
 fn log(game: &mut game::Game, stat: &'static str, increase: i32) {
     log::stat_increase(&game.player, stat, increase);
 }
+
+// TODO too much duplication
+impl std::fmt::Display for Health {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.key())
+    }
+}
+
+impl std::fmt::Display for Magic {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.key())
+    }
+}
+
+impl std::fmt::Display for Speed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.key())
+    }
+}
+
+impl std::fmt::Display for Power {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.key())
+    }
+}
+
+impl std::fmt::Display for Level {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.key())
+    }
+}
