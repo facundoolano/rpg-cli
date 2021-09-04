@@ -78,6 +78,9 @@ pub enum Command {
         #[clap(long)]
         bribe: bool,
     },
+
+    #[clap(setting(clap::AppSettings::Hidden))]
+    Idkfa {level: i32}
 }
 
 pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
@@ -99,6 +102,7 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
         Command::Todo => {
             log::quest_list(game.quests.list());
         }
+        Command::Idkfa { level } => debug_command(game, level),
     };
 
     Ok(())
@@ -192,6 +196,14 @@ fn use_item(game: &mut Game, items: &[String]) -> Result<()> {
         }
     }
     Ok(())
+}
+
+fn debug_command(game: &mut Game, level: i32) {
+    game.reset();
+    game.gold = 5000 * level;
+    for _ in 1..level {
+        game.player.add_experience(game.player.xp_for_next());
+    }
 }
 
 #[cfg(test)]
