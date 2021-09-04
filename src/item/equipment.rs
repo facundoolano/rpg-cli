@@ -44,6 +44,15 @@ impl Equipment {
             true
         }
     }
+
+    pub fn describe(&self) -> String {
+        let stat = if let Key::Sword = self.key() {
+            "physical attack"
+        } else {
+            "defense"
+        };
+        format!("increases {} by {}", stat, self.strength())
+    }
 }
 
 impl fmt::Display for Equipment {

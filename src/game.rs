@@ -170,7 +170,7 @@ impl Game {
             self.add_item(Box::new(ring));
             Ok(())
         } else {
-            bail!("Item not found.")
+            bail!("item not found.")
         }
     }
 
@@ -179,6 +179,39 @@ impl Game {
             .iter()
             .map(|(k, v)| (k, v.len()))
             .collect::<HashMap<&Key, usize>>()
+    }
+
+    pub fn describe(&self, key: Key) -> Result<(String, String)> {
+        let (display, description) = match key {
+            Key::Sword if self.player.sword.is_some() => self
+                .player
+                .sword
+                .as_ref()
+                .map(|s| (s.to_string(), s.describe()))
+                .unwrap(),
+            Key::Shield if self.player.shield.is_some() => self
+                .player
+                .shield
+                .as_ref()
+                .map(|s| (s.to_string(), s.describe()))
+                .unwrap(),
+            Key::Ring(ref ring) if self.player.left_ring.as_ref() == Some(ring) => {
+                (ring.to_string(), ring.describe())
+            }
+            Key::Ring(ref ring) if self.player.right_ring.as_ref() == Some(ring) => {
+                (ring.to_string(), ring.describe())
+            }
+            _ => {
+                if let Some(items) = self.inventory.get(&key) {
+                    let item = items.first().unwrap();
+                    (item.to_string(), item.describe())
+                } else {
+                    bail!("item {} not found.", key)
+                }
+            }
+        };
+
+        Ok((display, description))
     }
 
     /// Attempt to bribe or run away according to the given options,

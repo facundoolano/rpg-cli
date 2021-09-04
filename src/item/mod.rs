@@ -14,9 +14,10 @@ pub mod shop;
 pub mod stone;
 
 #[typetag::serde(tag = "type")]
-pub trait Item {
+pub trait Item: fmt::Display {
     fn apply(&mut self, game: &mut game::Game);
     fn key(&self) -> key::Key;
+    fn describe(&self) -> String;
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -27,6 +28,10 @@ pub struct Potion {
 impl Potion {
     pub fn new(level: i32) -> Self {
         Self { level }
+    }
+
+    fn restores(&self) -> i32 {
+        character::Class::player_first().hp.at(self.level) / 2
     }
 }
 
@@ -39,13 +44,16 @@ impl fmt::Display for Potion {
 #[typetag::serde]
 impl Item for Potion {
     fn apply(&mut self, game: &mut game::Game) {
-        let to_restore = character::Class::player_first().hp.at(self.level) / 2;
-        let recovered = game.player.update_hp(to_restore).unwrap();
+        let recovered = game.player.update_hp(self.restores()).unwrap();
         log::heal_item(&game.player, "potion", recovered, 0, false);
     }
 
     fn key(&self) -> key::Key {
         key::Key::Potion
+    }
+
+    fn describe(&self) -> String {
+        format!("restores {}hp", self.restores())
     }
 }
 
@@ -66,6 +74,10 @@ impl Item for Escape {
 
     fn key(&self) -> key::Key {
         key::Key::Escape
+    }
+
+    fn describe(&self) -> String {
+        String::from("transports the player safely back home")
     }
 }
 
@@ -93,6 +105,10 @@ impl Item for Remedy {
 
     fn key(&self) -> key::Key {
         key::Key::Remedy
+    }
+
+    fn describe(&self) -> String {
+        String::from("removes status ailments")
     }
 }
 
@@ -135,5 +151,9 @@ impl Item for Ether {
 
     fn key(&self) -> key::Key {
         key::Key::Ether
+    }
+
+    fn describe(&self) -> String {
+        format!("restores level {} amount mp", self.level)
     }
 }
