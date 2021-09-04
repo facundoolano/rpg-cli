@@ -11,9 +11,9 @@ use clap::Clap;
 
 #[derive(Clap)]
 pub enum Command {
-    /// Display the hero's status [default]
+    /// Display stats for the given items. Defaults to displaying hero stats if no item is specified. [default]
     #[clap(aliases=&["s", "status"], display_order=0)]
-    Stat,
+    Stat { items: Vec<String> },
 
     /// Moves the hero to the supplied destination, potentially initiating battles along the way.
     #[clap(name = "cd", display_order = 1)]
@@ -81,8 +81,8 @@ pub enum Command {
 }
 
 pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
-    match cmd.unwrap_or(Command::Stat) {
-        Command::Stat => log::status(game),
+    match cmd.unwrap_or(Command::Stat { items: vec![] }) {
+        Command::Stat { items } => stat(game, &items)?,
         Command::ChangeDir {
             destination,
             run,
@@ -164,6 +164,20 @@ fn shop(game: &mut Game, items: &[String]) -> Result<()> {
         }
 
         item::shop::buy(game, &keys)
+    }
+}
+
+fn stat(game: &mut Game, items: &[String]) -> Result<()> {
+    if items.is_empty() {
+        log::status(game);
+        Ok(())
+    } else {
+        for item_name in items {
+            let item_name = Key::from(item_name)?;
+            let (display, description) = game.describe(item_name)?;
+            println!("{}: {}", display, description);
+        }
+        Ok(())
     }
 }
 
