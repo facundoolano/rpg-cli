@@ -53,7 +53,6 @@ impl Chest {
         if gold_chest {
             chest.gold = game.player.gold_gained(game.player.level + distance.len());
         }
-
         if equipment_chest {
             let (sword, shield) = random_equipment(game.player.rounded_level());
             chest.sword = sword;

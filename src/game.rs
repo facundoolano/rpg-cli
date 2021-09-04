@@ -96,8 +96,10 @@ impl Game {
         while self.location != *dest {
             self.visit(self.location.go_to(dest))?;
 
-            if let Some(mut enemy) = enemy::spawn(&self.location, &self.player) {
-                return self.battle(&mut enemy, run, bribe);
+            if !self.location.is_home() {
+                if let Some(mut enemy) = enemy::spawn(&self.location, &self.player) {
+                    return self.battle(&mut enemy, run, bribe);
+                }
             }
         }
         Ok(())
