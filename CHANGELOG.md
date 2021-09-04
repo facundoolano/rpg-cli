@@ -27,6 +27,8 @@
 * Show items bought and money spent in the buy command output #108
 * Show mp cost in magic attacks 9f92efc
 * The stat command can be used to describe items and equipment #117
+* Equipment level found in chest based on distance instead of player level d22d3b9
+* Game balance related tweaks #118
 
 ### Fixed
 * Reach level 50 and 100 unlock and reward 4128f75
