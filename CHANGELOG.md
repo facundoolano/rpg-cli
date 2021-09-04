@@ -34,7 +34,7 @@
 * Reach level quests rewarded when multiple levels raised in a single event 60f5fb2
 * Give base mp when switching to a magic class from a non base level 96c2de6
 * Missed levels with class quest completion 1ec760
-* Reduce gold found in chests 0317979
+* Tweak gold found in chests 0317979 83691fa
 * Don't add xp beyond the actual inflicted damage (prevents high xp when beating weaker enemies) 812a5f1
 
 ## [0.6.0](https://github.com/facundoolano/rpg-cli/releases/tag/0.6.0) - 2021-08-04
