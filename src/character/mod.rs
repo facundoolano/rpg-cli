@@ -404,6 +404,10 @@ impl Character {
             _ => 1,
         };
 
+        // don't consider xp beyond the actually inflicted damage, otherwise
+        // the stronger the char, the more xp even if defeating a weak enemy.
+        let damage = min(damage, receiver.current_hp);
+
         if receiver.level > self.level {
             damage * (1 + receiver.level - self.level) * class_multiplier
         } else {

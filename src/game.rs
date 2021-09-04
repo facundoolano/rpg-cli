@@ -477,7 +477,7 @@ mod tests {
         let enemy_base = class::Class::random(class::Category::Common);
         let enemy_class = class::Class {
             speed: class::Stat(1, 1),
-            hp: class::Stat(15, 1),
+            hp: class::Stat(16, 1),
             strength: class::Stat(5, 1),
             ..enemy_base.clone()
         };
@@ -495,14 +495,13 @@ mod tests {
         // expected turns
         // enemy - 10hp
         // player - 5 hp
-        // enemy - 10hp
+        // enemy - 10hp (but has 3 remaining)
 
         let result = game.battle(&mut enemy, false, false);
         assert!(result.is_ok());
         assert_eq!(15, game.player.current_hp);
         assert_eq!(1, game.player.level);
-        assert_eq!(20, game.player.xp);
-
+        assert_eq!(16, game.player.xp);
         // extra 100g for the completed quest
         assert_eq!(150, game.gold);
 
@@ -513,7 +512,7 @@ mod tests {
         let result = game.battle(&mut enemy, false, false);
         assert!(result.is_ok());
         assert_eq!(2, game.player.level);
-        assert_eq!(10, game.player.xp);
+        assert_eq!(2, game.player.xp);
         // extra 100g for level up quest
         assert_eq!(300, game.gold);
     }

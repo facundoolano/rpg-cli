@@ -209,7 +209,7 @@ mod tests {
         };
 
         // increase level to ensure win
-        for _ in 0..10 {
+        for _ in 0..5 {
             game.player.add_experience(game.player.xp_for_next());
         }
 
