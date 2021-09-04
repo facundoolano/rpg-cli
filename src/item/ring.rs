@@ -10,64 +10,25 @@ use strum_macros::EnumIter;
 /// different places of the game, e.g. increase a stat, double gold gained, etc.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, EnumIter, Debug)]
 pub enum Ring {
-    /// No-effect ring
     Void,
-
-    /// Increases physical attack
     Attack,
-
-    /// Increases deffense
     Deffense,
-
-    /// Increases speed stat
     Speed,
-
-    /// Increases magical attack
     Magic,
-
-    /// Increases max MP
     MP,
-
-    /// Increases max HP
     HP,
-
-    /// Enemies don't appear while wearing this ring
     Evade,
-
-    /// Recovers hp on every turn
     RegenHP,
-
-    /// Recovers mp on every turn
     RegenMP,
-
-    /// One ring to rule them all
     Ruling,
-
-    /// Prevents status ailments
     Protect,
-
-    /// Inflicts burn status
     Fire,
-
-    /// Inflicts poison status
     Poison,
-
-    /// Attack twice on each turn
     Double,
-
-    /// Counter-attacks when receiving damage
     Counter,
-
-    /// Come back from dead during battle
     Revive,
-
-    /// Doubles chest finding frequency
     Chest,
-
-    /// Doubles gold gained in battles and chests
     Gold,
-
-    /// Looks expensive
     Diamond,
 }
 
@@ -109,5 +70,31 @@ impl Item for Ring {
 
     fn key(&self) -> key::Key {
         key::Key::Ring(self.clone())
+    }
+
+    fn describe(&self) -> String {
+        let str = match self {
+            Ring::Void => "no-effect ring",
+            Ring::Attack => "increases physical attack",
+            Ring::Deffense => "increases defense",
+            Ring::Speed => "increases speed",
+            Ring::Magic => "increases magical attack",
+            Ring::MP => "increases max mp",
+            Ring::HP => "increases max hp",
+            Ring::Evade => "reduces enemy appearance frequency",
+            Ring::RegenHP => "recovers hp on every turn",
+            Ring::RegenMP => "recovers mp on every turn",
+            Ring::Ruling => "one ring to rule them all",
+            Ring::Protect => "prevents status ailments",
+            Ring::Fire => "inflicts burn status on attack",
+            Ring::Poison => "inflicts poison status on attack",
+            Ring::Double => "strike twice per turn",
+            Ring::Counter => "counter-attack when an attack is received",
+            Ring::Revive => "come back from dead during battle",
+            Ring::Chest => "doubles chest finding frequency",
+            Ring::Gold => "doubles gold gained in battles and chests",
+            Ring::Diamond => "looks expensive",
+        };
+        str.to_string()
     }
 }

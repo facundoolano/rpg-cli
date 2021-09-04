@@ -29,6 +29,10 @@ impl Item for Health {
     fn key(&self) -> key::Key {
         key::Key::HealthStone
     }
+
+    fn describe(&self) -> String {
+        String::from("raises hp")
+    }
 }
 
 #[typetag::serde]
@@ -40,6 +44,10 @@ impl Item for Magic {
 
     fn key(&self) -> key::Key {
         key::Key::MagicStone
+    }
+
+    fn describe(&self) -> String {
+        String::from("raises mp")
     }
 }
 
@@ -53,6 +61,10 @@ impl Item for Power {
     fn key(&self) -> key::Key {
         key::Key::PowerStone
     }
+
+    fn describe(&self) -> String {
+        String::from("raises strength")
+    }
 }
 
 #[typetag::serde]
@@ -64,6 +76,10 @@ impl Item for Speed {
 
     fn key(&self) -> key::Key {
         key::Key::SpeedStone
+    }
+
+    fn describe(&self) -> String {
+        String::from("raises speed")
     }
 }
 
@@ -77,6 +93,10 @@ impl Item for Level {
 
     fn key(&self) -> key::Key {
         key::Key::LevelStone
+    }
+
+    fn describe(&self) -> String {
+        String::from("raises the player level")
     }
 }
 
