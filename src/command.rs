@@ -80,7 +80,7 @@ pub enum Command {
     },
 
     #[clap(setting(clap::AppSettings::Hidden))]
-    Idkfa {level: i32}
+    Idkfa { level: i32 },
 }
 
 pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {

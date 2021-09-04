@@ -51,7 +51,7 @@ impl Chest {
         let mut chest = Self::default();
 
         if gold_chest {
-            chest.gold = game.player.gold_gained(game.player.level + 2);
+            chest.gold = game.player.gold_gained(game.player.level + distance.len());
         }
 
         if equipment_chest {
