@@ -362,7 +362,7 @@ dependencies = [
 
 [[package]]
 name = "rpg-cli"
-version = "0.6.0"
+version = "1.0.0-beta"
 dependencies = [
  "anyhow",
  "bincode",

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+## [1.0.0-beta](https://github.com/facundoolano/rpg-cli/releases/tag/1.0.0-beta) - 2021-09-05
 ### Added
 * Quest to beat your own shadow #86
 * Easter egg quest  #87
