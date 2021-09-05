@@ -289,7 +289,9 @@ impl Character {
 
     /// If the double beat ring is equipped, attack the receiver.
     pub fn maybe_double_beat(&mut self, receiver: &mut Self) {
-        if self.left_ring == Some(Ring::Double) || self.right_ring == Some(Ring::Double) {
+        if receiver.current_hp > 0
+            && (self.left_ring == Some(Ring::Double) || self.right_ring == Some(Ring::Double))
+        {
             // assuming it's always the player and we don't need to handle death
             let _ = self.attack(receiver);
         }

@@ -24,6 +24,7 @@ pub fn spawn(location: &location::Location, player: &Character) -> Option<Charac
             .or_else(|| spawn_dev(player, location))
             .unwrap_or_else(|| spawn_random(player, &distance));
 
+        let level = random().enemy_level(level);
         let enemy = Character::new(class, level);
         log::enemy_appears(&enemy, location);
         Some(enemy)
@@ -43,7 +44,7 @@ fn spawn_gorthaur(player: &Character, location: &location::Location) -> Option<(
         class.hp.0 *= 2;
         class.strength.0 *= 2;
         class.category = Category::Legendary;
-        Some((class, 100))
+        Some((class, player.level))
     } else {
         None
     }
@@ -106,7 +107,6 @@ fn spawn_random(player: &Character, distance: &location::Distance) -> (Class, i3
         .clone();
 
     let level = std::cmp::max(player.level / 10 + distance.len() - 1, 1);
-    let level = random().enemy_level(level);
     (Class::random(category).clone(), level)
 }
 

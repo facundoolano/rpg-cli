@@ -54,7 +54,7 @@ impl Chest {
             chest.gold = game.player.gold_gained(game.player.level + distance.len());
         }
         if equipment_chest {
-            let (sword, shield) = random_equipment(game.player.rounded_level());
+            let (sword, shield) = random_equipment(distance.len());
             chest.sword = sword;
             chest.shield = shield;
         }
@@ -170,8 +170,10 @@ fn maybe_upgrade(current: &mut Option<Equipment>, other: &mut Option<Equipment>)
     false
 }
 
-fn random_equipment(level: i32) -> (Option<Equipment>, Option<Equipment>) {
+fn random_equipment(distance: i32) -> (Option<Equipment>, Option<Equipment>) {
     let mut rng = rand::thread_rng();
+
+    let level = std::cmp::max(1, (distance / 5) * 5);
 
     vec![
         (100, (Some(Equipment::sword(level)), None)),
@@ -193,11 +195,11 @@ fn random_item(level: i32) -> Box<dyn Item> {
         (10, Box::new(Remedy::new())),
         (10, Box::new(Escape::new())),
         (50, Box::new(Ether::new(level))),
-        (10, Box::new(stone::Health)),
-        (10, Box::new(stone::Magic)),
-        (10, Box::new(stone::Power)),
-        (10, Box::new(stone::Speed)),
-        (5, Box::new(stone::Level)),
+        (5, Box::new(stone::Health)),
+        (5, Box::new(stone::Magic)),
+        (5, Box::new(stone::Power)),
+        (5, Box::new(stone::Speed)),
+        (1, Box::new(stone::Level)),
     ];
 
     // make a separate vec with enumerated weights, then remove from the item vec
