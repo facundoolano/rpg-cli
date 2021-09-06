@@ -162,16 +162,16 @@ The further from home you move the hero, the tougher the enemies will get. If yo
     ~ $ rpg cd ~/dev/facundoolano/rpg-cli/target/debug/examples/
       zombie[3][xxxx][----]@~/dev/facundoolano/rpg-cli/target/debug
       zombie[3][xxxx] -14hp
-      warrior[1][xxx-] -14hp
+     warrior[1][xxx-] -14hp
       zombie[3][xxx-] -16hp
-      warrior[1][xxx-] -11hp
+     warrior[1][xxx-] -11hp
       zombie[3][xx--] -16hp
-      warrior[1][xx--] -9hp
+     warrior[1][xx--] -9hp
       zombie[3][xx--] -15hp
-      warrior[1][x---] -9hp
+     warrior[1][x---] -9hp
       zombie[3][x---] -12hp
-      warrior[1][----] -20hp critical!
-      warrior[1][----] 💀
+     warrior[1][----] -20hp critical!
+     warrior[1][----] 💀
 
 Death is permanent: you can't save your progress and reload after dying, but if you take your new hero to the location of the previous one's death,
 you can recover gold, items and equipment:
