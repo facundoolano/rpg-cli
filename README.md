@@ -1,6 +1,6 @@
 # rpg-cli —your filesystem as a dungeon!
 
-rpg-cli is a bare-bones [JRPG](https://en.wikipedia.org/wiki/JRPG)-inspired terminal game written in Rust. It can work as an alternative to `cd` where you randomly encounter enemies as you change directories.
+rpg-cli is a minimalist [computer RPG](https://en.wikipedia.org/wiki/Role-playing_video_game) written in Rust. Its command-line interface can be used as a `cd` replacement where you randomly encounter enemies as you change directories.
 
 ![](rpg-cli.png)
 
@@ -11,11 +11,10 @@ Features:
 * Item and equipment support.
 * Warrior, thief and mage player classes.
 * 15+ Enemy classes.
-* Extensible player and enemy classes via a configuration file.
+* Extensible player and enemy classes via configuration.
+* Permadeath with item recovering.
 * Quests to-do list.
 * Chests hidden in directories.
-* Permadeath with item recovering.
-* Run and bribe to escape battles.
 
 ## Installation
 
@@ -30,27 +29,32 @@ Assuming you have [Rust and Cargo installed](https://doc.rust-lang.org/cargo/get
 
 The binary should be available as `rpg-cli` (assuming you have `~/.cargo/bin` in your `$PATH`).
 
-### Using homebrew (macOS)
+### Other installation methods
+<details>
+  <summary>Show details</summary>
+
+#### Homebrew (macOS)
 You can use homebrew to install the binary on macOS::
 
     $ brew install rpg-cli
 
-### Using nixpkgs
+#### Nixpkgs
 If you use nix/nixos you can get rpg-cli from nixpkgs, either install it by adding it to your system config, installing it with `nix-env -i rpg-cli` or try it in a ephemeral shell with `nix-shell -p rpg-cli`.
 Note that at the current time of writing, the package hasn't hit any of the channels yet. When you try it, check that it's in your channel.
 
-### Using portage (Gentoo)
+#### Portage (Gentoo)
 If you use Gentoo, you can get rpg-cli from portage:
 
     # emerge -av games-rpg/rpg-cli
 
-### Using pacman (Arch Linux)
+#### Pacman (Arch Linux)
 
 rpg-cli can be installed from the [community repository](https://archlinux.org/packages/community/x86_64/rpg-cli/) for Arch Linux:
 
     $ pacman -S rpg-cli
+</details>
 
-## Shell integration (recommended)
+## Shell integration
 
 The game is designed to integrate with common file system operations, such as changing directories or deleting files.
 The most basic type of integration consists in wrapping rpg-cli in a shell function, such that the working directory is updated to match the hero's progress, effectively working as a `cd` alternative:
