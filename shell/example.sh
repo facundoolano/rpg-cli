@@ -1,10 +1,15 @@
 #!/bin/bash
 # An example setup to use the game in the bash shell. Check the guide for more options.
 
+# FIXME override this with your own path to rpg-cli
+RPG=/your/path/to/facundoolano/rpg-cli/target/release/rpg-cli
+
 # Use the rpg as the command to do non fs related tasks such as print
 # status and buy items.
-# TODO override this with your own path to rpg-cli
-alias rpg=/your/path/to/facundoolano/rpg-cli/target/release/rpg-cli
+rpg () {
+    $RPG "$@"
+    sync_rpg
+}
 
 # Try to move the hero to the given destination, and cd match the shell pwd
 # to that of the hero's location:
@@ -12,21 +17,13 @@ alias rpg=/your/path/to/facundoolano/rpg-cli/target/release/rpg-cli
 # - the one where the battle took place, if the hero wins
 # - the home dir, if the hero dies
 cd () {
-    rpg cd "$@"
-    builtin cd "$(rpg pwd)"
+    $RPG cd "$@"
+    sync_rpg
 }
 
-# When invoking ls without additional args, suffix the output with
-# any chest or tombstone found at the current location
-ls () {
-    command ls "$@"
-    if [ $# -eq 0 ] ; then
-        rpg cd -f .
-	rpg ls
-    fi
-}
-
-# Generate dungeon levels on the fly
+# Generate dungeon levels on the fly and look for treasures while moving down.
+#  Will start by creating dungeon/1 at the current directory, and /2, /3, etc.
+#  on subsequent runs.
 dn () {
     current=$(basename $PWD)
     number_re='^[0-9]+$'
@@ -41,15 +38,7 @@ dn () {
     fi
 }
 
-# For other file related commands, force-move the hero to the current working dir
-# then potentially initiate a battle. Only if the hero wins or there's no battle
-# the required command is actually run
-battle="rpg cd -f . && rpg battle"
-alias rm="$battle && rm"
-alias rmdir="$battle && rmdir"
-alias mkdir="$battle && mkdir"
-alias touch="$battle && touch"
-alias mv="$battle && mv"
-alias cp="$battle && cp"
-alias chown="$battle && chown"
-alias chmod="$battle && chmod"
+# This helper is used to make the pwd match the tracked internally by the game
+sync_rpg () {
+    builtin cd "$($RPG pwd)"
+}
