@@ -77,54 +77,116 @@ cd () {
 
 Other commands like `rm`, `mkdir`, `touch`, etc. can also be aliased. Check [this example](shell/example.sh) and the [shell integration guide](shell/README.md) for more sophisticated examples, as well as their fish shell equivalents.
 
-## Usage
+## Gameplay
 
 This example session assumes a basic `rpg` function as described in the previous section.
 
+### Character setup
 The first time you run the program, a new hero is created at the user's home directory.
 
     ~ $ rpg
-        hero[1]@home
-        hp:[xxxxxxxxxx] 25/25
+     warrior[1]@home
+        hp:[xxxxxxxxxx] 48/48
+        mp:[----------] 0/0
         xp:[----------] 0/30
-        att:10   def:0   spd:5
+        att:10   mag:0   def:0   spd:10
         equip:{}
         item:{}
         0g
 
-When running without parameters, as above, the hero status is printed (health points, accumulated experience, etc.). If you use the `cd` with a path as parameter, it will instruct the hero to move:
+When running without parameters, as above, the hero status is printed (health points, accumulated experience, etc.).
+The stats are randomized: if you run `rpg reset` you will get a slightly different character every time:
+
+    ~ $ rpg reset; rpg
+     warrior[1]@home
+        hp:[xxxxxxxxxx] 50/50
+        mp:[----------] 0/0
+        xp:[----------] 0/30
+        att:13   mag:0   def:0   spd:12
+        equip:{}
+        item:{}
+        0g
+
+You can also pick a different class (default options are `warrior`, `thief` and `mage`, but [more can be added](#customize-character-classes)).
+For example, the `mage` class enables magic attacks:
+
+    ~ $ rpg class mage; rpg
+        mage[1]@home
+        hp:[xxxxxxxxxx] 32/32
+        mp:[xxxxxxxxxx] 12/12
+        xp:[----------] 0/30
+        att:3   mag:27   def:0   spd:9
+        equip:{}
+        item:{}
+        0g
+
+### Movement and battles
+If you use the `cd` subcommand with a path as parameter, it will instruct the hero to move:
 
     ~ $ rpg cd dev/
     ~/dev $ rpg
-        hero[1]@~/dev
-        hp:[xxxxxxxxxx] 25/25
+        warrior[1]@~/dev
+        hp:[xxxxxxxxxx] 47/47
+        mp:[----------] 0/0
         xp:[----------] 0/30
-        att:10   def:0   spd:5
+        att:10   mag:0   def:0   spd:12
         equip:{}
         item:{}
         0g
 
-In this case, the hero moved to `~/dev`. Sometimes enemies will appear as you move through the directories,
+In this case, the warrior moved to `~/dev`. Sometimes enemies will appear as you move through the directories,
 and both characters will engage in battle:
 
     ~/dev $ rpg cd facundoolano/
-       snake[1][xxxx]@~/dev/facundoolano
-       snake[1][x---] -12hp
-        hero[1][xxxx]  dodged!
-       snake[1][----] -12hp
-        hero[1][xxxx] +24xp +75g
-        hero[1][xxxx][xxxx]@~/dev/facundoolano
+       snake[3][xxxx][----]@~/dev/facundoolano
+       snake[3][xxx-] -10hp
+     warrior[1][xxxx] -8hp
+       snake[3][xxx-] -9hp
+     warrior[1][xxx-] -10hp
+       snake[3][x---] -12hp
+     warrior[1][xx--] -9hp
+       snake[3][----] -14hp
+     warrior[3][xxx-] +117xp ++level +275g
+     warrior[3][xxx-][----][x---]@~/dev/facundoolano
 
-Each character attacks in turn (the frequency being determined by their `speed` stat).
-After taking an enemies hit, there's a chance to get a status effect, which will affect subsequent actions: hero attacks and moves.
-Whenever you win a fight, your hero gains experience points and eventually raises its level, along with their other stats.
+Each character attacks in turn (the frequency being determined by their `spd` stat).
+Whenever you win a fight, your hero gains experience points and eventually raises its level, along with its other stats.
 
 When you return to the home directory, the hero's health points are restored and status effects are removed:
 
     ~/dev/facundoolano/rpg-cli $ rpg cd ~
-        hero[1][xxxx][xxxx]@home +20hp +healed
+        warrior[3][xxxx][----][x---]@home +27hp
 
-Also at the home directory, you can buy items and equipment:
+The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health, your hero is likely to die in battle, causing the game to restart at the home directory.
+
+    ~ $ rpg cd ~/dev/facundoolano/rpg-cli/target/debug/examples/
+      zombie[3][xxxx][----]@~/dev/facundoolano/rpg-cli/target/debug
+      zombie[3][xxxx] -14hp
+      warrior[1][xxx-] -14hp
+      zombie[3][xxx-] -16hp
+      warrior[1][xxx-] -11hp
+      zombie[3][xx--] -16hp
+      warrior[1][xx--] -9hp
+      zombie[3][xx--] -15hp
+      warrior[1][x---] -9hp
+      zombie[3][x---] -12hp
+      warrior[1][----] -20hp critical!
+      warrior[1][----] 💀
+
+Death is permanent: you can't save your progress and reload after dying, but if you take your new hero to the location of the previous one's death,
+you can recover gold, items and equipment:
+
+    ~ $ rpg cd ~/dev/facundoolano/rpg-cli/target/debug/
+    🪦 +potionx1 +275g
+
+### Items and equipment
+
+In addition to winning items as battle rewards, some directories have hidden treasure chests that you can find with `rpg ls`:
+
+    ~ $ rpg ls
+    📦  +potionx2
+
+Finally, some items can be bought at the game directory running `rpg buy`:
 
     ~ $ rpg buy
         sword[1]    500g
@@ -134,51 +196,31 @@ Also at the home directory, you can buy items and equipment:
         escape      1000g
 
         funds: 275g
-
     ~ $ rpg buy potion
-    ~ $ rpg
-        hero[3]@home
-        hp:[xxxxxxxxxx] 37/37
-        xp:[xx--------] 19/155
-        att:13   def:0   spd:7
-        equip:{}
-        item:{potion[1]x1}
-        75g
+       -200g +potionx1
 
-The shortcut `rpg b p` would also work above. The item can then be used as `rpg use potion`.
+The shortcut `rpg b p` would also work above. An item can be described with the `stat` subcommand and used with `use`:
 
-Some directories have hidden treasure chests that you can find with `rpg ls`:
+    ~ $ rpg stat potion
+    potion[1]: restores 25hp
+    ~ $ rpg use potion
+     warrior[3][xxxx] +25hp potion
 
-    ~ $ rpg ls
-    📦  +potionx2
+### Quests and late game
 
 The `rpg todo` command will display a list of quest for your hero:
 
     ~ $ rpg todo
       □ buy a sword
-      □ use a potion
-      □ reach level 2
+      ✔ use a potion
+      ✔ reach level 2
       ✔ win a battle
 
 Each time you complete an item on the list, you will receive a reward. The quests renew as your level raises, so be sure to check often!
 
-The further from home you move the hero, the tougher the enemies will get. If you go to far or too long without restoring your health, your hero is likely to die in battle, causing the game to restart at the home directory.
-
-    ~ $ rpg cd ~/dev/facundoolano/rpg-cli/target/debug/examples/
-         orc[1][xxxx]@~/dev/facundoolano/rpg-cli
-        hero[1][x---] -20hp critical!
-        hero[1][x---]  got burned 🔥
-         orc[1][xxx-] -9hp
-        hero[1][x---] -1hp 🔥
-        hero[1][----] -16hp
-        hero[1][----] 💀
-
-Death is permanent: you can't save your progress and reload after dying, but if you take your new hero to the location of the previous one's death,
-you can recover gold, items and equipment:
-
-    ~ $ rpg cd - && rpg ls
-    🪦 +potionx1 +75g
-
+The game difficulty increases as you go deeper in the dungeon; to raise your level, encounter the tougher enemies, find the rarest items
+and complete all the quests, it's necessary to go as far as possible from the `$HOME` directory. One option to ease the gameplay
+is to [use a shell function](https://github.com/facundoolano/rpg-cli/blob/main/shell/README.md#arbitrary-dungeon-levels) that creates directories "on-demand".
 
 Try `rpg --help` for more options and check the [shell integration guide](shell/README.md) for ideas to adapt the game to your preferences.
 
