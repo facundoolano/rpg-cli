@@ -235,3 +235,7 @@ The hero's class can be changed at the home directory using `rpg-cli class <name
 ## Troubleshooting
 
 * The release binary for macOS [is not signed](https://github.com/facundoolano/rpg-cli/issues/27). To open it for the first time, right click on the binary and select "Open" from the menu.
+
+## Feedback appreciated!
+
+If you find any issue, have features ideas, gameplay suggestions or example shell scripts, feel free to [file an issue](https://github.com/facundoolano/rpg-cli/issues/new) to start a conversation.
