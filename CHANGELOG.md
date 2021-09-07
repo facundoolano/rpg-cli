@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+### Fixed
+* Don't reward items, gold or xp for cheap victories 6dc970a
 
 ## [1.0.0-beta](https://github.com/facundoolano/rpg-cli/releases/tag/1.0.0-beta) - 2021-09-05
 ### Added
