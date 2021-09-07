@@ -31,10 +31,16 @@ impl Chest {
             return None;
         }
 
+        let distance = &game.location.distance_from_home();
+
+        // don't reward cheap victories
+        if game.player.level > distance.len() + 10 {
+            return None;
+        }
+
         // To give the impression of "dynamic" chest contents, each content type
         // is randomized separately, and what's found is combined into a single
         // chest at the end
-        let distance = &game.location.distance_from_home();
         let mut gold_chest = random().gold_chest(distance);
         let mut equipment_chest = random().equipment_chest(distance);
         let mut ring_chest = random().ring_chest(distance);

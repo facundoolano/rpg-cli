@@ -410,7 +410,10 @@ impl Character {
         // the stronger the char, the more xp even if defeating a weak enemy.
         let damage = min(damage, receiver.current_hp);
 
-        if receiver.level > self.level {
+        if self.level > receiver.level + 10 {
+            // don't reward cheap victories
+            0
+        } else if receiver.level > self.level {
             damage * (1 + receiver.level - self.level) * class_multiplier
         } else {
             damage / (1 + self.level - receiver.level) * class_multiplier
@@ -529,10 +532,13 @@ impl Character {
     /// Return the gold that should be rewarded for beating an enemy of the given
     /// level. Doubled if the gold ring is equipped.
     pub fn gold_gained(&self, enemy_level: i32) -> i32 {
-        let level = std::cmp::max(1, enemy_level - self.level);
+        let level = max(1, enemy_level - self.level);
         let gold = random().gold_gained(level * 50);
 
-        if self.left_ring == Some(Ring::Gold) || self.right_ring == Some(Ring::Gold) {
+        if self.level > enemy_level + 10 {
+            // don't reward cheap victories
+            0
+        } else if self.left_ring == Some(Ring::Gold) || self.right_ring == Some(Ring::Gold) {
             gold * 2
         } else {
             gold
@@ -558,11 +564,11 @@ impl Character {
         match ring {
             Some(Ring::HP) => {
                 let to_remove = (ring.as_ref().unwrap().factor() * self.max_hp as f64) as i32;
-                self.current_hp = std::cmp::max(1, self.current_hp - to_remove);
+                self.current_hp = max(1, self.current_hp - to_remove);
             }
             Some(Ring::MP) => {
                 let to_remove = (ring.as_ref().unwrap().factor() * self.max_mp as f64) as i32;
-                self.current_mp = std::cmp::max(1, self.current_mp - to_remove);
+                self.current_mp = max(1, self.current_mp - to_remove);
             }
             _ => {}
         }
