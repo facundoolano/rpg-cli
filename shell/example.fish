@@ -20,4 +20,14 @@ function cd_fn
   sync_rpg
 end
 
+# Some directories have hidden treasure chests that you can find with ls
+function l_fn
+  command ls "$argv"
+  if test 'count $argv' > 0
+      rpg cd -f .
+      rpg ls
+  end
+end
+
 alias 'cd'='cd_fn'
+alias 'l'='l_fn'
