@@ -5,6 +5,7 @@ on:
       - "*.*.*"
 jobs:
   changelog:
+    runs-on: ubuntu-latest
     steps:
       - name: Get version from tag
         id: tag_name
