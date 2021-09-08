@@ -1,6 +1,6 @@
 [package]
 name = "rpg-cli"
-version = "1.0.0-beta"
+version = "1.0.0"
 authors = ["facundo <facundo.olano@gmail.com>"]
 edition = "2018"
 
