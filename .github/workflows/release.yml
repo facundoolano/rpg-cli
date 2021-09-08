@@ -4,7 +4,26 @@ on:
     tags:
       - "*.*.*"
 jobs:
-  tests:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version from tag
+        id: tag_name
+        run: |
+          echo ::set-output name=current_version::${GITHUB_REF#refs/tags/}
+        shell: bash
+      - uses: actions/checkout@v2
+      - name: Get Changelog Entry
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          version: ${{ steps.tag_name.outputs.current_version }}
+      - name: Release body
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ steps.changelog_reader.outputs.changes }}
+    
+  artifact:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -29,11 +48,6 @@ jobs:
           echo ::set-output name=current_version::${GITHUB_REF#refs/tags/}
         shell: bash
       - uses: actions/checkout@v2
-      - name: Get Changelog Entry
-        id: changelog_reader
-        uses: mindsers/changelog-reader-action@v2
-        with:
-          version: ${{ steps.tag_name.outputs.current_version }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -42,10 +56,9 @@ jobs:
       - run: cargo build --release --target ${{ matrix.TARGET }}
       - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
       
-      - name: Release
+      - name: Release files
         uses: softprops/action-gh-release@v1
         with:
-          body: ${{ steps.changelog_reader.outputs.changes }}
           files: rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
 
 

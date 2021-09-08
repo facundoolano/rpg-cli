@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+
 ### Fixed
 * Don't reward items, gold or xp for cheap victories 6dc970a
 
