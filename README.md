@@ -1,4 +1,4 @@
-# rpg-cli —your filesystem as a dungeon!
+# rpg-cli — your filesystem as a dungeon!
 
 rpg-cli is a minimalist [computer RPG](https://en.wikipedia.org/wiki/Role-playing_video_game) written in Rust. Its command-line interface can be used as a `cd` replacement where you randomly encounter enemies as you change directories.
 
@@ -39,9 +39,8 @@ You can use homebrew to install the binary on macOS::
     $ brew install rpg-cli
 
 #### Nixpkgs
-If you use nix/nixos you can get rpg-cli from nixpkgs, either install it by adding it to your system config, installing it with `nix-env -i rpg-cli` or try it in a ephemeral shell with `nix-shell -p rpg-cli`.
-Note that at the current time of writing, the package hasn't hit any of the channels yet. When you try it, check that it's in your channel.
-
+If you use Nix/NixOS you can get rpg-cli from nixpkgs, either install it by adding it to your system config, with `nix-env -i rpg-cli`/`nix profile install nixpkgs#rpg-cli` or try it in a ephemeral shell with `nix-shell -p rpg-cli`/`nix shell nixpkgs#rpg-cli`.
+    
 #### Portage (Gentoo)
 If you use Gentoo, you can get rpg-cli from portage:
 
