@@ -21,7 +21,6 @@ jobs:
       - name: Release body
         uses: softprops/action-gh-release@v1
         with:
-          draft: true
           body: ${{ steps.changelog_reader.outputs.changes }}
     
   artifact:
@@ -60,7 +59,6 @@ jobs:
       - name: Release files
         uses: softprops/action-gh-release@v1
         with:
-          draft: true
           files: rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
 
 
