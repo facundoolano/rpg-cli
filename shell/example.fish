@@ -15,19 +15,36 @@ end
 # - the one supplied as parameter, if there weren't any battles
 # - the one where the battle took place, if the hero wins
 # - the home dir, if the hero dies
-function cd_fn
-  rpg-cli cd "$argv"
-  sync_rpg
+function cd
+    if count $argv > /dev/null
+        rpg-cli cd "$argv"
+    else
+        rpg-cli cd $HOME 
+    end
+    sync_rpg
 end
 
 # Some directories have hidden treasure chests that you can find with ls
-function l_fn
-  command ls "$argv"
-  if test 'count $argv' > 0
-      rpg cd -f .
-      rpg ls
-  end
+function ls
+    if count $argv > /dev/null
+        rpg-cli cd -f $argv[1]
+        rpg-cli ls
+        command ls $argv[1]
+        rpg-cli cd -f (pwd)
+    else
+        rpg-cli ls
+        command ls
+    end
 end
 
-alias 'cd'='cd_fn'
-alias 'l'='l_fn'
+# Create dungeon
+function dn
+    set regex '^[0-9]+$'
+    set location (basename (pwd))
+    if string match -r -q $regex $location
+        set next_dir (math $location + 1)
+        command mkdir -p $next_dir && cd $next_dir && rpg ls
+    else
+        command mkdir -p dungeon/1 && cd dungeon/1 && rpg ls
+    end
+end
