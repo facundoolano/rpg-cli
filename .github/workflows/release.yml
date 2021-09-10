@@ -22,7 +22,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body: ${{ steps.changelog_reader.outputs.changes }}
-    
+
   artifact:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -39,7 +39,7 @@ jobs:
 
         - os: windows-latest
           OS_NAME: windows
-          TARGET: x86_64-pc-windows-gnu
+          TARGET: x86_64-pc-windows-msvc
           EXTENSION: .exe
     steps:
       - name: Get version from tag
@@ -55,11 +55,8 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - run: cargo build --release --target ${{ matrix.TARGET }}
       - run: cp target/${{ matrix.TARGET }}/release/rpg-cli${{ matrix.EXTENSION }} rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
-      
+
       - name: Release files
         uses: softprops/action-gh-release@v1
         with:
           files: rpg-cli-${{ steps.tag_name.outputs.current_version }}-${{ matrix.OS_NAME }}${{ matrix.EXTENSION }}
-
-
-
