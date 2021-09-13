@@ -19,7 +19,7 @@ function cd
     if count $argv > /dev/null
         rpg-cli cd "$argv"
     else
-        rpg-cli cd $HOME 
+        rpg-cli cd $HOME
     end
     sync_rpg
 end
@@ -44,7 +44,9 @@ function dn
     if string match -r -q $regex $location
         set next_dir (math $location + 1)
         command mkdir -p $next_dir && cd $next_dir && rpg ls
+    else if string match -r -q '^dungeon$' $location
+        command mkdir -p 1 && cd 1 && rpg ls
     else
-        command mkdir -p dungeon/1 && cd dungeon/1 && rpg ls
+        command mkdir -p dungeon && rpg-cli cd dungeon && rpg ls
     end
 end
