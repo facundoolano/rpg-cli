@@ -123,8 +123,8 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
     if let Err(character::Dead) = result {
         game.reset();
         bail!("");
-    }   
-    
+    }
+
     Ok(())
 }
 
