@@ -322,7 +322,7 @@ mod tests {
 
         game.player.current_hp = 1;
 
-        // back home (without forcing)
+        // force back home should restore hp
         let cmd = Command::ChangeDir {
             destination: "~".to_string(),
             run: false,
