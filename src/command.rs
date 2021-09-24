@@ -115,7 +115,7 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
     let result = if force {
         // When change is force, skip enemies along the way
         // but still apply side-effects at destination
-        game.visit(&dest)
+        game.visit(dest)
     } else {
         game.go_to(&dest, run, bribe)
     };
