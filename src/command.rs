@@ -112,9 +112,8 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
 /// in combat along the way.
 fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) -> Result<()> {
     let dest = Location::from(dest)?;
-    if force {
-        game.location = dest;
-    } else if let Err(character::Dead) = game.go_to(&dest, run, bribe) {
+    if ( force &&  matches!(game.visit(dest.clone()), Err(character::Dead)) ) //If force, visit then check for dead
+        || ( matches!(game.go_to(&dest, run, bribe), Err(character::Dead) ) ) { //If not force, go_to and check for dead
         game.reset();
         bail!("");
     }
