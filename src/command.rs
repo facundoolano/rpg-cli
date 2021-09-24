@@ -303,6 +303,40 @@ mod tests {
     }
 
     #[test]
+    fn change_dir_home_force() {
+        let mut game = Game::new();
+
+        assert!(game.location.is_home());
+
+        // force move to a non home location
+        let cmd = Command::ChangeDir {
+            destination: "~/..".to_string(),
+            run: false,
+            bribe: false,
+            force: true,
+        };
+
+        let result = run(Some(cmd), &mut game);
+        assert!(result.is_ok());
+        assert!(!game.location.is_home());
+
+        game.player.current_hp = 1;
+
+        // back home (without forcing)
+        let cmd = Command::ChangeDir {
+            destination: "~".to_string(),
+            run: false,
+            bribe: false,
+            force: true,
+        };
+
+        let result = run(Some(cmd), &mut game);
+        assert!(result.is_ok());
+        assert!(game.location.is_home());
+        assert_eq!(game.player.max_hp(), game.player.current_hp);
+    }
+
+    #[test]
     fn inspect_tombstone() {
         // die at non home with some gold
         let mut game = Game::new();
