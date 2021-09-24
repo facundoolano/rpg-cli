@@ -112,12 +112,19 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
 /// in combat along the way.
 fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) -> Result<()> {
     let dest = Location::from(dest)?;
-    if force {
-        game.location = dest;
-    } else if let Err(character::Dead) = game.go_to(&dest, run, bribe) {
+    let result = if force {
+        // When change is force, skip enemies along the way
+        // but still apply side-effects at destination
+        game.visit(dest)
+    } else {
+        game.go_to(&dest, run, bribe)
+    };
+
+    if let Err(character::Dead) = result {
         game.reset();
         bail!("");
     }
+
     Ok(())
 }
 
@@ -287,6 +294,40 @@ mod tests {
             run: false,
             bribe: false,
             force: false,
+        };
+
+        let result = run(Some(cmd), &mut game);
+        assert!(result.is_ok());
+        assert!(game.location.is_home());
+        assert_eq!(game.player.max_hp(), game.player.current_hp);
+    }
+
+    #[test]
+    fn change_dir_home_force() {
+        let mut game = Game::new();
+
+        assert!(game.location.is_home());
+
+        // force move to a non home location
+        let cmd = Command::ChangeDir {
+            destination: "~/..".to_string(),
+            run: false,
+            bribe: false,
+            force: true,
+        };
+
+        let result = run(Some(cmd), &mut game);
+        assert!(result.is_ok());
+        assert!(!game.location.is_home());
+
+        game.player.current_hp = 1;
+
+        // force back home should restore hp
+        let cmd = Command::ChangeDir {
+            destination: "~".to_string(),
+            run: false,
+            bribe: false,
+            force: true,
         };
 
         let result = run(Some(cmd), &mut game);

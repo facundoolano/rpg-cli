@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+### Fixed
+* `cd --force` now applies directory side effects (status effects and heal at home) #128
 
 ## [1.0.0](https://github.com/facundoolano/rpg-cli/releases/tag/1.0.0) - 2021-09-07
 ### Fixed
