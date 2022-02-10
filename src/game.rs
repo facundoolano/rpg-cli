@@ -122,7 +122,13 @@ impl Game {
         }
 
         // In location is home, already healed of negative status
-        self.player.apply_status_effects()
+        let result = self.player.apply_status_effects();
+
+        if let Err(character::Dead) = result {
+            // drops tombstone
+            self.battle_lost();
+        }
+        result
     }
 
     /// Look for chests and tombstones at the current location.
