@@ -262,10 +262,46 @@ mod tests {
         let result = run(Some(cmd), &mut game);
 
         assert!(result.is_err());
+
         // game reset
         assert_eq!(game.player.max_hp(), game.player.current_hp);
         assert_eq!(0, game.gold);
         assert_eq!(0, game.player.xp);
+        assert!(!game.tombstones.is_empty());
+    }
+
+    #[test]
+    fn status_effect_dead() {
+        let mut game = Game::new();
+
+        // using force prevents battle but effects should apply anyway
+        let cmd = Command::ChangeDir {
+            destination: "~/..".to_string(),
+            run: false,
+            bribe: false,
+            force: true,
+        };
+
+        // reduce stats to ensure loss
+        let weak_class = character::class::Class {
+            hp: character::class::Stat(1, 1),
+            speed: character::class::Stat(1, 1),
+            ..game.player.class
+        };
+        game.player = character::Character::new(weak_class, 1);
+        game.player.status_effect = Some(character::StatusEffect::Burn);
+        game.gold = 100;
+        game.player.xp = 100;
+
+        let result = run(Some(cmd), &mut game);
+
+        assert!(result.is_err());
+
+        // game reset
+        assert_eq!(game.player.max_hp(), game.player.current_hp);
+        assert_eq!(0, game.gold);
+        assert_eq!(0, game.player.xp);
+        assert!(!game.tombstones.is_empty());
     }
 
     #[test]
