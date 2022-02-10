@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## [1.0.1](https://github.com/facundoolano/rpg-cli/releases/tag/1.0.0) - 2022-02-10
 ### Fixed
 * `cd --force` now applies directory side effects (status effects and heal at home) #128
 * Tombstone was not generated when dead by status effect #136
