@@ -49,7 +49,12 @@ fn write(file: path::PathBuf, data: Vec<u8>) -> Result<(), io::Error> {
 }
 
 fn rpg_dir() -> path::PathBuf {
-    dirs::home_dir().unwrap().join(".rpg")
+    let home_dir = dirs::home_dir().unwrap().join(".rpg");
+    if home_dir.exists() {
+        home_dir
+    } else {
+        dirs::data_dir().unwrap().join("rpg")
+    }
 }
 
 fn data_file() -> path::PathBuf {
