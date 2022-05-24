@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## [1.0.2](https://github.com/facundoolano/rpg-cli/releases/tag/1.0.2) - 2022-02-10
+## [1.0.2](https://github.com/facundoolano/rpg-cli/releases/tag/1.0.2) - 2022-05-24
 ### Fixed
 * Now uses $XDG_DATA_HOME/rpg (~/.local/share/rpg) for userdata. Will still use ~/.rpg if folder exist.
 
