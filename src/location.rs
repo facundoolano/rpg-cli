@@ -40,7 +40,13 @@ impl Location {
     }
 
     pub fn is_rpg_dir(&self) -> bool {
-        self.path == dirs::home_dir().unwrap().join(".rpg")
+        let home_dir = dirs::home_dir().unwrap().join(".rpg");
+        let data_dir = dirs::data_dir().unwrap().join("rpg");
+        if home_dir.exists() {
+            self.path == home_dir
+        } else {
+            self.path == data_dir
+        }
     }
 
     /// Return a new location that it's one dir closer to the given destination.
