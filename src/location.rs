@@ -40,6 +40,7 @@ impl Location {
     }
 
     pub fn is_rpg_dir(&self) -> bool {
+        //Home is checked first because that was the default in a previous version
         let home_dir = dirs::home_dir().unwrap().join(".rpg");
         let data_dir = dirs::data_dir().unwrap().join("rpg");
         if home_dir.exists() {
