@@ -1,3 +1,4 @@
+use crate::datafile::rpg_dir;
 use serde::{Deserialize, Serialize};
 use std::path;
 
@@ -40,7 +41,7 @@ impl Location {
     }
 
     pub fn is_rpg_dir(&self) -> bool {
-        self.path == dirs::home_dir().unwrap().join(".rpg")
+        self.path == rpg_dir()
     }
 
     /// Return a new location that it's one dir closer to the given destination.
