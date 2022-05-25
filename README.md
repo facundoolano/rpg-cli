@@ -225,7 +225,7 @@ Try `rpg --help` for more options and check the [shell integration guide](shell/
 
 ## Customize character classes
 
-The character class determines a character's initial stats and at what pace they increase when leveling up. By default, rpg-cli will use classes as defined by [this file](src/character/classes.yaml), but these definitions can be overridden by placing a YAML file with that same structure at `~/.local/share/rpg/classes.yaml`. Check [this doc](https://docs.rs/dirs/3.0.2/dirs/fn.data_dir.html) for path.
+The character class determines a character's initial stats and at what pace they increase when leveling up. By default, rpg-cli will use classes as defined by [this file](src/character/classes.yaml), but these definitions can be overridden by placing a YAML file with that same structure at `~/.local/share/rpg/classes.yaml`. Check the [dirs crate doc](https://docs.rs/dirs/3.0.2/dirs/fn.data_dir.html) to find the data path on your OS.
 
 The `category` field is used to distinguish between player and enemy classes, and in the latter case how likely a given enemy class is likely to appear (e.g. `legendary` classes will appear less frequently, and only when far away from home).
 
