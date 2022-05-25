@@ -41,7 +41,7 @@ impl Location {
     }
 
     pub fn is_rpg_dir(&self) -> bool {
-            self.path == rpg_dir()
+        self.path == rpg_dir()
     }
 
     /// Return a new location that it's one dir closer to the given destination.
