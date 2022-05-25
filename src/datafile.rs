@@ -52,7 +52,7 @@ pub fn rpg_dir() -> path::PathBuf {
     //Home is checked first because that was the default in a previous version
     let home_dir = dirs::home_dir().unwrap().join(".rpg");
     let data_dir = dirs::data_dir().unwrap();
-    if home_dir.exists() || !data_dir.exists()  {
+    if home_dir.exists() || !data_dir.exists() {
         home_dir
     } else {
         data_dir.join("rpg")

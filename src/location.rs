@@ -1,6 +1,6 @@
+use crate::datafile::rpg_dir;
 use serde::{Deserialize, Serialize};
 use std::path;
-use crate::datafile::rpg_dir;
 
 #[derive(Serialize, Deserialize, Debug, Eq, Clone)]
 pub struct Location {
