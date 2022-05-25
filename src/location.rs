@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::path;
+use crate::datafile::rpg_dir;
 
 #[derive(Serialize, Deserialize, Debug, Eq, Clone)]
 pub struct Location {
@@ -40,14 +41,7 @@ impl Location {
     }
 
     pub fn is_rpg_dir(&self) -> bool {
-        //Home is checked first because that was the default in a previous version
-        let home_dir = dirs::home_dir().unwrap().join(".rpg");
-        let data_dir = dirs::data_dir().unwrap().join("rpg");
-        if home_dir.exists() {
-            self.path == home_dir
-        } else {
-            self.path == data_dir
-        }
+            self.path == rpg_dir()
     }
 
     /// Return a new location that it's one dir closer to the given destination.

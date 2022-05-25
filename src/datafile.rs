@@ -48,7 +48,7 @@ fn write(file: path::PathBuf, data: Vec<u8>) -> Result<(), io::Error> {
     fs::write(file, &data)
 }
 
-fn rpg_dir() -> path::PathBuf {
+pub fn rpg_dir() -> path::PathBuf {
     //Home is checked first because that was the default in a previous version
     let home_dir = dirs::home_dir().unwrap().join(".rpg");
     if home_dir.exists() {
