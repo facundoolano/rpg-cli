@@ -213,7 +213,7 @@ mod tests {
         let mut game = Game::new();
         game.gold = 1000;
 
-        let result = buy(&mut game, &vec![Key::Potion]);
+        let result = buy(&mut game, &[Key::Potion]);
         assert!(result.is_ok());
         assert_eq!(800, game.gold);
         assert_eq!(1, *game.inventory().get(&Key::Potion).unwrap());
@@ -224,7 +224,7 @@ mod tests {
         let mut game = Game::new();
         game.gold = 1000;
 
-        let result = buy(&mut game, &vec![Key::Potion, Key::Potion, Key::Potion]);
+        let result = buy(&mut game, &[Key::Potion, Key::Potion, Key::Potion]);
         assert!(result.is_ok());
         assert_eq!(400, game.gold);
         assert_eq!(3, *game.inventory().get(&Key::Potion).unwrap());
@@ -235,7 +235,7 @@ mod tests {
         let mut game = Game::new();
         game.gold = 500;
 
-        let result = buy(&mut game, &vec![Key::Potion, Key::Potion, Key::Potion]);
+        let result = buy(&mut game, &[Key::Potion, Key::Potion, Key::Potion]);
         assert!(result.is_err());
         assert_eq!(100, game.gold);
         assert_eq!(2, *game.inventory().get(&Key::Potion).unwrap());
@@ -247,7 +247,7 @@ mod tests {
         game.gold = 1000;
 
         // not sellable
-        let result = buy(&mut game, &vec![Key::Potion, Key::MagicStone, Key::Potion]);
+        let result = buy(&mut game, &[Key::Potion, Key::MagicStone, Key::Potion]);
         assert!(result.is_err());
         assert_eq!(800, game.gold);
         assert_eq!(1, *game.inventory().get(&Key::Potion).unwrap());
@@ -257,7 +257,7 @@ mod tests {
         game.gold = 2000;
         let result = buy(
             &mut game,
-            &vec![Key::Potion, Key::Shield, Key::Shield, Key::Potion],
+            &[Key::Potion, Key::Shield, Key::Shield, Key::Potion],
         );
         assert!(result.is_err());
         // 200 from potion - 500 from shield (once)

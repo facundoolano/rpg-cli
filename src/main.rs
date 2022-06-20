@@ -11,11 +11,10 @@ mod quest;
 mod randomizer;
 
 use anyhow::Result;
-use clap::{crate_version, AppSettings, Clap};
+use clap::{crate_version, Parser};
 
 /// Your filesystem as a dungeon!
-#[derive(Clap)]
-#[clap(global_setting = AppSettings::ColoredHelp)]
+#[derive(Parser)]
 #[clap(version = crate_version!(), author = "Facundo Olano <facundo.olano@gmail.com>")]
 struct Opts {
     #[clap(subcommand)]

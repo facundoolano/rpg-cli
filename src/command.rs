@@ -7,9 +7,10 @@ use crate::location::Location;
 use crate::log;
 use anyhow::{anyhow, bail, Result};
 
-use clap::Clap;
+use clap::Parser;
 
-#[derive(Clap)]
+#[derive(Parser)]
+#[clap()]
 pub enum Command {
     /// Display stats for the given items. Defaults to displaying hero stats if no item is specified. [default]
     #[clap(aliases=&["s", "status"], display_order=0)]
