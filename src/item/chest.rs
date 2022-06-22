@@ -159,7 +159,7 @@ impl Chest {
         // keep the best of each equipment
         maybe_upgrade(&mut self.sword, &mut other.sword);
         maybe_upgrade(&mut self.shield, &mut other.shield);
-        self.items.extend(other.items.drain(..));
+        self.items.append(&mut other.items);
         self.gold += other.gold;
     }
 }

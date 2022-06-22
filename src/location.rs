@@ -16,7 +16,7 @@ impl Location {
         if path.starts_with('~') {
             // TODO figure out these string lossy stuff
             let home_str = dirs::home_dir().unwrap().to_string_lossy().to_string();
-            path = path.replacen("~", &home_str, 1)
+            path = path.replacen('~', &home_str, 1)
         }
 
         let path = path::Path::new(&path);

@@ -517,7 +517,7 @@ mod tests {
         // extra 100g for the completed quest
         assert_eq!(150, game.gold);
 
-        let mut enemy = character::Character::new(enemy_class.clone(), 1);
+        let mut enemy = character::Character::new(enemy_class, 1);
 
         // same turns, added xp increases level
 
