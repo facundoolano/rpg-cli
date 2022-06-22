@@ -2,11 +2,12 @@
 
 ## Unreleased
 
+### Changed
+* Bump rust edition from 2018 -> 2021 #142
+
 ### Fixed
 * Now uses $XDG_DATA_HOME/rpg (~/.local/share/rpg) for userdata. Will still use ~/.rpg if folder exist #141 
-* Updated all outdated dependencies to their newest version. 
-* Fix clippy warnings, which removed unnecessary clones, and macro usage
-* Bump rust edition from 2018 -> 2021
+* Fix clap compilation errors #142
 
 
 ## [1.0.1](https://github.com/facundoolano/rpg-cli/releases/tag/1.0.1) - 2022-02-10
