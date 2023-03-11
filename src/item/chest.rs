@@ -13,7 +13,7 @@ use std::collections::HashMap;
 /// A chest is a bag of items that can be picked up by the hero.
 /// It can randomly appear at a location upon inspection, or dropped
 /// by the hero when they die.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct Chest {
     items: Vec<Box<dyn Item>>,
     sword: Option<Equipment>,
@@ -226,17 +226,6 @@ fn random_ring(game: &mut game::Game) -> Option<ring::Ring> {
         game.ring_pool.take(&ring)
     } else {
         None
-    }
-}
-
-impl Default for Chest {
-    fn default() -> Self {
-        Self {
-            gold: 0,
-            sword: None,
-            shield: None,
-            items: Vec::new(),
-        }
     }
 }
 

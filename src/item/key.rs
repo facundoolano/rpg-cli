@@ -120,13 +120,6 @@ impl From<Key> for String {
     }
 }
 
-// Needed to implement EnumIter for tests
-impl Default for Ring {
-    fn default() -> Self {
-        Ring::Void
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

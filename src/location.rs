@@ -22,7 +22,7 @@ impl Location {
         let path = path::Path::new(&path);
         // this is a replacement to std::fs::canonicalize()
         // that circumvents windows quirks with paths
-        let path = dunce::canonicalize(&path)?;
+        let path = dunce::canonicalize(path)?;
         Ok(Self { path })
     }
 
@@ -60,7 +60,7 @@ impl Location {
         let dest = other.path.as_path();
 
         let mut distance = 0;
-        while !dest.starts_with(&current) {
+        while !dest.starts_with(current) {
             current = current.parent().unwrap();
             distance += 1;
         }

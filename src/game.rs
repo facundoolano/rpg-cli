@@ -1,5 +1,3 @@
-extern crate dirs;
-
 use crate::character;
 use crate::character::enemy;
 use crate::character::Character;

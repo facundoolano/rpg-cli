@@ -45,7 +45,7 @@ fn write(file: path::PathBuf, data: Vec<u8>) -> Result<(), io::Error> {
     if !rpg_dir.exists() {
         fs::create_dir(&rpg_dir).unwrap();
     }
-    fs::write(file, &data)
+    fs::write(file, data)
 }
 
 pub fn rpg_dir() -> path::PathBuf {

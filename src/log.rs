@@ -111,7 +111,7 @@ pub fn heal_item(
                 recovered_hp,
                 recovered_mp,
                 healed,
-                &item.color(color).to_string(),
+                &item.color(color),
             ),
         );
     }
@@ -135,7 +135,7 @@ pub fn heal(
 
 pub fn change_class(player: &Character, lost_xp: i32) {
     if lost_xp > 0 {
-        battle_log(player, &format!("-{}xp", lost_xp).bright_red().to_string());
+        battle_log(player, &format!("-{}xp", lost_xp).bright_red());
     }
 }
 

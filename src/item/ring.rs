@@ -8,8 +8,9 @@ use strum_macros::EnumIter;
 
 /// Rings are a wearable item that produce arbitrary effects hooked in
 /// different places of the game, e.g. increase a stat, double gold gained, etc.
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, EnumIter, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, EnumIter, Debug, Default)]
 pub enum Ring {
+    #[default]
     Void,
     Attack,
     Deffense,
