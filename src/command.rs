@@ -10,54 +10,54 @@ use anyhow::{anyhow, bail, Result};
 use clap::Parser;
 
 #[derive(Parser)]
-#[clap()]
+#[command()]
 pub enum Command {
     /// Display stats for the given items. Defaults to displaying hero stats if no item is specified. [default]
-    #[clap(aliases=&["s", "status"], display_order=0)]
+    #[command(aliases=&["s", "status"], display_order=0)]
     Stat { items: Vec<String> },
 
     /// Moves the hero to the supplied destination, potentially initiating battles along the way.
-    #[clap(name = "cd", display_order = 1)]
+    #[command(name = "cd", display_order = 1)]
     ChangeDir {
         /// Directory to move to.
-        #[clap(default_value = "~")]
+        #[arg(default_value = "~")]
         destination: String,
 
         /// Attempt to avoid battles by running away.
-        #[clap(long)]
+        #[arg(long)]
         run: bool,
 
         /// Attempt to avoid battles by bribing the enemy.
-        #[clap(long)]
+        #[arg(long)]
         bribe: bool,
 
         /// Move the hero's to a different location without spawning enemies.
         /// Intended for scripts and shell integration.
-        #[clap(short, long)]
+        #[arg(short, long)]
         force: bool,
     },
 
     /// Inspect the directory contents, possibly finding treasure chests and hero tombstones.
-    #[clap(name = "ls", display_order = 1)]
+    #[command(name = "ls", display_order = 1)]
     Inspect,
 
     /// Buys an item from the shop.
     /// If name is omitted lists the items available for sale.
-    #[clap(alias = "b", display_order = 2)]
+    #[command(alias = "b", display_order = 2)]
     Buy { items: Vec<String> },
 
     /// Uses an item from the inventory.
-    #[clap(alias = "u", display_order = 3)]
+    #[command(alias = "u", display_order = 3)]
     Use { items: Vec<String> },
 
     /// Prints the quest todo list.
-    #[clap(alias = "t", display_order = 4)]
+    #[command(alias = "t", display_order = 4)]
     Todo,
 
     /// Resets the current game.
     Reset {
         /// Reset data files, losing cross-hero progress.
-        #[clap(long)]
+        #[arg(long)]
         hard: bool,
     },
 
@@ -66,21 +66,21 @@ pub enum Command {
     Class { name: Option<String> },
 
     /// Prints the hero's current location
-    #[clap(name = "pwd")]
+    #[command(name = "pwd")]
     PrintWorkDir,
 
     /// Potentially initiates a battle in the hero's current location.
     Battle {
         /// Attempt to avoid battles by running away.
-        #[clap(long)]
+        #[arg(long)]
         run: bool,
 
         /// Attempt to avoid battles by bribing the enemy.
-        #[clap(long)]
+        #[arg(long)]
         bribe: bool,
     },
 
-    #[clap(hide=true)]
+    #[command(hide = true)]
     Idkfa { level: i32 },
 }
 

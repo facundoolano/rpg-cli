@@ -15,17 +15,17 @@ use clap::{crate_version, Parser};
 
 /// Your filesystem as a dungeon!
 #[derive(Parser)]
-#[clap(version = crate_version!(), author = "Facundo Olano <facundo.olano@gmail.com>")]
+#[command(version = crate_version!(), author = "Facundo Olano <facundo.olano@gmail.com>")]
 struct Opts {
     #[clap(subcommand)]
     cmd: Option<command::Command>,
 
     /// Print succinct output when possible.
-    #[clap(long, short, global = true)]
+    #[arg(long, short, global = true)]
     quiet: bool,
 
     /// Print machine-readable output when possible.
-    #[clap(long, global = true)]
+    #[arg(long, global = true)]
     plain: bool,
 }
 
