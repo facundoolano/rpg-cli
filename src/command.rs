@@ -80,7 +80,7 @@ pub enum Command {
         bribe: bool,
     },
 
-    #[clap(setting(clap::AppSettings::Hidden))]
+    #[clap(hide=true)]
     Idkfa { level: i32 },
 }
 
