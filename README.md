@@ -48,7 +48,7 @@ If you use Gentoo, you can get rpg-cli from portage:
 
 #### Pacman (Arch Linux)
 
-rpg-cli can be installed from the [community repository](https://archlinux.org/packages/community/x86_64/rpg-cli/) for Arch Linux:
+rpg-cli can be installed from the [extra repository](https://archlinux.org/packages/extra/x86_64/rpg-cli/) for Arch Linux:
 
     $ pacman -S rpg-cli
 </details>
