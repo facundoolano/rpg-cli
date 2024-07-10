@@ -150,7 +150,7 @@ impl Game {
 
     pub fn add_item(&mut self, item: Box<dyn Item>) {
         let key = item.key();
-        let entry = self.inventory.entry(item.key()).or_insert_with(Vec::new);
+        let entry = self.inventory.entry(item.key()).or_default();
         entry.push(item);
         quest::item_added(self, key);
     }
@@ -459,24 +459,24 @@ mod tests {
         game.add_item(Box::new(Ring::Void));
         game.add_item(Box::new(Ring::HP));
         game.use_item(Key::Ring(Ring::Void)).unwrap();
-        assert!(game.inventory().get(&Key::Ring(Ring::Void)).is_none());
+        assert!(!game.inventory().contains_key(&Key::Ring(Ring::Void)));
         assert_eq!(Some(Ring::Void), game.player.left_ring);
 
         game.use_item(Key::Ring(Ring::Void)).unwrap();
-        assert!(game.inventory().get(&Key::Ring(Ring::Void)).is_some());
+        assert!(game.inventory().contains_key(&Key::Ring(Ring::Void)));
         assert!(game.player.left_ring.is_none());
 
         let base_hp = game.player.max_hp();
         game.use_item(Key::Ring(Ring::Void)).unwrap();
         game.use_item(Key::Ring(Ring::HP)).unwrap();
-        assert!(game.inventory().get(&Key::Ring(Ring::Void)).is_none());
-        assert!(game.inventory().get(&Key::Ring(Ring::HP)).is_none());
+        assert!(!game.inventory().contains_key(&Key::Ring(Ring::Void)));
+        assert!(!game.inventory().contains_key(&Key::Ring(Ring::HP)));
         assert_eq!(Some(Ring::HP), game.player.left_ring);
         assert_eq!(Some(Ring::Void), game.player.right_ring);
         assert!(game.player.max_hp() > base_hp);
 
         game.use_item(Key::Ring(Ring::HP)).unwrap();
-        assert!(game.inventory().get(&Key::Ring(Ring::HP)).is_some());
+        assert!(game.inventory().contains_key(&Key::Ring(Ring::HP)));
         assert_eq!(Some(Ring::Void), game.player.left_ring);
         assert!(game.player.right_ring.is_none());
         assert_eq!(base_hp, game.player.max_hp());

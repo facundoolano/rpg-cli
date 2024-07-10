@@ -181,7 +181,7 @@ fn random_equipment(distance: i32) -> (Option<Equipment>, Option<Equipment>) {
 
     let level = std::cmp::max(1, (distance / 5) * 5);
 
-    vec![
+    [
         (100, (Some(Equipment::sword(level)), None)),
         (80, (None, Some(Equipment::shield(level)))),
         (30, (Some(Equipment::sword(level + 5)), None)),
