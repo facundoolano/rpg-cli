@@ -1206,18 +1206,18 @@ mod tests {
 
         // shouldn't counter if no ring equipped
         enemy.current_hp = 25;
-        let _ = player.maybe_counter_attack(&mut enemy);
+        player.maybe_counter_attack(&mut enemy);
         assert_eq!(25, enemy.current_hp);
 
         // counter when ring equipped
         player.left_ring = Some(Ring::Counter);
-        let _ = player.maybe_counter_attack(&mut enemy);
+        player.maybe_counter_attack(&mut enemy);
         assert_eq!(15, enemy.current_hp);
 
         player.right_ring = Some(Ring::Counter);
         player.left_ring = None;
         enemy.current_hp = 25;
-        let _ = player.maybe_counter_attack(&mut enemy);
+        player.maybe_counter_attack(&mut enemy);
         assert_eq!(15, enemy.current_hp);
     }
 
@@ -1228,18 +1228,18 @@ mod tests {
 
         // shouldn't counter if no ring equipped
         enemy.current_hp = 25;
-        let _ = player.maybe_double_beat(&mut enemy);
+        player.maybe_double_beat(&mut enemy);
         assert_eq!(25, enemy.current_hp);
 
         // counter when ring equipped
         player.left_ring = Some(Ring::Double);
-        let _ = player.maybe_double_beat(&mut enemy);
+        player.maybe_double_beat(&mut enemy);
         assert_eq!(15, enemy.current_hp);
 
         player.right_ring = Some(Ring::Double);
         player.left_ring = None;
         enemy.current_hp = 25;
-        let _ = player.maybe_double_beat(&mut enemy);
+        player.maybe_double_beat(&mut enemy);
         assert_eq!(15, enemy.current_hp);
     }
 
