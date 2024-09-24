@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+## [1.2.0](https://github.com/facundoolano/rpg-cli/releases/tag/1.2.0) - 2024-09-24
 ### Changed
 * Bump rust edition from 2018 -> 2021 #142
 
