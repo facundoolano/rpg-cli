@@ -107,8 +107,20 @@ impl std::fmt::Display for Location {
         let mut loc = self.path.to_string_lossy().replace(&home, "~");
         if loc == "~" {
             loc = "home".to_string();
+        } else {
+            // Omit the location
+            let path = path::PathBuf::from(loc.clone());
+            let components: Vec<_> = path.components().collect();
+            let len = components.len();
+            if 3 < len {
+                let mut omitted_path = path::PathBuf::new();
+                omitted_path.push(components[0]);
+                omitted_path.push("...");
+                omitted_path.push(components[len - 1]);
+                loc = omitted_path.to_string_lossy().to_string();
+            }
         }
-        write!(f, "{}", loc)
+        write!(f, "{}[{}]", loc, self.distance_from_home().len())
     }
 }
 
