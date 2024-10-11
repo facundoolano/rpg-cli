@@ -115,6 +115,7 @@ impl std::fmt::Display for Location {
             if 3 < len {
                 let mut omitted_path = path::PathBuf::new();
                 omitted_path.push(components[0]);
+                omitted_path.push(components[1]);
                 omitted_path.push("...");
                 omitted_path.push(components[len - 1]);
                 loc = omitted_path.to_string_lossy().to_string();
