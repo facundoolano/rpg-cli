@@ -1,6 +1,7 @@
 use crate::datafile::rpg_dir;
 use serde::{Deserialize, Serialize};
 use std::path;
+use std::env;
 
 #[derive(Serialize, Deserialize, Debug, Eq, Clone)]
 pub struct Location {
@@ -108,17 +109,19 @@ impl std::fmt::Display for Location {
         if loc == "~" {
             loc = "home".to_string();
         } else {
-            // Omit the location
-            let path = path::PathBuf::from(loc.clone());
-            let components: Vec<_> = path.components().collect();
-            let len = components.len();
-            if 3 < len {
-                let mut omitted_path = path::PathBuf::new();
-                omitted_path.push(components[0]);
-                omitted_path.push(components[1]);
-                omitted_path.push("...");
-                omitted_path.push(components[len - 1]);
-                loc = omitted_path.to_string_lossy().to_string();
+            if env::var("RPGCLI_OMITDIR").is_ok() {
+                // Omit the location
+                let path = path::PathBuf::from(loc.clone());
+                let components: Vec<_> = path.components().collect();
+                let len = components.len();
+                if 3 < len {
+                    let mut omitted_path = path::PathBuf::new();
+                    omitted_path.push(components[0]);
+                    omitted_path.push(components[1]);
+                    omitted_path.push("...");
+                    omitted_path.push(components[len - 1]);
+                    loc = omitted_path.to_string_lossy().to_string();
+                }
             }
         }
         write!(f, "{}[{}]", loc, self.distance_from_home().len())
