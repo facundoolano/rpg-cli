@@ -48,8 +48,8 @@ It can be integrated to the regular ls like this:
 ls () {
     command ls "$@"
     if [ $# -eq 0 ] ; then
-        rpg cd -f .
-        rpg ls
+        rpg-cli cd -f .
+        rpg-cli ls
     fi
 }
 ```
