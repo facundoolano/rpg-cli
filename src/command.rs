@@ -252,6 +252,7 @@ mod tests {
 
     #[test]
     fn change_dir_dead() {
+        let mut game = Game::new();
         let cmd = Command::ChangeDir {
             destination: "~/..".to_string(),
             run: false,
@@ -259,7 +260,6 @@ mod tests {
             keep_location_on_death: false,
             force: false,
         };
-        let mut game = Game::new();
 
         // reduce stats to ensure loss
         let weak_class = character::class::Class {
@@ -287,6 +287,7 @@ mod tests {
 
     #[test]
     fn change_dir_dead_keep_location() {
+        let mut game = Game::new();
         // We want an absolute path instead of using ".."
         let target_destination = dirs::home_dir().unwrap().parent().unwrap().to_string_lossy().to_string();
         let cmd = Command::ChangeDir {
@@ -296,7 +297,6 @@ mod tests {
             keep_location_on_death: true,
             force: false,
         };
-        let mut game = Game::new();
 
         // reduce stats to ensure loss
         let weak_class = character::class::Class {
