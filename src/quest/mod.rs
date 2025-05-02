@@ -330,7 +330,7 @@ mod tests {
         assert_eq!(1, count_status(&game.quests, Status::Completed));
 
         game.gold = 10;
-        game.reset();
+        game.reset(false);
         // verify that the reset did something
         assert_eq!(0, game.gold);
 

@@ -47,7 +47,7 @@ impl Game {
     pub fn new() -> Self {
         let quests = QuestList::new();
 
-        // There's one instance of each ring exiting per game.
+        // There's one instance of each ring existing per game.
         // The diamond ring is the only one that's found in the shop
         // instead of chests
         let mut ring_pool = Ring::set();
@@ -67,9 +67,13 @@ impl Game {
 
     /// Remove the game data and reset this reference.
     /// Progress is preserved across games.
-    pub fn reset(&mut self) {
+    pub fn reset(&mut self, keep_location: bool) {
         let mut new_game = Self::new();
-        // preserve tombstones and quests across hero's lifes
+        // If specified, we keep the location across resets
+        if keep_location {
+            std::mem::swap(&mut new_game.location, &mut self.location);
+        }
+        // preserve tombstones, quests and rings across hero's lives
         std::mem::swap(&mut new_game.tombstones, &mut self.tombstones);
         std::mem::swap(&mut new_game.quests, &mut self.quests);
         std::mem::swap(&mut new_game.ring_pool, &mut self.ring_pool);

@@ -31,6 +31,10 @@ pub enum Command {
         #[arg(long)]
         bribe: bool,
 
+        /// Does not cd to the home directory on death
+        #[arg(long, short)]
+        keep_location_on_death: bool,
+
         /// Move the hero's to a different location without spawning enemies.
         /// Intended for scripts and shell integration.
         #[arg(short, long)]
@@ -78,6 +82,10 @@ pub enum Command {
         /// Attempt to avoid battles by bribing the enemy.
         #[arg(long)]
         bribe: bool,
+
+        /// Does not cd to the home directory on death
+        #[arg(long, short)]
+        keep_location_on_death: bool,
     },
 
     #[command(hide = true)]
@@ -91,13 +99,14 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
             destination,
             run,
             bribe,
+            keep_location_on_death,
             force,
-        } => change_dir(game, &destination, run, bribe, force)?,
+        } => change_dir(game, &destination, run, bribe, keep_location_on_death, force)?,
         Command::Inspect => game.inspect(),
         Command::Class { name } => class(game, &name)?,
-        Command::Battle { run, bribe } => battle(game, run, bribe)?,
+        Command::Battle { run, bribe, keep_location_on_death } => battle(game, run, bribe, keep_location_on_death)?,
         Command::PrintWorkDir => println!("{}", game.location.path_string()),
-        Command::Reset { .. } => game.reset(),
+        Command::Reset { .. } => game.reset(false),
         Command::Buy { items } => shop(game, &items)?,
         Command::Use { items } => use_item(game, &items)?,
         Command::Todo => {
@@ -111,7 +120,7 @@ pub fn run(cmd: Option<Command>, game: &mut Game) -> Result<()> {
 
 /// Attempt to move the hero to the supplied location, possibly engaging
 /// in combat along the way.
-fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) -> Result<()> {
+fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, keep_location_on_death: bool, force: bool) -> Result<()> {
     let dest = Location::from(dest)?;
     let result = if force {
         // When change is force, skip enemies along the way
@@ -122,7 +131,7 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
     };
 
     if let Err(character::Dead) = result {
-        game.reset();
+        game.reset(keep_location_on_death);
         bail!("");
     }
 
@@ -131,10 +140,10 @@ fn change_dir(game: &mut Game, dest: &str, run: bool, bribe: bool, force: bool) 
 
 /// Potentially run a battle at the current location, independently from
 /// the hero's movement.
-fn battle(game: &mut Game, run: bool, bribe: bool) -> Result<()> {
+fn battle(game: &mut Game, run: bool, bribe: bool, keep_location_on_death: bool) -> Result<()> {
     if let Some(mut enemy) = enemy::spawn(&game.location, &game.player) {
         if let Err(character::Dead) = game.battle(&mut enemy, run, bribe) {
-            game.reset();
+            game.reset(keep_location_on_death);
             bail!("");
         }
     }
@@ -207,7 +216,7 @@ fn use_item(game: &mut Game, items: &[String]) -> Result<()> {
 }
 
 fn debug_command(game: &mut Game, level: i32) {
-    game.reset();
+    game.reset(false);
     game.gold = 5000 * level;
     for _ in 1..level {
         game.player.add_experience(game.player.xp_for_next());
@@ -225,6 +234,7 @@ mod tests {
             destination: "~/..".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: false,
         };
 
@@ -242,13 +252,14 @@ mod tests {
 
     #[test]
     fn change_dir_dead() {
-        let mut game = Game::new();
         let cmd = Command::ChangeDir {
             destination: "~/..".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: false,
         };
+        let mut game = Game::new();
 
         // reduce stats to ensure loss
         let weak_class = character::class::Class {
@@ -256,6 +267,8 @@ mod tests {
             speed: character::class::Stat(1, 1),
             ..game.player.class
         };
+        // Change the game location to assert that deaths takes us back to the home
+        game.location = Location::from("/").unwrap();
         game.player = character::Character::new(weak_class, 1);
         game.gold = 100;
         game.player.xp = 100;
@@ -265,10 +278,44 @@ mod tests {
         assert!(result.is_err());
 
         // game reset
+        assert_eq!(game.location, Location::home());
         assert_eq!(game.player.max_hp(), game.player.current_hp);
         assert_eq!(0, game.gold);
         assert_eq!(0, game.player.xp);
         assert!(!game.tombstones.is_empty());
+    }
+
+    #[test]
+    fn change_dir_dead_keep_location() {
+        // We want an absolute path instead of using ".."
+        let target_destination = dirs::home_dir().unwrap().parent().unwrap().to_string_lossy().to_string();
+        let cmd = Command::ChangeDir {
+            destination: target_destination.clone(),
+            run: false,
+            bribe: false,
+            keep_location_on_death: true,
+            force: false,
+        };
+        let mut game = Game::new();
+
+        // reduce stats to ensure loss
+        let weak_class = character::class::Class {
+            hp: character::class::Stat(1, 1),
+            speed: character::class::Stat(1, 1),
+            ..game.player.class
+        };
+        // Put ourselves in a different directory that is neither the target nor the home
+        game.location = Location::from("/").unwrap();
+        game.player = character::Character::new(weak_class, 1);
+        game.gold = 100;
+        game.player.xp = 100;
+
+        let result = run(Some(cmd), &mut game);
+
+        assert!(result.is_err());
+
+        // Validate that the location did not change
+        assert_eq!(game.location.path_string(), target_destination);
     }
 
     #[test]
@@ -280,6 +327,7 @@ mod tests {
             destination: "~/..".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: true,
         };
 
@@ -316,6 +364,7 @@ mod tests {
             destination: "~/..".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: true,
         };
 
@@ -330,6 +379,7 @@ mod tests {
             destination: "~".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: false,
         };
 
@@ -350,6 +400,7 @@ mod tests {
             destination: "~/..".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: true,
         };
 
@@ -364,6 +415,7 @@ mod tests {
             destination: "~".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: true,
         };
 
@@ -383,6 +435,7 @@ mod tests {
             destination: "~/..".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: false,
         };
 
@@ -400,6 +453,7 @@ mod tests {
             destination: "~/..".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: true,
         };
         run(Some(cmd), &mut game).unwrap();
@@ -452,6 +506,7 @@ mod tests {
             destination: "~/..".to_string(),
             run: false,
             bribe: false,
+            keep_location_on_death: false,
             force: true,
         };
         run(Some(cmd), &mut game).unwrap();
